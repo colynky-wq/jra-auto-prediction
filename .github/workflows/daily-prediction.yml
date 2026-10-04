@@ -16,16 +16,29 @@ jobs:
         with:
           python-version: '3.10'
       
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-browser-l10n
+      
+      - name: Install ChromeDriver
+        run: |
+          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d. -f1)
+          wget https://chromedriver.chromium.org/download -q -O - | grep -oP "LATEST_RELEASE_$CHROME_VERSION" | xargs wget -q -O chromedriver.zip https://chromedriver.chromium.org/download/
+          unzip -q chromedriver.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+      
       - name: Install dependencies
         run: |
-          pip install pandas numpy scikit-learn gspread google-auth google-auth-oauthlib google-auth-httplib2 beautifulsoup4 requests lxml
+          pip install pandas numpy scikit-learn gspread google-auth google-auth-oauthlib google-auth-httplib2 beautifulsoup4 requests selenium lxml
       
       - name: Download pkl from Releases
         run: |
           wget https://github.com/colynky-wq/jra-auto-prediction/releases/download/v1.0/history_data.pkl
       
-      - name: Scrape today's race results and update pkl
-        run: python scrape_and_update.py
+      - name: Scrape today's race results and update pkl (Selenium)
+        run: python scrape_and_update_selenium.py
       
       - name: Run prediction
         env:
