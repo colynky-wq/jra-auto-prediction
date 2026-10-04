@@ -16,10 +16,15 @@ print("=" * 80)
 print("自動日次予測（GitHub Actions）")
 print("=" * 80)
 
-# Google Sheets 認証
+# Google Sheets 認証（スコープを明示的に指定）
 creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
 creds_dict = json.loads(creds_json)
-creds = Credentials.from_service_account_info(creds_dict)
+
+scopes = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive'
+]
+creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 gc = gspread.authorize(creds)
 
 SHEET_ID = os.getenv('SHEET_ID')
@@ -30,7 +35,7 @@ today = datetime.now()
 today_str = today.strftime("%Y%m%d")
 print(f"\n【実行日時】{today.strftime('%Y年%m月%d日')}")
 
-# pkl を読み込み（GitHub Actions でダウンロード済み）
+# pkl を読み込み
 print("\n[1/3] モデル学習中...")
 try:
     hist = pickle.load(open('history_data.pkl', 'rb'))
@@ -80,7 +85,6 @@ else:
     print(f"  総出走馬数: {len(target_races):,}点")
     print(f"  推奨馬数: {len(buy_df):,}点")
     
-    # Google Sheets に書き込み
     print(f"\n[3/3] Google Sheets に書き込み中...")
     
     output_df = buy_df[['レースID', '馬名', '人気_num', '単勝オッズ_num', '1着確率', '期待値']].copy()
