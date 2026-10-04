@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import gspread
-from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os
 import json
@@ -16,7 +15,7 @@ print("=" * 80)
 print("自動日次予測（GitHub Actions）")
 print("=" * 80)
 
-# Google Sheets 認証（スコープを明示的に指定）
+# Google Sheets 認証（gspread専用関数を使ってスコープエラーを確実に防止）
 creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
 creds_dict = json.loads(creds_json)
 
@@ -24,8 +23,8 @@ scopes = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive'
 ]
-creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-gc = gspread.authorize(creds)
+
+gc = gspread.service_account_from_dict(creds_dict, scopes=scopes)
 
 SHEET_ID = os.getenv('SHEET_ID')
 sh = gc.open_by_key(SHEET_ID)
@@ -35,7 +34,7 @@ today = datetime.now()
 today_str = today.strftime("%Y%m%d")
 print(f"\n【実行日時】{today.strftime('%Y年%m月%d日')}")
 
-# pkl を読み込み
+# pkl を読み込み（history_data.pklのまま）
 print("\n[1/3] モデル学習中...")
 try:
     hist = pickle.load(open('history_data.pkl', 'rb'))
