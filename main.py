@@ -2,36 +2,16 @@ import pandas as pd
 import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-import gspread
+import requests
 from datetime import datetime
 import os
-import json
 import warnings
-import time
 
 warnings.filterwarnings('ignore')
 
 print("=" * 80)
-print("自動日次予測（GitHub Actions）")
+print("自動日次予測（GAS経由 スプレッドシート書き込み）")
 print("=" * 80)
-
-# 1. 環境変数から認証情報を取得
-creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-if not creds_json:
-    print("✗ エラー: GOOGLE_CREDENTIALS_JSON が設定されていません。")
-    exit(1)
-
-try:
-    creds_info = json.loads(creds_json)
-    # ★ 修正ポイント: 手動でのスコープ指定を完全にやめ、gspreadの公式推奨機能を使う
-    gc = gspread.service_account_from_dict(creds_info)
-    print("  ✓ Google認証成功")
-except Exception as e:
-    print(f"✗ 認証エラー: {e}")
-    exit(1)
-
-SHEET_ID = os.getenv('SHEET_ID')
-sh = gc.open_by_key(SHEET_ID)
 
 # 今日の日付
 today = datetime.now()
@@ -70,6 +50,7 @@ print("  ✓ 学習完了")
 print(f"\n[2/3] {today.strftime('%m月%d日')}のレースを抽出中...")
 
 target_races = df[df['レースID'].astype(str).str[:8] == today_str].copy()
+buy_df = pd.DataFrame()
 
 if len(target_races) == 0:
     print(f"  ⚠ {today.strftime('%m月%d日')}にはレースがありません")
@@ -87,36 +68,43 @@ else:
     
     print(f"  総出走馬数: {len(target_races):,}点")
     print(f"  推奨馬数: {len(buy_df):,}点")
-    
-    print(f"\n[3/3] Google Sheets に書き込み中...")
-    
+
+print(f"\n[3/3] Google Sheets に書き込み中...")
+
+# 書き込むデータの形を作成
+if len(buy_df) > 0:
     output_df = buy_df[['レースID', '馬名', '人気_num', '単勝オッズ_num', '1着確率', '期待値']].copy()
     output_df.columns = ['レースID', '馬名', '人気', 'オッズ', '推定確率', '期待値']
     output_df = output_df.sort_values('レースID').reset_index(drop=True)
     
+    write_data = [['実行日時', today.strftime('%Y年%m月%d日'), '推奨馬数', len(buy_df)]]
+    write_data.append(['レースID', '馬名', '人気', 'オッズ', '推定確率', '期待値'])
+    
+    for idx, row in output_df.iterrows():
+        write_data.append([
+            str(row['レースID']),
+            row['馬名'],
+            str(int(row['人気'])),
+            f"{row['オッズ']:.2f}",
+            f"{row['推定確率']:.4f}",
+            f"{row['期待値']:.2f}"
+        ])
+else:
+    write_data = [['実行日時', today.strftime('%Y年%m月%d日'), '推奨馬数', 0], ['本日の推奨馬はありませんでした']]
+
+# データをGASに送信
+gas_url = os.getenv('GAS_WEBHOOK_URL')
+if not gas_url:
+    print("  ✗ エラー: GAS_WEBHOOK_URL が設定されていません。")
+else:
     try:
-        ws_recommend = sh.worksheet("日次推奨")
-        ws_recommend.clear()
-        time.sleep(1)
-        
-        write_data = [['実行日時', today.strftime('%Y年%m月%d日'), '推奨馬数', len(buy_df)]]
-        write_data.append(['レースID', '馬名', '人気', 'オッズ', '推定確率', '期待値'])
-        
-        for idx, row in output_df.iterrows():
-            write_data.append([
-                str(row['レースID']),
-                row['馬名'],
-                str(int(row['人気'])),
-                f"{row['オッズ']:.2f}",
-                f"{row['推定確率']:.4f}",
-                f"{row['期待値']:.2f}"
-            ])
-        
-        ws_recommend.update("A1", write_data)
-        print(f"  ✓ {len(buy_df):,}点を Google Sheets に書き込み完了")
-        
+        response = requests.post(gas_url, json=write_data)
+        if response.status_code == 200:
+            print(f"  ✓ {len(buy_df):,}点を Google Sheets に書き込み完了 (GAS経由)")
+        else:
+            print(f"  ✗ 書き込み失敗: {response.text}")
     except Exception as e:
-        print(f"  ✗ エラー: {e}")
+        print(f"  ✗ 通信エラー: {e}")
 
 print("\n" + "=" * 80)
 print("✓ 自動実行完了！")
