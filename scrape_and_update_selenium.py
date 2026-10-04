@@ -1,15 +1,12 @@
 import os, re, time, random
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import pickle
 from datetime import datetime
 
 print("=" * 80)
-print("当日レース結果スクレイピング＆pkl更新（Selenium版）")
+print("当日レース結果スクレイピング＆pkl更新")
 print("=" * 80)
 
 today = datetime.now()
@@ -18,7 +15,7 @@ today_jp = today.strftime("%Y年%m月%d日")
 print(f"\n【対象日】{today_jp}")
 
 # ① links_2026.txt を読み込み
-print("\n[1/6] links_2026.txt を読み込み中...")
+print("\n[1/5] links_2026.txt を読み込み中...")
 try:
     with open('links_2026.txt', 'r', encoding='utf-8') as f:
         links = f.read()
@@ -30,7 +27,7 @@ except FileNotFoundError:
 
 # ② 本日のレースID抽出
 today_races = [rid for rid in race_ids if rid.startswith(today_str)]
-print(f"\n[2/6] 本日のレースID抽出")
+print(f"\n[2/5] 本日のレースID抽出")
 print(f"  ✓ 本日のレース数: {len(today_races)}")
 
 if len(today_races) == 0:
@@ -42,54 +39,40 @@ if len(today_races) == 0:
         print("  ✗ 既存 pkl も見つかりません")
     exit(0)
 
-# ③ Selenium セットアップ
-print(f"\n[3/6] Selenium (Chrome) をセットアップ中...")
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
-
-options = webdriver.ChromeOptions()
-options.add_argument('--headless')  # ヘッドレスモード
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-dev-shm-usage')
-options.add_argument('--disable-gpu')
-options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15')
-
-try:
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    print(f"  ✓ Chrome ドライバ起動成功")
-except Exception as e:
-    print(f"  ✗ Chrome ドライバ起動失敗: {e}")
-    exit(1)
-
-# ④ スクレイピング関数
-SLEEP = (0.5, 1.0)
+# ③ 関数定義（Google Colab のコードから）
 URL = "https://race.netkeiba.com/race/result.html?race_id={}&rf=race_list"
+HEAD = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+        "Accept-Language": "ja,en;q=0.8"}
 
-def _t(x):
+def _t(x): 
     return re.sub(r"\s+", " ", x.get_text(" ", strip=True)) if x is not None else ""
 
 def _id(a, pat):
     m = re.search(pat, a.get("href", "")) if a else None
     return m.group(1) if m else ""
 
-def fetch_with_selenium(race_id, driver):
-    """Selenium で JavaScript を実行してから HTML を取得"""
-    try:
-        driver.get(URL.format(race_id))
-        
-        # テーブルが読み込まれるまで待機（最大10秒）
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.ID, "All_Result_Table"))
-        )
-        
-        time.sleep(1)  # 追加の待機
-        html = driver.page_source
-        return html, "ok"
-    except Exception as e:
-        return None, str(e)[:80]
+def fetch(race_id, sess):
+    """HTMLを取得。戻り値: (html or None, 状態文字列)"""
+    last = ""
+    for attempt in range(3):
+        try:
+            r = sess.get(URL.format(race_id), headers=HEAD, timeout=20)
+            if r.status_code in (403, 429, 503):
+                time.sleep(60 * (attempt + 1))
+                continue
+            if r.status_code != 200:
+                return None, f"error:HTTP{r.status_code}"
+            try:
+                return r.content.decode("utf-8"), "ok"
+            except UnicodeDecodeError:
+                return r.content.decode("euc-jp", errors="replace"), "ok"
+        except Exception as e:
+            time.sleep(5 * (attempt + 1))
+            last = str(e)[:80]
+    return None, f"error:取得失敗 {last}"
 
 def parse_race(html, race_id):
+    """戻り値: (status, horse_rows)"""
     s = BeautifulSoup(html, "html.parser")
     tbl = s.select_one("table#All_Result_Table")
     name = s.select_one("h1.RaceName")
@@ -138,13 +121,15 @@ def parse_race(html, race_id):
     
     return "ok", horses
 
-# ⑤ スクレイピング実行
-print(f"\n[4/6] NetKeiba からスクレイピング中（Selenium使用）...")
+# ④ スクレイピング実行
+print(f"\n[3/5] NetKeiba からスクレイピング中...")
+sess = requests.Session()
 all_horses = []
 success_count = 0
+SLEEP = (1.2, 2.2)
 
 for i, race_id in enumerate(today_races):
-    html, st = fetch_with_selenium(race_id, driver)
+    html, st = fetch(race_id, sess)
     time.sleep(random.uniform(*SLEEP))
     
     if html is None:
@@ -155,12 +140,10 @@ for i, race_id in enumerate(today_races):
     if status == "ok":
         all_horses.extend(horses)
         success_count += 1
-        if (i + 1) % 20 == 0:
+        if (i + 1) % 30 == 0:
             print(f"  進捗: {i+1}/{len(today_races)} ({success_count}成功)")
     else:
         print(f"  ⚠ {race_id} 解析失敗")
-
-driver.quit()  # ブラウザを閉じる
 
 print(f"  成功: {success_count}/{len(today_races)} レース")
 print(f"  取得馬数: {len(all_horses)}")
@@ -169,8 +152,8 @@ if len(all_horses) == 0:
     print("  ⚠ 本日のレース結果が取得できませんでした")
     exit(0)
 
-# ⑥ 既存 pkl と統合
-print(f"\n[5/6] 既存データと統合中...")
+# ⑤ 既存 pkl と統合
+print(f"\n[4/5] 既存データと統合中...")
 try:
     hist = pickle.load(open('history_data.pkl', 'rb'))
     print(f"  既存データ: {len(hist):,}行")
@@ -182,8 +165,8 @@ new_df = pd.DataFrame(all_horses)
 hist = pd.concat([hist, new_df], ignore_index=True)
 print(f"  統合後: {len(hist):,}行")
 
-# ⑦ pkl に保存
-print(f"\n[6/6] pkl を保存中...")
+# ⑥ pkl に保存
+print(f"\n[5/5] pkl を保存中...")
 with open('history_data.pkl', 'wb') as f:
     pickle.dump(hist, f)
 print(f"  ✓ 保存完了")
