@@ -1,33 +1,27 @@
-name: Daily Horse Racing Prediction
-
-on:
-  schedule:
-    - cron: '0 12 * * *'  # 毎日 12:00 UTC（日本時間 21:00）
-  workflow_dispatch:
-
-jobs:
-  predict:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          pip install pandas numpy scikit-learn gspread google-auth google-auth-oauthlib google-auth-httplib2 beautifulsoup4 requests lxml
-      
-      - name: Download pkl from Releases
-        run: |
-          wget https://github.com/colynky-wq/jra-auto-prediction/releases/download/v1.0/history_data.pkl
-      
-      - name: Scrape today's race results and update pkl
-        run: python scrape_and_update.py
-      
-      - name: Run prediction
-        env:
-          GAS_WEBHOOK_URL: ${{ secrets.GAS_WEBHOOK_URL }}
-        run: python main.py
+- name: Debug scraping
+  run: |
+    python << 'EOF'
+    import requests
+    from bs4 import BeautifulSoup
+    
+    URL = "https://race.netkeiba.com/race/result.html?race_id=202610040101&rf=race_list"
+    HEAD = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15",
+        "Accept-Language": "ja,en;q=0.8",
+        "Referer": "https://race.netkeiba.com/top/"
+    }
+    
+    sess = requests.Session()
+    r = sess.get(URL, headers=HEAD, timeout=20)
+    
+    print(f"Status Code: {r.status_code}")
+    print(f"Content Length: {len(r.content)}")
+    print(f"First 2000 chars:\n{r.text[:2000]}")
+    
+    soup = BeautifulSoup(r.text, "html.parser")
+    tbl = soup.select_one("table#All_Result_Table")
+    name = soup.select_one("h1.RaceName")
+    
+    print(f"\nTable found: {tbl is not None}")
+    print(f"RaceName found: {name is not None}")
+    EOF
