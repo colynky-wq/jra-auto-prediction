@@ -1,9 +1,9 @@
-import pandas as pd
-import pickle
+import os, re, time, random
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
+import pickle
 from datetime import datetime
-import os
 
 print("=" * 80)
 print("当日レース結果スクレイピング＆pkl更新")
@@ -14,108 +14,154 @@ today_str = today.strftime("%Y%m%d")
 today_jp = today.strftime("%Y年%m月%d日")
 print(f"\n【対象日】{today_jp}")
 
-# ① 既存の pkl を読み込み
-print("\n[1/4] 既存データを読み込み中...")
+# ① links_2026.txt を読み込み
+print("\n[1/5] links_2026.txt を読み込み中...")
 try:
-    hist = pickle.load(open('history_data.pkl', 'rb'))
-    print(f"  ✓ 既存データ: {len(hist):,}行")
-except Exception as e:
-    print(f"  ✗ 読み込みエラー: {e}")
+    with open('links_2026.txt', 'r', encoding='utf-8') as f:
+        links = f.read()
+    race_ids = [m for m in re.findall(r'race_id=(\d{12})', links)]
+    print(f"  ✓ 全レースID数: {len(race_ids)}")
+except FileNotFoundError:
+    print("  ✗ links_2026.txt が見つかりません")
     exit(1)
 
-# ② NetKeiba から本日のレース一覧を取得
-print(f"\n[2/4] {today_jp}のレースを NetKeiba からスクレイピング中...")
+# ② 本日のレースID抽出
+today_races = [rid for rid in race_ids if rid.startswith(today_str)]
+print(f"\n[2/5] 本日のレースID抽出")
+print(f"  ✓ 本日のレース数: {len(today_races)}")
 
-try:
-    # NetKeiba のレース一覧ページ（本日分）
-    url = f"https://race.netkeiba.com/top/race_list.html?kaisai_date={today_str}"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    response = requests.get(url, headers=headers, timeout=10)
-    response.encoding = 'euc-jp'
+if len(today_races) == 0:
+    print(f"  ⚠ {today_jp}にはレースがありません")
+    # 既存の pkl を読み込むだけ
+    try:
+        hist = pickle.load(open('history_data.pkl', 'rb'))
+        print(f"  既存データ: {len(hist):,}行")
+    except:
+        print("  ✗ 既存 pkl も見つかりません")
+    exit(0)
+
+print(f"  対象レースID: {today_races[:3]}")
+
+# ③ スクレイピング用の関数（既存コードから）
+SLEEP = (0.5, 1.0)
+URL = "https://race.netkeiba.com/race/result.html?race_id={}&rf=race_list"
+HEAD = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15"}
+
+def _t(x):
+    return re.sub(r"\s+", " ", x.get_text(" ", strip=True)) if x is not None else ""
+
+def _id(a, pat):
+    m = re.search(pat, a.get("href", "")) if a else None
+    return m.group(1) if m else ""
+
+def fetch(race_id, sess):
+    try:
+        r = sess.get(URL.format(race_id), headers=HEAD, timeout=20)
+        if r.status_code != 200:
+            return None, f"HTTP{r.status_code}"
+        try:
+            return r.content.decode("utf-8"), "ok"
+        except:
+            return r.content.decode("euc-jp", errors="replace"), "ok"
+    except Exception as e:
+        return None, str(e)[:80]
+
+def parse_race(html, race_id):
+    s = BeautifulSoup(html, "html.parser")
+    tbl = s.select_one("table#All_Result_Table")
+    name = s.select_one("h1.RaceName")
+    rows = tbl.select("tbody tr.HorseList") if tbl else []
     
-    soup = BeautifulSoup(response.text, 'html.parser')
+    if not tbl or not rows or name is None or not _t(name):
+        return "none", []
     
-    # レースID と馬情報を抽出
-    race_tables = soup.find_all('table', class_='race_table_01')
-    
-    new_records = []
-    
-    for table in race_tables:
-        # レースID の抽出
-        race_link = table.find('a', href=True)
-        if not race_link:
-            continue
+    horses = []
+    for tr in rows:
+        td = tr.find_all("td")
+        cls = lambda c: tr.select_one("td." + c)
+        times = tr.select("td.Time")
+        w = cls("Weight")
+        wt = _t(w)
+        mw = re.match(r"(\d+)\s*\(([+-]?\d+)\)", wt)
+        hn = tr.select_one("span.Horse_Name a")
+        jk = cls("Jockey")
+        trn = cls("Trainer")
+        info = tr.select("td.Horse_Info")
         
-        href = race_link['href']
-        # https://race.netkeiba.com/race/20261004010101/ → 20261004010101
-        if '/race/' in href:
-            race_id = href.split('/race/')[1].rstrip('/')
-        else:
-            continue
-        
-        # 馬情報を抽出
-        rows = table.find_all('tr')[1:]  # ヘッダー行をスキップ
-        
-        for row in rows:
-            cells = row.find_all('td')
-            if len(cells) < 10:
-                continue
-            
-            try:
-                着順 = cells[0].text.strip()
-                枠 = cells[1].text.strip()
-                馬番 = cells[2].text.strip()
-                馬名 = cells[3].text.strip()
-                性齢 = cells[4].text.strip()
-                斤量 = cells[5].text.strip()
-                騎手 = cells[6].text.strip()
-                タイム = cells[7].text.strip()
-                着差 = cells[8].text.strip()
-                人気 = cells[9].text.strip()
-                
-                # 単勝オッズを取得（別途取得が必要な場合もある）
-                単勝オッズ = "N/A"
-                
-                record = {
-                    'レースID': race_id,
-                    '着順': 着順,
-                    '枠': 枠,
-                    '馬番': 馬番,
-                    '馬名': 馬名,
-                    '性齢': 性齢,
-                    '斤量': 斤量,
-                    '騎手': 騎手,
-                    'タイム': タイム,
-                    '着差': 着差,
-                    '人気': 人気,
-                    '単勝オッズ': 単勝オッズ
-                }
-                new_records.append(record)
-            except Exception as e:
-                print(f"    ⚠ 行パース失敗: {e}")
-                continue
+        horse_record = {
+            "レースID": race_id,
+            "着順": _t(tr.select_one("div.Rank")),
+            "枠": _t(tr.select_one("td[class*=Waku]")),
+            "馬番": _t(tr.select("td.Num")[-1]) if tr.select("td.Num") else "",
+            "馬名": hn.get("title", "") if hn else "",
+            "馬ID": _id(hn, r"/horse/(\w+)"),
+            "性齢": _t(info[-1]) if info else "",
+            "斤量": _t(tr.select_one("span.JockeyWeight")),
+            "騎手": _t(jk),
+            "騎手ID": _id(jk.find("a") if jk else None, r"/jockey/result/recent/(\w+)"),
+            "タイム": _t(times[0]) if len(times) > 0 else "",
+            "着差": _t(times[1]) if len(times) > 1 else "",
+            "後3F": _t(times[2]) if len(times) > 2 else "",
+            "人気": _t(tr.select_one("span.OddsPeople")),
+            "単勝オッズ": _t(tr.select("td.Odds")[-1]) if tr.select("td.Odds") else "",
+            "コーナー通過順": _t(cls("PassageRate")),
+            "所属": _t(trn.select_one("span[class^=Label]")) if trn else "",
+            "調教師": (trn.find("a").get("title", "") if trn and trn.find("a") else ""),
+            "調教師ID": _id(trn.find("a") if trn else None, r"/trainer/result/recent/(\w+)"),
+            "馬体重": mw.group(1) if mw else "",
+            "増減": mw.group(2) if mw else ""
+        }
+        horses.append(horse_record)
     
-    if len(new_records) == 0:
-        print(f"  ⚠ {today_jp}のレース結果が見つかりません（レース未実施の可能性）")
+    return "ok", horses
+
+# ④ スクレイピング実行
+print(f"\n[3/5] NetKeiba からスクレイピング中...")
+sess = requests.Session()
+all_horses = []
+success_count = 0
+
+for race_id in today_races:
+    html, st = fetch(race_id, sess)
+    time.sleep(random.uniform(*SLEEP))
+    
+    if html is None:
+        print(f"  ✗ {race_id} 取得失敗: {st}")
+        continue
+    
+    status, horses = parse_race(html, race_id)
+    if status == "ok":
+        all_horses.extend(horses)
+        success_count += 1
+        print(f"  ✓ {race_id} - {len(horses)}頭")
     else:
-        print(f"  ✓ {len(new_records):,}件のレース結果を取得")
-        
-        # ③ pkl に新規データを追加
-        print(f"\n[3/4] pkl に追加中...")
-        new_df = pd.DataFrame(new_records)
-        hist = pd.concat([hist, new_df], ignore_index=True)
-        print(f"  ✓ 更新後のデータ: {len(hist):,}行")
-        
-        # ④ 更新した pkl を保存
-        print(f"\n[4/4] pkl を保存中...")
-        with open('history_data.pkl', 'wb') as f:
-            pickle.dump(hist, f)
-        print(f"  ✓ 保存完了")
+        print(f"  ⚠ {race_id} 解析失敗: {status}")
 
-except requests.exceptions.RequestException as e:
-    print(f"  ✗ ネットワークエラー: {e}")
-except Exception as e:
-    print(f"  ✗ スクレイピングエラー: {e}")
+print(f"  成功: {success_count}/{len(today_races)} レース")
+print(f"  取得馬数: {len(all_horses)}")
+
+if len(all_horses) == 0:
+    print("  ⚠ 本日のレース結果が取得できませんでした")
+    exit(0)
+
+# ⑤ 既存 pkl と統合
+print(f"\n[4/5] 既存データと統合中...")
+try:
+    hist = pickle.load(open('history_data.pkl', 'rb'))
+    print(f"  既存データ: {len(hist):,}行")
+except:
+    hist = pd.DataFrame()
+    print(f"  既存データ: なし")
+
+new_df = pd.DataFrame(all_horses)
+hist = pd.concat([hist, new_df], ignore_index=True)
+print(f"  統合後: {len(hist):,}行")
+
+# ⑥ pkl に保存
+print(f"\n[5/5] pkl を保存中...")
+with open('history_data.pkl', 'wb') as f:
+    pickle.dump(hist, f)
+print(f"  ✓ 保存完了")
 
 print("\n" + "=" * 80)
 print("✓ スクレイピング＆更新完了！")
