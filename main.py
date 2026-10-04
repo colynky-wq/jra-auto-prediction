@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import gspread
-from google.oauth2 import service_account
 from datetime import datetime
 import os
 import json
@@ -16,20 +15,25 @@ print("=" * 80)
 print("自動日次予測（GitHub Actions）")
 print("=" * 80)
 
-# Google Sheets 認証（公式クレデンシャルに明示的にスコープをバインドしてエラーを防止）
+# 1. GitHub Secrets の JSON を一時ファイルに書き出す
 creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-creds_dict = json.loads(creds_json)
+if not creds_json:
+    print("✗ エラー: GOOGLE_CREDENTIALS_JSON が設定されていません。")
+    exit(1)
 
-scopes = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive'
-]
+with open('credentials.json', 'w') as f:
+    f.write(creds_json)
 
-creds = service_account.Credentials.from_service_account_info(
-    creds_dict, 
-    scopes=scopes
-)
-gc = gspread.authorize(creds)
+# 2. ★【重要】スコープを明示的に指定して gspread で認証する
+try:
+    scopes = [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    gc = gspread.service_account(filename='credentials.json', scopes=scopes)
+except Exception as e:
+    print(f"✗ 認証エラー: {e}")
+    exit(1)
 
 SHEET_ID = os.getenv('SHEET_ID')
 sh = gc.open_by_key(SHEET_ID)
@@ -39,7 +43,7 @@ today = datetime.now()
 today_str = today.strftime("%Y%m%d")
 print(f"\n【実行日時】{today.strftime('%Y年%m月%d日')}")
 
-# pkl を読み込み（history_data.pkl）
+# pkl を読み込み
 print("\n[1/3] モデル学習中...")
 try:
     hist = pickle.load(open('history_data.pkl', 'rb'))
