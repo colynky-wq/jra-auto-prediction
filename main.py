@@ -16,7 +16,7 @@ print("=" * 80)
 print("自動日次予測（GitHub Actions）")
 print("=" * 80)
 
-# 1. 環境変数から認証情報を直接取得して認証する
+# 1. 環境変数から認証情報を取得
 creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
 if not creds_json:
     print("✗ エラー: GOOGLE_CREDENTIALS_JSON が設定されていません。")
@@ -24,9 +24,11 @@ if not creds_json:
 
 try:
     creds_info = json.loads(creds_json)
+    # ★ スコープに cloud-platform を追加してエラーを強制回避します
     scopes = [
         'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive'
+        'https://www.googleapis.com/auth/drive',
+        'https://www.googleapis.com/auth/cloud-platform'
     ]
     credentials = service_account.Credentials.from_service_account_info(creds_info, scopes=scopes)
     gc = gspread.authorize(credentials)
