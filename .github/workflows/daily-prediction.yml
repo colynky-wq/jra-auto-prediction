@@ -20,10 +20,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y chromium-browser chromium-browser-l10n
-      
-      - name: Install dependencies
-        run: |
-          pip install pandas numpy scikit-learn gspread google-auth google-auth-oauthlib google-auth-httplib2 beautifulsoup4 requests selenium webdriver-manager lxml
+          
+      - name: Scrape today's race results and update pkl
+        run: python scrape_and_update.py
       
       - name: Download pkl from Releases
         run: |
