@@ -1,31 +1,26 @@
 name: Daily Horse Racing Prediction
-
 on:
   schedule:
     - cron: '0 21 * * *' # Runs at 21:00 UTC
   workflow_dispatch:
-
 jobs:
   predict:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
       - name: Install dependencies
+        # ★ ここを変更：gspread関連を消して requests を追加
         run: |
-          pip install pandas numpy scikit-learn gspread google-auth google-auth-oauthlib google-auth-httplib2
-
+          pip install pandas numpy scikit-learn requests
       - name: Download pkl from Releases
         run: |
           wget https://github.com/colynky-wq/jra-auto-prediction/releases/download/v1.0/history_data.pkl
-
       - name: Run prediction
+        # ★ ここを変更：GASのURLだけを渡す
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-          SHEET_ID: ${{ secrets.SHEET_ID }}
+          GAS_WEBHOOK_URL: ${{ secrets.GAS_WEBHOOK_URL }}
         run: python main.py
