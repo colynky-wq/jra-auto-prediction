@@ -3,7 +3,6 @@ import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import gspread
-from google.oauth2 import service_account
 from datetime import datetime
 import os
 import json
@@ -24,14 +23,8 @@ if not creds_json:
 
 try:
     creds_info = json.loads(creds_json)
-    # ★ スコープに cloud-platform を追加してエラーを強制回避します
-    scopes = [
-        'https://www.googleapis.com/auth/spreadsheets',
-        'https://www.googleapis.com/auth/drive',
-        'https://www.googleapis.com/auth/cloud-platform'
-    ]
-    credentials = service_account.Credentials.from_service_account_info(creds_info, scopes=scopes)
-    gc = gspread.authorize(credentials)
+    # ★ 修正ポイント: 手動でのスコープ指定を完全にやめ、gspreadの公式推奨機能を使う
+    gc = gspread.service_account_from_dict(creds_info)
     print("  ✓ Google認証成功")
 except Exception as e:
     print(f"✗ 認証エラー: {e}")
