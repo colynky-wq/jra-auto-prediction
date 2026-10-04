@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 print("=" * 80)
-print("自動日次予測（GAS経由 スプレッドシート書き込み）")
+print("自動日次予測（GAS経由 スプレッドシート書き込み・詳細報告版）")
 print("=" * 80)
 
 # 今日の日付
@@ -52,7 +52,10 @@ print(f"\n[2/3] {today.strftime('%m月%d日')}のレースを抽出中...")
 target_races = df[df['レースID'].astype(str).str[:8] == today_str].copy()
 buy_df = pd.DataFrame()
 
-if len(target_races) == 0:
+# ★ データの有無をチェックするフラグ
+has_races_today = len(target_races) > 0
+
+if not has_races_today:
     print(f"  ⚠ {today.strftime('%m月%d日')}にはレースがありません")
 else:
     X_target = target_races[['能力点数_num', '過去5走平均着順_num', '過去5走1着率_num', '人気_num']].values
@@ -62,6 +65,7 @@ else:
     target_races_eval['1着確率'] = pred_prob
     target_races_eval['期待値'] = target_races_eval['単勝オッズ_num'] * pred_prob
     
+    # ★ 推奨条件
     mask_pop = (target_races_eval['人気_num'] >= 4) & (target_races_eval['人気_num'] <= 10)
     mask_exp = target_races_eval['期待値'] >= 1.0
     buy_df = target_races_eval[mask_pop & mask_exp].copy()
@@ -71,8 +75,16 @@ else:
 
 print(f"\n[3/3] Google Sheets に書き込み中...")
 
-# 書き込むデータの形を作成
-if len(buy_df) > 0:
+# ★ スプレッドシートに書き込むメッセージを分岐
+if not has_races_today:
+    # そもそも今日のデータが読み込めていない場合
+    write_data = [
+        ['実行日時', today.strftime('%Y年%m月%d日'), '状態', 'データなし'], 
+        ['⚠ 確認事項：', 'history_data.pkl の中に本日のレースデータが含まれていません。'],
+        ['', 'スクレイピングが完了しているか、最新のpklファイルがアップロードされているか確認してください。']
+    ]
+elif len(buy_df) > 0:
+    # 条件に合う推奨馬がいる場合
     output_df = buy_df[['レースID', '馬名', '人気_num', '単勝オッズ_num', '1着確率', '期待値']].copy()
     output_df.columns = ['レースID', '馬名', '人気', 'オッズ', '推定確率', '期待値']
     output_df = output_df.sort_values('レースID').reset_index(drop=True)
@@ -90,7 +102,11 @@ if len(buy_df) > 0:
             f"{row['期待値']:.2f}"
         ])
 else:
-    write_data = [['実行日時', today.strftime('%Y年%m月%d日'), '推奨馬数', 0], ['本日の推奨馬はありませんでした']]
+    # データはあるが、条件に合う馬がいなかった場合
+    write_data = [
+        ['実行日時', today.strftime('%Y年%m月%d日'), '総出走馬数', len(target_races)], 
+        ['結果：', f'全 {len(target_races)} 頭を予測しましたが、本日の推奨条件（4〜10番人気、期待値1.0以上）を満たす馬はいませんでした。']
+    ]
 
 # データをGASに送信
 gas_url = os.getenv('GAS_WEBHOOK_URL')
@@ -100,7 +116,7 @@ else:
     try:
         response = requests.post(gas_url, json=write_data)
         if response.status_code == 200:
-            print(f"  ✓ {len(buy_df):,}点を Google Sheets に書き込み完了 (GAS経由)")
+            print(f"  ✓ Google Sheets に書き込み完了 (GAS経由)")
         else:
             print(f"  ✗ 書き込み失敗: {response.text}")
     except Exception as e:
