@@ -25,3 +25,6 @@
     print(f"\nTable found: {tbl is not None}")
     print(f"RaceName found: {name is not None}")
     EOF
+
+- name: Scrape today's race results and update pkl
+  run: python scrape_and_update.py
