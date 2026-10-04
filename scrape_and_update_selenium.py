@@ -44,6 +44,9 @@ if len(today_races) == 0:
 
 # ③ Selenium セットアップ
 print(f"\n[3/6] Selenium (Chrome) をセットアップ中...")
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
+
 options = webdriver.ChromeOptions()
 options.add_argument('--headless')  # ヘッドレスモード
 options.add_argument('--no-sandbox')
@@ -52,7 +55,8 @@ options.add_argument('--disable-gpu')
 options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15')
 
 try:
-    driver = webdriver.Chrome(options=options)
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
     print(f"  ✓ Chrome ドライバ起動成功")
 except Exception as e:
     print(f"  ✗ Chrome ドライバ起動失敗: {e}")
