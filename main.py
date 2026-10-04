@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 import gspread
+from google.oauth2 import service_account
 from datetime import datetime
 import os
 import json
@@ -15,22 +16,21 @@ print("=" * 80)
 print("自動日次予測（GitHub Actions）")
 print("=" * 80)
 
-# 1. GitHub Secrets の JSON を一時ファイルに書き出す
+# 1. 環境変数から認証情報を直接取得して認証する
 creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
 if not creds_json:
     print("✗ エラー: GOOGLE_CREDENTIALS_JSON が設定されていません。")
     exit(1)
 
-with open('credentials.json', 'w') as f:
-    f.write(creds_json)
-
-# 2. ★【重要】スコープを明示的に指定して gspread で認証する
 try:
+    creds_info = json.loads(creds_json)
     scopes = [
         'https://www.googleapis.com/auth/spreadsheets',
         'https://www.googleapis.com/auth/drive'
     ]
-    gc = gspread.service_account(filename='credentials.json', scopes=scopes)
+    credentials = service_account.Credentials.from_service_account_info(creds_info, scopes=scopes)
+    gc = gspread.authorize(credentials)
+    print("  ✓ Google認証成功")
 except Exception as e:
     print(f"✗ 認証エラー: {e}")
     exit(1)
