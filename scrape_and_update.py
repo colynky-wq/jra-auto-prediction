@@ -1,168 +1,180 @@
-import os, re, time, random
+"""
+scrape_and_update.py
+JRA競馬予測システム - 当日レース結果の取得・pkl更新・GitHub反映スクリプト
+
+【使い方】
+Google Colab 上で実行してください（Google Driveのマウントが必要です）。
+開催があった日の翌日以降に実行し、history_data.pkl を最新化します。
+
+【前提】
+- Google Driveに /MyDrive/code_output/jra_data/scrape_gap/history_data.pkl が存在すること
+- ColabのシークレットにGITHUB_TOKEN（Contents: Read and write権限）が設定されていること
+
+【カレンダーについて】
+TOKYO_2026_SCHEDULE は東京競馬の開催日程（JRA公式発表）を手動で登録したものです。
+新しい開催が発表されたら、ここに追記してください。
+現状、東京以外の競馬場（京都など）には未対応です。
+
+最終更新: 2026-10-05
+"""
+import os, re
 import requests
-from bs4 import BeautifulSoup
 import pandas as pd
-import pickle
+from bs4 import BeautifulSoup
 from datetime import datetime
+from google.colab import userdata, drive
 
-print("=" * 80)
-print("当日レース結果スクレイピング＆pkl更新")
-print("=" * 80)
-
-today = datetime.now()
-today_str = today.strftime("%Y%m%d")
-today_jp = today.strftime("%Y年%m月%d日")
-print(f"\n【対象日】{today_jp}")
-
-# ① links_2026.txt を読み込み
-print("\n[1/5] links_2026.txt を読み込み中...")
 try:
-    with open('links_2026.txt', 'r', encoding='utf-8') as f:
-        links = f.read()
-    race_ids = [m for m in re.findall(r'race_id=(\d{12})', links)]
-    print(f"  ✓ 全レースID数: {len(race_ids)}")
-except FileNotFoundError:
-    print("  ✗ links_2026.txt が見つかりません")
-    exit(1)
+    drive.mount('/content/drive')
+except Exception:
+    pass
 
-# ② 本日のレースID抽出
-today_races = [rid for rid in race_ids if rid.startswith(today_str)]
-print(f"\n[2/5] 本日のレースID抽出")
-print(f"  ✓ 本日のレース数: {len(today_races)}")
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+}
 
-if len(today_races) == 0:
-    print(f"  ⚠ {today_jp}にはレースがありません")
-    # 既存の pkl を読み込むだけ
+WORK = "/content/drive/MyDrive/code_output/jra_data/scrape_gap"
+pkl_path = f"{WORK}/history_data.pkl"
+
+# 対象日：通常は実行日（必要なら手動で上書き可能）
+TARGET_DATE = datetime.now().strftime('%Y-%m-%d')
+
+TOKYO_2026_SCHEDULE = {
+    "2026-10-03": 1, "2026-10-04": 2,
+    "2026-10-10": 3, "2026-10-11": 4, "2026-10-12": 5,
+    "2026-10-17": 6, "2026-10-18": 7,
+    # 10/24, 11/1 は4回開催内だが日目未確認。わかり次第追加
+}
+TOKYO_MEETING_NUMBER = "04"
+VENUE_CODE_TOKYO = "05"
+
+JOCKEY_NAME_FIX = {
+    "05339": "Ｃ．ルメール",
+}
+
+def resolve_jockey_name(jid, fallback):
+    return JOCKEY_NAME_FIX.get(jid, fallback)
+
+def get_race_ids(date_str):
+    day_num = TOKYO_2026_SCHEDULE.get(date_str)
+    if day_num is None:
+        return []
+    year = date_str[:4]
+    return [f"{year}{VENUE_CODE_TOKYO}{TOKYO_MEETING_NUMBER}{str(day_num).zfill(2)}{str(r).zfill(2)}" for r in range(1, 13)]
+
+def parse_race(race_id):
+    url = f"https://race.netkeiba.com/race/result.html?race_id={race_id}&rf=race_list"
     try:
-        hist = pickle.load(open('history_data.pkl', 'rb'))
-        print(f"  既存データ: {len(hist):,}行")
-    except:
-        print("  ✗ 既存 pkl も見つかりません")
-    exit(0)
-
-print(f"  対象レースID: {today_races[:3]}")
-
-# ③ スクレイピング用の関数（既存コードから）
-SLEEP = (0.5, 1.0)
-URL = "https://race.netkeiba.com/race/result.html?race_id={}&rf=race_list"
-HEAD = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15"}
-
-def _t(x):
-    return re.sub(r"\s+", " ", x.get_text(" ", strip=True)) if x is not None else ""
-
-def _id(a, pat):
-    m = re.search(pat, a.get("href", "")) if a else None
-    return m.group(1) if m else ""
-
-def fetch(race_id, sess):
-    try:
-        r = sess.get(URL.format(race_id), headers=HEAD, timeout=20)
-        if r.status_code != 200:
-            return None, f"HTTP{r.status_code}"
-        try:
-            return r.content.decode("utf-8"), "ok"
-        except:
-            return r.content.decode("euc-jp", errors="replace"), "ok"
+        response = requests.get(url, headers=headers, timeout=10)
+        response.encoding = 'utf-8'
+        soup = BeautifulSoup(response.content, 'html.parser')
+        race_name_tag = soup.find('h1', class_='RaceName')
+        race_name = race_name_tag.text.strip() if race_name_tag else "Unknown"
+        result_table = soup.find('table', id='All_Result_Table')
+        if not result_table:
+            return None
+        rows = result_table.find_all('tr')[1:]
+        results = []
+        for row in rows:
+            cols = row.find_all('td')
+            if len(cols) < 15:
+                continue
+            jockey_link = cols[6].find('a')
+            jockey_id = None
+            if jockey_link and jockey_link.get('href'):
+                m_id = re.search(r'/jockey/(?:result/recent/)?(\w+)/', jockey_link['href'])
+                if m_id:
+                    jockey_id = m_id.group(1)
+            jockey_name = resolve_jockey_name(jockey_id, cols[6].text.strip())
+            affil_text = cols[13].get_text(separator="\n", strip=True)
+            affil_parts = [p for p in affil_text.split('\n') if p.strip()]
+            affiliation = affil_parts[0] if affil_parts else ''
+            trainer = affil_parts[1] if len(affil_parts) > 1 else ''
+            weight_text = cols[14].text.strip()
+            m = re.match(r'(\d+)\(([+-]?\d+)\)', weight_text)
+            horse_weight, weight_diff = (m.group(1), m.group(2)) if m else (weight_text, '')
+            results.append({
+                'レースID': race_id, 'レース名': race_name,
+                '着順': cols[0].text.strip(), '枠': cols[1].text.strip(),
+                '馬番': cols[2].text.strip(), '馬名': cols[3].text.strip(),
+                '性齢': cols[4].text.strip(), '斤量': cols[5].text.strip(),
+                '騎手': jockey_name, '騎手ID': jockey_id or '',
+                'タイム': cols[7].text.strip(), '着差': cols[8].text.strip(),
+                '人気': cols[9].text.strip(), '単勝オッズ': cols[10].text.strip(),
+                '後3F': cols[11].text.strip(), 'コーナー通過順': cols[12].text.strip(),
+                '所属': affiliation, '調教師': trainer,
+                '馬体重': horse_weight, '増減': weight_diff,
+            })
+        return results
     except Exception as e:
-        return None, str(e)[:80]
+        print(f"  ⚠ {race_id} 取得失敗: {str(e)[:80]}")
+        return None
 
-def parse_race(html, race_id):
-    s = BeautifulSoup(html, "html.parser")
-    tbl = s.select_one("table#All_Result_Table")
-    name = s.select_one("h1.RaceName")
-    rows = tbl.select("tbody tr.HorseList") if tbl else []
-    
-    if not tbl or not rows or name is None or not _t(name):
-        return "none", []
-    
-    horses = []
-    for tr in rows:
-        td = tr.find_all("td")
-        cls = lambda c: tr.select_one("td." + c)
-        times = tr.select("td.Time")
-        w = cls("Weight")
-        wt = _t(w)
-        mw = re.match(r"(\d+)\s*\(([+-]?\d+)\)", wt)
-        hn = tr.select_one("span.Horse_Name a")
-        jk = cls("Jockey")
-        trn = cls("Trainer")
-        info = tr.select("td.Horse_Info")
-        
-        horse_record = {
-            "レースID": race_id,
-            "着順": _t(tr.select_one("div.Rank")),
-            "枠": _t(tr.select_one("td[class*=Waku]")),
-            "馬番": _t(tr.select("td.Num")[-1]) if tr.select("td.Num") else "",
-            "馬名": hn.get("title", "") if hn else "",
-            "馬ID": _id(hn, r"/horse/(\w+)"),
-            "性齢": _t(info[-1]) if info else "",
-            "斤量": _t(tr.select_one("span.JockeyWeight")),
-            "騎手": _t(jk),
-            "騎手ID": _id(jk.find("a") if jk else None, r"/jockey/result/recent/(\w+)"),
-            "タイム": _t(times[0]) if len(times) > 0 else "",
-            "着差": _t(times[1]) if len(times) > 1 else "",
-            "後3F": _t(times[2]) if len(times) > 2 else "",
-            "人気": _t(tr.select_one("span.OddsPeople")),
-            "単勝オッズ": _t(tr.select("td.Odds")[-1]) if tr.select("td.Odds") else "",
-            "コーナー通過順": _t(cls("PassageRate")),
-            "所属": _t(trn.select_one("span[class^=Label]")) if trn else "",
-            "調教師": (trn.find("a").get("title", "") if trn and trn.find("a") else ""),
-            "調教師ID": _id(trn.find("a") if trn else None, r"/trainer/result/recent/(\w+)"),
-            "馬体重": mw.group(1) if mw else "",
-            "増減": mw.group(2) if mw else ""
-        }
-        horses.append(horse_record)
-    
-    return "ok", horses
 
-# ④ スクレイピング実行
-print(f"\n[3/5] NetKeiba からスクレイピング中...")
-sess = requests.Session()
-all_horses = []
-success_count = 0
+print("="*60)
+print(f"本日のレース取得＆更新：{TARGET_DATE}")
+print("="*60)
 
-for race_id in today_races:
-    html, st = fetch(race_id, sess)
-    time.sleep(random.uniform(*SLEEP))
-    
-    if html is None:
-        print(f"  ✗ {race_id} 取得失敗: {st}")
-        continue
-    
-    status, horses = parse_race(html, race_id)
-    if status == "ok":
-        all_horses.extend(horses)
-        success_count += 1
-        print(f"  ✓ {race_id} - {len(horses)}頭")
+print(f"\n[1/4] Drive上のデータを読み込み中...")
+hist_df = pd.read_pickle(pkl_path)
+print(f"  ✓ 行数: {len(hist_df)}行")
+
+print(f"\n[2/4] {TARGET_DATE} のレースをスクレイピング中...")
+race_ids = get_race_ids(TARGET_DATE)
+
+if not race_ids:
+    print("  本日は東京開催日ではありません。処理を終了します。")
+else:
+    all_results = []
+    for rid in race_ids:
+        results = parse_race(rid)
+        if results:
+            all_results.extend(results)
+            print(f"  ✓ {rid} → {len(results)}頭")
+        else:
+            print(f"  ❌ {rid} → 取得失敗（未発走の可能性）")
+
+    if all_results:
+        print(f"\n[3/4] マージしてDriveに保存中...")
+        new_df = pd.DataFrame(all_results)
+        hist_df = hist_df[~hist_df['レースID'].isin(race_ids)]
+        hist_df = pd.concat([hist_df, new_df], ignore_index=True)
+        hist_df.to_pickle(pkl_path)
+        print(f"  ✓ 更新後: {len(hist_df)}行 → Driveに保存完了")
+
+        print(f"\n[4/4] GitHubへアップロード中...")
+        try:
+            GITHUB_TOKEN = userdata.get('GITHUB_TOKEN')
+        except Exception:
+            GITHUB_TOKEN = None
+
+        if not GITHUB_TOKEN:
+            print("  ❌ GITHUB_TOKEN が設定されていません")
+        else:
+            OWNER, REPO, TAG, ASSET_NAME = "colynky-wq", "jra-auto-prediction", "v1.0", "history_data.pkl"
+            api_headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github+json"}
+
+            resp = requests.get(f"https://api.github.com/repos/{OWNER}/{REPO}/releases/tags/{TAG}", headers=api_headers)
+            release_data = resp.json()
+            release_id = release_data['id']
+
+            existing = next((a for a in release_data['assets'] if a['name'] == ASSET_NAME), None)
+            if existing:
+                d = requests.delete(f"https://api.github.com/repos/{OWNER}/{REPO}/releases/assets/{existing['id']}", headers=api_headers)
+                print(f"  （既存アセット削除: {'成功' if d.status_code == 204 else '失敗:' + str(d.status_code)}）")
+
+            upload_headers = {"Authorization": f"token {GITHUB_TOKEN}", "Content-Type": "application/octet-stream"}
+            with open(pkl_path, 'rb') as f:
+                up = requests.post(
+                    f"https://uploads.github.com/repos/{OWNER}/{REPO}/releases/{release_id}/assets?name={ASSET_NAME}",
+                    headers=upload_headers, data=f
+                )
+
+            if up.status_code == 201:
+                print(f"  ✅ アップロード成功！\n  {up.json()['browser_download_url']}")
+            else:
+                print(f"  ❌ アップロード失敗: {up.status_code}\n  {up.text[:300]}")
     else:
-        print(f"  ⚠ {race_id} 解析失敗: {status}")
+        print("\n⚠ 取得データなし（レースがまだ発走していない可能性）")
 
-print(f"  成功: {success_count}/{len(today_races)} レース")
-print(f"  取得馬数: {len(all_horses)}")
-
-if len(all_horses) == 0:
-    print("  ⚠ 本日のレース結果が取得できませんでした")
-    exit(0)
-
-# ⑤ 既存 pkl と統合
-print(f"\n[4/5] 既存データと統合中...")
-try:
-    hist = pickle.load(open('history_data.pkl', 'rb'))
-    print(f"  既存データ: {len(hist):,}行")
-except:
-    hist = pd.DataFrame()
-    print(f"  既存データ: なし")
-
-new_df = pd.DataFrame(all_horses)
-hist = pd.concat([hist, new_df], ignore_index=True)
-print(f"  統合後: {len(hist):,}行")
-
-# ⑥ pkl に保存
-print(f"\n[5/5] pkl を保存中...")
-with open('history_data.pkl', 'wb') as f:
-    pickle.dump(hist, f)
-print(f"  ✓ 保存完了")
-
-print("\n" + "=" * 80)
-print("✓ スクレイピング＆更新完了！")
-print("=" * 80)
+print("\n完了！")
