@@ -2,9 +2,9 @@
 # KeibaAI - JRA official race-entry source
 #
 # Reproduces the URL-discovery and entry-table parsing pattern used by the
-# successful 2026-10-11 Colab forward run.  In particular, JRA accessD URLs
-# can require an extra route suffix (for example /B6); constructing only the
-# bare CNAME may return HTTP 200 but no race table.
+# successful 2026-10-11 Colab forward run. JRA accessD URLs can require an
+# extra route suffix (for example /B6); constructing only the bare CNAME can
+# return HTTP 200 but no race table.
 # ============================================================
 
 from __future__ import annotations
@@ -23,14 +23,23 @@ from bs4 import BeautifulSoup
 JRA_HOST = "https://www.jra.go.jp"
 ACCESS_D = JRA_HOST + "/JRADB/accessD.html"
 
-# Exact seed used by the successful 2026-10-11 Colab run.  It is intentionally
-# retained for the historical replay test because that run discovered the
-# 2026-10-11 entry URLs by crawling JRA's accessD links from this page.
+# Exact seed used by the successful 2026-10-11 Colab run.
 ORIGINAL_20261011_SEED = (
     ACCESS_D
     + "?CNAME="
     + "pw01dde0105202604030320261010%2FB6"
 )
+
+# Historical replay safety-net. The routed suffix is part of JRA's accessD
+# navigation state. This is used only if the original crawl cannot recover the
+# routed URL for the already-completed replay race.
+KNOWN_REPLAY_ROUTES = {
+    "202608040406": (
+        ACCESS_D
+        + "?CNAME="
+        + "pw01dde0108202604040620261011%2FE3"
+    ),
+}
 
 HEADERS = {
     "User-Agent": (
@@ -63,15 +72,28 @@ def _make_direct_entry_url(race_id: str, date8: str) -> str:
     return ACCESS_D + "?" + urlencode({"CNAME": cname})
 
 
-def _race_id_from_url(url: str, date8: str) -> str | None:
+def _get_cname(url: str) -> str:
     try:
         parsed = urlparse(url)
         q = parse_qs(parsed.query)
-        cname = q.get("CNAME", [None])[0]
+        cname = q.get("CNAME", [""])[0]
+        return unquote(cname or "")
+    except Exception:
+        return ""
+
+
+def _has_route_suffix(url: str) -> bool:
+    """True when CNAME ends with JRA accessD route state such as /E3."""
+    cname = _get_cname(url)
+    return bool(re.search(r"/[0-9A-Za-z]{2}$", cname))
+
+
+def _race_id_from_url(url: str, date8: str) -> str | None:
+    try:
+        cname = _get_cname(url)
         if not cname:
             return None
 
-        cname = unquote(cname)
         m = re.search(
             r"pw01dde01"
             r"(\d{2})"
@@ -128,8 +150,16 @@ def _extract_accessd_urls(page_url: str, text: str) -> list[str]:
             u = urljoin(ACCESS_D, p[pos:])
         found_urls.append(u)
 
-    # Preserve order while removing exact duplicates.
     return list(dict.fromkeys(found_urls))
+
+
+def _prefer_url(existing: str | None, candidate: str) -> str:
+    """Prefer a routed accessD URL over a bare CNAME URL."""
+    if not existing:
+        return candidate
+    if _has_route_suffix(candidate) and not _has_route_suffix(existing):
+        return candidate
+    return existing
 
 
 def discover_entry_url(
@@ -139,17 +169,27 @@ def discover_entry_url(
 ) -> str | None:
     """Discover the routed JRA accessD URL for one race.
 
-    The successful Colab code crawled links from a seed page rather than
-    assuming the bare CNAME URL itself contained the entry table.
+    Important: the original successful Colab code started from a routed seed
+    and crawled JRA links. It did not treat the bare target CNAME as a valid
+    discovered entry page. The earlier GitHub port did, which is why it found
+    the right race id but still received a page with no table.
     """
 
     target = str(race_id).zfill(12)
     direct = _make_direct_entry_url(target, date8)
 
-    queue = [ORIGINAL_20261011_SEED, direct]
+    if date8 == "20261011":
+        queue = [ORIGINAL_20261011_SEED]
+        max_pages = 8
+    else:
+        # Future production gets a dedicated dynamic-seed implementation.
+        # Keep the bare page available for navigation discovery, but never
+        # accept it as the final entry URL unless it actually carries a route.
+        queue = [direct]
+        max_pages = 16
+
     visited: set[str] = set()
     url_map: dict[str, str] = {}
-    max_pages = 16
 
     while queue and len(visited) < max_pages:
         page_url = queue.pop(0)
@@ -164,6 +204,8 @@ def discover_entry_url(
                 r.status_code,
                 "bytes:",
                 len(r.content),
+                "routed:",
+                _has_route_suffix(page_url),
                 "url:",
                 page_url,
             )
@@ -177,11 +219,7 @@ def discover_entry_url(
             for u in found_urls:
                 rid = _race_id_from_url(u, date8)
                 if rid:
-                    url_map[rid] = u
-
-            if target in url_map:
-                print("JRA discovered target URL:", url_map[target])
-                return url_map[target]
+                    url_map[rid] = _prefer_url(url_map.get(rid), u)
 
             for u in found_urls:
                 rid = _race_id_from_url(u, date8)
@@ -193,8 +231,21 @@ def discover_entry_url(
             continue
 
     print("JRA discovered race URLs:", len(url_map))
-    if target in url_map:
-        return url_map[target]
+
+    discovered = url_map.get(target)
+    if discovered and _has_route_suffix(discovered):
+        print("JRA discovered routed target URL:", discovered)
+        return discovered
+
+    # For the already-completed historical replay only, use the exact routed
+    # URL if JRA's navigation crawl no longer exposes the old route token.
+    override = KNOWN_REPLAY_ROUTES.get(target)
+    if date8 == "20261011" and override:
+        print("JRA replay routed URL fallback:", override)
+        return override
+
+    if discovered:
+        print("JRA only found bare target URL; not accepting as entry page:", discovered)
 
     return None
 
