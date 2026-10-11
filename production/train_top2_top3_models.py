@@ -27,7 +27,6 @@
 from __future__ import annotations
 
 import json
-import math
 import os
 import shutil
 import sys
@@ -77,6 +76,32 @@ PARAMS = {
     "force_col_wise": True,
 }
 
+BASE_COLS = [
+    "レースID",
+    "日付",
+    "馬番",
+    "馬名",
+    "馬キー",
+    "年齢",
+    "斤量",
+    "騎手",
+    "調教師",
+    "着順",
+    "人気",
+    "単勝オッズ",
+    "出典",
+    "芝ダ",
+    "距離",
+    "クラス",
+    "障害",
+    "馬体重",
+    "増減",
+    "タイム秒",
+    "上がり3F",
+    "初角",
+    "頭数",
+]
+
 
 # ============================================================
 # Helpers
@@ -113,12 +138,7 @@ def brier(y: np.ndarray, p: np.ndarray) -> float:
 
 
 def plackett_luce_top2_top3(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-    """Exact Top2 / Top3 marginal probabilities from race win strengths.
-
-    The input market probability is already normalized to sum to 1 within
-    each race.  For each race we use the Plackett-Luce sequential ranking
-    model and sum the probabilities of finishing in positions 1..2 / 1..3.
-    """
+    """Exact Top2 / Top3 marginal probabilities from race win strengths."""
 
     p_all = pd.to_numeric(df["市場確率"], errors="coerce").to_numpy(dtype=float)
     out2 = np.full(len(df), np.nan, dtype=float)
@@ -127,16 +147,16 @@ def plackett_luce_top2_top3(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     for _, pos in df.groupby("レースID", sort=False).indices.items():
         pos = np.asarray(pos, dtype=int)
         q = p_all[pos].astype(float)
+
         if len(q) < 3 or not np.isfinite(q).all() or q.sum() <= 0:
             continue
 
         q = q / q.sum()
         n = len(q)
 
-        # Probability that target i finishes second:
-        # sum_j P(j first) * P(i second | j first)
-        first = q[:, None]                  # j x 1
-        target = q[None, :]                 # 1 x i
+        # P(target finishes second)
+        first = q[:, None]
+        target = q[None, :]
         den2 = 1.0 - first
         term2 = np.divide(
             first * target,
@@ -147,9 +167,7 @@ def plackett_luce_top2_top3(df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
         np.fill_diagonal(term2, 0.0)
         rank2 = term2.sum(axis=0)
 
-        # Probability that target i finishes third:
-        # sum_{j,k distinct from i} P(j first) * P(k second | j)
-        #                            * P(i third | j,k)
+        # P(target finishes third)
         qj = q[:, None, None]
         qk = q[None, :, None]
         qi = q[None, None, :]
@@ -182,7 +200,7 @@ def normalize_race_total(
     raw_prob: np.ndarray,
     target_total: int,
 ) -> np.ndarray:
-    """Shift logits per race so marginal probabilities sum to Top-K count."""
+    """Shift logits per race so marginal probabilities sum to K exactly."""
 
     p = np.clip(np.asarray(raw_prob, dtype=float), 1e-9, 1.0 - 1e-9)
     z = logit(p)
@@ -192,9 +210,14 @@ def normalize_race_total(
         pos = np.asarray(pos, dtype=int)
         zz = z[pos]
         n = len(pos)
-        total = min(int(target_total), n - 1 if n > 1 else 1)
 
+        if n <= target_total:
+            out[pos] = 1.0
+            continue
+
+        total = float(target_total)
         lo, hi = -30.0, 30.0
+
         for _ in range(80):
             mid = (lo + hi) / 2.0
             s = float(sigmoid(zz + mid).sum())
@@ -202,13 +225,14 @@ def normalize_race_total(
                 lo = mid
             else:
                 hi = mid
+
         out[pos] = sigmoid(zz + (lo + hi) / 2.0)
 
     return out
 
 
 def topk_capture(df: pd.DataFrame, prob: np.ndarray, k: int) -> float:
-    """Share of actual Top-K finishers captured by the K highest predictions."""
+    """Share of actual Top-K finishers captured by K highest predictions."""
 
     temp = df[["レースID", "着順"]].copy()
     temp["p"] = np.asarray(prob, dtype=float)
@@ -233,18 +257,23 @@ def evaluate(
     corrected: np.ndarray,
     k: int,
 ) -> dict:
+    base_ll = binary_logloss(y, baseline)
+    model_ll = binary_logloss(y, corrected)
+    base_br = brier(y, baseline)
+    model_br = brier(y, corrected)
+
     return {
         "rows": int(len(frame)),
         "races": int(frame["レースID"].nunique()),
         "actualRate": float(np.mean(y)),
         "baselineMean": float(np.mean(baseline)),
         "modelMean": float(np.mean(corrected)),
-        "baselineLogloss": binary_logloss(y, baseline),
-        "modelLogloss": binary_logloss(y, corrected),
-        "loglossImprovement": binary_logloss(y, baseline) - binary_logloss(y, corrected),
-        "baselineBrier": brier(y, baseline),
-        "modelBrier": brier(y, corrected),
-        "brierImprovement": brier(y, baseline) - brier(y, corrected),
+        "baselineLogloss": base_ll,
+        "modelLogloss": model_ll,
+        "loglossImprovement": base_ll - model_ll,
+        "baselineBrier": base_br,
+        "modelBrier": model_br,
+        "brierImprovement": base_br - model_br,
         "baselineTopKCapture": topk_capture(frame, baseline, k),
         "modelTopKCapture": topk_capture(frame, corrected, k),
         "meanRaceProbabilitySum": float(
@@ -264,7 +293,7 @@ def train_one(
     baseline_col: str,
     k: int,
     model_name: str,
-) -> tuple[lgb.Booster, dict]:
+) -> tuple[lgb.Booster, dict, np.ndarray]:
     print()
     print("=" * 110)
     print(f"TRAIN {model_name}")
@@ -320,13 +349,7 @@ def train_one(
     p_valid_pre = sigmoid(logit(base_valid) + raw_valid)
     p_valid = normalize_race_total(valid, p_valid_pre, k)
 
-    metrics = evaluate(
-        valid,
-        y_valid,
-        base_valid,
-        p_valid,
-        k,
-    )
+    metrics = evaluate(valid, y_valid, base_valid, p_valid, k)
     metrics["bestIteration"] = best_iteration
     metrics["preNormalizationMean"] = float(np.mean(p_valid_pre))
 
@@ -355,7 +378,7 @@ def train_one(
         num_boost_round=best_iteration,
     )
 
-    return final_model, metrics
+    return final_model, metrics, p_valid
 
 
 def main() -> None:
@@ -373,15 +396,12 @@ def main() -> None:
     hist = pd.read_parquet(HISTORY_PATH)
     hist["日付"] = pd.to_datetime(hist["日付"], errors="coerce")
 
-    if list(hist.columns) != [
-        "レースID", "日付", "馬番", "馬名", "馬キー", "年齢", "斤量", "騎手", "調教師",
-        "着順", "人気", "単勝オッズ", "出典", "芝ダ", "距離", "クラス", "障害", "馬体重",
-        "増減", "タイム秒", "上がり3F", "初角", "頭数",
-    ]:
+    if list(hist.columns) != BASE_COLS:
         fail("production_history.parquet is not the expected 23-column schema")
 
     source_latest = hist["日付"].max()
     work = hist.loc[hist["日付"] <= FINAL_END].copy()
+    work = work.sort_values(["日付", "レースID", "馬番"]).reset_index(drop=True)
 
     if (work["日付"].dt.year >= 2026).any():
         fail("2026 row entered the model-training frame")
@@ -400,7 +420,7 @@ def main() -> None:
         & (~work["障害"].fillna(False).astype(bool))
         & (work["頭数"] >= 3)
     )
-    d = work.loc[eligible].copy()
+    d = work.loc[eligible].copy().reset_index(drop=True)
 
     if d.empty:
         fail("no eligible flat historical rows")
@@ -420,9 +440,9 @@ def main() -> None:
     if d[["market_top2", "market_top3"]].isna().any().any():
         fail("market Top2/Top3 baseline contains missing values")
 
-    train = d.loc[d["日付"] <= TRAIN_END].copy()
-    valid = d.loc[(d["日付"] >= VALID_START) & (d["日付"] <= VALID_END)].copy()
-    all_final = d.loc[d["日付"] <= FINAL_END].copy()
+    train = d.loc[d["日付"] <= TRAIN_END].copy().reset_index(drop=True)
+    valid = d.loc[(d["日付"] >= VALID_START) & (d["日付"] <= VALID_END)].copy().reset_index(drop=True)
+    all_final = d.loc[d["日付"] <= FINAL_END].copy().reset_index(drop=True)
 
     print("train 2014-2024:", f"{len(train):,}", "rows /", train["レースID"].nunique(), "races")
     print("valid 2025     :", f"{len(valid):,}", "rows /", valid["レースID"].nunique(), "races")
@@ -431,24 +451,26 @@ def main() -> None:
     if train.empty or valid.empty:
         fail("train or 2025 validation split is empty")
 
-    model2, metrics2 = train_one(
-        train, valid, all_final,
-        "target_top2", "market_top2", 2,
+    model2, metrics2, p2_valid = train_one(
+        train,
+        valid,
+        all_final,
+        "target_top2",
+        "market_top2",
+        2,
         "Top2 (2着以内)",
     )
-    model3, metrics3 = train_one(
-        train, valid, all_final,
-        "target_top3", "market_top3", 3,
+    model3, metrics3, p3_valid = train_one(
+        train,
+        valid,
+        all_final,
+        "target_top3",
+        "market_top3",
+        3,
         "Top3 (3着以内)",
     )
 
-    # Cross-model monotonicity on the untouched 2025 validation split.
-    X_valid = valid[ALLF].astype(np.float32)
-    raw2 = model2.predict(X_valid, raw_score=True, validate_features=True)
-    raw3 = model3.predict(X_valid, raw_score=True, validate_features=True)
-    p2 = normalize_race_total(valid, sigmoid(logit(valid["market_top2"].to_numpy()) + raw2), 2)
-    p3 = normalize_race_total(valid, sigmoid(logit(valid["market_top3"].to_numpy()) + raw3), 3)
-    monotonic_violations = int(np.sum(p2 > p3 + 1e-12))
+    monotonic_violations = int(np.sum(p2_valid > p3_valid + 1e-12))
     monotonic_rate = float(monotonic_violations / len(valid))
 
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
@@ -506,11 +528,7 @@ def main() -> None:
     report_md = ARTIFACT_DIR / "top2_top3_model_report.md"
     report_md.write_text("\n".join(md) + "\n", encoding="utf-8")
 
-    # Minimal metadata for future prediction integration.
-    for k, metrics, model_path in [
-        (2, metrics2, model2_path),
-        (3, metrics3, model3_path),
-    ]:
+    for k, metrics in [(2, metrics2), (3, metrics3)]:
         info = {
             "modelName": f"LightGBM_Top{k}_market_correction_fixed_2025",
             "meaning": f"P(finish <= {k})",
