@@ -1,9 +1,10 @@
 # ============================================================
 # KeibaAI GitHub Actions - one race production dry run
 #
-# Uses:
-# - frozen 10-minute odds and expected output from RaceData.json
-# - live race-entry page from netkeiba
+# Replays one already-published 10-minute prediction with:
+# - frozen 10-minute win odds from RaceData.json
+# - the SAME JRA official entry-table parser used by the 2026-10-11
+#   Colab forward run
 # - production_history.parquet (23 columns)
 # - portable feature_engine.py
 # - fixed LightGBM model
@@ -18,6 +19,7 @@ import sys
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 
 import lightgbm as lgb
 import numpy as np
@@ -27,26 +29,50 @@ from bs4 import BeautifulSoup
 
 from feature_engine import ALLF, add_features, add_rating
 
+
+# ============================================================
+# 1. Paths / test target
+# ============================================================
+
 JST = timezone(timedelta(hours=9))
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
+
 HISTORY_PATH = HERE / "production_history.parquet"
 MODEL_PATH = HERE / "lightgbm_fixed_2025.txt"
 RACEDATA_PATH = REPO / "RaceData.json"
 
 DEFAULT_DATE = "20261011"
 DEFAULT_RACE_ID = "202608040406"  # Kyoto 6R; known research-candidate race
+
 TEST_DATE8 = os.environ.get("KEIBAAI_DRYRUN_DATE", "").strip() or DEFAULT_DATE
 TEST_RACE_ID = os.environ.get("KEIBAAI_DRYRUN_RACE_ID", "").strip() or DEFAULT_RACE_ID
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
-    ),
-    "Accept-Language": "ja,en;q=0.8",
-    "Cache-Control": "no-cache",
-}
+JRA_HOST = "https://www.jra.go.jp"
+ACCESS_D = JRA_HOST + "/JRADB/accessD.html"
+
+SESSION = requests.Session()
+SESSION.headers.update(
+    {
+        "User-Agent": (
+            "Mozilla/5.0 "
+            "(Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 "
+            "(KHTML, like Gecko) "
+            "Chrome/140.0 Safari/537.36"
+        ),
+        "Accept-Language": "ja,en;q=0.8",
+        "Cache-Control": "no-cache",
+    }
+)
+
+
+# ============================================================
+# 2. Helpers
+# ============================================================
+
+def jst_now() -> datetime:
+    return datetime.now(JST)
 
 
 def fail(message: str) -> None:
@@ -58,32 +84,56 @@ def fail(message: str) -> None:
     sys.exit(1)
 
 
-def norm(value) -> str:
-    s = unicodedata.normalize("NFKC", str(value or ""))
-    s = re.sub(r"[\s\u3000]+", "", s)
-    s = s.replace("▲", "").replace("△", "").replace("☆", "").replace("★", "")
+def compact_name(x) -> str:
+    """Exact name normalizer used by the 2026-10-11 forward notebook."""
+    if pd.isna(x):
+        return ""
+
+    s = unicodedata.normalize("NFKC", str(x))
+
+    # Apprentice/display symbols used on JRA pages.
+    s = re.sub(r"^[☆★△▲◇]", "", s)
+
+    # Spaces, Japanese middle dot, and dots.
+    s = re.sub(r"[\s・\.．]", "", s)
+
     return s.strip()
 
 
-def history_match(value, allowed: set[str], label: str) -> str:
-    """Map current-page jockey/trainer spelling to one historical spelling."""
-    if value in allowed:
-        return value
+def match_history_name(current_name, history_values):
+    """Exact matching rule used by the 2026-10-11 forward notebook."""
+    cn = compact_name(current_name)
 
-    target = norm(value)
-    exact = [x for x in allowed if norm(x) == target]
-    if len(exact) == 1:
-        return exact[0]
+    if not cn:
+        return None
 
-    # Conservative fallback for abbreviated foreign names.
-    near = [x for x in allowed if norm(x).startswith(target) or target.startswith(norm(x))]
-    near = [x for x in near if abs(len(norm(x)) - len(target)) <= 4]
-    if len(near) == 1:
-        return near[0]
+    candidates = []
 
-    raise RuntimeError(
-        f"{label} name could not be matched uniquely: {value!r} / candidates={near[:10]}"
-    )
+    for hv in history_values:
+        hn = compact_name(hv)
+
+        if not hn:
+            continue
+
+        # Exact match.
+        if cn == hn:
+            candidates.append((100000 + len(hn), hv))
+            continue
+
+        # Prefix-style abbreviation matching.
+        if cn.startswith(hn):
+            candidates.append((50000 + len(hn), hv))
+            continue
+
+        # Foreign-name abbreviation matching.
+        if hn in cn:
+            candidates.append((10000 + len(hn), hv))
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda z: z[0], reverse=True)
+    return candidates[0][1]
 
 
 def load_expected_race() -> dict:
@@ -100,6 +150,7 @@ def load_expected_race() -> dict:
 
 def derive_class(race_name: str) -> str:
     name = str(race_name)
+
     if "新馬" in name:
         return "新馬"
     if "未勝利" in name:
@@ -110,258 +161,312 @@ def derive_class(race_name: str) -> str:
         return "2勝"
     if "3勝" in name:
         return "3勝"
+
     return "OP"
 
 
-def td_classes(td) -> set[str]:
-    return {str(x).lower() for x in (td.get("class") or [])}
+# ============================================================
+# 3. JRA official entry URL
+# ============================================================
 
+def make_direct_entry_url(race_id: str) -> str:
+    """Same fallback URL construction used by the formal Colab forward run."""
+    rid = str(race_id).zfill(12)
 
-def latest_historical_age(hist: pd.DataFrame, horse_name: str, test_date: pd.Timestamp):
-    """Fallback only when the current HTML does not expose sex/age text.
+    year = rid[0:4]
+    venue = rid[4:6]
+    meeting = rid[6:8]
+    day = rid[8:10]
+    race_no = rid[10:12]
 
-    JRA horse age advances by calendar year, so a prior observed age can be
-    moved forward by the difference in calendar years.
-    """
-    d = (
-        hist.loc[
-            hist["馬名"].astype(str).eq(str(horse_name)),
-            ["日付", "年齢"],
-        ]
-        .dropna(subset=["日付", "年齢"])
-        .sort_values("日付")
+    cname = (
+        "pw01dde01"
+        + venue
+        + year
+        + meeting
+        + day
+        + race_no
+        + TEST_DATE8
     )
 
-    if d.empty:
-        return None
-
-    last = d.iloc[-1]
-    last_date = pd.Timestamp(last["日付"])
-    last_age = int(last["年齢"])
-    return last_age + int(test_date.year - last_date.year)
+    return ACCESS_D + "?" + urlencode({"CNAME": cname})
 
 
-def parse_entry_page(
-    expected_race: dict,
-    hist: pd.DataFrame,
-    test_date: pd.Timestamp,
-) -> pd.DataFrame:
-    """Parse only the actual shutuba table.
+# ============================================================
+# 4. JRA official entry parser
+# ============================================================
 
-    Important: netkeiba pages can contain other `tr.HorseList` rows (for odds
-    widgets etc.).  Selecting `tr.HorseList` globally can therefore pick a row
-    that has horse name and odds but no sex/age or carried weight.  We first
-    select the shutuba table and only then inspect horse rows inside it.
-    """
+def fetch_entry_table(race_id: str):
+    """Port of the JRA official parser used by the formal 10-minute run."""
+    url = make_direct_entry_url(race_id)
+    last_error = None
 
-    url = f"https://race.netkeiba.com/race/shutuba.html?race_id={TEST_RACE_ID}"
-    r = requests.get(url, headers=HEADERS, timeout=30)
-    print("entry HTTP:", r.status_code, "bytes:", len(r.content))
+    try:
+        r = SESSION.get(url, timeout=20)
+        fetch_time = jst_now()
 
-    if r.status_code != 200 or len(r.content) < 5000:
-        fail(f"Could not fetch usable entry page: HTTP {r.status_code}")
+        print("JRA entry URL:", url)
+        print("JRA entry HTTP:", r.status_code, "bytes:", len(r.content))
 
-    soup = BeautifulSoup(
-        r.content.decode("utf-8", errors="replace"),
-        "html.parser",
+        if r.status_code != 200:
+            raise RuntimeError(f"HTTP={r.status_code}")
+
+        enc = r.apparent_encoding or "shift_jis"
+        text = r.content.decode(enc, errors="replace")
+
+        soup = BeautifulSoup(text, "html.parser")
+        table = soup.find("table")
+
+        if table is None:
+            raise RuntimeError("tableなし")
+
+        rows = []
+
+        for tr in table.find_all("tr"):
+            tds = tr.find_all("td")
+
+            if len(tds) < 4:
+                continue
+
+            # ----------------------------------------------------
+            # Horse number
+            # ----------------------------------------------------
+            uma_raw = tds[1].get_text(" ", strip=True)
+            um = re.search(r"\d+", uma_raw)
+
+            if not um:
+                continue
+
+            uma = int(um.group())
+
+            if uma < 1 or uma > 18:
+                continue
+
+            # ----------------------------------------------------
+            # Horse information cell
+            # ----------------------------------------------------
+            info_td = tds[2]
+            info_text = re.sub(
+                r"\s+",
+                " ",
+                info_td.get_text(" ", strip=True),
+            )
+
+            links = [
+                a.get_text(" ", strip=True)
+                for a in info_td.find_all("a")
+                if a.get_text(" ", strip=True)
+            ]
+
+            horse_name = links[0] if links else ""
+
+            if not horse_name:
+                m_name = re.match(
+                    r"^(.*?)\s*\d+(?:\.\d+)?\s*\(\s*\d+番人気",
+                    info_text,
+                )
+
+                if m_name:
+                    horse_name = m_name.group(1).strip()
+
+            if not horse_name:
+                continue
+
+            # ----------------------------------------------------
+            # Body weight / change
+            # ----------------------------------------------------
+            m_weight = re.search(
+                r"(\d{3})\s*kg\s*\(\s*([+-]?\d+)\s*\)",
+                info_text,
+            )
+
+            if m_weight:
+                body_weight = int(m_weight.group(1))
+                diff = int(m_weight.group(2))
+            else:
+                body_weight = np.nan
+                diff = np.nan
+
+            # ----------------------------------------------------
+            # Trainer
+            # ----------------------------------------------------
+            trainer_full = None
+
+            affiliation_node = info_td.find(
+                string=re.compile(r"\(\s*(美浦|栗東)\s*\)")
+            )
+
+            if affiliation_node is not None:
+                trainer_a = affiliation_node.find_previous("a")
+
+                if trainer_a is not None and info_td in trainer_a.parents:
+                    trainer_full = trainer_a.get_text(" ", strip=True)
+
+            # ----------------------------------------------------
+            # Sex/age, carried weight, jockey
+            # ----------------------------------------------------
+            sex_td = tds[3]
+            sex_text = re.sub(
+                r"\s+",
+                " ",
+                sex_td.get_text(" ", strip=True),
+            )
+
+            m_age = re.search(
+                r"(牡|牝|せん|セン|セ)\s*(\d+)",
+                sex_text,
+            )
+
+            if not m_age:
+                raise RuntimeError(
+                    f"性齢解析失敗 馬番{uma}: {sex_text}"
+                )
+
+            age = int(m_age.group(2))
+
+            m_kg = re.search(
+                r"(\d+(?:\.\d+)?)\s*kg",
+                sex_text,
+            )
+
+            if not m_kg:
+                raise RuntimeError(
+                    f"斤量解析失敗 馬番{uma}: {sex_text}"
+                )
+
+            carried_weight = float(m_kg.group(1))
+
+            jockey_links = [
+                a.get_text(" ", strip=True)
+                for a in sex_td.find_all("a")
+                if a.get_text(" ", strip=True)
+            ]
+
+            if jockey_links:
+                jockey_full = jockey_links[-1]
+            else:
+                jockey_full = re.sub(
+                    r"^.*?\d+(?:\.\d+)?\s*kg",
+                    "",
+                    sex_text,
+                ).strip()
+
+            rows.append(
+                {
+                    "レースID": race_id,
+                    "馬番": uma,
+                    "馬名": horse_name,
+                    "年齢": age,
+                    "斤量": carried_weight,
+                    "騎手_JRA": jockey_full,
+                    "調教師_JRA": trainer_full,
+                    "馬体重": body_weight,
+                    "増減": diff,
+                }
+            )
+
+        d = pd.DataFrame(rows)
+
+        if d.empty:
+            raise RuntimeError("出走馬解析0頭")
+
+        d = (
+            d.sort_values("馬番")
+            .drop_duplicates("馬番", keep="last")
+            .reset_index(drop=True)
+        )
+
+        return d, fetch_time, url
+
+    except Exception as e:
+        last_error = str(e)
+
+    raise RuntimeError(
+        f"JRA出馬表取得失敗: {race_id} / {last_error}"
     )
 
-    table = soup.select_one("table.Shutuba_Table") or soup.select_one("table.RaceTable01")
-    if table is None:
-        fail("Could not find Shutuba_Table / RaceTable01 in entry page")
 
-    horse_rows = table.select("tr.HorseList")
-    if not horse_rows:
-        horse_rows = table.select("tr")
+# ============================================================
+# 5. Known formal inputs for the default replay race
+#    (diagnostic only; prediction never uses these constants)
+# ============================================================
 
-    print("entry table rows:", len(horse_rows))
+KNOWN_DEFAULT_INPUTS = {
+    1: ("ブラックレジェンド", "今村聖", 452.0, 4.0),
+    2: ("ココロヅヨサ", "北村友一", 458.0, -4.0),
+    3: ("キタノシャカール", "松若風馬", 428.0, -4.0),
+    4: ("ミヤジオズ", "田口貫", 502.0, 12.0),
+    5: ("ブルーストレイル", "城戸義政", 470.0, 6.0),
+    6: ("ルファーダ", "幸英明", 494.0, 0.0),
+    7: ("アルビオン", "西塚洸", 462.0, -4.0),
+    8: ("コルヴァス", "坂井瑠星", 510.0, 16.0),
+    9: ("クリュギスト", "松山弘平", 506.0, 8.0),
+    10: ("ジャスティンダラス", "高杉吏", 538.0, 18.0),
+    11: ("ゴールデンスラム", "小沢大仁", 492.0, 6.0),
+    12: ("メイショウオグマ", "国分恭介", 494.0, 10.0),
+    13: ("ダイメイクマモト", "太宰啓介", 482.0, 6.0),
+    14: ("レザーアンドレース", "田山旺", 472.0, 0.0),
+    15: ("ブレイジングスター", "酒井学", 488.0, 0.0),
+    16: ("ハイロード", "斎藤新", 482.0, 32.0),
+}
 
-    expected_by_name = {
-        norm(h["name"]): h
-        for h in expected_race["horses"]
-    }
 
-    rows = []
-    age_history_fallbacks = []
+def check_known_default_inputs(entries: pd.DataFrame) -> None:
+    if TEST_DATE8 != DEFAULT_DATE or TEST_RACE_ID != DEFAULT_RACE_ID:
+        return
 
-    for tr in horse_rows:
-        anchors = tr.find_all("a")
+    mismatches = []
 
-        expected = None
-        horse_name = None
-
-        for a in anchors:
-            text = a.get_text(" ", strip=True)
-            key = norm(text)
-            if key in expected_by_name:
-                horse_name = str(expected_by_name[key]["name"])
-                expected = expected_by_name[key]
-                break
+    for _, row in entries.sort_values("馬番").iterrows():
+        no = int(row["馬番"])
+        expected = KNOWN_DEFAULT_INPUTS.get(no)
 
         if expected is None:
+            mismatches.append(f"馬番{no}: known input missing")
             continue
 
-        tds = tr.find_all("td")
-        cell_texts = [re.sub(r"\s+", " ", td.get_text(" ", strip=True)).strip() for td in tds]
-        row_text = " | ".join(cell_texts)
+        exp_name, exp_jockey, exp_weight, exp_diff = expected
 
-        # ----------------------------------------------------
-        # Age
-        # ----------------------------------------------------
-        age = None
-
-        # Prefer a dedicated sex/age cell such as `牡3` / `牝4`.
-        for td, text in zip(tds, cell_texts):
-            m = re.fullmatch(r"(?:牡|牝|セ|騸)\s*(\d+)", text)
-            if m:
-                age = int(m.group(1))
-                break
-
-            classes = td_classes(td)
-            if any("barei" in c or "age" in c for c in classes):
-                m = re.search(r"(?:牡|牝|セ|騸)?\s*(\d+)", text)
-                if m:
-                    age = int(m.group(1))
-                    break
-
-        if age is None:
-            age = latest_historical_age(hist, horse_name, test_date)
-            if age is not None:
-                age_history_fallbacks.append(horse_name)
-
-        if age is None:
-            raise RuntimeError(
-                f"Age could not be parsed or recovered from history: {horse_name} / {row_text[:400]}"
+        if str(row["馬名"]) != exp_name:
+            mismatches.append(
+                f"馬番{no} 馬名 {row['馬名']!r} != {exp_name!r}"
             )
 
-        # ----------------------------------------------------
-        # Jockey / trainer
-        # ----------------------------------------------------
-        jockey = None
-        trainer = None
-        jockey_td_index = None
-
-        for a in anchors:
-            href = str(a.get("href") or "").lower()
-            text = a.get_text(" ", strip=True)
-
-            if text and jockey is None and "jockey" in href:
-                jockey = text
-                parent_td = a.find_parent("td")
-                if parent_td in tds:
-                    jockey_td_index = tds.index(parent_td)
-
-            if text and trainer is None and "trainer" in href:
-                trainer = text
-
-        # Class-based fallback.
-        if not jockey or not trainer:
-            for idx, (td, text) in enumerate(zip(tds, cell_texts)):
-                classes = td_classes(td)
-
-                if not jockey and any("jockey" in c for c in classes):
-                    jockey = text
-                    jockey_td_index = idx
-
-                if not trainer and any("trainer" in c for c in classes):
-                    trainer = text
-
-        if not jockey or not trainer:
-            raise RuntimeError(
-                f"Jockey/trainer could not be parsed: {horse_name} / "
-                f"jockey={jockey!r} trainer={trainer!r} / {row_text[:400]}"
+        if str(row["騎手"]) != exp_jockey:
+            mismatches.append(
+                f"馬番{no} 騎手 {row['騎手']!r} != {exp_jockey!r}"
             )
 
-        # ----------------------------------------------------
-        # Carried weight
-        # ----------------------------------------------------
-        carried = None
+        weight = pd.to_numeric(pd.Series([row["馬体重"]]), errors="coerce").iloc[0]
+        diff = pd.to_numeric(pd.Series([row["増減"]]), errors="coerce").iloc[0]
 
-        # The carried-weight cell is normally before the jockey cell.
-        search_indices = range(len(tds))
-        if jockey_td_index is not None:
-            search_indices = range(jockey_td_index - 1, -1, -1)
-
-        for idx in search_indices:
-            text = cell_texts[idx]
-            if re.fullmatch(r"(?:4[5-9]|5\d|6[0-5])(?:\.\d)?", text):
-                carried = float(text)
-                break
-
-        # Dedicated weight-class fallback, but reject 3-digit body weights.
-        if carried is None:
-            for td, text in zip(tds, cell_texts):
-                classes = td_classes(td)
-                if any("weight" in c for c in classes):
-                    if re.fullmatch(r"(?:4[5-9]|5\d|6[0-5])(?:\.\d)?", text):
-                        carried = float(text)
-                        break
-
-        if carried is None:
-            raise RuntimeError(
-                f"Carried weight could not be parsed: {horse_name} / {row_text[:400]}"
+        if not np.isfinite(weight) or abs(float(weight) - exp_weight) > 1e-12:
+            mismatches.append(
+                f"馬番{no} 馬体重 {row['馬体重']!r} != {exp_weight}"
             )
 
-        # ----------------------------------------------------
-        # Body weight / change
-        # ----------------------------------------------------
-        body_weight = np.nan
-        body_change = np.nan
+        if not np.isfinite(diff) or abs(float(diff) - exp_diff) > 1e-12:
+            mismatches.append(
+                f"馬番{no} 増減 {row['増減']!r} != {exp_diff}"
+            )
 
-        for text in cell_texts:
-            m = re.search(r"(?<!\d)(\d{3})\s*\(\s*([+-]?\d+)\s*\)", text)
-            if m:
-                body_weight = float(m.group(1))
-                body_change = float(m.group(2))
-                break
+    print("formal-input replay check:", "OK" if not mismatches else "MISMATCH")
 
-        rows.append(
-            {
-                "馬番": int(expected["number"]),
-                "馬名": horse_name,
-                "年齢": int(age),
-                "斤量": float(carried),
-                "騎手_raw": str(jockey),
-                "調教師_raw": str(trainer),
-                "馬体重": body_weight,
-                "増減": body_change,
-            }
-        )
+    if mismatches:
+        for x in mismatches[:30]:
+            print("  ", x)
+        fail("JRA official entry inputs differ from the saved formal Kyoto 6R inputs")
 
-    if age_history_fallbacks:
-        print(
-            "age recovered from pre-race history:",
-            len(age_history_fallbacks),
-            "/",
-            age_history_fallbacks[:10],
-        )
 
-    df = pd.DataFrame(rows)
-
-    if df.empty:
-        fail("No expected horses were parsed from the shutuba table")
-
-    df = df.sort_values("馬番").reset_index(drop=True)
-    expected_count = len(expected_race["horses"])
-
-    print("entry parsed:", len(df), "/", expected_count)
-
-    if len(df) != expected_count:
-        found = df[["馬番", "馬名"]].to_dict("records")
-        fail(
-            f"Entry count mismatch. parsed={len(df)} expected={expected_count} found={found}"
-        )
-
-    if df["馬番"].duplicated().any():
-        fail("Duplicate horse numbers in parsed entry table")
-
-    return df
-
+# ============================================================
+# 6. Main replay
+# ============================================================
 
 def main() -> None:
     print("=" * 110)
     print("KeibaAI GitHub Actions - ONE RACE AI DRY RUN")
-    print("JST:", datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"))
+    print("entry source: JRA OFFICIAL (same parser as formal Colab run)")
+    print("JST:", jst_now().strftime("%Y-%m-%d %H:%M:%S"))
     print("date:", TEST_DATE8)
     print("race:", TEST_RACE_ID)
     print("mode: READ ONLY / RaceData.json is NOT modified")
@@ -384,36 +489,99 @@ def main() -> None:
     print("course:", race["course"])
     print("frozen 10-min odds horses:", len(race["horses"]))
 
+    # Production history is forward-safe; for replay we still explicitly
+    # exclude the replay date and anything after it.
     hist = pd.read_parquet(HISTORY_PATH)
     hist["日付"] = pd.to_datetime(hist["日付"], errors="coerce")
     hist = hist.loc[hist["日付"].dt.normalize() < test_date].copy()
 
     print("history:", f"{len(hist):,}", "rows; latest:", hist["日付"].max())
 
-    entries = parse_entry_page(
-        expected_race=race,
-        hist=hist,
-        test_date=test_date,
+    entries, entry_time, entry_url = fetch_entry_table(TEST_RACE_ID)
+
+    # Keep only the horses that existed in the frozen 10-minute snapshot.
+    active_numbers = {
+        int(h["number"])
+        for h in race["horses"]
+    }
+
+    entries = (
+        entries.loc[
+            entries["馬番"].astype(int).isin(active_numbers)
+        ]
+        .sort_values("馬番")
+        .reset_index(drop=True)
     )
 
-    hist_jockeys = set(hist["騎手"].dropna().astype(str))
-    hist_trainers = set(hist["調教師"].dropna().astype(str))
+    expected_count = len(race["horses"])
 
-    entries["騎手"] = entries["騎手_raw"].map(
-        lambda x: history_match(x, hist_jockeys, "jockey")
+    print("JRA official entry parsed:", len(entries), "/", expected_count)
+    print("entry fetched at:", entry_time)
+    print("entry URL:", entry_url)
+
+    if len(entries) != expected_count:
+        fail(
+            f"JRA entry count mismatch: {len(entries)} / {expected_count}"
+        )
+
+    frozen_names = {
+        int(h["number"]): str(h["name"])
+        for h in race["horses"]
+    }
+
+    for _, row in entries.iterrows():
+        no = int(row["馬番"])
+        expected_name = frozen_names.get(no)
+
+        if expected_name is None or str(row["馬名"]) != expected_name:
+            fail(
+                f"JRA entry / frozen horse-name mismatch: "
+                f"馬番{no} {row['馬名']!r} / expected={expected_name!r}"
+            )
+
+    # Same historical name lists and matching logic as the formal run.
+    hist_jockeys = sorted(set(hist["騎手"].dropna().astype(str)))
+    hist_trainers = sorted(set(hist["調教師"].dropna().astype(str)))
+
+    entries["騎手"] = entries["騎手_JRA"].map(
+        lambda x: match_history_name(x, hist_jockeys)
     )
 
-    entries["調教師"] = entries["調教師_raw"].map(
-        lambda x: history_match(x, hist_trainers, "trainer")
+    entries["調教師"] = entries["調教師_JRA"].map(
+        lambda x: match_history_name(x, hist_trainers)
     )
 
-    latest_key = (
-        hist.sort_values(["日付", "レースID", "馬番"])
+    if entries["騎手"].isna().any():
+        print(
+            entries.loc[
+                entries["騎手"].isna(),
+                ["馬番", "馬名", "騎手_JRA"],
+            ].to_string(index=False)
+        )
+        fail("騎手表記変換失敗")
+
+    if entries["調教師"].isna().any():
+        print(
+            entries.loc[
+                entries["調教師"].isna(),
+                ["馬番", "馬名", "調教師_JRA"],
+            ].to_string(index=False)
+        )
+        fail("調教師表記変換失敗")
+
+    # Same horse-key logic as the formal run.
+    latest_key_df = (
+        hist[["日付", "馬名", "馬キー"]]
         .dropna(subset=["馬名", "馬キー"])
+        .sort_values("日付")
         .drop_duplicates("馬名", keep="last")
-        .set_index("馬名")["馬キー"]
-        .astype(str)
-        .to_dict()
+    )
+
+    latest_key = dict(
+        zip(
+            latest_key_df["馬名"].astype(str),
+            latest_key_df["馬キー"].astype(str),
+        )
     )
 
     entries["馬キー"] = [
@@ -421,6 +589,10 @@ def main() -> None:
         for name, age in zip(entries["馬名"], entries["年齢"])
     ]
 
+    # Diagnostic guard for the known Kyoto 6R replay.
+    check_known_default_inputs(entries)
+
+    # Frozen 10-minute win odds already published to RaceData.json.
     frozen = pd.DataFrame(race["horses"])[["number", "name", "odds"]].copy()
     frozen.columns = ["馬番", "RaceData馬名", "単勝オッズ"]
 
@@ -431,15 +603,17 @@ def main() -> None:
         validate="one_to_one",
     )
 
-    if len(current) != len(race["horses"]):
-        fail("Entry/odds merge count mismatch")
+    if len(current) != expected_count:
+        fail("JRA entry / frozen-odds merge count mismatch")
 
     if not (
         current["馬名"].astype(str).values
         == current["RaceData馬名"].astype(str).values
     ).all():
-        fail("Horse names differ between live entry page and frozen RaceData")
+        fail("Horse names differ between JRA official entry and frozen RaceData")
 
+    # The saved snapshot's popularity is equivalent to win-odds rank here.
+    # The default replay race has no tied odds.
     current["人気"] = current["単勝オッズ"].rank(
         ascending=True,
         method="min",
@@ -447,6 +621,7 @@ def main() -> None:
 
     course = str(race["course"])
     m = re.search(r"(芝|ダ|障)\s*(\d+)\s*m", course)
+
     if not m:
         fail(f"Course parse failed: {course}")
 
@@ -458,7 +633,11 @@ def main() -> None:
 
     race_class = derive_class(race["raceName"])
 
+    # ------------------------------------------------------------
+    # Build today's 23-column row set exactly like formal run
+    # ------------------------------------------------------------
     cur = pd.DataFrame(index=np.arange(len(current)))
+
     cur["レースID"] = TEST_RACE_ID
     cur["日付"] = test_date
 
@@ -478,7 +657,7 @@ def main() -> None:
         cur[col] = current[col].to_numpy()
 
     cur["着順"] = np.nan
-    cur["出典"] = "当日予測_GitHub_DRYRUN"
+    cur["出典"] = "当日予測_JRA公式_10分前"
     cur["芝ダ"] = surface
     cur["距離"] = distance
     cur["クラス"] = race_class
@@ -488,15 +667,33 @@ def main() -> None:
     cur["初角"] = np.nan
     cur["頭数"] = len(cur)
 
+    if len(cur) != expected_count:
+        fail("Current input row count mismatch")
+
+    # ------------------------------------------------------------
+    # History + today -> rating -> 37 features
+    # ------------------------------------------------------------
     work = pd.concat([hist, cur], ignore_index=True)
     work["日付"] = pd.to_datetime(work["日付"], errors="coerce")
-    work = work.sort_values(["日付", "レースID", "馬番"]).reset_index(drop=True)
+    work = (
+        work.sort_values(["日付", "レースID", "馬番"])
+        .reset_index(drop=True)
+    )
 
     print("feature input:", f"{len(work):,}")
+
+    before_rating_n = len(work)
     print("add_rating...")
     work = add_rating(work)
+
+    if len(work) != before_rating_n:
+        fail("add_rating changed row count")
+
     print("add_features...")
     work = add_features(work)
+
+    if len(work) != before_rating_n:
+        fail("add_features changed row count")
 
     pred = (
         work.loc[
@@ -522,6 +719,9 @@ def main() -> None:
     if not np.isfinite(X.to_numpy()).all():
         fail("37 model features contain inf/-inf")
 
+    # ------------------------------------------------------------
+    # Fixed LightGBM
+    # ------------------------------------------------------------
     model = lgb.Booster(model_file=str(MODEL_PATH))
 
     if list(model.feature_name()) != list(ALLF):
@@ -565,6 +765,9 @@ def main() -> None:
         }
     )
 
+    # ------------------------------------------------------------
+    # Compare with already-published RaceData.json
+    # ------------------------------------------------------------
     expected = pd.DataFrame(race["horses"])[
         [
             "number",
@@ -649,7 +852,8 @@ def main() -> None:
     print("expected research candidates:", sorted(expected_candidates))
     print("actual research candidates  :", sorted(actual_candidates))
 
-    # RaceData values are rounded for the app, so allow only rounding-sized differences.
+    # RaceData values are rounded for the app, so allow only rounding-sized
+    # differences. Do NOT widen these tolerances to hide input differences.
     numeric_ok = (
         ai_max <= 0.002
         and ratio_max <= 0.0002
@@ -669,6 +873,7 @@ def main() -> None:
     print("=" * 110)
     print("race:", TEST_RACE_ID, race["raceName"], race["course"])
     print("horses:", len(result))
+    print("entry source: JRA official")
     print("37 features finite: True")
     print("fixed LightGBM: OK")
     print("research-candidate match:", candidate_ok)
@@ -677,11 +882,14 @@ def main() -> None:
 
     if not numeric_ok:
         fail(
-            "Prediction values differ from the already-published 10-minute RaceData beyond rounding tolerance"
+            "Prediction values differ from the already-published 10-minute "
+            "RaceData beyond rounding tolerance"
         )
 
     if not candidate_ok:
-        fail("Research-candidate set differs from the already-published RaceData")
+        fail(
+            "Research-candidate set differs from the already-published RaceData"
+        )
 
 
 if __name__ == "__main__":
