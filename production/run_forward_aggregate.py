@@ -4,11 +4,15 @@
 # Purpose
 # - Keep aggregate_forward_results.py unchanged.
 # - Replace only the race-result fetcher.
-# - Use JRA official result pages for finish positions / popularity.
-# - Use the already-proven netkeiba win-odds API for final win odds.
+# - Resolve each JRA result URL from that race's routed official entry page.
+# - Use JRA official results for finish positions / popularity.
+# - Use the proven netkeiba win-odds API for final win odds.
 #
-# This avoids relying on HTML result tables from race.netkeiba.com or
-# db.netkeiba.com, which can return bot/simplified pages to GitHub runners.
+# Why this version
+# - A JRA result route suffix is race-specific.
+# - Crawling only one result seed per venue can find only that one race.
+# - The routed JRA entry page for EACH race contains its own result link,
+#   so resolve the result URL race-by-race instead.
 # ============================================================
 
 from __future__ import annotations
@@ -30,19 +34,6 @@ import jra_entry_source as entry_source
 JRA_HOST = "https://www.jra.go.jp"
 ACCESS_S = JRA_HOST + "/JRADB/accessS.html"
 
-# Historical seeds used only to bootstrap the already-completed 2026-10-11
-# forward report. From one routed result page we crawl the same-day JRA links.
-KNOWN_RESULT_SEEDS = {
-    "20261011": [
-        ACCESS_S
-        + "?CNAME="
-        + "pw01sde0105202604040520261011%2F0C",
-        ACCESS_S
-        + "?CNAME="
-        + "pw01sde0108202604040520261011%2FEA",
-    ],
-}
-
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -56,11 +47,11 @@ HEADERS = {
 SESSION = requests.Session()
 SESSION.headers.update(HEADERS)
 
-_RESULT_URL_MAP: dict[str, str] | None = None
+_RESULT_URL_CACHE: dict[str, str] = {}
 
 
 # ============================================================
-# 1. JRA routed-result URL discovery
+# 1. JRA result URL discovery
 # ============================================================
 
 
@@ -127,14 +118,6 @@ def _extract_result_urls(page_url: str, text: str) -> list[str]:
     return list(dict.fromkeys(urls))
 
 
-def _prefer_routed(existing: str | None, candidate: str) -> str:
-    if not existing:
-        return candidate
-    if _has_route_suffix(candidate) and not _has_route_suffix(existing):
-        return candidate
-    return existing
-
-
 def _decode_response(response) -> str:
     encodings = [
         response.encoding,
@@ -146,6 +129,7 @@ def _decode_response(response) -> str:
 
     best = None
     best_score = -1
+    best_replacements = 10**18
 
     for enc in encodings:
         if not enc:
@@ -154,164 +138,98 @@ def _decode_response(response) -> str:
             text = response.content.decode(enc, errors="replace")
         except Exception:
             continue
-        score = sum(text.count(token) for token in ["着順", "馬番", "馬名", "レース結果"])
-        if score > best_score:
+
+        score = sum(
+            text.count(token)
+            for token in ["着順", "馬番", "馬名", "レース結果", "出馬表"]
+        )
+        replacements = text.count("�")
+
+        if score > best_score or (
+            score == best_score and replacements < best_replacements
+        ):
             best = text
             best_score = score
+            best_replacements = replacements
 
     if best is None:
         return response.text
     return best
 
 
-def _result_seeds_from_entry_pages(date8: str, target_ids: list[str]) -> list[str]:
-    """Try to discover result-page links from routed JRA entry pages.
+def _discover_result_url_for_race(race_id: str, date8: str) -> str:
+    """Resolve the routed JRA accessS result URL for exactly one race.
 
-    This is the generic path for future dates.  The live-monitor entry source
-    already knows how to enter the JRA routed navigation tree.  A routed entry
-    page contains menu/navigation links to accessS result pages.
+    The crucial point is that route tokens are race-specific.  We therefore
+    first resolve the official routed ENTRY page for this race, then read the
+    same-race 'レース結果' accessS link from that page.
     """
 
-    seeds = []
-    representatives = {}
-    for rid in target_ids:
-        representatives.setdefault(rid[4:6], rid)
+    race_id = str(race_id).zfill(12)
 
-    for rid in representatives.values():
-        try:
-            entry_url = entry_source.discover_entry_url(rid, date8, SESSION)
-            if not entry_url:
-                continue
+    if race_id in _RESULT_URL_CACHE:
+        return _RESULT_URL_CACHE[race_id]
 
-            r = SESSION.get(entry_url, timeout=20)
-            print(
-                "result seed via entry HTTP:",
-                r.status_code,
-                "bytes:",
-                len(r.content),
-                "race:",
-                rid,
-            )
-            if r.status_code != 200:
-                continue
+    entry_url = entry_source.discover_entry_url(
+        race_id,
+        date8,
+        SESSION,
+    )
 
-            text = _decode_response(r)
-            for u in _extract_result_urls(entry_url, text):
-                if _race_id_from_result_url(u, date8):
-                    seeds.append(u)
-        except Exception as exc:
-            print("result seed via entry warning:", rid, repr(exc))
-
-    return list(dict.fromkeys(seeds))
-
-
-def _discover_result_url_map(date8: str, target_ids: list[str]) -> dict[str, str]:
-    target_set = set(target_ids)
-    queue = list(KNOWN_RESULT_SEEDS.get(date8, []))
-
-    dynamic = _result_seeds_from_entry_pages(date8, target_ids)
-    for u in dynamic:
-        if u not in queue:
-            queue.append(u)
-
-    if not queue:
+    if not entry_url:
         raise RuntimeError(
-            f"no routed JRA result seed could be discovered for {date8}"
+            f"JRA routed entry URL not found while resolving result: {race_id}"
         )
 
-    print("JRA result discovery seeds:", len(queue), "date:", date8)
+    r = SESSION.get(entry_url, timeout=30)
+    print(
+        "JRA result-link source HTTP:",
+        r.status_code,
+        "bytes:",
+        len(r.content),
+        "race:",
+        race_id,
+    )
 
-    visited = set()
-    url_map: dict[str, str] = {}
-    max_pages = 80
+    if r.status_code != 200:
+        raise RuntimeError(
+            f"JRA entry page HTTP {r.status_code} while resolving result: {race_id}"
+        )
 
-    while queue and len(visited) < max_pages:
-        page_url = queue.pop(0)
-        if page_url in visited:
-            continue
-        visited.add(page_url)
+    text = _decode_response(r)
+    candidates = _extract_result_urls(entry_url, text)
 
-        try:
-            r = SESSION.get(page_url, timeout=20)
-            print(
-                "JRA result discovery HTTP:",
-                r.status_code,
-                "bytes:",
-                len(r.content),
-                "routed:",
-                _has_route_suffix(page_url),
-            )
-            if r.status_code != 200:
-                continue
+    exact = []
+    for u in candidates:
+        rid = _race_id_from_result_url(u, date8)
+        if rid == race_id:
+            exact.append(u)
 
-            text = _decode_response(r)
-            found = [page_url] + _extract_result_urls(page_url, text)
+    routed = [u for u in exact if _has_route_suffix(u)]
 
-            for u in found:
-                rid = _race_id_from_result_url(u, date8)
-                if rid:
-                    url_map[rid] = _prefer_routed(url_map.get(rid), u)
-
-            if target_set.issubset(
-                {rid for rid, u in url_map.items() if _has_route_suffix(u)}
-            ):
-                break
-
-            for u in found:
-                rid = _race_id_from_result_url(u, date8)
-                if (
-                    rid
-                    and _has_route_suffix(u)
-                    and u not in visited
-                    and u not in queue
-                ):
-                    queue.append(u)
-
-        except Exception as exc:
-            print("JRA result discovery warning:", repr(exc))
-
-    routed = {
-        rid: url
-        for rid, url in url_map.items()
-        if _has_route_suffix(url)
-    }
+    if routed:
+        result_url = routed[0]
+        _RESULT_URL_CACHE[race_id] = result_url
+        print(
+            "JRA same-race routed result URL:",
+            result_url,
+        )
+        return result_url
 
     print(
-        "JRA routed result URLs discovered:",
+        "JRA result links seen from entry page:",
+        len(candidates),
+        "same-race:",
+        len(exact),
+        "routed same-race:",
         len(routed),
-        "/ targets:",
-        len(target_set),
+        "race:",
+        race_id,
     )
 
-    missing = sorted(target_set - set(routed))
-    if missing:
-        print("JRA result URLs still missing:", missing)
-
-    return routed
-
-
-def _ensure_result_url_map() -> dict[str, str]:
-    global _RESULT_URL_MAP
-    if _RESULT_URL_MAP is not None:
-        return _RESULT_URL_MAP
-
-    predictions = agg.load_predictions()
-    target_ids = sorted(
-        {
-            agg.normalize_race_id(r.get("raceID", ""))
-            for r in predictions
-            if re.fullmatch(
-                r"\d{12}",
-                agg.normalize_race_id(r.get("raceID", "")),
-            )
-        }
+    raise RuntimeError(
+        f"same-race JRA routed result URL not found from entry page: {race_id}"
     )
-
-    _RESULT_URL_MAP = _discover_result_url_map(
-        agg.TARGET_DATE8,
-        target_ids,
-    )
-    return _RESULT_URL_MAP
 
 
 # ============================================================
@@ -335,7 +253,9 @@ def _parse_jra_result_table(text: str, race_id: str) -> pd.DataFrame:
     try:
         tables = pd.read_html(io.StringIO(text))
     except Exception as exc:
-        raise RuntimeError(f"JRA result table parse failed: {race_id}: {exc}") from exc
+        raise RuntimeError(
+            f"JRA result table parse failed: {race_id}: {exc}"
+        ) from exc
 
     result = None
 
@@ -369,7 +289,11 @@ def _parse_jra_result_table(text: str, race_id: str) -> pd.DataFrame:
     rows = []
 
     for _, row in result.iterrows():
-        no = pd.to_numeric(pd.Series([row[no_col]]), errors="coerce").iloc[0]
+        no = pd.to_numeric(
+            pd.Series([row[no_col]]),
+            errors="coerce",
+        ).iloc[0]
+
         if not np.isfinite(no):
             continue
 
@@ -378,6 +302,7 @@ def _parse_jra_result_table(text: str, race_id: str) -> pd.DataFrame:
             continue
 
         finish, status = agg.parse_finish(row[finish_col])
+
         popularity = np.nan
         if pop_col is not None:
             popularity = pd.to_numeric(
@@ -399,7 +324,9 @@ def _parse_jra_result_table(text: str, race_id: str) -> pd.DataFrame:
 
     d = pd.DataFrame(rows)
     if d.empty:
-        raise RuntimeError(f"JRA result rows = 0: {race_id}")
+        raise RuntimeError(
+            f"JRA result rows = 0: {race_id}"
+        )
 
     return (
         d.sort_values("number")
@@ -429,6 +356,7 @@ def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
             headers={**HEADERS, "Referer": referer},
             timeout=30,
         )
+
         print(
             "final-odds HTTP:",
             r.status_code,
@@ -437,6 +365,7 @@ def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
             "race:",
             race_id,
         )
+
         if r.status_code != 200:
             return {}
 
@@ -446,6 +375,7 @@ def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
         win = odds_root.get("1") if isinstance(odds_root.get("1"), dict) else {}
 
         result = {}
+
         for k, v in win.items():
             if not isinstance(v, list) or not v:
                 continue
@@ -454,14 +384,25 @@ def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
                 odd = float(v[0])
             except Exception:
                 continue
+
             if np.isfinite(odd) and odd > 0:
                 result[no] = odd
 
-        print("final win odds parsed:", len(result), "race:", race_id)
+        print(
+            "final win odds parsed:",
+            len(result),
+            "race:",
+            race_id,
+        )
+
         return result
 
     except Exception as exc:
-        print("final odds warning:", race_id, repr(exc))
+        print(
+            "final odds warning:",
+            race_id,
+            repr(exc),
+        )
         return {}
 
 
@@ -472,13 +413,17 @@ def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
 
 def fetch_result_table_jra(race_id: str) -> pd.DataFrame:
     race_id = str(race_id).zfill(12)
-    url_map = _ensure_result_url_map()
-    url = url_map.get(race_id)
 
-    if not url:
-        raise RuntimeError(f"JRA routed result URL not found: {race_id}")
+    url = _discover_result_url_for_race(
+        race_id,
+        agg.TARGET_DATE8,
+    )
 
-    r = SESSION.get(url, timeout=30)
+    r = SESSION.get(
+        url,
+        timeout=30,
+    )
+
     print(
         "JRA result HTTP:",
         r.status_code,
@@ -489,15 +434,26 @@ def fetch_result_table_jra(race_id: str) -> pd.DataFrame:
         "url:",
         url,
     )
+
     if r.status_code != 200:
-        raise RuntimeError(f"JRA result HTTP {r.status_code}: {race_id}")
+        raise RuntimeError(
+            f"JRA result HTTP {r.status_code}: {race_id}"
+        )
 
     text = _decode_response(r)
-    d = _parse_jra_result_table(text, race_id)
+    d = _parse_jra_result_table(
+        text,
+        race_id,
+    )
 
-    final_odds = _fetch_final_win_odds(race_id)
+    final_odds = _fetch_final_win_odds(
+        race_id
+    )
+
     if final_odds:
-        d["finalOdds"] = d["number"].map(final_odds)
+        d["finalOdds"] = d["number"].map(
+            final_odds
+        )
 
     print(
         "result source: JRA official",
