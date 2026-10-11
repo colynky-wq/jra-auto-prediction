@@ -48,7 +48,7 @@ jobs:
         env:
           KEIBAAI_AGGREGATE_DATE: ${{ inputs.target_date }}
           PYTHONDONTWRITEBYTECODE: '1'
-        run: python production/run_forward_aggregate.py
+        run: python production/run_forward_aggregate_v2.py
 
       - name: Commit reports when changed
         shell: bash
