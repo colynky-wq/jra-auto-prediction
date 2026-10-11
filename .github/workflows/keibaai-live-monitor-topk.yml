@@ -28,13 +28,21 @@ on:
         description: 'Live mode polling interval seconds'
         required: false
         default: '20'
+      publish_to_app:
+        description: 'Write live Top2/Top3 result to RaceData.json for the app'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  topk-live-dry-run:
-    name: Read-only Win Top2 Top3 live monitor
+  topk-live:
+    name: Win Top2 Top3 live monitor
     runs-on: ubuntu-24.04
     timeout-minutes: 45
 
@@ -61,11 +69,31 @@ jobs:
       - name: Smoke-test Top2 Top3 runtime
         run: python production/smoke_topk_runtime.py
 
-      - name: Run parallel Top2 Top3 live monitor
+      - name: Run Win Top2 Top3 live monitor
         env:
           KEIBAAI_LIVE_DATE: ${{ inputs.target_date }}
           KEIBAAI_LIVE_MODE: ${{ inputs.mode }}
           KEIBAAI_LIVE_RACE_ID: ${{ inputs.target_race_id }}
           KEIBAAI_LIVE_MAX_MINUTES: ${{ inputs.max_runtime_minutes }}
           KEIBAAI_LIVE_POLL_SECONDS: ${{ inputs.poll_seconds }}
-        run: python production/live_monitor_topk.py
+          KEIBAAI_PUBLISH_RACEDATA: ${{ inputs.publish_to_app }}
+        run: |
+          if [ "${{ inputs.publish_to_app }}" = "true" ]; then
+            python production/live_monitor_topk_publish.py
+          else
+            python production/live_monitor_topk.py
+          fi
+
+      - name: Publish RaceData.json to main branch
+        if: ${{ inputs.publish_to_app == 'true' && inputs.mode == 'live' }}
+        run: |
+          if git diff --quiet -- RaceData.json; then
+            echo "RaceData.json was not changed; nothing to publish."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add RaceData.json
+          git commit -m "Publish live Top2 Top3 RaceData"
+          git push origin HEAD:${GITHUB_REF_NAME}
