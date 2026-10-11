@@ -3,74 +3,368 @@
 #
 # Purpose
 # - Keep aggregate_forward_results.py unchanged.
-# - Replace only the race-result fetcher with a robust version.
-# - Prefer the static db.netkeiba.com race page.
-# - Decode Japanese HTML safely and parse the result table directly.
-# - Fall back to the original race.netkeiba.com parser if needed.
+# - Replace only the race-result fetcher.
+# - Use JRA official result pages for finish positions / popularity.
+# - Use the already-proven netkeiba win-odds API for final win odds.
+#
+# This avoids relying on HTML result tables from race.netkeiba.com or
+# db.netkeiba.com, which can return bot/simplified pages to GitHub runners.
 # ============================================================
 
 from __future__ import annotations
 
+import html as html_lib
 import io
 import re
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
 import numpy as np
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 
 import aggregate_forward_results as agg
+import jra_entry_source as entry_source
 
 
-ORIGINAL_FETCH_RESULT_TABLE = agg.fetch_result_table
+JRA_HOST = "https://www.jra.go.jp"
+ACCESS_S = JRA_HOST + "/JRADB/accessS.html"
+
+# Historical seeds used only to bootstrap the already-completed 2026-10-11
+# forward report. From one routed result page we crawl the same-day JRA links.
+KNOWN_RESULT_SEEDS = {
+    "20261011": [
+        ACCESS_S
+        + "?CNAME="
+        + "pw01sde0105202604040520261011%2F0C",
+        ACCESS_S
+        + "?CNAME="
+        + "pw01sde0108202604040520261011%2FEA",
+    ],
+}
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/140.0 Safari/537.36"
+    ),
+    "Accept-Language": "ja,en;q=0.8",
+    "Cache-Control": "no-cache",
+}
+
+SESSION = requests.Session()
+SESSION.headers.update(HEADERS)
+
+_RESULT_URL_MAP: dict[str, str] | None = None
 
 
 # ============================================================
-# 1. Common helpers
+# 1. JRA routed-result URL discovery
+# ============================================================
+
+
+def _get_cname(url: str) -> str:
+    try:
+        q = parse_qs(urlparse(url).query)
+        return unquote(q.get("CNAME", [""])[0] or "")
+    except Exception:
+        return ""
+
+
+def _has_route_suffix(url: str) -> bool:
+    return bool(re.search(r"/[0-9A-Za-z]{2}$", _get_cname(url)))
+
+
+def _race_id_from_result_url(url: str, date8: str) -> str | None:
+    cname = _get_cname(url)
+    if not cname:
+        return None
+
+    m = re.search(
+        r"pw01sde01"
+        r"(\d{2})"   # venue
+        r"(\d{4})"   # year
+        r"(\d{2})"   # meeting
+        r"(\d{2})"   # day
+        r"(\d{2})"   # race no
+        r"(\d{8})",  # calendar date
+        cname,
+    )
+    if not m:
+        return None
+
+    venue, year, meeting, day, race_no, found_date = m.groups()
+    if found_date != date8:
+        return None
+
+    return year + venue + meeting + day + race_no
+
+
+def _extract_result_urls(page_url: str, text: str) -> list[str]:
+    soup = BeautifulSoup(text, "html.parser")
+    urls = []
+
+    for a in soup.find_all("a", href=True):
+        href = str(a.get("href", ""))
+        if "accessS.html" not in href or "pw01sde01" not in href:
+            continue
+        urls.append(urljoin(page_url, href))
+
+    raw = html_lib.unescape(text)
+    for m in re.findall(
+        r'[^"\']*accessS\.html\?CNAME=pw01sde01[^"\']+',
+        raw,
+    ):
+        value = m.strip()
+        if value.startswith("http"):
+            urls.append(value)
+        else:
+            pos = value.find("accessS.html")
+            if pos >= 0:
+                urls.append(urljoin(ACCESS_S, value[pos:]))
+
+    return list(dict.fromkeys(urls))
+
+
+def _prefer_routed(existing: str | None, candidate: str) -> str:
+    if not existing:
+        return candidate
+    if _has_route_suffix(candidate) and not _has_route_suffix(existing):
+        return candidate
+    return existing
+
+
+def _decode_response(response) -> str:
+    encodings = [
+        response.encoding,
+        response.apparent_encoding,
+        "utf-8",
+        "cp932",
+        "shift_jis",
+    ]
+
+    best = None
+    best_score = -1
+
+    for enc in encodings:
+        if not enc:
+            continue
+        try:
+            text = response.content.decode(enc, errors="replace")
+        except Exception:
+            continue
+        score = sum(text.count(token) for token in ["着順", "馬番", "馬名", "レース結果"])
+        if score > best_score:
+            best = text
+            best_score = score
+
+    if best is None:
+        return response.text
+    return best
+
+
+def _result_seeds_from_entry_pages(date8: str, target_ids: list[str]) -> list[str]:
+    """Try to discover result-page links from routed JRA entry pages.
+
+    This is the generic path for future dates.  The live-monitor entry source
+    already knows how to enter the JRA routed navigation tree.  A routed entry
+    page contains menu/navigation links to accessS result pages.
+    """
+
+    seeds = []
+    representatives = {}
+    for rid in target_ids:
+        representatives.setdefault(rid[4:6], rid)
+
+    for rid in representatives.values():
+        try:
+            entry_url = entry_source.discover_entry_url(rid, date8, SESSION)
+            if not entry_url:
+                continue
+
+            r = SESSION.get(entry_url, timeout=20)
+            print(
+                "result seed via entry HTTP:",
+                r.status_code,
+                "bytes:",
+                len(r.content),
+                "race:",
+                rid,
+            )
+            if r.status_code != 200:
+                continue
+
+            text = _decode_response(r)
+            for u in _extract_result_urls(entry_url, text):
+                if _race_id_from_result_url(u, date8):
+                    seeds.append(u)
+        except Exception as exc:
+            print("result seed via entry warning:", rid, repr(exc))
+
+    return list(dict.fromkeys(seeds))
+
+
+def _discover_result_url_map(date8: str, target_ids: list[str]) -> dict[str, str]:
+    target_set = set(target_ids)
+    queue = list(KNOWN_RESULT_SEEDS.get(date8, []))
+
+    dynamic = _result_seeds_from_entry_pages(date8, target_ids)
+    for u in dynamic:
+        if u not in queue:
+            queue.append(u)
+
+    if not queue:
+        raise RuntimeError(
+            f"no routed JRA result seed could be discovered for {date8}"
+        )
+
+    print("JRA result discovery seeds:", len(queue), "date:", date8)
+
+    visited = set()
+    url_map: dict[str, str] = {}
+    max_pages = 80
+
+    while queue and len(visited) < max_pages:
+        page_url = queue.pop(0)
+        if page_url in visited:
+            continue
+        visited.add(page_url)
+
+        try:
+            r = SESSION.get(page_url, timeout=20)
+            print(
+                "JRA result discovery HTTP:",
+                r.status_code,
+                "bytes:",
+                len(r.content),
+                "routed:",
+                _has_route_suffix(page_url),
+            )
+            if r.status_code != 200:
+                continue
+
+            text = _decode_response(r)
+            found = [page_url] + _extract_result_urls(page_url, text)
+
+            for u in found:
+                rid = _race_id_from_result_url(u, date8)
+                if rid:
+                    url_map[rid] = _prefer_routed(url_map.get(rid), u)
+
+            if target_set.issubset(
+                {rid for rid, u in url_map.items() if _has_route_suffix(u)}
+            ):
+                break
+
+            for u in found:
+                rid = _race_id_from_result_url(u, date8)
+                if (
+                    rid
+                    and _has_route_suffix(u)
+                    and u not in visited
+                    and u not in queue
+                ):
+                    queue.append(u)
+
+        except Exception as exc:
+            print("JRA result discovery warning:", repr(exc))
+
+    routed = {
+        rid: url
+        for rid, url in url_map.items()
+        if _has_route_suffix(url)
+    }
+
+    print(
+        "JRA routed result URLs discovered:",
+        len(routed),
+        "/ targets:",
+        len(target_set),
+    )
+
+    missing = sorted(target_set - set(routed))
+    if missing:
+        print("JRA result URLs still missing:", missing)
+
+    return routed
+
+
+def _ensure_result_url_map() -> dict[str, str]:
+    global _RESULT_URL_MAP
+    if _RESULT_URL_MAP is not None:
+        return _RESULT_URL_MAP
+
+    predictions = agg.load_predictions()
+    target_ids = sorted(
+        {
+            agg.normalize_race_id(r.get("raceID", ""))
+            for r in predictions
+            if re.fullmatch(
+                r"\d{12}",
+                agg.normalize_race_id(r.get("raceID", "")),
+            )
+        }
+    )
+
+    _RESULT_URL_MAP = _discover_result_url_map(
+        agg.TARGET_DATE8,
+        target_ids,
+    )
+    return _RESULT_URL_MAP
+
+
+# ============================================================
+# 2. JRA result-table parser
 # ============================================================
 
 
 def _normalize_header(value) -> str:
-    s = str(value)
-    s = re.sub(r"\s+", "", s)
-    s = s.replace("\u3000", "")
-    return s.strip()
+    return re.sub(r"\s+", "", str(value)).replace("\u3000", "").strip()
 
 
-def _find_result_table_from_tables(tables):
-    for raw in tables:
-        t = agg.flatten_columns(raw)
-        cols = list(t.columns)
-        normalized = [_normalize_header(x) for x in cols]
-
-        has_finish = any("着順" in x for x in normalized)
-        has_number = any("馬番" in x for x in normalized)
-        has_name = any("馬名" in x for x in normalized)
-
-        if has_finish and has_number and has_name:
-            return t
-
-    return None
-
-
-def _find_col_normalized(columns, wanted_tokens):
+def _find_col(columns, tokens):
     for c in columns:
         n = _normalize_header(c)
-        if any(token in n for token in wanted_tokens):
+        if any(token in n for token in tokens):
             return c
     return None
 
 
-def _parse_result_dataframe(result: pd.DataFrame, race_id: str) -> pd.DataFrame:
-    finish_col = _find_col_normalized(result.columns, ("着順",))
-    no_col = _find_col_normalized(result.columns, ("馬番",))
-    name_col = _find_col_normalized(result.columns, ("馬名",))
-    odds_col = _find_col_normalized(result.columns, ("単勝オッズ", "単勝"))
-    pop_col = _find_col_normalized(result.columns, ("人気",))
+def _parse_jra_result_table(text: str, race_id: str) -> pd.DataFrame:
+    try:
+        tables = pd.read_html(io.StringIO(text))
+    except Exception as exc:
+        raise RuntimeError(f"JRA result table parse failed: {race_id}: {exc}") from exc
 
-    if not all([finish_col, no_col, name_col]):
+    result = None
+
+    for raw in tables:
+        t = agg.flatten_columns(raw)
+        cols = list(t.columns)
+        if (
+            _find_col(cols, ("着順",)) is not None
+            and _find_col(cols, ("馬番",)) is not None
+            and _find_col(cols, ("馬名",)) is not None
+        ):
+            result = t
+            break
+
+    if result is None:
+        headers = []
+        for raw in tables[:10]:
+            try:
+                headers.append(list(agg.flatten_columns(raw).columns))
+            except Exception:
+                pass
         raise RuntimeError(
-            f"required result columns missing: {race_id}: {list(result.columns)}"
+            f"JRA result table not found: {race_id}; headers={headers[:5]}"
         )
+
+    finish_col = _find_col(result.columns, ("着順",))
+    no_col = _find_col(result.columns, ("馬番",))
+    name_col = _find_col(result.columns, ("馬名",))
+    pop_col = _find_col(result.columns, ("単勝人気", "人気"))
 
     rows = []
 
@@ -79,37 +373,33 @@ def _parse_result_dataframe(result: pd.DataFrame, race_id: str) -> pd.DataFrame:
         if not np.isfinite(no):
             continue
 
+        horse_no = int(no)
+        if horse_no < 1 or horse_no > 18:
+            continue
+
         finish, status = agg.parse_finish(row[finish_col])
-
-        final_odds = np.nan
-        final_pop = np.nan
-
-        if odds_col is not None:
-            final_odds = pd.to_numeric(
-                pd.Series([row[odds_col]]), errors="coerce"
-            ).iloc[0]
-
+        popularity = np.nan
         if pop_col is not None:
-            final_pop = pd.to_numeric(
-                pd.Series([row[pop_col]]), errors="coerce"
+            popularity = pd.to_numeric(
+                pd.Series([row[pop_col]]),
+                errors="coerce",
             ).iloc[0]
 
         rows.append(
             {
                 "raceID": race_id,
-                "number": int(no),
+                "number": horse_no,
                 "resultHorseName": str(row[name_col]).strip(),
                 "finish": finish,
                 "resultStatus": status,
-                "finalOdds": final_odds,
-                "finalPopularity": final_pop,
+                "finalOdds": np.nan,
+                "finalPopularity": popularity,
             }
         )
 
     d = pd.DataFrame(rows)
-
     if d.empty:
-        raise RuntimeError(f"no result rows parsed: {race_id}")
+        raise RuntimeError(f"JRA result rows = 0: {race_id}")
 
     return (
         d.sort_values("number")
@@ -119,326 +409,110 @@ def _parse_result_dataframe(result: pd.DataFrame, race_id: str) -> pd.DataFrame:
 
 
 # ============================================================
-# 2. Encoding detection
+# 3. Final win odds from the proven odds API
 # ============================================================
 
 
-def _decode_japanese_html(response) -> tuple[str, str, int]:
-    """Choose the decoding that makes the result-table Japanese readable.
+def _fetch_final_win_odds(race_id: str) -> dict[int, float]:
+    url = "https://race.netkeiba.com/api/api_get_jra_odds.html"
+    referer = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}"
 
-    db.netkeiba pages have historically varied in charset metadata.  Rather
-    than trusting one declaration, try the likely encodings and score the
-    decoded text using the labels that must appear on a completed result page.
-    """
+    try:
+        r = SESSION.get(
+            url,
+            params={
+                "race_id": race_id,
+                "type": 1,
+                "action": "init",
+                "compress": 0,
+            },
+            headers={**HEADERS, "Referer": referer},
+            timeout=30,
+        )
+        print(
+            "final-odds HTTP:",
+            r.status_code,
+            "bytes:",
+            len(r.content),
+            "race:",
+            race_id,
+        )
+        if r.status_code != 200:
+            return {}
 
-    candidates = []
+        payload = r.json()
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        odds_root = data.get("odds") if isinstance(data.get("odds"), dict) else {}
+        win = odds_root.get("1") if isinstance(odds_root.get("1"), dict) else {}
 
-    for enc in [
-        response.encoding,
-        response.apparent_encoding,
-        "utf-8",
-        "cp932",
-        "shift_jis",
-        "euc_jp",
-    ]:
-        if not enc:
-            continue
-        key = str(enc).lower().replace("-", "_")
-        if key not in candidates:
-            candidates.append(key)
+        result = {}
+        for k, v in win.items():
+            if not isinstance(v, list) or not v:
+                continue
+            try:
+                no = int(k)
+                odd = float(v[0])
+            except Exception:
+                continue
+            if np.isfinite(odd) and odd > 0:
+                result[no] = odd
 
-    required_tokens = ["着順", "馬番", "馬名", "人気", "単勝"]
+        print("final win odds parsed:", len(result), "race:", race_id)
+        return result
 
-    best_text = None
-    best_encoding = None
-    best_score = -1
-    best_replacements = 10**18
+    except Exception as exc:
+        print("final odds warning:", race_id, repr(exc))
+        return {}
 
-    for enc in candidates:
-        try:
-            text = response.content.decode(enc, errors="replace")
-        except Exception:
-            continue
 
-        score = sum(text.count(token) for token in required_tokens)
-        replacements = text.count("�")
+# ============================================================
+# 4. Hook used by aggregate_forward_results.py
+# ============================================================
 
-        if score > best_score or (
-            score == best_score and replacements < best_replacements
-        ):
-            best_text = text
-            best_encoding = enc
-            best_score = score
-            best_replacements = replacements
 
-    if best_text is None:
-        raise RuntimeError("could not decode result HTML")
+def fetch_result_table_jra(race_id: str) -> pd.DataFrame:
+    race_id = str(race_id).zfill(12)
+    url_map = _ensure_result_url_map()
+    url = url_map.get(race_id)
+
+    if not url:
+        raise RuntimeError(f"JRA routed result URL not found: {race_id}")
+
+    r = SESSION.get(url, timeout=30)
+    print(
+        "JRA result HTTP:",
+        r.status_code,
+        "bytes:",
+        len(r.content),
+        "race:",
+        race_id,
+        "url:",
+        url,
+    )
+    if r.status_code != 200:
+        raise RuntimeError(f"JRA result HTTP {r.status_code}: {race_id}")
+
+    text = _decode_response(r)
+    d = _parse_jra_result_table(text, race_id)
+
+    final_odds = _fetch_final_win_odds(race_id)
+    if final_odds:
+        d["finalOdds"] = d["number"].map(final_odds)
 
     print(
-        "result DB decoding:",
-        best_encoding,
-        "score:",
-        best_score,
-        "replacement_chars:",
-        best_replacements,
-    )
-
-    return best_text, str(best_encoding), int(best_score)
-
-
-# ============================================================
-# 3. Direct HTML result-table parser
-# ============================================================
-
-
-def _cell_text(cell) -> str:
-    return re.sub(r"\s+", " ", cell.get_text(" ", strip=True)).strip()
-
-
-def _parse_static_table_from_html(text: str, race_id: str) -> pd.DataFrame:
-    soup = BeautifulSoup(text, "html.parser")
-
-    tables = list(soup.find_all("table"))
-    candidate_tables = []
-
-    for table in tables:
-        table_text = _normalize_header(table.get_text(" ", strip=True))
-        score = sum(
-            token in table_text
-            for token in ("着順", "馬番", "馬名", "人気", "単勝")
-        )
-        if score >= 3:
-            candidate_tables.append((score, table))
-
-    candidate_tables.sort(key=lambda x: x[0], reverse=True)
-
-    if not candidate_tables:
-        raise RuntimeError("static result table not found in HTML")
-
-    table = candidate_tables[0][1]
-
-    # Header indexes when available.
-    header_cells = table.find_all("th")
-    header_texts = [_normalize_header(_cell_text(c)) for c in header_cells]
-
-    def header_index(tokens):
-        for i, value in enumerate(header_texts):
-            if any(token in value for token in tokens):
-                return i
-        return None
-
-    idx_finish = header_index(("着順",))
-    idx_number = header_index(("馬番",))
-    idx_name = header_index(("馬名",))
-    idx_pop = header_index(("人気",))
-    idx_odds = header_index(("単勝オッズ", "単勝"))
-
-    rows = []
-
-    for tr in table.find_all("tr"):
-        cells = tr.find_all("td")
-        if not cells:
-            continue
-
-        values = [_cell_text(c) for c in cells]
-
-        # Standard db.netkeiba result-table layout:
-        # 0 着順 / 1 枠番 / 2 馬番 / 3 馬名 / ... / 9 人気 / 10 単勝オッズ
-        # Use those positions if the page did not expose useful <th> indexes.
-        fi = idx_finish if idx_finish is not None and idx_finish < len(values) else 0
-        ni = idx_number if idx_number is not None and idx_number < len(values) else 2
-        nmi = idx_name if idx_name is not None and idx_name < len(values) else 3
-        pi = idx_pop if idx_pop is not None and idx_pop < len(values) else 9
-        oi = idx_odds if idx_odds is not None and idx_odds < len(values) else 10
-
-        if max(fi, ni, nmi) >= len(values):
-            continue
-
-        no_match = re.search(r"\d+", values[ni])
-        if not no_match:
-            continue
-
-        horse_no = int(no_match.group())
-        if horse_no < 1 or horse_no > 18:
-            continue
-
-        horse_name = values[nmi].strip()
-        if not horse_name:
-            continue
-
-        finish, status = agg.parse_finish(values[fi])
-
-        final_pop = np.nan
-        final_odds = np.nan
-
-        if pi < len(values):
-            final_pop = pd.to_numeric(
-                pd.Series([values[pi]]), errors="coerce"
-            ).iloc[0]
-
-        if oi < len(values):
-            final_odds = pd.to_numeric(
-                pd.Series([values[oi]]), errors="coerce"
-            ).iloc[0]
-
-        rows.append(
-            {
-                "raceID": race_id,
-                "number": horse_no,
-                "resultHorseName": horse_name,
-                "finish": finish,
-                "resultStatus": status,
-                "finalOdds": final_odds,
-                "finalPopularity": final_pop,
-            }
-        )
-
-    d = pd.DataFrame(rows)
-
-    if d.empty:
-        raise RuntimeError("static result HTML table produced 0 rows")
-
-    d = (
-        d.sort_values("number")
-        .drop_duplicates("number", keep="last")
-        .reset_index(drop=True)
+        "result source: JRA official",
+        "rows:",
+        len(d),
+        "final odds:",
+        int(d["finalOdds"].notna().sum()),
+        "race:",
+        race_id,
     )
 
     return d
 
 
-# ============================================================
-# 4. Static db.netkeiba source
-# ============================================================
-
-
-def fetch_result_table_static(race_id: str) -> pd.DataFrame:
-    race_id = str(race_id).zfill(12)
-    url = f"https://db.netkeiba.com/race/{race_id}/"
-
-    response = agg.SESSION.get(
-        url,
-        headers={
-            **agg.HEADERS,
-            "Referer": "https://db.netkeiba.com/",
-        },
-        timeout=30,
-    )
-
-    print(
-        "result DB HTTP:",
-        response.status_code,
-        "bytes:",
-        len(response.content),
-        "race:",
-        race_id,
-        "url:",
-        response.url,
-    )
-
-    if response.status_code != 200:
-        raise RuntimeError(
-            f"db result HTTP {response.status_code}: {race_id}"
-        )
-
-    text, encoding_used, score = _decode_japanese_html(response)
-
-    # First choice: direct BeautifulSoup parsing. This avoids pandas/lxml
-    # charset guesses, which caused mojibake on GitHub-hosted runners.
-    try:
-        parsed = _parse_static_table_from_html(text, race_id)
-        print(
-            "result source: db.netkeiba.com direct HTML",
-            "encoding:",
-            encoding_used,
-            "rows:",
-            len(parsed),
-            "race:",
-            race_id,
-        )
-        return parsed
-    except Exception as direct_error:
-        print(
-            "STATIC DIRECT PARSE WARNING:",
-            race_id,
-            repr(direct_error),
-        )
-
-    # Second choice: pandas after *explicit* correct decoding.
-    try:
-        tables = pd.read_html(io.StringIO(text))
-    except Exception as exc:
-        raise RuntimeError(
-            f"db result table parse failed: {race_id}: {exc}; "
-            f"encoding={encoding_used}; score={score}"
-        ) from exc
-
-    result = _find_result_table_from_tables(tables)
-
-    if result is None:
-        headers = []
-        for raw in tables[:10]:
-            try:
-                headers.append(list(agg.flatten_columns(raw).columns))
-            except Exception:
-                pass
-
-        raise RuntimeError(
-            f"db race result table not found: {race_id}; "
-            f"encoding={encoding_used}; score={score}; "
-            f"table_headers={headers[:5]}"
-        )
-
-    parsed = _parse_result_dataframe(result, race_id)
-
-    print(
-        "result source: db.netkeiba.com pandas",
-        "encoding:",
-        encoding_used,
-        "rows:",
-        len(parsed),
-        "race:",
-        race_id,
-    )
-
-    return parsed
-
-
-# ============================================================
-# 5. Public fetch hook used by aggregate_forward_results.py
-# ============================================================
-
-
-def robust_fetch_result_table(race_id: str) -> pd.DataFrame:
-    """Static DB first; original race.netkeiba parser as fallback."""
-
-    first_error = None
-
-    try:
-        return fetch_result_table_static(race_id)
-    except Exception as exc:
-        first_error = exc
-        print(
-            "STATIC RESULT WARNING:",
-            str(race_id),
-            repr(exc),
-        )
-
-    print(
-        "Falling back to race.netkeiba.com result page:",
-        str(race_id),
-    )
-
-    try:
-        return ORIGINAL_FETCH_RESULT_TABLE(race_id)
-    except Exception as second_error:
-        raise RuntimeError(
-            f"both result sources failed: {race_id}; "
-            f"static={first_error}; race_page={second_error}"
-        ) from second_error
-
-
-agg.fetch_result_table = robust_fetch_result_table
+agg.fetch_result_table = fetch_result_table_jra
 
 
 if __name__ == "__main__":
