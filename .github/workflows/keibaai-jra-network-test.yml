@@ -1,0 +1,40 @@
+name: KeibaAI JRA Network Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_date:
+        description: 'Race date YYYYMMDD'
+        required: false
+        default: '20261011'
+      test_race_id:
+        description: '12-digit race ID'
+        required: false
+        default: '202608040405'
+
+permissions:
+  contents: read
+
+jobs:
+  network-test:
+    name: Test JRA access from GitHub runner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install network-test dependency
+        run: python -m pip install 'requests==2.32.5'
+
+      - name: Test race list, race page, and win odds API
+        env:
+          KEIBAAI_TEST_DATE: ${{ inputs.test_date }}
+          KEIBAAI_TEST_RACE_ID: ${{ inputs.test_race_id }}
+        run: python production/test_jra_network.py
