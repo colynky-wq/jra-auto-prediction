@@ -45,4 +45,4 @@ jobs:
         env:
           KEIBAAI_DRYRUN_DATE: ${{ inputs.test_date }}
           KEIBAAI_DRYRUN_RACE_ID: ${{ inputs.test_race_id }}
-        run: python production/dry_run_one_race.py
+        run: python production/run_one_race_dry_run.py
