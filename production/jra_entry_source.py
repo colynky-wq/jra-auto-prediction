@@ -30,6 +30,25 @@ ORIGINAL_20261011_SEED = (
     + "pw01dde0105202604030320261010%2FB6"
 )
 
+# Routed seeds for dates that are being forward-tested.
+# A routed seed is enough to enter JRA's accessD navigation tree and discover
+# the other race links for the same date. We keep one seed per venue when
+# possible so the crawl does not depend on cross-venue navigation links.
+KNOWN_DATE_SEEDS = {
+    "20261012": [
+        (
+            ACCESS_D
+            + "?CNAME="
+            + "pw01dde0105202604050120261012%2FAC"
+        ),
+        (
+            ACCESS_D
+            + "?CNAME="
+            + "pw01dde0108202604050120261012%2F8A"
+        ),
+    ],
+}
+
 # Historical replay safety-net. The routed suffix is part of JRA's accessD
 # navigation state. This is used only if the original crawl cannot recover the
 # routed URL for the already-completed replay race.
@@ -169,10 +188,9 @@ def discover_entry_url(
 ) -> str | None:
     """Discover the routed JRA accessD URL for one race.
 
-    Important: the original successful Colab code started from a routed seed
-    and crawled JRA links. It did not treat the bare target CNAME as a valid
-    discovered entry page. The earlier GitHub port did, which is why it found
-    the right race id but still received a page with no table.
+    JRA accessD pages carry a short route-state suffix in CNAME. A bare CNAME
+    may return HTTP 200 while containing no race table, so the final URL must
+    be a routed URL.
     """
 
     target = str(race_id).zfill(12)
@@ -180,11 +198,14 @@ def discover_entry_url(
 
     if date8 == "20261011":
         queue = [ORIGINAL_20261011_SEED]
-        max_pages = 8
+        max_pages = 12
+    elif date8 in KNOWN_DATE_SEEDS:
+        queue = list(KNOWN_DATE_SEEDS[date8])
+        max_pages = 32
+        print("JRA discovery using routed date seeds:", len(queue), date8)
     else:
-        # Future production gets a dedicated dynamic-seed implementation.
-        # Keep the bare page available for navigation discovery, but never
-        # accept it as the final entry URL unless it actually carries a route.
+        # Generic fallback. A future production version will populate routed
+        # seeds automatically from the current JRA navigation tree.
         queue = [direct]
         max_pages = 16
 
@@ -220,6 +241,12 @@ def discover_entry_url(
                 rid = _race_id_from_url(u, date8)
                 if rid:
                     url_map[rid] = _prefer_url(url_map.get(rid), u)
+
+            # Stop early as soon as the target routed URL is found.
+            current_target = url_map.get(target)
+            if current_target and _has_route_suffix(current_target):
+                print("JRA discovered routed target URL:", current_target)
+                return current_target
 
             for u in found_urls:
                 rid = _race_id_from_url(u, date8)
