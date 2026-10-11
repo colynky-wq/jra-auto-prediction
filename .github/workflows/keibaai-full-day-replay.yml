@@ -1,0 +1,48 @@
+name: KeibaAI Full-Day Replay
+
+on:
+  workflow_dispatch:
+    inputs:
+      replay_date:
+        description: 'Historical replay date YYYYMMDD'
+        required: false
+        default: '20261011'
+      max_races:
+        description: '0 = all published races; otherwise replay only first N'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: Replay published races in 10-minute order
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install production dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Install replay network dependencies
+        run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
+      - name: Run full-day read-only replay
+        env:
+          KEIBAAI_REPLAY_DATE: ${{ inputs.replay_date }}
+          KEIBAAI_REPLAY_MAX_RACES: ${{ inputs.max_races }}
+        run: python production/full_day_replay.py
