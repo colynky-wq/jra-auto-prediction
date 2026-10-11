@@ -28,6 +28,9 @@ on:
         description: 'Live mode polling interval seconds'
         required: false
         default: '20'
+  push:
+    branches:
+      - topk-actions-validation
 
 permissions:
   contents: read
@@ -61,7 +64,28 @@ jobs:
       - name: Smoke-test Top2 Top3 runtime
         run: python production/smoke_topk_runtime.py
 
+      - name: Validation plan mode
+        if: github.event_name == 'push'
+        env:
+          KEIBAAI_LIVE_DATE: ''
+          KEIBAAI_LIVE_MODE: plan
+          KEIBAAI_LIVE_RACE_ID: ''
+          KEIBAAI_LIVE_MAX_MINUTES: '30'
+          KEIBAAI_LIVE_POLL_SECONDS: '20'
+        run: python production/live_monitor_topk.py
+
+      - name: Validation preflight mode
+        if: github.event_name == 'push'
+        env:
+          KEIBAAI_LIVE_DATE: ''
+          KEIBAAI_LIVE_MODE: preflight
+          KEIBAAI_LIVE_RACE_ID: ''
+          KEIBAAI_LIVE_MAX_MINUTES: '30'
+          KEIBAAI_LIVE_POLL_SECONDS: '20'
+        run: python production/live_monitor_topk.py
+
       - name: Run parallel Top2 Top3 live monitor
+        if: github.event_name == 'workflow_dispatch'
         env:
           KEIBAAI_LIVE_DATE: ${{ inputs.target_date }}
           KEIBAAI_LIVE_MODE: ${{ inputs.mode }}
