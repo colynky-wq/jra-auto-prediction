@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "initial-corner-six-races-v1",
+  "status": "research_reference_only",
+  "fixedMethod": "mean of normalized first-corner positions in last six valid past flat races",
+  "minimumPastRaces": 3,
+  "minimumCoveragePct": 80.0,
+  "development2024": {
+    "year": 2024,
+    "horseRows": 45411,
+    "labeledHorseRowsWithThreePastRuns": 31543,
+    "normalizedPositionMAE": {
+      "last": 0.24249,
+      "six": 0.211697,
+      "middle": 0.268535
+    },
+    "positionImprovementVsLast95CI": [
+      0.028716,
+      0.032802
+    ],
+    "allRaces": 3303,
+    "eligibleRaces": 1861,
+    "skippedForCoverage": 1442,
+    "skippedMissingLeader": 0,
+    "leaderTop1Pct": 33.42,
+    "leaderTop3Pct": 63.73,
+    "lastPositionLeaderTop3Pct": 60.02,
+    "randomKnownHorseLeaderTop1Pct": 7.71,
+    "randomKnownHorseLeaderTop3Pct": 23.14,
+    "leaderTop3ImprovementVsRandom95CI": [
+      0.385407,
+      0.426684
+    ],
+    "pairwiseOrderAgreementPct": 72.68,
+    "evaluationDays": 106
+  },
+  "evaluation2025": {
+    "year": 2025,
+    "horseRows": 46130,
+    "labeledHorseRowsWithThreePastRuns": 32113,
+    "normalizedPositionMAE": {
+      "last": 0.243398,
+      "six": 0.212592,
+      "middle": 0.267907
+    },
+    "positionImprovementVsLast95CI": [
+      0.028897,
+      0.032781
+    ],
+    "allRaces": 3313,
+    "eligibleRaces": 1877,
+    "skippedForCoverage": 1436,
+    "skippedMissingLeader": 0,
+    "leaderTop1Pct": 31.01,
+    "leaderTop3Pct": 60.79,
+    "lastPositionLeaderTop3Pct": 58.92,
+    "randomKnownHorseLeaderTop1Pct": 7.63,
+    "randomKnownHorseLeaderTop3Pct": 22.88,
+    "leaderTop3ImprovementVsRandom95CI": [
+      0.36106,
+      0.398629
+    ],
+    "pairwiseOrderAgreementPct": 72.03,
+    "evaluationDays": 109
+  },
+  "paceForecastValidated": false,
+  "stakeSizingEnabled": false,
+  "formalSignalsChanged": false,
+  "limitations": [
+    "2025 is evaluated after the method is accepted using 2024; 2026 is excluded.",
+    "All runners on a day are predicted before that day's results are added.",
+    "Top-three includes ties and unknown leaders count as misses; random baseline uses the same known-horse pool.",
+    "Initial-corner order is a rough reference, not the full race formation or a leader probability.",
+    "No race-level early sectional/lap target is stored; S/M/H pace cannot be validated.",
+    "Straight races, debut-heavy fields and fields below 80% coverage are not given a race-wide reference."
+  ],
+  "historySHA256": "f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b"
+}

@@ -1,24 +1,103 @@
 {
   "schemaVersion": 1,
   "status": "research_display_only",
-  "generatedAtJST": "2026-10-12 19:53:34",
+  "generatedAtJST": "2026-10-13 00:26:52",
   "stakeSizingEnabled": false,
   "formalSignalsChanged": false,
   "sourceInputs": {
     "predictionSHA256": "c1252e4b026fa989fafab95e0cf78df84826fdc14b338f59c67a1bbc2a07a9e9",
-    "historySHA256": "08ce44580a76119b96ed518726325f4225cfeebf80e48ff1e88645930f2e4dbf",
-    "methodVersion": "history-style-six-races-v1"
+    "historySHA256": "f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b",
+    "methodVersion": "history-corner-six-races-v2",
+    "formationMethodVersion": "initial-corner-six-races-v1"
   },
   "evaluation2025": {
     "schemaVersion": 1,
-    "methodVersion": "history-style-six-races-v1",
+    "methodVersion": "history-corner-six-races-v2",
     "evaluationYear": 2025,
-    "rows": 41291,
-    "lastStyleExactPct": 43.04,
+    "rows": 40938,
+    "lastStyleExactPct": 43.03,
     "lastSixExactPct": 42.95,
-    "lastStyleAdjacentPct": 87.2,
-    "lastSixAdjacentPct": 87.0,
+    "lastStyleAdjacentPct": 87.19,
+    "lastSixAdjacentPct": 87.01,
     "meaning": "各レースより前の履歴だけで比較。2026年は評価や条件選びに使わない。脚質割合は過去の観測頻度であり、次走の戦法の確率ではない。"
+  },
+  "formationValidation": {
+    "schemaVersion": 1,
+    "methodVersion": "initial-corner-six-races-v1",
+    "status": "research_reference_only",
+    "fixedMethod": "mean of normalized first-corner positions in last six valid past flat races",
+    "minimumPastRaces": 3,
+    "minimumCoveragePct": 80.0,
+    "development2024": {
+      "year": 2024,
+      "horseRows": 45411,
+      "labeledHorseRowsWithThreePastRuns": 31543,
+      "normalizedPositionMAE": {
+        "last": 0.24249,
+        "six": 0.211697,
+        "middle": 0.268535
+      },
+      "positionImprovementVsLast95CI": [
+        0.028716,
+        0.032802
+      ],
+      "allRaces": 3303,
+      "eligibleRaces": 1861,
+      "skippedForCoverage": 1442,
+      "skippedMissingLeader": 0,
+      "leaderTop1Pct": 33.42,
+      "leaderTop3Pct": 63.73,
+      "lastPositionLeaderTop3Pct": 60.02,
+      "randomKnownHorseLeaderTop1Pct": 7.71,
+      "randomKnownHorseLeaderTop3Pct": 23.14,
+      "leaderTop3ImprovementVsRandom95CI": [
+        0.385407,
+        0.426684
+      ],
+      "pairwiseOrderAgreementPct": 72.68,
+      "evaluationDays": 106
+    },
+    "evaluation2025": {
+      "year": 2025,
+      "horseRows": 46130,
+      "labeledHorseRowsWithThreePastRuns": 32113,
+      "normalizedPositionMAE": {
+        "last": 0.243398,
+        "six": 0.212592,
+        "middle": 0.267907
+      },
+      "positionImprovementVsLast95CI": [
+        0.028897,
+        0.032781
+      ],
+      "allRaces": 3313,
+      "eligibleRaces": 1877,
+      "skippedForCoverage": 1436,
+      "skippedMissingLeader": 0,
+      "leaderTop1Pct": 31.01,
+      "leaderTop3Pct": 60.79,
+      "lastPositionLeaderTop3Pct": 58.92,
+      "randomKnownHorseLeaderTop1Pct": 7.63,
+      "randomKnownHorseLeaderTop3Pct": 22.88,
+      "leaderTop3ImprovementVsRandom95CI": [
+        0.36106,
+        0.398629
+      ],
+      "pairwiseOrderAgreementPct": 72.03,
+      "evaluationDays": 109
+    },
+    "paceForecastValidated": false,
+    "stakeSizingEnabled": false,
+    "formalSignalsChanged": false,
+    "limitations": [
+      "2025 is evaluated after the method is accepted using 2024; 2026 is excluded.",
+      "All runners on a day are predicted before that day's results are added.",
+      "Top-three includes ties and unknown leaders count as misses; random baseline uses the same known-horse pool.",
+      "Initial-corner order is a rough reference, not the full race formation or a leader probability.",
+      "No race-level early sectional/lap target is stored; S/M/H pace cannot be validated.",
+      "Straight races, debut-heavy fields and fields below 80% coverage are not given a race-wide reference."
+    ],
+    "historySHA256": "f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b"
   },
   "races": [
     {
@@ -42,6 +121,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-16"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.125,
+            "minRelativePosition": 0.083333,
+            "maxRelativePosition": 0.166667,
+            "latestHistoryDate": "2026-08-16"
           }
         },
         {
@@ -60,6 +146,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.452991,
+            "minRelativePosition": 0.444444,
+            "maxRelativePosition": 0.461538,
             "latestHistoryDate": "2026-08-30"
           }
         },
@@ -80,6 +173,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.804487,
+            "minRelativePosition": 0.692308,
+            "maxRelativePosition": 0.916667,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -98,6 +198,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-10-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 1.0,
+            "minRelativePosition": 1.0,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-10-04"
           }
         },
@@ -118,6 +225,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.071429,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.071429,
+            "latestHistoryDate": "2026-09-22"
           }
         },
         {
@@ -136,6 +250,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.8,
+            "minRelativePosition": 0.8,
+            "maxRelativePosition": 0.8,
             "latestHistoryDate": "2026-09-20"
           }
         },
@@ -156,6 +277,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.443182,
+            "minRelativePosition": 0.090909,
+            "maxRelativePosition": 0.875,
+            "latestHistoryDate": "2026-09-12"
           }
         },
         {
@@ -174,6 +302,13 @@
               "差し": 50.0,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.607143,
+            "minRelativePosition": 0.357143,
+            "maxRelativePosition": 0.857143,
             "latestHistoryDate": "2026-09-19"
           }
         },
@@ -194,6 +329,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.642857,
+            "minRelativePosition": 0.642857,
+            "maxRelativePosition": 0.642857,
+            "latestHistoryDate": "2026-09-27"
           }
         },
         {
@@ -212,6 +354,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-10-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.808333,
+            "minRelativePosition": 0.75,
+            "maxRelativePosition": 0.866667,
             "latestHistoryDate": "2026-10-04"
           }
         },
@@ -232,6 +381,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.375,
+            "minRelativePosition": 0.25,
+            "maxRelativePosition": 0.5,
+            "latestHistoryDate": "2026-08-23"
           }
         },
         {
@@ -250,6 +406,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.083916,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.090909,
             "latestHistoryDate": "2026-09-20"
           }
         }
@@ -363,7 +526,31 @@
           },
           "practicalRank": 6
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 1,
+        "unknownHorses": 11,
+        "totalHorses": 12,
+        "coveragePct": 8.3,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040502",
@@ -386,6 +573,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-07-05"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.5,
+            "minRelativePosition": 0.5,
+            "maxRelativePosition": 0.5,
+            "latestHistoryDate": "2026-07-05"
           }
         },
         {
@@ -404,6 +598,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.333333,
+            "minRelativePosition": 0.333333,
+            "maxRelativePosition": 0.333333,
             "latestHistoryDate": "2026-09-27"
           }
         },
@@ -424,6 +625,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-02"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.428571,
+            "minRelativePosition": 0.428571,
+            "maxRelativePosition": 0.428571,
+            "latestHistoryDate": "2026-08-02"
           }
         },
         {
@@ -442,6 +650,13 @@
               "差し": 50.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.392857,
+            "minRelativePosition": 0.285714,
+            "maxRelativePosition": 0.5,
             "latestHistoryDate": "2026-09-12"
           }
         },
@@ -462,6 +677,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-10-03"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.603175,
+            "minRelativePosition": 0.333333,
+            "maxRelativePosition": 0.833333,
+            "latestHistoryDate": "2026-10-03"
           }
         },
         {
@@ -480,6 +702,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.714286,
+            "minRelativePosition": 0.714286,
+            "maxRelativePosition": 0.714286,
             "latestHistoryDate": "2026-09-26"
           }
         },
@@ -500,6 +729,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-06-28"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.555556,
+            "minRelativePosition": 0.555556,
+            "maxRelativePosition": 0.555556,
+            "latestHistoryDate": "2026-06-28"
           }
         },
         {
@@ -518,6 +754,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.6,
+            "minRelativePosition": 0.6,
+            "maxRelativePosition": 0.6,
             "latestHistoryDate": "2026-09-19"
           }
         },
@@ -538,6 +781,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.888889,
+            "minRelativePosition": 0.888889,
+            "maxRelativePosition": 0.888889,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -556,6 +806,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.928571,
+            "minRelativePosition": 0.857143,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-19"
           }
         },
@@ -576,6 +833,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.436508,
+            "minRelativePosition": 0.428571,
+            "maxRelativePosition": 0.444444,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -594,6 +858,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.076923,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.076923,
             "latestHistoryDate": "2026-09-26"
           }
         }
@@ -689,7 +960,31 @@
           },
           "practicalRank": 5
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 1,
+        "unknownHorses": 11,
+        "totalHorses": 12,
+        "coveragePct": 8.3,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040503",
@@ -712,6 +1007,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.0,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.0,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -730,6 +1032,13 @@
               "差し": 75.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.474747,
+            "minRelativePosition": 0.222222,
+            "maxRelativePosition": 0.666667,
             "latestHistoryDate": "2026-09-22"
           }
         },
@@ -750,6 +1059,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.299242,
+            "minRelativePosition": 0.181818,
+            "maxRelativePosition": 0.416667,
+            "latestHistoryDate": "2026-09-27"
           }
         },
         {
@@ -768,6 +1084,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.571429,
+            "minRelativePosition": 0.571429,
+            "maxRelativePosition": 0.571429,
             "latestHistoryDate": "2026-09-26"
           }
         },
@@ -788,6 +1111,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-08-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.785714,
+            "minRelativePosition": 0.785714,
+            "maxRelativePosition": 0.785714,
+            "latestHistoryDate": "2026-08-15"
           }
         },
         {
@@ -806,6 +1136,13 @@
               "差し": 50.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.166667,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.333333,
             "latestHistoryDate": "2026-09-13"
           }
         },
@@ -826,6 +1163,13 @@
               "追込": 66.7
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.719048,
+            "minRelativePosition": 0.5,
+            "maxRelativePosition": 0.857143,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -844,6 +1188,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-16"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.583333,
+            "minRelativePosition": 0.583333,
+            "maxRelativePosition": 0.583333,
             "latestHistoryDate": "2026-08-16"
           }
         },
@@ -864,6 +1215,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 1.0,
+            "minRelativePosition": 1.0,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-27"
           }
         },
         {
@@ -883,6 +1241,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-09-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 1.0,
+            "minRelativePosition": 1.0,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-22"
           }
         },
         {
@@ -901,6 +1266,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.361823,
+            "minRelativePosition": 0.111111,
+            "maxRelativePosition": 0.666667,
             "latestHistoryDate": "2026-09-22"
           }
         }
@@ -978,7 +1350,33 @@
           },
           "practicalRank": 4
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 3,
+        "unknownHorses": 8,
+        "totalHorses": 11,
+        "coveragePct": 27.3,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [
+          11
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040503",
@@ -1001,6 +1399,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.111111,
+            "minRelativePosition": 0.111111,
+            "maxRelativePosition": 0.111111,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -1019,6 +1424,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.285714,
+            "minRelativePosition": 0.285714,
+            "maxRelativePosition": 0.285714,
             "latestHistoryDate": "2026-09-26"
           }
         },
@@ -1039,6 +1451,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-10-03"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.620588,
+            "minRelativePosition": 0.222222,
+            "maxRelativePosition": 0.933333,
+            "latestHistoryDate": "2026-10-03"
           }
         },
         {
@@ -1057,6 +1476,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-09-05"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.75,
+            "minRelativePosition": 0.75,
+            "maxRelativePosition": 0.75,
             "latestHistoryDate": "2026-09-05"
           }
         },
@@ -1077,6 +1503,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.555556,
+            "minRelativePosition": 0.111111,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -1095,6 +1528,13 @@
               "差し": 50.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.222222,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.444444,
             "latestHistoryDate": "2026-08-08"
           }
         },
@@ -1115,6 +1555,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.631313,
+            "minRelativePosition": 0.444444,
+            "maxRelativePosition": 0.818182,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -1133,6 +1580,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-01"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.25,
+            "minRelativePosition": 0.25,
+            "maxRelativePosition": 0.25,
             "latestHistoryDate": "2026-08-01"
           }
         },
@@ -1153,6 +1607,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.428571,
+            "minRelativePosition": 0.428571,
+            "maxRelativePosition": 0.428571,
+            "latestHistoryDate": "2026-09-26"
           }
         },
         {
@@ -1171,6 +1632,13 @@
               "差し": 100.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-06-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.375,
+            "minRelativePosition": 0.375,
+            "maxRelativePosition": 0.375,
             "latestHistoryDate": "2026-06-20"
           }
         },
@@ -1191,6 +1659,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.171429,
+            "minRelativePosition": 0.142857,
+            "maxRelativePosition": 0.2,
+            "latestHistoryDate": "2026-08-15"
           }
         },
         {
@@ -1209,6 +1684,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.166667,
+            "minRelativePosition": 0.166667,
+            "maxRelativePosition": 0.166667,
             "latestHistoryDate": "2026-09-13"
           }
         }
@@ -1322,7 +1804,31 @@
           },
           "practicalRank": 6
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 1,
+        "unknownHorses": 11,
+        "totalHorses": 12,
+        "coveragePct": 8.3,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040504",
@@ -1334,7 +1840,8 @@
           "sourceAiProbabilityPct": 1.819,
           "sourceMarketProbabilityPct": 1.941,
           "sourceOdds": 41.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 2,
@@ -1342,7 +1849,8 @@
           "sourceAiProbabilityPct": 1.913,
           "sourceMarketProbabilityPct": 1.955,
           "sourceOdds": 40.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 3,
@@ -1350,7 +1858,8 @@
           "sourceAiProbabilityPct": 2.257,
           "sourceMarketProbabilityPct": 2.34,
           "sourceOdds": 34.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 4,
@@ -1358,7 +1867,8 @@
           "sourceAiProbabilityPct": 9.775,
           "sourceMarketProbabilityPct": 9.703,
           "sourceOdds": 8.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 5,
@@ -1366,7 +1876,8 @@
           "sourceAiProbabilityPct": 3.341,
           "sourceMarketProbabilityPct": 3.288,
           "sourceOdds": 24.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 6,
@@ -1374,7 +1885,8 @@
           "sourceAiProbabilityPct": 1.41,
           "sourceMarketProbabilityPct": 1.498,
           "sourceOdds": 53.1,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -1382,7 +1894,8 @@
           "sourceAiProbabilityPct": 10.799,
           "sourceMarketProbabilityPct": 10.752,
           "sourceOdds": 7.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 8,
@@ -1390,7 +1903,8 @@
           "sourceAiProbabilityPct": 5.892,
           "sourceMarketProbabilityPct": 5.85,
           "sourceOdds": 13.6,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 9,
@@ -1398,7 +1912,8 @@
           "sourceAiProbabilityPct": 2.82,
           "sourceMarketProbabilityPct": 2.811,
           "sourceOdds": 28.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 10,
@@ -1406,7 +1921,8 @@
           "sourceAiProbabilityPct": 2.299,
           "sourceMarketProbabilityPct": 2.382,
           "sourceOdds": 33.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 11,
@@ -1414,7 +1930,8 @@
           "sourceAiProbabilityPct": 0.715,
           "sourceMarketProbabilityPct": 0.807,
           "sourceOdds": 98.6,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 12,
@@ -1422,7 +1939,8 @@
           "sourceAiProbabilityPct": 38.114,
           "sourceMarketProbabilityPct": 37.887,
           "sourceOdds": 2.1,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 13,
@@ -1430,7 +1948,8 @@
           "sourceAiProbabilityPct": 5.197,
           "sourceMarketProbabilityPct": 5.412,
           "sourceOdds": 14.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 14,
@@ -1438,7 +1957,8 @@
           "sourceAiProbabilityPct": 7.343,
           "sourceMarketProbabilityPct": 7.233,
           "sourceOdds": 11.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 15,
@@ -1446,7 +1966,8 @@
           "sourceAiProbabilityPct": 2.979,
           "sourceMarketProbabilityPct": 2.893,
           "sourceOdds": 27.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 16,
@@ -1454,7 +1975,8 @@
           "sourceAiProbabilityPct": 3.325,
           "sourceMarketProbabilityPct": 3.247,
           "sourceOdds": 24.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         }
       ],
       "longshotCandidates": [
@@ -1638,7 +2160,31 @@
           },
           "practicalRank": 10
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 0,
+        "unknownHorses": 16,
+        "totalHorses": 16,
+        "coveragePct": 0.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040505",
@@ -1650,7 +2196,8 @@
           "sourceAiProbabilityPct": 5.637,
           "sourceMarketProbabilityPct": 5.522,
           "sourceOdds": 14.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 2,
@@ -1658,7 +2205,8 @@
           "sourceAiProbabilityPct": 2.277,
           "sourceMarketProbabilityPct": 2.282,
           "sourceOdds": 34.6,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 3,
@@ -1666,7 +2214,8 @@
           "sourceAiProbabilityPct": 0.983,
           "sourceMarketProbabilityPct": 1.076,
           "sourceOdds": 73.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 4,
@@ -1674,7 +2223,8 @@
           "sourceAiProbabilityPct": 1.847,
           "sourceMarketProbabilityPct": 1.903,
           "sourceOdds": 41.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 5,
@@ -1682,7 +2232,8 @@
           "sourceAiProbabilityPct": 1.471,
           "sourceMarketProbabilityPct": 1.479,
           "sourceOdds": 53.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 6,
@@ -1690,7 +2241,8 @@
           "sourceAiProbabilityPct": 22.944,
           "sourceMarketProbabilityPct": 22.563,
           "sourceOdds": 3.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -1698,7 +2250,8 @@
           "sourceAiProbabilityPct": 6.273,
           "sourceMarketProbabilityPct": 6.122,
           "sourceOdds": 12.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 8,
@@ -1706,7 +2259,8 @@
           "sourceAiProbabilityPct": 1.548,
           "sourceMarketProbabilityPct": 1.618,
           "sourceOdds": 48.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 9,
@@ -1714,7 +2268,8 @@
           "sourceAiProbabilityPct": 0.909,
           "sourceMarketProbabilityPct": 0.995,
           "sourceOdds": 79.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 10,
@@ -1722,7 +2277,8 @@
           "sourceAiProbabilityPct": 38.87,
           "sourceMarketProbabilityPct": 39.485,
           "sourceOdds": 2.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 11,
@@ -1730,7 +2286,8 @@
           "sourceAiProbabilityPct": 0.742,
           "sourceMarketProbabilityPct": 0.84,
           "sourceOdds": 94.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 12,
@@ -1738,7 +2295,8 @@
           "sourceAiProbabilityPct": 16.498,
           "sourceMarketProbabilityPct": 16.116,
           "sourceOdds": 4.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         }
       ],
       "longshotCandidates": [
@@ -1814,7 +2372,31 @@
           },
           "practicalRank": 4
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 0,
+        "unknownHorses": 12,
+        "totalHorses": 12,
+        "coveragePct": 0.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040505",
@@ -1826,7 +2408,8 @@
           "sourceAiProbabilityPct": 4.243,
           "sourceMarketProbabilityPct": 4.194,
           "sourceOdds": 18.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 2,
@@ -1834,7 +2417,8 @@
           "sourceAiProbabilityPct": 35.948,
           "sourceMarketProbabilityPct": 35.838,
           "sourceOdds": 2.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 3,
@@ -1842,7 +2426,8 @@
           "sourceAiProbabilityPct": 7.797,
           "sourceMarketProbabilityPct": 7.73,
           "sourceOdds": 10.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 4,
@@ -1850,7 +2435,8 @@
           "sourceAiProbabilityPct": 13.363,
           "sourceMarketProbabilityPct": 13.363,
           "sourceOdds": 5.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 5,
@@ -1858,7 +2444,8 @@
           "sourceAiProbabilityPct": 8.126,
           "sourceMarketProbabilityPct": 7.964,
           "sourceOdds": 9.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 6,
@@ -1866,7 +2453,8 @@
           "sourceAiProbabilityPct": 10.497,
           "sourceMarketProbabilityPct": 10.239,
           "sourceOdds": 7.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -1874,7 +2462,8 @@
           "sourceAiProbabilityPct": 3.2,
           "sourceMarketProbabilityPct": 3.141,
           "sourceOdds": 25.1,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 8,
@@ -1882,7 +2471,8 @@
           "sourceAiProbabilityPct": 2.992,
           "sourceMarketProbabilityPct": 2.931,
           "sourceOdds": 26.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 9,
@@ -1890,7 +2480,8 @@
           "sourceAiProbabilityPct": 13.833,
           "sourceMarketProbabilityPct": 14.6,
           "sourceOdds": 5.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         }
       ],
       "longshotCandidates": [
@@ -1966,7 +2557,31 @@
           },
           "practicalRank": 4
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 0,
+        "unknownHorses": 9,
+        "totalHorses": 9,
+        "coveragePct": 0.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040506",
@@ -1978,7 +2593,8 @@
           "sourceAiProbabilityPct": 5.729,
           "sourceMarketProbabilityPct": 5.669,
           "sourceOdds": 13.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 2,
@@ -1986,7 +2602,8 @@
           "sourceAiProbabilityPct": 7.801,
           "sourceMarketProbabilityPct": 7.824,
           "sourceOdds": 10.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 3,
@@ -1994,7 +2611,8 @@
           "sourceAiProbabilityPct": 3.532,
           "sourceMarketProbabilityPct": 3.508,
           "sourceOdds": 22.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 4,
@@ -2002,7 +2620,8 @@
           "sourceAiProbabilityPct": 0.78,
           "sourceMarketProbabilityPct": 0.89,
           "sourceOdds": 87.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 5,
@@ -2010,7 +2629,8 @@
           "sourceAiProbabilityPct": 9.245,
           "sourceMarketProbabilityPct": 9.314,
           "sourceOdds": 8.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 6,
@@ -2018,7 +2638,8 @@
           "sourceAiProbabilityPct": 2.738,
           "sourceMarketProbabilityPct": 2.707,
           "sourceOdds": 28.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -2026,7 +2647,8 @@
           "sourceAiProbabilityPct": 8.381,
           "sourceMarketProbabilityPct": 8.413,
           "sourceOdds": 9.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 8,
@@ -2034,7 +2656,8 @@
           "sourceAiProbabilityPct": 3.322,
           "sourceMarketProbabilityPct": 3.287,
           "sourceOdds": 23.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 9,
@@ -2042,7 +2665,8 @@
           "sourceAiProbabilityPct": 3.089,
           "sourceMarketProbabilityPct": 2.975,
           "sourceOdds": 26.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 10,
@@ -2050,7 +2674,8 @@
           "sourceAiProbabilityPct": 2.936,
           "sourceMarketProbabilityPct": 2.876,
           "sourceOdds": 27.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 11,
@@ -2058,7 +2683,8 @@
           "sourceAiProbabilityPct": 4.113,
           "sourceMarketProbabilityPct": 3.951,
           "sourceOdds": 19.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 12,
@@ -2066,7 +2692,8 @@
           "sourceAiProbabilityPct": 0.78,
           "sourceMarketProbabilityPct": 0.854,
           "sourceOdds": 91.6,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 13,
@@ -2074,7 +2701,8 @@
           "sourceAiProbabilityPct": 0.63,
           "sourceMarketProbabilityPct": 0.742,
           "sourceOdds": 105.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 14,
@@ -2082,7 +2710,8 @@
           "sourceAiProbabilityPct": 43.509,
           "sourceMarketProbabilityPct": 43.466,
           "sourceOdds": 1.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 15,
@@ -2090,7 +2719,8 @@
           "sourceAiProbabilityPct": 0.807,
           "sourceMarketProbabilityPct": 0.915,
           "sourceOdds": 85.5,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 16,
@@ -2098,7 +2728,8 @@
           "sourceAiProbabilityPct": 2.609,
           "sourceMarketProbabilityPct": 2.608,
           "sourceOdds": 30.0,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         }
       ],
       "longshotCandidates": [
@@ -2228,7 +2859,31 @@
           },
           "practicalRank": 7
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 0,
+        "unknownHorses": 16,
+        "totalHorses": 16,
+        "coveragePct": 0.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040506",
@@ -2240,7 +2895,8 @@
           "sourceAiProbabilityPct": 1.654,
           "sourceMarketProbabilityPct": 1.696,
           "sourceOdds": 46.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 2,
@@ -2248,7 +2904,8 @@
           "sourceAiProbabilityPct": 7.675,
           "sourceMarketProbabilityPct": 7.647,
           "sourceOdds": 10.4,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 3,
@@ -2256,7 +2913,8 @@
           "sourceAiProbabilityPct": 10.602,
           "sourceMarketProbabilityPct": 10.195,
           "sourceOdds": 7.8,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 4,
@@ -2264,7 +2922,8 @@
           "sourceAiProbabilityPct": 2.943,
           "sourceMarketProbabilityPct": 2.978,
           "sourceOdds": 26.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 5,
@@ -2272,7 +2931,8 @@
           "sourceAiProbabilityPct": 4.315,
           "sourceMarketProbabilityPct": 4.253,
           "sourceOdds": 18.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 6,
@@ -2280,7 +2940,8 @@
           "sourceAiProbabilityPct": 1.947,
           "sourceMarketProbabilityPct": 2.024,
           "sourceOdds": 39.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -2288,7 +2949,8 @@
           "sourceAiProbabilityPct": 10.672,
           "sourceMarketProbabilityPct": 11.201,
           "sourceOdds": 7.1,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 8,
@@ -2296,7 +2958,8 @@
           "sourceAiProbabilityPct": 12.039,
           "sourceMarketProbabilityPct": 11.869,
           "sourceOdds": 6.7,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 9,
@@ -2304,7 +2967,8 @@
           "sourceAiProbabilityPct": 7.349,
           "sourceMarketProbabilityPct": 7.1,
           "sourceOdds": 11.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 10,
@@ -2312,7 +2976,8 @@
           "sourceAiProbabilityPct": 1.56,
           "sourceMarketProbabilityPct": 1.646,
           "sourceOdds": 48.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 11,
@@ -2320,7 +2985,8 @@
           "sourceAiProbabilityPct": 15.064,
           "sourceMarketProbabilityPct": 15.293,
           "sourceOdds": 5.2,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 12,
@@ -2328,7 +2994,8 @@
           "sourceAiProbabilityPct": 24.181,
           "sourceMarketProbabilityPct": 24.098,
           "sourceOdds": 3.3,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         }
       ],
       "longshotCandidates": [
@@ -2458,7 +3125,31 @@
           },
           "practicalRank": 7
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 0,
+        "unknownHorses": 12,
+        "totalHorses": 12,
+        "coveragePct": 0.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040507",
@@ -2481,6 +3172,13 @@
               "追込": 83.3
             },
             "latestHistoryDate": "2026-06-14"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.80754,
+            "minRelativePosition": 0.4,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-06-14"
           }
         },
         {
@@ -2499,6 +3197,13 @@
               "差し": 0.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-01-31"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.222222,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.866667,
             "latestHistoryDate": "2026-01-31"
           }
         },
@@ -2519,6 +3224,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.360317,
+            "minRelativePosition": 0.2,
+            "maxRelativePosition": 0.533333,
+            "latestHistoryDate": "2026-09-27"
           }
         },
         {
@@ -2537,6 +3249,13 @@
               "差し": 33.3,
               "追込": 16.7
             },
+            "latestHistoryDate": "2025-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.411966,
+            "minRelativePosition": 0.166667,
+            "maxRelativePosition": 0.733333,
             "latestHistoryDate": "2025-09-13"
           }
         },
@@ -2557,6 +3276,13 @@
               "追込": 83.3
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.858547,
+            "minRelativePosition": 0.461538,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -2575,6 +3301,13 @@
               "差し": 16.7,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-08-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.671032,
+            "minRelativePosition": 0.083333,
+            "maxRelativePosition": 0.857143,
             "latestHistoryDate": "2026-08-22"
           }
         },
@@ -2595,6 +3328,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.449573,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.769231,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -2613,6 +3353,13 @@
               "差し": 66.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-06-14"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.361844,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.642857,
             "latestHistoryDate": "2026-06-14"
           }
         },
@@ -2633,6 +3380,13 @@
               "追込": 80.0
             },
             "latestHistoryDate": "2026-06-28"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 5,
+            "meanRelativePosition": 0.826667,
+            "minRelativePosition": 0.416667,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-06-28"
           }
         },
         {
@@ -2651,6 +3405,13 @@
               "差し": 16.7,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.623604,
+            "minRelativePosition": 0.266667,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-19"
           }
         },
@@ -2671,6 +3432,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.675214,
+            "minRelativePosition": 0.5,
+            "maxRelativePosition": 0.9,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -2689,6 +3457,13 @@
               "差し": 33.3,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.694444,
+            "minRelativePosition": 0.4,
+            "maxRelativePosition": 0.866667,
             "latestHistoryDate": "2026-09-12"
           }
         },
@@ -2709,6 +3484,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-08-01"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.377349,
+            "minRelativePosition": 0.058824,
+            "maxRelativePosition": 0.857143,
+            "latestHistoryDate": "2026-08-01"
           }
         },
         {
@@ -2727,6 +3509,13 @@
               "差し": 33.3,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-07-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.498138,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-07-19"
           }
         },
@@ -2747,6 +3536,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-05-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.430159,
+            "minRelativePosition": 0.083333,
+            "maxRelativePosition": 0.833333,
+            "latestHistoryDate": "2026-05-23"
           }
         },
         {
@@ -2765,6 +3561,13 @@
               "差し": 0.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-08-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.170868,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.705882,
             "latestHistoryDate": "2026-08-15"
           }
         }
@@ -2950,7 +3753,56 @@
           },
           "practicalRank": 10
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 16,
+        "unknownHorses": 0,
+        "totalHorses": 16,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          16,
+          2,
+          3,
+          8,
+          13,
+          4,
+          15,
+          7,
+          14,
+          10,
+          6,
+          11,
+          12,
+          1,
+          9,
+          5
+        ],
+        "escapeTrendHorseNumbers": [
+          16
+        ],
+        "frontTrendHorseNumbers": [
+          2,
+          4,
+          13,
+          15,
+          16
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040507",
@@ -2973,6 +3825,13 @@
               "追込": 66.7
             },
             "latestHistoryDate": "2026-08-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.680662,
+            "minRelativePosition": 0.133333,
+            "maxRelativePosition": 0.916667,
+            "latestHistoryDate": "2026-08-15"
           }
         },
         {
@@ -2991,6 +3850,13 @@
               "差し": 0.0,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-04-05"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.308333,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.8,
             "latestHistoryDate": "2026-04-05"
           }
         },
@@ -3011,6 +3877,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.400331,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.666667,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3029,6 +3902,13 @@
               "差し": 66.7,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-01-11"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.612698,
+            "minRelativePosition": 0.466667,
+            "maxRelativePosition": 0.8,
             "latestHistoryDate": "2026-01-11"
           }
         },
@@ -3049,6 +3929,13 @@
               "追込": 75.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.875,
+            "minRelativePosition": 0.642857,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3067,6 +3954,13 @@
               "差し": 16.7,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-09-06"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.301404,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.866667,
             "latestHistoryDate": "2026-09-06"
           }
         },
@@ -3087,6 +3981,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.255189,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.769231,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3105,6 +4006,13 @@
               "差し": 33.3,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.77417,
+            "minRelativePosition": 0.444444,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-21"
           }
         },
@@ -3125,6 +4033,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.620545,
+            "minRelativePosition": 0.214286,
+            "maxRelativePosition": 0.8,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3143,6 +4058,13 @@
               "差し": 16.7,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.506452,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-19"
           }
         },
@@ -3163,6 +4085,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.413767,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.916667,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3181,6 +4110,13 @@
               "差し": 66.7,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.497619,
+            "minRelativePosition": 0.3,
+            "maxRelativePosition": 0.785714,
             "latestHistoryDate": "2026-08-23"
           }
         },
@@ -3201,6 +4137,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.710012,
+            "minRelativePosition": 0.307692,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -3219,6 +4162,13 @@
               "差し": 50.0,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-05-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.653968,
+            "minRelativePosition": 0.428571,
+            "maxRelativePosition": 0.916667,
             "latestHistoryDate": "2026-05-23"
           }
         },
@@ -3239,6 +4189,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.405952,
+            "minRelativePosition": 0.25,
+            "maxRelativePosition": 0.571429,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3257,6 +4214,13 @@
               "差し": 75.0,
               "追込": 25.0
             },
+            "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.5,
+            "minRelativePosition": 0.333333,
+            "maxRelativePosition": 0.8,
             "latestHistoryDate": "2026-08-08"
           }
         }
@@ -3424,7 +4388,55 @@
           },
           "practicalRank": 9
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 16,
+        "unknownHorses": 0,
+        "totalHorses": 16,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          7,
+          6,
+          2,
+          3,
+          15,
+          11,
+          12,
+          16,
+          10,
+          4,
+          9,
+          14,
+          1,
+          13,
+          8,
+          5
+        ],
+        "escapeTrendHorseNumbers": [
+          7
+        ],
+        "frontTrendHorseNumbers": [
+          2,
+          6,
+          7,
+          11
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040508",
@@ -3447,6 +4459,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-07-25"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.6,
+            "minRelativePosition": 0.6,
+            "maxRelativePosition": 0.6,
+            "latestHistoryDate": "2026-07-25"
           }
         },
         {
@@ -3465,6 +4484,13 @@
               "差し": 0.0,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-08-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.402597,
+            "minRelativePosition": 0.090909,
+            "maxRelativePosition": 0.714286,
             "latestHistoryDate": "2026-08-22"
           }
         },
@@ -3485,6 +4511,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.115385,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.230769,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -3503,6 +4536,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.071429,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.142857,
             "latestHistoryDate": "2026-09-26"
           }
         },
@@ -3523,6 +4563,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.071429,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.142857,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -3541,6 +4588,13 @@
               "差し": 33.3,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-10-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.770563,
+            "minRelativePosition": 0.454545,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-10-04"
           }
         }
@@ -3564,7 +4618,33 @@
           },
           "practicalRank": 1
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 2,
+        "unknownHorses": 4,
+        "totalHorses": 6,
+        "coveragePct": 33.3,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [
+          5
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040508",
@@ -3587,6 +4667,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.550595,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-08-23"
           }
         },
         {
@@ -3605,6 +4692,13 @@
               "差し": 50.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.483279,
+            "minRelativePosition": 0.181818,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-27"
           }
         },
@@ -3625,6 +4719,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2025-12-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.208333,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.5,
+            "latestHistoryDate": "2025-12-13"
           }
         },
         {
@@ -3643,6 +4744,13 @@
               "差し": 33.3,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.616966,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-27"
           }
         },
@@ -3663,6 +4771,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-04-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.425672,
+            "minRelativePosition": 0.142857,
+            "maxRelativePosition": 0.923077,
+            "latestHistoryDate": "2026-04-12"
           }
         },
         {
@@ -3671,7 +4786,8 @@
           "sourceAiProbabilityPct": 9.335,
           "sourceMarketProbabilityPct": 8.932,
           "sourceOdds": 8.9,
-          "styleTendency": null
+          "styleTendency": null,
+          "initialPositionHistory": null
         },
         {
           "number": 7,
@@ -3689,6 +4805,13 @@
               "差し": 16.7,
               "追込": 83.3
             },
+            "latestHistoryDate": "2026-06-28"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.860606,
+            "minRelativePosition": 0.363636,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-06-28"
           }
         },
@@ -3709,6 +4832,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.384127,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.785714,
+            "latestHistoryDate": "2026-08-08"
           }
         },
         {
@@ -3727,6 +4857,13 @@
               "差し": 33.3,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-05-17"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.684127,
+            "minRelativePosition": 0.4,
+            "maxRelativePosition": 0.866667,
             "latestHistoryDate": "2026-05-17"
           }
         },
@@ -3747,6 +4884,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.489863,
+            "minRelativePosition": 0.125,
+            "maxRelativePosition": 0.928571,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -3765,6 +4909,13 @@
               "差し": 66.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.326611,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.588235,
             "latestHistoryDate": "2026-09-19"
           }
         }
@@ -3878,7 +5029,47 @@
           },
           "practicalRank": 6
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 10,
+        "unknownHorses": 1,
+        "totalHorses": 11,
+        "coveragePct": 90.9,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          3,
+          11,
+          8,
+          5,
+          2,
+          10,
+          1,
+          4,
+          9,
+          7
+        ],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [
+          3,
+          5,
+          8,
+          10
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040509",
@@ -3901,6 +5092,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-06"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.458242,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.769231,
+            "latestHistoryDate": "2026-09-06"
           }
         },
         {
@@ -3919,6 +5117,13 @@
               "差し": 25.0,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-07-25"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.517262,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.785714,
             "latestHistoryDate": "2026-07-25"
           }
         },
@@ -3939,6 +5144,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-07-25"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.321429,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.928571,
+            "latestHistoryDate": "2026-07-25"
           }
         },
         {
@@ -3957,6 +5169,13 @@
               "差し": 16.7,
               "追込": 83.3
             },
+            "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.764286,
+            "minRelativePosition": 0.6,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-13"
           }
         },
@@ -3977,6 +5196,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-07-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.610131,
+            "minRelativePosition": 0.294118,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-07-04"
           }
         },
         {
@@ -3995,6 +5221,13 @@
               "差し": 50.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.463889,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-08-30"
           }
         },
@@ -4015,6 +5248,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-04-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.647708,
+            "minRelativePosition": 0.363636,
+            "maxRelativePosition": 0.933333,
+            "latestHistoryDate": "2026-04-04"
           }
         },
         {
@@ -4033,6 +5273,13 @@
               "差し": 40.0,
               "追込": 40.0
             },
+            "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 5,
+            "meanRelativePosition": 0.498052,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.75,
             "latestHistoryDate": "2026-08-08"
           }
         },
@@ -4053,6 +5300,13 @@
               "追込": 25.0
             },
             "latestHistoryDate": "2026-07-11"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.452564,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.866667,
+            "latestHistoryDate": "2026-07-11"
           }
         },
         {
@@ -4071,6 +5325,13 @@
               "差し": 25.0,
               "追込": 25.0
             },
+            "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.261905,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.714286,
             "latestHistoryDate": "2026-08-08"
           }
         },
@@ -4091,6 +5352,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.586572,
+            "minRelativePosition": 0.411765,
+            "maxRelativePosition": 0.733333,
+            "latestHistoryDate": "2026-09-13"
           }
         },
         {
@@ -4109,6 +5377,13 @@
               "差し": 20.0,
               "追込": 80.0
             },
+            "latestHistoryDate": "2026-08-02"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 5,
+            "meanRelativePosition": 0.837521,
+            "minRelativePosition": 0.615385,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-08-02"
           }
         },
@@ -4129,6 +5404,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2025-08-17"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.361951,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.928571,
+            "latestHistoryDate": "2025-08-17"
           }
         },
         {
@@ -4147,6 +5429,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.193124,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.3,
             "latestHistoryDate": "2026-09-27"
           }
         }
@@ -4278,7 +5567,54 @@
           },
           "practicalRank": 7
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 14,
+        "unknownHorses": 0,
+        "totalHorses": 14,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          14,
+          10,
+          3,
+          13,
+          9,
+          1,
+          6,
+          8,
+          2,
+          11,
+          5,
+          7,
+          4,
+          12
+        ],
+        "escapeTrendHorseNumbers": [
+          10
+        ],
+        "frontTrendHorseNumbers": [
+          3,
+          9,
+          10,
+          13,
+          14
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040509",
@@ -4301,6 +5637,13 @@
               "追込": 25.0
             },
             "latestHistoryDate": "2026-04-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.487229,
+            "minRelativePosition": 0.142857,
+            "maxRelativePosition": 0.866667,
+            "latestHistoryDate": "2026-04-12"
           }
         },
         {
@@ -4319,6 +5662,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.228571,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.533333,
             "latestHistoryDate": "2026-09-27"
           }
         },
@@ -4339,6 +5689,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-05"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.619241,
+            "minRelativePosition": 0.4,
+            "maxRelativePosition": 0.9,
+            "latestHistoryDate": "2026-09-05"
           }
         },
         {
@@ -4357,6 +5714,13 @@
               "差し": 16.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.167424,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.454545,
             "latestHistoryDate": "2026-09-20"
           }
         },
@@ -4377,6 +5741,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.251404,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.5,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -4395,6 +5766,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.266811,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.666667,
             "latestHistoryDate": "2026-09-20"
           }
         },
@@ -4415,6 +5793,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.202116,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.4,
+            "latestHistoryDate": "2026-08-30"
           }
         },
         {
@@ -4433,6 +5818,13 @@
               "差し": 16.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-02-28"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.243122,
+            "minRelativePosition": 0.1,
+            "maxRelativePosition": 0.444444,
             "latestHistoryDate": "2026-02-28"
           }
         },
@@ -4453,6 +5845,13 @@
               "追込": 100.0
             },
             "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.916667,
+            "minRelativePosition": 0.833333,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-13"
           }
         },
         {
@@ -4471,6 +5870,13 @@
               "差し": 16.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-05-31"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.20482,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.384615,
             "latestHistoryDate": "2026-05-31"
           }
         },
@@ -4491,6 +5897,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.208802,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.428571,
+            "latestHistoryDate": "2026-09-27"
           }
         },
         {
@@ -4509,6 +5922,13 @@
               "差し": 66.7,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-01-05"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.703704,
+            "minRelativePosition": 0.444444,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-01-05"
           }
         }
@@ -4622,7 +6042,55 @@
           },
           "practicalRank": 6
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 11,
+        "unknownHorses": 1,
+        "totalHorses": 12,
+        "coveragePct": 91.7,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          4,
+          7,
+          10,
+          11,
+          2,
+          8,
+          5,
+          6,
+          1,
+          3,
+          12
+        ],
+        "escapeTrendHorseNumbers": [
+          4
+        ],
+        "frontTrendHorseNumbers": [
+          1,
+          2,
+          4,
+          5,
+          6,
+          7,
+          8,
+          10,
+          11
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040510",
@@ -4645,6 +6113,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.300397,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.733333,
+            "latestHistoryDate": "2026-09-13"
           }
         },
         {
@@ -4663,6 +6138,13 @@
               "差し": 50.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.39085,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.7,
             "latestHistoryDate": "2026-09-12"
           }
         },
@@ -4683,6 +6165,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-09"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.481183,
+            "minRelativePosition": 0.25,
+            "maxRelativePosition": 0.636364,
+            "latestHistoryDate": "2026-08-09"
           }
         },
         {
@@ -4701,6 +6190,13 @@
               "差し": 33.3,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-05-03"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.471062,
+            "minRelativePosition": 0.1,
+            "maxRelativePosition": 0.857143,
             "latestHistoryDate": "2026-05-03"
           }
         },
@@ -4721,6 +6217,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-05-10"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.24697,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.533333,
+            "latestHistoryDate": "2026-05-10"
           }
         },
         {
@@ -4739,6 +6242,13 @@
               "差し": 16.7,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.291632,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.875,
             "latestHistoryDate": "2026-08-30"
           }
         },
@@ -4759,6 +6269,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-06-14"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.595986,
+            "minRelativePosition": 0.3125,
+            "maxRelativePosition": 0.785714,
+            "latestHistoryDate": "2026-06-14"
           }
         },
         {
@@ -4777,6 +6294,13 @@
               "差し": 16.7,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-10-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.650187,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-10-04"
           }
         },
@@ -4797,6 +6321,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.436508,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.733333,
+            "latestHistoryDate": "2026-08-08"
           }
         },
         {
@@ -4816,6 +6347,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.700463,
+            "minRelativePosition": 0.5,
+            "maxRelativePosition": 0.888889,
+            "latestHistoryDate": "2026-09-21"
           }
         },
         {
@@ -4834,6 +6372,13 @@
               "差し": 50.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-03-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.420488,
+            "minRelativePosition": 0.181818,
+            "maxRelativePosition": 0.777778,
             "latestHistoryDate": "2026-03-22"
           }
         }
@@ -4947,7 +6492,48 @@
           },
           "practicalRank": 6
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 11,
+        "unknownHorses": 0,
+        "totalHorses": 11,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          5,
+          6,
+          1,
+          2,
+          11,
+          9,
+          4,
+          3,
+          7,
+          8,
+          10
+        ],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [
+          1,
+          5,
+          6,
+          9
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040510",
@@ -4970,6 +6556,13 @@
               "追込": 50.0
             },
             "latestHistoryDate": "2026-05-09"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.561497,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-05-09"
           }
         },
         {
@@ -4988,6 +6581,13 @@
               "差し": 66.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.327778,
+            "minRelativePosition": 0.1,
+            "maxRelativePosition": 0.5,
             "latestHistoryDate": "2026-09-21"
           }
         },
@@ -5008,6 +6608,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.315344,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -5026,6 +6633,13 @@
               "差し": 33.3,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-08-01"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.384417,
+            "minRelativePosition": 0.111111,
+            "maxRelativePosition": 0.705882,
             "latestHistoryDate": "2026-08-01"
           }
         },
@@ -5046,6 +6660,13 @@
               "追込": 20.0
             },
             "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 5,
+            "meanRelativePosition": 0.372436,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.875,
+            "latestHistoryDate": "2026-09-12"
           }
         },
         {
@@ -5064,6 +6685,13 @@
               "差し": 33.3,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-06-07"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.446338,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.785714,
             "latestHistoryDate": "2026-06-07"
           }
         },
@@ -5084,6 +6712,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-16"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 5,
+            "meanRelativePosition": 0.373333,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.666667,
+            "latestHistoryDate": "2026-08-16"
           }
         },
         {
@@ -5102,6 +6737,13 @@
               "差し": 33.3,
               "追込": 50.0
             },
+            "latestHistoryDate": "2026-08-01"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.637951,
+            "minRelativePosition": 0.285714,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-08-01"
           }
         },
@@ -5122,6 +6764,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-09-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.613889,
+            "minRelativePosition": 0.375,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-09-13"
           }
         },
         {
@@ -5140,6 +6789,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-01"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.030556,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.1,
             "latestHistoryDate": "2026-08-01"
           }
         }
@@ -5199,7 +6855,48 @@
           },
           "practicalRank": 3
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 10,
+        "unknownHorses": 0,
+        "totalHorses": 10,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          10,
+          3,
+          2,
+          5,
+          7,
+          4,
+          6,
+          1,
+          9,
+          8
+        ],
+        "escapeTrendHorseNumbers": [
+          10
+        ],
+        "frontTrendHorseNumbers": [
+          3,
+          4,
+          10
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202605040511",
@@ -5222,6 +6919,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-05-31"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.241811,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.533333,
+            "latestHistoryDate": "2026-05-31"
           }
         },
         {
@@ -5240,6 +6944,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-05-31"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.279807,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.545455,
             "latestHistoryDate": "2026-05-31"
           }
         },
@@ -5260,6 +6971,13 @@
               "追込": 83.3
             },
             "latestHistoryDate": "2026-03-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.808601,
+            "minRelativePosition": 0.533333,
+            "maxRelativePosition": 0.909091,
+            "latestHistoryDate": "2026-03-15"
           }
         },
         {
@@ -5278,6 +6996,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-06-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.136438,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.266667,
             "latestHistoryDate": "2026-06-21"
           }
         },
@@ -5298,6 +7023,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.533464,
+            "minRelativePosition": 0.1,
+            "maxRelativePosition": 0.764706,
+            "latestHistoryDate": "2026-08-30"
           }
         },
         {
@@ -5316,6 +7048,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-06"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.265049,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.466667,
             "latestHistoryDate": "2026-09-06"
           }
         },
@@ -5336,6 +7075,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-07-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.282172,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.6,
+            "latestHistoryDate": "2026-07-12"
           }
         },
         {
@@ -5354,6 +7100,13 @@
               "差し": 16.7,
               "追込": 66.7
             },
+            "latestHistoryDate": "2026-02-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.72604,
+            "minRelativePosition": 0.3,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-02-21"
           }
         },
@@ -5374,6 +7127,13 @@
               "追込": 83.3
             },
             "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.815611,
+            "minRelativePosition": 0.470588,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-08-08"
           }
         },
         {
@@ -5392,6 +7152,13 @@
               "差し": 16.7,
               "追込": 83.3
             },
+            "latestHistoryDate": "2026-08-30"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.795712,
+            "minRelativePosition": 0.588235,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-08-30"
           }
         },
@@ -5412,6 +7179,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.069094,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.176471,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -5430,6 +7204,13 @@
               "差し": 16.7,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-07-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.35141,
+            "minRelativePosition": 0.058824,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-07-26"
           }
         },
@@ -5450,6 +7231,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-07-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.099095,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.166667,
+            "latestHistoryDate": "2026-07-19"
           }
         },
         {
@@ -5468,6 +7256,13 @@
               "差し": 33.3,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-09-06"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.337173,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-09-06"
           }
         },
@@ -5488,6 +7283,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-07-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.594281,
+            "minRelativePosition": 0.235294,
+            "maxRelativePosition": 0.866667,
+            "latestHistoryDate": "2026-07-12"
           }
         },
         {
@@ -5506,6 +7308,13 @@
               "差し": 33.3,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.386782,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.9375,
             "latestHistoryDate": "2026-09-12"
           }
         },
@@ -5526,6 +7335,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2026-09-20"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.36544,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.833333,
+            "latestHistoryDate": "2026-09-20"
           }
         },
         {
@@ -5544,6 +7360,13 @@
               "差し": 16.7,
               "追込": 83.3
             },
+            "latestHistoryDate": "2026-06-13"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.767157,
+            "minRelativePosition": 0.470588,
+            "maxRelativePosition": 0.916667,
             "latestHistoryDate": "2026-06-13"
           }
         }
@@ -5747,7 +7570,64 @@
           },
           "practicalRank": 11
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 18,
+        "unknownHorses": 0,
+        "totalHorses": 18,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          11,
+          13,
+          4,
+          1,
+          6,
+          2,
+          7,
+          14,
+          12,
+          17,
+          16,
+          5,
+          15,
+          8,
+          18,
+          10,
+          3,
+          9
+        ],
+        "escapeTrendHorseNumbers": [
+          11
+        ],
+        "frontTrendHorseNumbers": [
+          1,
+          2,
+          4,
+          6,
+          7,
+          11,
+          12,
+          13,
+          14,
+          16,
+          17
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     },
     {
       "raceID": "202608040512",
@@ -5770,6 +7650,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.159524,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.266667,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -5788,6 +7675,13 @@
               "差し": 50.0,
               "追込": 16.7
             },
+            "latestHistoryDate": "2026-07-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.390873,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.833333,
             "latestHistoryDate": "2026-07-26"
           }
         },
@@ -5808,6 +7702,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-08-09"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.157242,
+            "minRelativePosition": 0.0625,
+            "maxRelativePosition": 0.333333,
+            "latestHistoryDate": "2026-08-09"
           }
         },
         {
@@ -5826,6 +7727,13 @@
               "差し": 0.0,
               "追込": 100.0
             },
+            "latestHistoryDate": "2026-07-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.893651,
+            "minRelativePosition": 0.714286,
+            "maxRelativePosition": 1.0,
             "latestHistoryDate": "2026-07-26"
           }
         },
@@ -5846,6 +7754,13 @@
               "追込": 25.0
             },
             "latestHistoryDate": "2026-03-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.333333,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-03-21"
           }
         },
         {
@@ -5864,6 +7779,13 @@
               "差し": 16.7,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-05-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.165812,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.461538,
             "latestHistoryDate": "2026-05-23"
           }
         },
@@ -5884,6 +7806,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2025-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.173077,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.538462,
+            "latestHistoryDate": "2025-08-23"
           }
         },
         {
@@ -5902,6 +7831,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-08-15"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.257143,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.642857,
             "latestHistoryDate": "2026-08-15"
           }
         },
@@ -5922,6 +7858,13 @@
               "追込": 16.7
             },
             "latestHistoryDate": "2025-10-25"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.22615,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.777778,
+            "latestHistoryDate": "2025-10-25"
           }
         },
         {
@@ -5940,6 +7883,13 @@
               "差し": 33.3,
               "追込": 33.3
             },
+            "latestHistoryDate": "2026-08-02"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.463492,
+            "minRelativePosition": 0.142857,
+            "maxRelativePosition": 0.714286,
             "latestHistoryDate": "2026-08-02"
           }
         },
@@ -5960,6 +7910,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-07-11"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.62877,
+            "minRelativePosition": 0.285714,
+            "maxRelativePosition": 1.0,
+            "latestHistoryDate": "2026-07-11"
           }
         },
         {
@@ -5978,6 +7935,13 @@
               "差し": 33.3,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-07-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.215945,
+            "minRelativePosition": 0.071429,
+            "maxRelativePosition": 0.4,
             "latestHistoryDate": "2026-07-04"
           }
         },
@@ -5998,6 +7962,13 @@
               "追込": 33.3
             },
             "latestHistoryDate": "2026-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.336895,
+            "minRelativePosition": 0.076923,
+            "maxRelativePosition": 0.777778,
+            "latestHistoryDate": "2026-08-23"
           }
         },
         {
@@ -6016,6 +7987,13 @@
               "差し": 50.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-09-12"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.315079,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.533333,
             "latestHistoryDate": "2026-09-12"
           }
         },
@@ -6036,6 +8014,13 @@
               "追込": 0.0
             },
             "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.208333,
+            "minRelativePosition": 0.066667,
+            "maxRelativePosition": 0.333333,
+            "latestHistoryDate": "2026-09-19"
           }
         },
         {
@@ -6054,6 +8039,13 @@
               "差し": 0.0,
               "追込": 0.0
             },
+            "latestHistoryDate": "2026-07-04"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 6,
+            "meanRelativePosition": 0.038889,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.166667,
             "latestHistoryDate": "2026-07-04"
           }
         }
@@ -6239,7 +8231,64 @@
           },
           "practicalRank": 10
         }
-      ]
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "reference_order",
+        "knownHorses": 16,
+        "unknownHorses": 0,
+        "totalHorses": 16,
+        "coveragePct": 100.0,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [
+          16,
+          3,
+          1,
+          6,
+          7,
+          15,
+          12,
+          9,
+          8,
+          14,
+          5,
+          13,
+          2,
+          10,
+          11,
+          4
+        ],
+        "escapeTrendHorseNumbers": [
+          7,
+          16
+        ],
+        "frontTrendHorseNumbers": [
+          1,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "前半のレースラップが未収録のため、速い・遅いのペース予想は未検証です。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
     }
   ]
 }
