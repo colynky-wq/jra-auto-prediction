@@ -14,7 +14,7 @@ on:
         default: ''
   schedule:
     # Every 5 minutes from 09:00 through 17:59 JST.
-    # On non-race/stale-data days the script exits without changing files.
+    # On non-race/stale-data days the scripts exit without meaningful changes.
     - cron: '*/5 0-8 * * *'
 
 permissions:
@@ -26,9 +26,9 @@ concurrency:
 
 jobs:
   sync-results:
-    name: Publish completed race results for app comparison
+    name: Publish results and forward validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -49,10 +49,13 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
 
-      - name: Compile result and performance publishers
+      - name: Compile result and validation publishers
         run: |
           python -m py_compile production/build_result_data_live.py
           python -m py_compile production/build_performance_data.py
+          python -m py_compile production/wide_forward_validation.py
+          python -m py_compile production/wide_validation_summary.py
+          python -m py_compile production/ticket_plan_shadow.py
 
       - name: Build app ResultData
         env:
@@ -64,19 +67,30 @@ jobs:
       - name: Build app PerformanceData
         run: python production/build_performance_data.py
 
-      - name: Commit ResultData and PerformanceData when changed
+      - name: Join frozen Wide snapshots with final payouts
+        env:
+          KEIBAAI_WIDE_VALIDATE_DATE: ${{ github.event.inputs.target_date || '' }}
+        run: python production/wide_forward_validation.py
+
+      - name: Rebuild cumulative Wide validation summary
+        run: python production/wide_validation_summary.py
+
+      - name: Evaluate preregistered ticket-plan rules in shadow mode
+        run: python production/ticket_plan_shadow.py
+
+      - name: Commit results and validation when changed
         shell: bash
         run: |
           set -euo pipefail
 
           if [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json reports)" ]; then
-            echo 'No result/performance changes to publish.'
+            echo 'No result/performance/validation changes to publish.'
             exit 0
           fi
 
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
           git add ResultData.json PerformanceData.json reports
-          git commit -m "Update KeibaAI live results and performance"
+          git commit -m "Update KeibaAI results and forward validation"
           git pull --rebase origin main
           git push origin HEAD:main
