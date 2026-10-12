@@ -1,0 +1,59 @@
+name: KeibaAI Wide Sidecar 2026-10-12
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - production/wide_odds_sidecar.py
+      - .github/workflows/keibaai-wide-sidecar-20261012.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-wide-sidecar-20261012
+  cancel-in-progress: false
+
+jobs:
+  capture-wide:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - run: pip install 'requests==2.32.5'
+
+      - name: Configure git
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+      - name: Freeze first successful pre-race Wide snapshot
+        env:
+          KEIBAAI_WIDE_DATE: '20261012'
+        shell: bash
+        run: |
+          set -euo pipefail
+          END_EPOCH=$(date -u -d '2026-10-12 08:10:00' +%s)
+          while [ "$(date -u +%s)" -lt "$END_EPOCH" ]; do
+            git pull --rebase origin main
+            python production/wide_odds_sidecar.py
+
+            if [ -n "$(git status --porcelain -- reports/20261012/wide_odds)" ]; then
+              git add reports/20261012/wide_odds
+              git commit -m 'Freeze pre-race Wide odds snapshot'
+              if ! git push origin HEAD:main; then
+                git pull --rebase origin main
+                git push origin HEAD:main
+              fi
+            fi
+            sleep 20
+          done
