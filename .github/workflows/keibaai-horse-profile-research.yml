@@ -1,0 +1,70 @@
+name: KeibaAI Horse Profile Research
+
+on:
+  push:
+    branches:
+      - research/horse-profile-course-v1
+    paths:
+      - 'production/horse_profile_runtime.py'
+      - 'production/build_horse_profiles.py'
+      - '.github/workflows/keibaai-horse-profile-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-profile-sample:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+      - name: Compile builder
+        run: |
+          python -m py_compile production/horse_profile_runtime.py
+          python -m py_compile production/build_horse_profiles.py
+      - name: Build recent 250-horse sample
+        env:
+          KEIBAAI_HORSE_PROFILE_LIMIT: '250'
+          KEIBAAI_HORSE_PROFILE_RECENT: '12'
+        run: python production/build_horse_profiles.py
+      - name: Validate app-facing database shape
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          idx = json.load(open('HorseIndex.json', encoding='utf-8'))
+          manifest = json.load(open('HorseProfileManifest.json', encoding='utf-8'))
+          assert idx['horseCount'] == manifest['horseCount']
+          assert 1 <= idx['horseCount'] <= 250
+          assert manifest['scope'] == 'JRA flat races only'
+          assert manifest['latestHistoryDate']
+
+          first = idx['horses'][0]
+          shard = json.load(open(Path('HorseProfiles') / f"{first['shard']}.json", encoding='utf-8'))
+          profile = shard['profiles'][first['profileID']]
+          assert profile['name'] == first['name']
+          assert profile['career']['starts'] >= 1
+          assert isinstance(profile['recentRaces'], list) and profile['recentRaces']
+          assert isinstance(profile['venueStats'], list)
+          assert isinstance(profile['distanceStats'], list)
+          print('HORSE_PROFILE_DB_OK', manifest)
+          print('SAMPLE_PROFILE', profile['name'], profile['career'], profile['bestVenues'][:2])
+          PY
+      - name: Upload sample database
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-horse-profile-sample
+          path: |
+            HorseIndex.json
+            HorseProfileManifest.json
+            HorseProfiles/
+          retention-days: 14
