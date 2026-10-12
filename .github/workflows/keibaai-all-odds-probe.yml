@@ -11,7 +11,7 @@ on:
       race_id:
         description: JRA netkeiba 12-digit race ID
         required: false
-        default: '202605040506'
+        default: '202605040508'
 
 permissions:
   contents: read
@@ -33,7 +33,7 @@ jobs:
           pip install requests
       - name: Probe public odds API
         env:
-          KEIBAAI_ODDS_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040506' }}
+          KEIBAAI_ODDS_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040508' }}
         run: python production/probe_all_odds_api.py
 
-# Research-only rerun marker: 2026-10-12 formal-signal integration
+# Research-only live pre-race probe for Wide / exotics structure.
