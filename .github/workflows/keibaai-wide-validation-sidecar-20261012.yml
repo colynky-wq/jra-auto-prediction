@@ -1,0 +1,60 @@
+name: KeibaAI Wide Validation Sidecar 2026-10-12
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - production/wide_forward_validation_live.py
+      - .github/workflows/keibaai-wide-validation-sidecar-20261012.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-wide-validation-sidecar-20261012
+  cancel-in-progress: false
+
+jobs:
+  validate-wide:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - run: pip install 'pandas==2.2.3' 'requests==2.32.5' 'lxml==5.3.0'
+
+      - name: Configure git
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+      - name: Join frozen Wide evaluation with final payouts
+        env:
+          KEIBAAI_WIDE_VALIDATE_DATE: '20261012'
+          KEIBAAI_WIDE_VALIDATE_DELAY_MINUTES: '5'
+        shell: bash
+        run: |
+          set -euo pipefail
+          END_EPOCH=$(date -u -d '2026-10-12 08:30:00' +%s)
+          while [ "$(date -u +%s)" -lt "$END_EPOCH" ]; do
+            git pull --rebase origin main
+            python production/wide_forward_validation_live.py
+
+            if [ -n "$(git status --porcelain -- reports/20261012/WideValidation.json)" ]; then
+              git add reports/20261012/WideValidation.json
+              git commit -m 'Update Wide forward validation results'
+              if ! git push origin HEAD:main; then
+                git pull --rebase origin main
+                git push origin HEAD:main
+              fi
+            fi
+            sleep 60
+          done
