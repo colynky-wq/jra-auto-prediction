@@ -1,0 +1,116 @@
+name: KeibaAI Horse Profile Publish
+
+on:
+  pull_request:
+    paths:
+      - 'production/horse_profile_runtime.py'
+      - 'production/build_horse_profiles.py'
+      - '.github/workflows/keibaai-horse-profile-publish.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'production/production_history.parquet'
+      - 'production/horse_profile_runtime.py'
+      - 'production/build_horse_profiles.py'
+      - '.github/workflows/keibaai-horse-profile-publish.yml'
+  schedule:
+    - cron: '40 9 * * *' # 18:40 JST daily; no-op when source history is unchanged
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-horse-profile-publish
+  cancel-in-progress: false
+
+jobs:
+  build-horse-profiles:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Compile horse profile code
+        run: |
+          python -m py_compile production/horse_profile_runtime.py
+          python -m py_compile production/build_horse_profiles.py
+
+      - name: Build full horse profile database
+        run: |
+          rm -rf HorseProfiles HorseIndex.json HorseProfileManifest.json
+          python production/build_horse_profiles.py
+
+      - name: Validate database shape
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          idx = json.load(open('HorseIndex.json', encoding='utf-8'))
+          manifest = json.load(open('HorseProfileManifest.json', encoding='utf-8'))
+          assert idx['schemaVersion'] == 1
+          assert idx['horseCount'] == manifest['horseCount']
+          assert idx['horseCount'] > 1000
+          assert manifest['scope'] == 'JRA flat races only'
+          assert manifest['latestHistoryDate']
+          assert manifest['shardCount'] > 0
+          assert len(list(Path('HorseProfiles').glob('*.json'))) == manifest['shardCount']
+
+          sample = idx['horses'][0]
+          shard = json.load(open(Path('HorseProfiles') / f"{sample['shard']}.json", encoding='utf-8'))
+          profile = shard['profiles'][sample['profileID']]
+          assert profile['name'] == sample['name']
+          assert profile['career']['starts'] >= 1
+          assert isinstance(profile['recentRaces'], list)
+          assert isinstance(profile['venueStats'], list)
+          assert isinstance(profile['venueSurfaceStats'], list)
+          print('HORSE_PROFILE_DATABASE_OK')
+          print('horseCount=', idx['horseCount'])
+          print('latestHistoryDate=', manifest['latestHistoryDate'])
+          print('shardCount=', manifest['shardCount'])
+          PY
+
+      - name: Upload validation artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-horse-profile-validation
+          path: |
+            HorseIndex.json
+            HorseProfileManifest.json
+          retention-days: 7
+
+      - name: Publish database to main
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add HorseIndex.json HorseProfileManifest.json HorseProfiles
+          if git diff --cached --quiet; then
+            echo 'Horse profile database unchanged.'
+            exit 0
+          fi
+          git commit -m 'Update horse profile database'
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Publish retry $attempt"
+            sleep $((attempt * 5))
+          done
+          exit 1
