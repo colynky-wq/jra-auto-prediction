@@ -12,13 +12,15 @@ import pandas as pd
 
 from app_research_runtime import METHOD_VERSION, STYLE_ORDER, classify_style, finite, practical_candidates, tendency
 from horse_profile_runtime import normalize_horse_name
+from formation_runtime import FORMATION_METHOD_VERSION, current_race_has_corner, formation_reference, is_straight_race, position_history, relative_position
 
 REPO = Path(__file__).resolve().parent.parent
 HISTORY_PATH = REPO / "production/production_history.parquet"
 RACEDATA_PATH = REPO / "RaceData.json"
 OUT_PATH = REPO / "AppResearchData.json"
 VALIDATION_PATH = REPO / "reports/RunningStyleValidation.json"
-HISTORY_COLUMNS = ["レースID", "日付", "馬名", "馬キー", "初角", "頭数", "障害"]
+FORMATION_VALIDATION_PATH = REPO / "reports/FormationValidation.json"
+HISTORY_COLUMNS = ["レースID", "日付", "馬名", "馬キー", "初角", "頭数", "障害", "芝ダ", "距離"]
 JST = timezone(timedelta(hours=9))
 
 
@@ -27,6 +29,12 @@ def prepare_history(history: pd.DataFrame) -> pd.DataFrame:
     d["日付"] = pd.to_datetime(d["日付"], errors="coerce").dt.normalize()
     d = d[d["日付"].notna() & ~d["障害"].fillna(False).astype(bool)].copy()
     d = d[d["馬キー"].notna() & d["馬名"].notna()].copy()
+    if "芝ダ" in d and "距離" in d:
+        straight = pd.Series([is_straight_race(rid, surface, distance)
+                              for rid, surface, distance in d[["レースID", "芝ダ", "距離"]].itertuples(index=False, name=None)], index=d.index)
+        d["hasCorner"] = ~straight
+    else:
+        d["hasCorner"] = True
     names = {name: normalize_horse_name(name) for name in d["馬名"].unique()}
     d["normalizedName"] = d["馬名"].map(names)
     return d.sort_values(["日付", "レースID"])
@@ -58,7 +66,8 @@ def build_races(history: pd.DataFrame, races: list[dict]) -> list[dict]:
     d = prepare_history(history)
     wanted = {normalize_horse_name(h["name"]) for race in races for h in race["horses"]}
     d = d[d["normalizedName"].isin(wanted)].copy()
-    d["style"] = [classify_style(pos, count) for pos, count in zip(d["初角"], d["頭数"])]
+    d["style"] = [classify_style(pos, count) if has_corner else None
+                  for pos, count, has_corner in zip(d["初角"], d["頭数"], d["hasCorner"])]
     out = []
     for race in races:
         validate_race(race)
@@ -73,20 +82,26 @@ def build_races(history: pd.DataFrame, races: list[dict]) -> list[dict]:
             key = keys.get(normalize_horse_name(horse["name"]))
             group = groups.get(key)
             stat = None
+            initial_position = None
             if group is not None:
                 valid = group[group["style"].notna()].tail(6)
                 stat = tendency(valid["style"].tolist())
                 if stat:
                     stat["latestHistoryDate"] = valid["日付"].max().strftime("%Y-%m-%d")
+                observations = [(relative_position(row["初角"], row["頭数"]), row["日付"].strftime("%Y-%m-%d"))
+                                for _, row in valid.iterrows()]
+                initial_position = position_history(observations)
             horses.append({
                 "number": horse["number"], "name": horse["name"],
                 "sourceAiProbabilityPct": horse["aiProbability"],
                 "sourceMarketProbabilityPct": horse["marketProbability"],
                 "sourceOdds": horse["odds"], "styleTendency": stat,
+                "initialPositionHistory": initial_position,
             })
         out.append({
             "raceID": race["raceID"], "raceDate": cutoff.strftime("%Y-%m-%d"),
             "horses": horses, "longshotCandidates": practical_candidates(race),
+            "formation": formation_reference(horses, has_corner=current_race_has_corner(race)),
         })
     return out
 
@@ -94,7 +109,8 @@ def build_races(history: pd.DataFrame, races: list[dict]) -> list[dict]:
 def evaluate_2025(history: pd.DataFrame) -> dict:
     d = prepare_history(history)
     d = d[d["日付"].dt.year <= 2025].copy()
-    d["style"] = [classify_style(pos, count) for pos, count in zip(d["初角"], d["頭数"])]
+    d["style"] = [classify_style(pos, count) if has_corner else None
+                  for pos, count, has_corner in zip(d["初角"], d["頭数"], d["hasCorner"])]
     d = d[d["style"].notna()]
     keys = set(d.loc[d["日付"].dt.year == 2025, "馬キー"])
     d = d[d["馬キー"].isin(keys)].sort_values(["馬キー", "日付", "レースID"])
@@ -149,6 +165,7 @@ def main() -> None:
         "predictionSHA256": hashlib.sha256(race_bytes).hexdigest(),
         "historySHA256": hashlib.sha256(HISTORY_PATH.read_bytes()).hexdigest(),
         "methodVersion": METHOD_VERSION,
+        "formationMethodVersion": FORMATION_METHOD_VERSION,
     }
     if OUT_PATH.exists() and not args.evaluate:
         old = json.loads(OUT_PATH.read_text(encoding="utf-8"))
@@ -165,11 +182,28 @@ def main() -> None:
         stored = json.loads(VALIDATION_PATH.read_text(encoding="utf-8"))
         if stored.get("methodVersion") == METHOD_VERSION:
             evaluation = stored
+    formation_evaluation = None
+    if FORMATION_VALIDATION_PATH.exists():
+        stored = json.loads(FORMATION_VALIDATION_PATH.read_text(encoding="utf-8"))
+        if stored.get("methodVersion") == FORMATION_METHOD_VERSION:
+            formation_evaluation = stored
+    built_races = build_races(history, races)
+    for race in built_races:
+        formation = race["formation"]
+        if formation_evaluation and formation_evaluation.get("status") == "research_reference_only":
+            result = formation_evaluation["evaluation2025"]
+            formation["validation2025"] = {
+                key: result[key] for key in ["eligibleRaces", "leaderTop1Pct", "leaderTop3Pct", "pairwiseOrderAgreementPct"]
+            }
+        elif formation["status"] == "reference_order":
+            formation["status"] = "validation_pending"
+            formation["orderedHorseNumbers"] = []
     payload = {
         "schemaVersion": 1, "status": "research_display_only",
         "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
         "stakeSizingEnabled": False, "formalSignalsChanged": False,
-        "sourceInputs": inputs, "evaluation2025": evaluation, "races": build_races(history, races),
+        "sourceInputs": inputs, "evaluation2025": evaluation,
+        "formationValidation": formation_evaluation, "races": built_races,
     }
     write_json(OUT_PATH, payload)
     for day in sorted({race["raceDate"] for race in payload["races"]}):
