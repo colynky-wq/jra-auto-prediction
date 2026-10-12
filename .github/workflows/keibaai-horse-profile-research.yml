@@ -8,6 +8,7 @@ on:
       - 'production/horse_profile_runtime.py'
       - 'production/build_horse_profiles.py'
       - 'production/research_course_affinity.py'
+      - 'production/research_course_affinity_model.py'
       - '.github/workflows/keibaai-horse-profile-research.yml'
   workflow_dispatch:
 
@@ -17,7 +18,7 @@ permissions:
 jobs:
   build-profile-sample:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -32,6 +33,7 @@ jobs:
           python -m py_compile production/horse_profile_runtime.py
           python -m py_compile production/build_horse_profiles.py
           python -m py_compile production/research_course_affinity.py
+          python -m py_compile production/research_course_affinity_model.py
       - name: Build recent 250-horse sample
         env:
           KEIBAAI_HORSE_PROFILE_LIMIT: '250'
@@ -78,6 +80,25 @@ jobs:
           print('VENUE_BUCKETS', p['venue'])
           print('VENUE_SURFACE_BUCKETS', p['venueSurface'])
           PY
+      - name: Compare 37-feature baseline with 41-feature course model
+        run: python production/research_course_affinity_model.py
+      - name: Validate model comparison report
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open('reports/research_course_affinity_model.json', encoding='utf-8'))
+          assert p['researchOnly'] is True
+          assert p['productionModelChanged'] is False
+          assert p['protocol']['2026Used'] is False
+          assert p['data']['evaluationRows2025'] > 0
+          assert p['metrics2025']['baseline37']['races'] == p['metrics2025']['extended41']['races']
+          assert p['featureSets']['added'] == ['同場適性', '同場回数c', '同場芝ダ適性', '同場芝ダ回数c']
+          print('COURSE_MODEL_COMPARISON_OK')
+          print('ROUNDS', p['selectedRounds'])
+          print('DELTA', p['delta'])
+          print('BOOTSTRAP', p['pairedDayBootstrap'])
+          print('DECISION', p['decision'])
+          PY
       - name: Upload research outputs
         uses: actions/upload-artifact@v4
         with:
@@ -87,4 +108,5 @@ jobs:
             HorseProfileManifest.json
             HorseProfiles/
             reports/research_course_affinity.json
+            reports/research_course_affinity_model.json
           retention-days: 14
