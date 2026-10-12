@@ -1,0 +1,33 @@
+name: KeibaAI Result Payout Probe
+
+on:
+  push:
+    branches:
+      - research/live-signal-wide-v2
+    paths:
+      - production/probe_result_payouts.py
+      - .github/workflows/keibaai-result-payout-probe.yml
+  workflow_dispatch:
+    inputs:
+      race_id:
+        description: Finished JRA netkeiba 12-digit race ID
+        required: false
+        default: '202605040502'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'pandas==2.2.3' 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==5.3.0'
+      - name: Probe result payout tables
+        env:
+          KEIBAAI_PAYOUT_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040502' }}
+        run: python production/probe_result_payouts.py
