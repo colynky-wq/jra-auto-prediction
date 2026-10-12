@@ -48,7 +48,9 @@ jobs:
           python -m py_compile production/horse_profile_runtime.py
           python -m py_compile production/build_horse_profiles.py
 
-      - name: Build full horse profile database
+      - name: Build horse profile database
+        env:
+          KEIBAAI_HORSE_PROFILE_LIMIT: ${{ github.event_name == 'pull_request' && '2000' || '0' }}
         run: |
           rm -rf HorseProfiles HorseIndex.json HorseProfileManifest.json
           python production/build_horse_profiles.py
