@@ -35,3 +35,5 @@ jobs:
         env:
           KEIBAAI_ODDS_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040506' }}
         run: python production/probe_all_odds_api.py
+
+# Research-only rerun marker: 2026-10-12 formal-signal integration
