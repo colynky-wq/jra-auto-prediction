@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import build_signal_data as formal
+
 
 JST = timezone(timedelta(hours=9))
 HERE = Path(__file__).resolve().parent
@@ -14,6 +16,7 @@ REPO = HERE.parent
 REPORTS_DIR = REPO / "reports"
 RACEDATA_PATH = REPO / "RaceData.json"
 RESULTDATA_PATH = REPO / "ResultData.json"
+SIGNALDATA_PATH = REPO / "SignalData.json"
 OUT_PATH = REPO / "PerformanceData.json"
 
 
@@ -28,6 +31,17 @@ def load_json_list(path: Path) -> list[dict]:
         return []
 
 
+def load_json_dict(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            value = json.load(f)
+        return value if isinstance(value, dict) else {}
+    except Exception:
+        return {}
+
+
 def finite(value, default=np.nan) -> float:
     try:
         x = float(value)
@@ -36,59 +50,108 @@ def finite(value, default=np.nan) -> float:
         return default
 
 
-def prototype_chaos(ai_top_probability_pct: float, ratios: list[float]) -> int:
-    # Keep this exactly aligned with the current Swift UI prototype.
-    p = float(ai_top_probability_pct)
-    if p < 20:
-        score = 5
-    elif p < 28:
-        score = 4
-    elif p < 38:
-        score = 3
-    elif p < 50:
-        score = 2
+def normalize_race_date(value) -> str:
+    text = str(value or "").replace("/", "-")
+    if len(text) == 8 and text.isdigit():
+        return f"{text[:4]}-{text[4:6]}-{text[6:8]}"
+    return text
+
+
+def formal_battle_from_horses(horses: list[dict]) -> tuple[float | None, str | None]:
+    """Recompute the frozen formal battle definition using only pre-race win probabilities.
+
+    This is safe for old all_predictions.csv files because the formal battle score
+    does not require Top2/Top3 probabilities. The formula and 2024-fixed cutoffs
+    are imported from build_signal_data.py so the performance view cannot drift
+    from the live signal definition.
+    """
+    if not horses:
+        return None, None
+
+    market = [formal.prob_pct(h.get("marketProbability")) for h in horses]
+    ai = [formal.prob_pct(h.get("aiProbability")) for h in horses]
+    market = formal.normalized(market, 1.0)
+    ai = formal.normalized(ai, 1.0)
+
+    candidates = []
+    for i, h in enumerate(horses):
+        ratio = ai[i] / max(market[i], 1e-9)
+        edge = ai[i] - market[i]
+        ratio_component = max(0.0, min(1.0, (ratio - 1.0) / 0.40))
+        edge_component = max(0.0, min(1.0, edge / 0.06))
+        support_component = max(0.0, min(1.0, ai[i] / 0.10))
+        score = 0.55 * ratio_component + 0.30 * edge_component + 0.15 * support_component
+        positive = ratio > 1.0 and edge > 0.0 and ai[i] >= 0.01
+        candidates.append(
+            {
+                "score": score,
+                "positive": positive,
+                "aiProbability": ai[i],
+            }
+        )
+
+    positive = [x for x in candidates if x["positive"]]
+    battle = max(positive or candidates, key=lambda x: (x["score"], x["aiProbability"]))
+    score = float(battle["score"])
+    label = formal.grade(score, formal.BATTLE_CUTS, ["見送り", "C", "B", "A", "S"])
+    return score, label
+
+
+def load_formal_signal_lookup() -> dict[str, dict]:
+    """Load only signals that were actually saved before/around the live race process.
+
+    We deliberately do not reconstruct missing chaos labels after results are known.
+    That keeps the chaos breakdown honest: no hindsight-filled labels.
+    """
+    by_id: dict[str, dict] = {}
+
+    for path in sorted(REPORTS_DIR.glob("20??????/SignalData.json")):
+        payload = load_json_dict(path)
+        for signal in payload.get("races") or []:
+            rid = str(signal.get("raceID") or "")
+            if rid:
+                by_id[rid] = signal
+
+    payload = load_json_dict(SIGNALDATA_PATH)
+    for signal in payload.get("races") or []:
+        rid = str(signal.get("raceID") or "")
+        if rid:
+            by_id[rid] = signal
+
+    return by_id
+
+
+def apply_saved_formal_signal(row: dict, signal: dict | None) -> dict:
+    out = dict(row)
+    if signal and bool(signal.get("eligible", False)):
+        battle = signal.get("battle") or {}
+        chaos = signal.get("chaos") or {}
+
+        if battle.get("score") is not None:
+            out["battleScore"] = round(float(battle.get("score")), 6)
+        if battle.get("grade"):
+            out["battleGrade"] = str(battle.get("grade"))
+
+        level = chaos.get("level")
+        stars = chaos.get("stars")
+        try:
+            out["chaosLevel"] = int(level) if level is not None else None
+        except Exception:
+            out["chaosLevel"] = None
+        out["chaosStars"] = str(stars) if stars else None
+        out["signalVersion"] = str(signal.get("signalVersion") or "formal")
+        out["signalStatus"] = "saved_formal"
     else:
-        score = 1
+        out["signalVersion"] = out.get("signalVersion")
+        out["signalStatus"] = "formal_chaos_unavailable"
 
-    strong = sum(1 for x in ratios if np.isfinite(x) and x >= 1.20)
-    if strong >= 2:
-        score = min(5, score + 1)
-    return int(score)
-
-
-def prototype_battle(horses: list[dict]) -> tuple[float, str]:
-    # Keep this exactly aligned with the current Swift UI prototype.
-    best_ratio = max((finite(h.get("aiMarketRatio"), 0.0) for h in horses), default=0.0)
-    best_expected = max((finite(h.get("expectedIndex"), 0.0) for h in horses), default=0.0)
-    best_win = max((finite(h.get("aiProbability"), 0.0) for h in horses), default=0.0)
-
-    score = 0.0
-    if best_ratio >= 1.20:
-        score += 1.4
-    elif best_ratio >= 1.10:
-        score += 0.9
-    elif best_ratio >= 1.05:
-        score += 0.5
-
-    if best_expected >= 100:
-        score += 1.0
-    elif best_expected >= 90:
-        score += 0.6
-
-    if best_win >= 35:
-        score += 0.8
-    elif best_win >= 25:
-        score += 0.4
-
-    if score >= 3:
-        grade = "A"
-    elif score >= 2:
-        grade = "B"
-    elif score >= 1:
-        grade = "C"
-    else:
-        grade = "見送り"
-    return float(score), grade
+    # Backward-compatible aliases for the current Swift decoder. These values
+    # now contain the formal definitions; they are no longer prototype scores.
+    out["prototypeBattleScore"] = round(float(out.get("battleScore") or 0.0), 6)
+    out["prototypeBattleGrade"] = str(out.get("battleGrade") or "見送り")
+    out["prototypeChaosLevel"] = int(out.get("chaosLevel") or 0)
+    out["prototypeChaosStars"] = str(out.get("chaosStars") or "")
+    return out
 
 
 def row_from_horses(meta: dict, predicted: list[dict], results: list[dict]) -> dict | None:
@@ -155,9 +218,7 @@ def row_from_horses(meta: dict, predicted: list[dict], results: list[dict]) -> d
     ai_top3 = {h["number"] for h in ai_order[:3]}
     overlap = len(actual_top3 & ai_top3)
 
-    ratios = [finite(h["aiMarketRatio"]) for h in horses]
-    chaos = prototype_chaos(finite(ai_top["aiProbability"], 0.0), ratios)
-    battle_score, battle_grade = prototype_battle(horses)
+    battle_score, battle_grade = formal_battle_from_horses(horses)
 
     ai_top_finish = ai_top.get("finish")
     market_top_finish = market_top.get("finish")
@@ -166,10 +227,7 @@ def row_from_horses(meta: dict, predicted: list[dict], results: list[dict]) -> d
     ai_top_top3 = ai_top_finish is not None and ai_top_finish <= 3
 
     reference_return = finite(ai_top.get("finalOdds"), 0.0) if ai_top_won else 0.0
-
-    race_date = str(meta.get("raceDate") or meta.get("date") or "").replace("/", "-")
-    if len(race_date) == 8 and race_date.isdigit():
-        race_date = f"{race_date[:4]}-{race_date[4:6]}-{race_date[6:8]}"
+    race_date = normalize_race_date(meta.get("raceDate") or meta.get("date"))
 
     return {
         "raceDate": race_date,
@@ -180,10 +238,10 @@ def row_from_horses(meta: dict, predicted: list[dict], results: list[dict]) -> d
         "raceName": meta.get("raceName"),
         "course": meta.get("course"),
         "fieldSize": len(horses),
-        "prototypeBattleScore": round(battle_score, 4),
-        "prototypeBattleGrade": battle_grade,
-        "prototypeChaosLevel": chaos,
-        "prototypeChaosStars": "★" * chaos + "☆" * (5 - chaos),
+        "battleScore": round(float(battle_score or 0.0), 6),
+        "battleGrade": str(battle_grade or "見送り"),
+        "chaosLevel": None,
+        "chaosStars": None,
         "aiTopNumber": ai_top["number"],
         "aiTopName": ai_top["name"],
         "aiTopProbability": round(finite(ai_top["aiProbability"], 0.0), 3),
@@ -203,7 +261,7 @@ def row_from_horses(meta: dict, predicted: list[dict], results: list[dict]) -> d
     }
 
 
-def from_historical_csv(path: Path) -> list[dict]:
+def from_historical_csv(path: Path, signal_lookup: dict[str, dict]) -> list[dict]:
     try:
         df = pd.read_csv(path, encoding="utf-8-sig")
     except Exception as exc:
@@ -255,11 +313,11 @@ def from_historical_csv(path: Path) -> list[dict]:
         }
         out = row_from_horses(meta, predicted, results)
         if out:
-            rows.append(out)
+            rows.append(apply_saved_formal_signal(out, signal_lookup.get(str(race_id))))
     return rows
 
 
-def from_live_json() -> list[dict]:
+def from_live_json(signal_lookup: dict[str, dict]) -> list[dict]:
     races = load_json_list(RACEDATA_PATH)
     results = load_json_list(RESULTDATA_PATH)
     if not races or not results:
@@ -275,7 +333,7 @@ def from_live_json() -> list[dict]:
         meta["raceDate"] = race.get("raceDate") or rr.get("raceDate")
         out = row_from_horses(meta, race.get("horses") or [], rr.get("horses") or [])
         if out:
-            rows.append(out)
+            rows.append(apply_saved_formal_signal(out, signal_lookup.get(rid)))
     return rows
 
 
@@ -325,16 +383,17 @@ def write_json(path: Path, value: dict) -> None:
 
 
 def main() -> None:
+    signal_lookup = load_formal_signal_lookup()
     all_rows: list[dict] = []
     historical_dates: set[str] = set()
 
     for csv_path in sorted(REPORTS_DIR.glob("20??????/all_predictions.csv")):
-        rows = from_historical_csv(csv_path)
+        rows = from_historical_csv(csv_path, signal_lookup)
         all_rows.extend(rows)
         historical_dates.update(str(r.get("raceDate")) for r in rows)
 
     # Current live data fills the gap before the nightly all_predictions.csv exists.
-    for row in from_live_json():
+    for row in from_live_json(signal_lookup):
         if str(row.get("raceDate")) not in historical_dates:
             all_rows.append(row)
 
@@ -358,22 +417,23 @@ def main() -> None:
     periods = [
         {"id": "today", "label": "今日", "startDate": today.isoformat(), "endDate": today.isoformat(), "metrics": summarize(today_rows)},
         {"id": "last7", "label": "直近7日", "startDate": week_start.isoformat(), "endDate": today.isoformat(), "metrics": summarize(week_rows)},
-        {"id": "all", "label": "前向き検証 全期間", "startDate": min((r.get("raceDate") for r in all_rows), default=None), "endDate": max((r.get("raceDate") for r in all_rows), default=None), "metrics": summarize(all_rows)},
+        {"id": "all", "label": "実運用開始から", "startDate": min((r.get("raceDate") for r in all_rows), default=None), "endDate": max((r.get("raceDate") for r in all_rows), default=None), "metrics": summarize(all_rows)},
     ]
 
-    grade_order = ["見送り", "C", "B", "A"]
+    grade_order = ["見送り", "C", "B", "A", "S"]
     by_battle = []
     for grade in grade_order:
-        rows = [r for r in all_rows if r.get("prototypeBattleGrade") == grade]
-        by_battle.append({"grade": grade, "prototype": True, "metrics": summarize(rows)})
+        rows = [r for r in all_rows if r.get("battleGrade") == grade]
+        by_battle.append({"grade": grade, "prototype": False, "formal": True, "metrics": summarize(rows)})
 
     by_chaos = []
     for level in range(1, 6):
-        rows = [r for r in all_rows if int(r.get("prototypeChaosLevel") or 0) == level]
+        rows = [r for r in all_rows if int(r.get("chaosLevel") or 0) == level]
         by_chaos.append({
             "level": level,
             "stars": "★" * level + "☆" * (5 - level),
-            "prototype": True,
+            "prototype": False,
+            "formal": True,
             "metrics": summarize(rows),
         })
 
@@ -382,14 +442,26 @@ def main() -> None:
         rows = [r for r in all_rows if str(r.get("raceDate")) == date_text]
         daily.append({"raceDate": date_text, "metrics": summarize(rows)})
 
+    battle_coverage = sum(1 for r in all_rows if r.get("battleGrade") in grade_order)
+    chaos_coverage = sum(1 for r in all_rows if int(r.get("chaosLevel") or 0) in range(1, 6))
+
     payload = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
         "forwardValidation": True,
-        "prototypeLabels": True,
+        "prototypeLabels": False,
+        "formalSignalLabels": True,
+        "formalSignalDefinition": "keibaai-signals-v1 cutoffs (also used inside SignalData v2)",
+        "signalCoverage": {
+            "completedRaces": len(all_rows),
+            "battleRaces": battle_coverage,
+            "chaosRaces": chaos_coverage,
+            "chaosPolicy": "saved pre-race SignalData only; missing historical chaos labels are not reconstructed after results",
+        },
         "notes": [
             "成績は発走前に保存した予測と確定結果を突合して集計します。",
-            "勝負度・荒れ度は現在のアプリ表示と同じ試作ルールです。研究で検証した正式版へ置き換える予定です。",
+            "勝負度は正式版と同じ定義・2024固定閾値で再計算します。荒れ度は発走前に正式SignalDataとして保存できたレースだけを集計し、結果判明後の後付け推定はしません。",
+            "荒れ度・勝負度の基準は2024年データで固定し、2025年を未使用評価期間として確認したものです。2026年の結果で閾値を調整しません。",
             "参考単勝回収指数はAI1位を毎レース1単位買った仮定であり、馬券推奨や利益保証ではありません。",
         ],
         "periods": periods,
@@ -403,6 +475,8 @@ def main() -> None:
     print("performance races:", len(all_rows))
     print("today completed:", len(today_rows))
     print("last7 completed:", len(week_rows))
+    print("formal battle coverage:", battle_coverage)
+    print("saved formal chaos coverage:", chaos_coverage)
     print("output:", OUT_PATH)
 
 
