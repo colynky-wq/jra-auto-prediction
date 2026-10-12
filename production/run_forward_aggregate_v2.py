@@ -111,10 +111,10 @@ def enhanced_extract_result_urls(page_url: str, text: str) -> list[str]:
         pass
 
     # Exact routed result CNAME shape:
-    # pw01sde01 + venue(2) + year(4) + meeting(2) + day(2)
+    # pw01sde + route mode(01 or 10) + venue(2) + year(4) + meeting(2) + day(2)
     # + race(2) + calendar-date(8) + /XX
     token_pattern = re.compile(
-        r"pw01sde01\d{20}(?:(?:%2[fF])|/)[0-9A-Fa-f]{2}"
+        r"pw01sde(?:01|10)\d{20}(?:(?:%2[fF])|/)[0-9A-Fa-f]{2}"
     )
 
     for source in raw_variants:

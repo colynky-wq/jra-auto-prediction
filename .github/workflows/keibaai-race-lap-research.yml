@@ -1,0 +1,124 @@
+name: KeibaAI Official Race Lap Research
+
+on:
+  pull_request:
+    paths:
+      - 'production/race_lap_runtime.py'
+      - 'production/collect_race_laps.py'
+      - 'production/test_race_lap_runtime.py'
+      - 'production/jra_entry_source.py'
+      - 'production/run_forward_aggregate.py'
+      - 'production/run_forward_aggregate_v2.py'
+      - 'production/test_jra_route_modes.py'
+      - 'research/laps/**'
+      - '.github/workflows/keibaai-race-lap-research.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/race_lap_runtime.py'
+      - 'production/collect_race_laps.py'
+      - 'production/test_race_lap_runtime.py'
+      - 'production/jra_entry_source.py'
+      - 'production/run_forward_aggregate.py'
+      - 'production/run_forward_aggregate_v2.py'
+      - 'production/test_jra_route_modes.py'
+      - '.github/workflows/keibaai-race-lap-research.yml'
+  schedule:
+    - cron: '45 12 * * *' # 21:45 JST, after the independent history update.
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Completed JRA date YYYYMMDD. Blank uses today in JST.'
+        required: false
+        default: ''
+      force_refresh:
+        description: 'Fetch official pages again even if validated data exists.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-race-lap-research
+  cancel-in-progress: false
+
+jobs:
+  validate-and-collect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Test parser
+        run: |
+          python -m unittest discover -s production -p 'test_race_lap_runtime.py'
+          python -m unittest discover -s production -p 'test_jra_route_modes.py'
+      - name: Validate stored sidecars against history
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          import sys
+          sys.path.insert(0, 'production')
+          from race_lap_runtime import validate_source_url, segment_distances
+          history = pd.read_parquet('production/production_history.parquet', columns=['レースID','日付','芝ダ','距離'])
+          metadata = history.drop_duplicates('レースID').set_index('レースID')
+          for path in Path('research/laps').glob('*/RaceLapData.json'):
+              payload = json.loads(path.read_text())
+              assert payload['paceForecastEnabled'] is False
+              assert payload['stakeSizingEnabled'] is False
+              assert len({r['raceID'] for r in payload['races']}) == len(payload['races'])
+              for race in payload['races']:
+                  validate_source_url(race['sourceURL'], race['raceID'], path.parent.name)
+                  assert race['lapDistancesM'] == segment_distances(race['distanceM'], len(race['lapTimesSeconds']))
+                  assert all(race['validation'].values())
+                  assert abs(sum(race['lapTimesSeconds']) - race['winnerTimeSeconds']) <= 0.300000001
+                  row = metadata.loc[race['raceID']]
+                  assert int(row['距離']) == race['distanceM'] and row['芝ダ'] == race['surface']
+                  assert row['日付'].strftime('%Y-%m-%d') == race['raceDate']
+          print('RACE_LAP_SIDECARS_OK')
+          PY
+      - name: Collect official race laps
+        id: collect
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          TARGET_DATE: ${{ inputs.target_date }}
+          FORCE_REFRESH: ${{ inputs.force_refresh }}
+        run: |
+          args=(--apply)
+          if [ -n "$TARGET_DATE" ]; then args+=(--date "$TARGET_DATE"); fi
+          if [ "$FORCE_REFRESH" = 'true' ]; then args+=(--force); fi
+          python production/collect_race_laps.py "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: keibaai-race-lap-research
+          path: |
+            research/laps/*/RaceLapData.json
+            reports/race_laps/*.json
+          retention-days: 14
+      - name: Publish independently collected data
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add research/laps
+          if [ -d reports/race_laps ]; then git add reports/race_laps; fi
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update independent official race lap research data'
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Surface collection failures
+        if: steps.collect.outcome == 'failure'
+        run: exit 1
