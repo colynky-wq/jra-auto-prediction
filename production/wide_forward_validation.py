@@ -47,8 +47,6 @@ def fetch_wide_payouts(race_id: str) -> dict[tuple[int, int], int]:
             yen = _yen_values(row.iloc[2])
             if len(nums) < 2 or not yen:
                 continue
-            # Normal JRA Wide produces three winning pairs. Group the number
-            # sequence in twos and align it to the payout sequence.
             pairs = []
             for i in range(0, len(nums) - 1, 2):
                 a, b = sorted((nums[i], nums[i + 1]))
@@ -80,8 +78,11 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
             continue
         odds_by_pair[key] = p
 
+    wide_eval = signal.get("wideEvaluation") or {}
+    source_pairs = wide_eval.get("validationPairs") or wide_eval.get("pairs") or []
+
     evaluated = []
-    for p in ((signal.get("wideEvaluation") or {}).get("pairs") or []):
+    for p in source_pairs:
         try:
             key = tuple(sorted((int(p["number1"]), int(p["number2"]))))
         except Exception:
@@ -117,6 +118,7 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         "venue": signal.get("venue"),
         "raceNumber": signal.get("raceNumber"),
         "evaluatedPairs": len(evaluated),
+        "validationScope": "all_pairs" if wide_eval.get("validationPairs") else "display_pairs_only",
         "pairs": evaluated,
     }
 
