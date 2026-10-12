@@ -10,6 +10,8 @@ from pathlib import Path
 import pandas as pd
 import requests
 
+from build_signal_data_v2 import practical_rank_metrics
+
 JST = timezone(timedelta(hours=9))
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
@@ -96,6 +98,7 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         high = float(odds.get("oddsHigh") or low)
         conservative_ev = ai_prob * low
         upper_ev = ai_prob * high
+        metrics = practical_rank_metrics(ai_prob, low)
         evaluated.append({
             "number1": key[0],
             "name1": p.get("name1"),
@@ -108,14 +111,24 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
             "oddsHigh": high,
             "conservativeExpectedValue": round(conservative_ev, 4),
             "upperExpectedValue": round(upper_ev, 4),
+            **metrics,
             "hit": bool(payout > 0),
             "payoutPer100Yen": int(payout),
             "returnIndexPer100Yen": round(payout / 100.0, 3) if payout else 0.0,
         })
 
     evaluated.sort(
-        key=lambda x: (-x["conservativeExpectedValue"], -x["aiWideProbabilityPct"], x["number1"], x["number2"])
+        key=lambda x: (
+            -float(x.get("practicalScore") or 0.0),
+            -float(x.get("aiWideProbabilityPct") or 0.0),
+            -float(x.get("conservativeExpectedValue") or 0.0),
+            x["number1"],
+            x["number2"],
+        )
     )
+    for rank, row in enumerate(evaluated, start=1):
+        row["practicalRank"] = rank
+
     return {
         "raceID": str(signal.get("raceID") or snapshot.get("raceID") or ""),
         "raceDate": signal.get("raceDate"),
@@ -131,6 +144,7 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         "minutesToPost": snapshot.get("minutesToPost"),
         "evaluatedPairs": len(evaluated),
         "validationScope": "all_pairs" if wide_eval.get("validationPairs") else "display_pairs_only",
+        "rankingMethod": "practicalScore = positive Kelly fraction using AI hit probability and lower live Wide odds",
         "pairs": evaluated,
     }
 
@@ -182,10 +196,13 @@ def build_date(date8: str) -> dict:
         )
     )
     payload = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
         "date": f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}",
-        "meaning": "発走前に固定保存したワイド評価と、確定払戻を後から突合した前向き検証。",
+        "meaning": (
+            "発走前に固定保存したAIワイド確率と実オッズから実戦優先度を決め、"
+            "確定払戻を後から突合する前向き検証。"
+        ),
         "ticketPlanAutoEnable": False,
         "newValidationsThisRun": added,
         "waitingForResult": waiting,
