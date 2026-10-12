@@ -1,0 +1,63 @@
+name: KeibaAI Live NOW 2026-10-12 Tokyo 2R
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/keibaai-live-now-20261012-tokyo2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  live-now:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install production dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Install network dependencies
+        run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
+      - name: Smoke-test Top2 Top3 runtime
+        run: python production/smoke_topk_runtime.py
+
+      - name: Run 10-minute AI prediction for Tokyo 2R
+        env:
+          KEIBAAI_LIVE_DATE: '20261012'
+          KEIBAAI_LIVE_MODE: 'live'
+          KEIBAAI_LIVE_RACE_ID: '202605040502'
+          KEIBAAI_LIVE_MAX_MINUTES: '25'
+          KEIBAAI_LIVE_POLL_SECONDS: '20'
+          KEIBAAI_PUBLISH_RACEDATA: 'true'
+        run: python production/live_monitor_topk_publish.py
+
+      - name: Publish RaceData.json to main
+        run: |
+          if git diff --quiet -- RaceData.json; then
+            echo 'RaceData.json was not changed; nothing to publish.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add RaceData.json
+          git commit -m 'Publish 10-minute AI prediction Tokyo 2R 2026-10-12'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
