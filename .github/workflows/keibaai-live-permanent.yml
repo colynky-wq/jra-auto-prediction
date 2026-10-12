@@ -1,0 +1,152 @@
+name: KeibaAI Live Permanent
+
+on:
+  # Run every day so unusual JRA weekday dates are covered too. A cheap curl
+  # check exits immediately when the target date has no JRA races.
+  schedule:
+    # 08:45 JST and 14:15 JST every day.
+    - cron: '45 23 * * *'
+    - cron: '15 5 * * *'
+  workflow_dispatch:
+    inputs:
+      max_minutes:
+        description: Optional live-monitor runtime for manual testing
+        required: false
+        default: '120'
+
+permissions:
+  contents: write
+
+concurrency:
+  # The late session queues behind the early session if they overlap briefly.
+  group: keibaai-live-permanent
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Automatic Win Top2 Top3 Signal Wide monitor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+
+    steps:
+      - name: Check whether JRA races exist today
+        id: day
+        shell: bash
+        run: |
+          set -euo pipefail
+          date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
+          html=$(curl -fsSL --retry 2 \
+            -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0 Safari/537.36' \
+            "https://race.netkeiba.com/top/race_list_sub.html?kaisai_date=${date8}" || true)
+          ids=$(printf '%s' "$html" | grep -oE 'race_id=[0-9]{12}' || true)
+          count=$(printf '%s\n' "$ids" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')
+          echo "target_date=${date8}" >> "$GITHUB_OUTPUT"
+          if [ "${count:-0}" -gt 0 ]; then
+            echo 'has_races=true' >> "$GITHUB_OUTPUT"
+            echo "JRA race day detected: ${date8}, races=${count}"
+          else
+            echo 'has_races=false' >> "$GITHUB_OUTPUT"
+            echo "No JRA races detected for ${date8}; exiting cheaply."
+          fi
+
+      - name: Checkout repository
+        if: steps.day.outputs.has_races == 'true'
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        if: steps.day.outputs.has_races == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Install dependencies
+        if: steps.day.outputs.has_races == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
+      - name: Smoke-test bundled runtime
+        if: steps.day.outputs.has_races == 'true'
+        run: |
+          python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/wide_odds_runtime.py
+          python -m py_compile production/build_signal_data_v2.py
+          python -m py_compile production/repair_wide_odds.py
+          python production/smoke_topk_runtime.py
+
+      - name: Choose session runtime
+        if: steps.day.outputs.has_races == 'true'
+        id: runtime
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
+            minutes='${{ github.event.inputs.max_minutes }}'
+          elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then
+            # 08:45 JST through roughly 14:30 JST.
+            minutes='345'
+          else
+            # 14:15 JST backup/late session through roughly 17:15 JST.
+            minutes='180'
+          fi
+          echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
+          echo "session runtime minutes=${minutes}"
+
+      - name: Configure git publisher
+        if: steps.day.outputs.has_races == 'true'
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+      - name: Monitor races and publish one consistent bundle
+        if: steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_LIVE_DATE: ${{ steps.day.outputs.target_date }}
+          KEIBAAI_LIVE_MODE: 'live'
+          KEIBAAI_LIVE_RACE_ID: ''
+          KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
+          KEIBAAI_LIVE_POLL_SECONDS: '20'
+          KEIBAAI_PUBLISH_RACEDATA: 'true'
+          KEIBAAI_CAPTURE_WIDE_ODDS: 'true'
+          KEIBAAI_REFRESH_SIGNALS: 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          date8='${{ steps.day.outputs.target_date }}'
+
+          publish_if_changed() {
+            # repair_wide_odds only acts on predicted races and refuses to make
+            # a missing snapshot after scheduled post time.
+            python production/repair_wide_odds.py || true
+
+            changes=$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}")
+            if [ -z "$changes" ]; then
+              return 0
+            fi
+
+            git add -A -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}"
+            git commit -m "Publish KeibaAI live prediction bundle ${date8}" || true
+            git pull --rebase origin main
+            git push origin HEAD:main
+            echo "Published prediction bundle at $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST')"
+          }
+
+          git pull --rebase origin main
+          publish_if_changed
+
+          python production/live_monitor_topk_publish.py &
+          monitor_pid=$!
+          monitor_exit=0
+
+          while kill -0 "$monitor_pid" 2>/dev/null; do
+            sleep 20
+            publish_if_changed
+          done
+
+          wait "$monitor_pid" || monitor_exit=$?
+          publish_if_changed
+          exit "$monitor_exit"
