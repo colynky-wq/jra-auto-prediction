@@ -49,8 +49,10 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
 
-      - name: Compile result publisher
-        run: python -m py_compile production/build_result_data_live.py
+      - name: Compile result and performance publishers
+        run: |
+          python -m py_compile production/build_result_data_live.py
+          python -m py_compile production/build_performance_data.py
 
       - name: Build app ResultData
         env:
@@ -59,19 +61,22 @@ jobs:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python production/build_result_data_live.py
 
-      - name: Commit ResultData when changed
+      - name: Build app PerformanceData
+        run: python production/build_performance_data.py
+
+      - name: Commit ResultData and PerformanceData when changed
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ -z "$(git status --porcelain -- ResultData.json reports)" ]; then
-            echo 'No ResultData changes to publish.'
+          if [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json reports)" ]; then
+            echo 'No result/performance changes to publish.'
             exit 0
           fi
 
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add ResultData.json reports
-          git commit -m "Update KeibaAI live race results"
+          git add ResultData.json PerformanceData.json reports
+          git commit -m "Update KeibaAI live results and performance"
           git pull --rebase origin main
           git push origin HEAD:main
