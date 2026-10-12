@@ -7,6 +7,7 @@ on:
     paths:
       - 'production/horse_profile_runtime.py'
       - 'production/build_horse_profiles.py'
+      - 'production/research_course_affinity.py'
       - '.github/workflows/keibaai-horse-profile-research.yml'
   workflow_dispatch:
 
@@ -16,7 +17,7 @@ permissions:
 jobs:
   build-profile-sample:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -26,10 +27,11 @@ jobs:
           cache-dependency-path: production/requirements.txt
       - name: Install dependencies
         run: pip install -r production/requirements.txt
-      - name: Compile builder
+      - name: Compile research code
         run: |
           python -m py_compile production/horse_profile_runtime.py
           python -m py_compile production/build_horse_profiles.py
+          python -m py_compile production/research_course_affinity.py
       - name: Build recent 250-horse sample
         env:
           KEIBAAI_HORSE_PROFILE_LIMIT: '250'
@@ -55,16 +57,34 @@ jobs:
           assert profile['career']['starts'] >= 1
           assert isinstance(profile['recentRaces'], list) and profile['recentRaces']
           assert isinstance(profile['venueStats'], list)
+          assert isinstance(profile['venueSurfaceStats'], list)
           assert isinstance(profile['distanceStats'], list)
           print('HORSE_PROFILE_DB_OK', manifest)
           print('SAMPLE_PROFILE', profile['name'], profile['career'], profile['bestVenues'][:2])
           PY
-      - name: Upload sample database
+      - name: Run leakage-safe racecourse affinity research
+        run: python production/research_course_affinity.py
+      - name: Validate affinity report
+        run: |
+          python - <<'PY'
+          import json
+          p = json.load(open('reports/research_course_affinity.json', encoding='utf-8'))
+          assert p['evaluationYear'] == 2025
+          assert p['evaluationRows'] > 0
+          assert p['featureCandidates'] == ['同場適性', '同場回数c', '同場芝ダ適性', '同場芝ダ回数c']
+          assert p['venue']
+          assert p['venueSurface']
+          print('COURSE_AFFINITY_RESEARCH_OK')
+          print('VENUE_BUCKETS', p['venue'])
+          print('VENUE_SURFACE_BUCKETS', p['venueSurface'])
+          PY
+      - name: Upload research outputs
         uses: actions/upload-artifact@v4
         with:
-          name: keibaai-horse-profile-sample
+          name: keibaai-horse-profile-course-research
           path: |
             HorseIndex.json
             HorseProfileManifest.json
             HorseProfiles/
+            reports/research_course_affinity.json
           retention-days: 14
