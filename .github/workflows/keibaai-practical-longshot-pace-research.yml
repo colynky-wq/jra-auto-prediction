@@ -1,0 +1,66 @@
+name: KeibaAI Practical Longshot and Pace Research
+
+on:
+  pull_request:
+    paths:
+      - 'production/research_practical_longshot.py'
+      - 'production/research_running_style.py'
+      - '.github/workflows/keibaai-practical-longshot-pace-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Compile research code
+        run: |
+          python -m py_compile production/research_practical_longshot.py
+          python -m py_compile production/research_running_style.py
+
+      - name: Build practical longshot shadow ranking
+        run: python production/research_practical_longshot.py
+
+      - name: Build running style tendency research
+        run: python production/research_running_style.py
+
+      - name: Validate outputs
+        run: |
+          python - <<'PY'
+          import json
+
+          longshot = json.load(open('reports/PracticalLongshotShadow.json', encoding='utf-8'))
+          pace = json.load(open('reports/RunningStyleResearch.json', encoding='utf-8'))
+          assert longshot['status'] == 'shadow_research_only'
+          assert longshot['stakeSizingEnabled'] is False
+          assert isinstance(longshot['races'], list)
+          assert pace['status'] == 'research_tendency_only'
+          assert pace['evaluation2025']['rows'] > 0
+          assert isinstance(pace['currentRaces'], list)
+          print('PRACTICAL_LONGSHOT_PACE_RESEARCH_OK')
+          print('longshot races=', len(longshot['races']))
+          print('running-style 2025=', pace['evaluation2025'])
+          PY
+
+      - name: Upload research outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: practical-longshot-pace-research
+          path: |
+            reports/PracticalLongshotShadow.json
+            reports/RunningStyleResearch.json
+          retention-days: 14
