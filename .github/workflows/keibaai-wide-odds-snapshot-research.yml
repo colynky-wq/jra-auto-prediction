@@ -1,0 +1,40 @@
+name: KeibaAI Wide Odds Snapshot Research
+
+on:
+  push:
+    branches:
+      - research/wide-budget-model-v1
+    paths:
+      - production/capture_wide_odds_snapshot.py
+      - .github/workflows/keibaai-wide-odds-snapshot-research.yml
+  workflow_dispatch:
+    inputs:
+      race_id:
+        description: JRA netkeiba 12-digit race ID
+        required: false
+        default: '202605040508'
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: Capture one Wide odds snapshot safely
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'requests==2.32.5'
+      - name: Capture Wide odds
+        env:
+          KEIBAAI_WIDE_RACE_ID: ${{ github.event.inputs.race_id || '202605040508' }}
+        run: python production/capture_wide_odds_snapshot.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-wide-odds-snapshot-research
+          path: wide_odds_artifacts/wide_snapshot.json
+          if-no-files-found: error
+          retention-days: 14
