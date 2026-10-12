@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -37,10 +38,9 @@ def fetch_wide_payouts(race_id: str) -> dict[tuple[int, int], int]:
     tables = pd.read_html(io.StringIO(html))
 
     for table in tables:
-        t = table.copy()
-        if t.shape[1] < 3:
+        if table.shape[1] < 3:
             continue
-        for _, row in t.iterrows():
+        for _, row in table.iterrows():
             if str(row.iloc[0]).strip() != "ワイド":
                 continue
             nums = _numbers(row.iloc[1])
@@ -98,8 +98,12 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         upper_ev = ai_prob * high
         evaluated.append({
             "number1": key[0],
+            "name1": p.get("name1"),
             "number2": key[1],
+            "name2": p.get("name2"),
+            "marketWideProbabilityPct": p.get("marketWideProbability"),
             "aiWideProbabilityPct": round(ai_prob * 100.0, 3),
+            "probabilityEdgePct": p.get("probabilityEdgePct"),
             "oddsLow": low,
             "oddsHigh": high,
             "conservativeExpectedValue": round(conservative_ev, 4),
@@ -117,6 +121,14 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         "raceDate": signal.get("raceDate"),
         "venue": signal.get("venue"),
         "raceNumber": signal.get("raceNumber"),
+        "startTime": signal.get("startTime"),
+        "raceName": signal.get("raceName"),
+        "course": signal.get("course"),
+        "chaosStars": ((signal.get("chaos") or {}).get("stars")),
+        "chaosLevel": ((signal.get("chaos") or {}).get("level")),
+        "battleGrade": ((signal.get("battle") or {}).get("grade")),
+        "snapshotCapturedAtJST": snapshot.get("capturedAtJST"),
+        "minutesToPost": snapshot.get("minutesToPost"),
         "evaluatedPairs": len(evaluated),
         "validationScope": "all_pairs" if wide_eval.get("validationPairs") else "display_pairs_only",
         "pairs": evaluated,
@@ -124,39 +136,73 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
 
 
 def build_date(date8: str) -> dict:
+    if not re.fullmatch(r"\d{8}", str(date8)):
+        raise RuntimeError(f"invalid date: {date8!r}")
+
     day = REPORTS_DIR / date8
+    out = day / "WideValidation.json"
+    old_payload = _load_json(out, {})
+    old_races = old_payload.get("races") if isinstance(old_payload, dict) else []
+    by_validated = {
+        str(r.get("raceID") or ""): r
+        for r in (old_races or [])
+        if str(r.get("raceID") or "")
+    }
+
     signal_payload = _load_json(day / "SignalData.json", {})
     signals = signal_payload.get("races") if isinstance(signal_payload, dict) else []
     by_id = {str(r.get("raceID") or ""): r for r in (signals or [])}
-    races = []
 
+    waiting = 0
+    added = 0
     for path in sorted((day / "wide_odds").glob("*.json")):
         snapshot = _load_json(path, {})
         rid = str(snapshot.get("raceID") or path.stem)
+        if rid in by_validated:
+            continue
         signal = by_id.get(rid)
         if not signal or not bool(signal.get("eligible", False)):
             continue
         try:
             payouts = fetch_wide_payouts(rid)
         except Exception as exc:
+            waiting += 1
             print("WIDE RESULT NOT READY:", rid, repr(exc))
             continue
-        races.append(evaluate_race(signal, snapshot, payouts))
+        by_validated[rid] = evaluate_race(signal, snapshot, payouts)
+        added += 1
 
+    races = list(by_validated.values())
+    races.sort(
+        key=lambda r: (
+            str(r.get("startTime") or ""),
+            str(r.get("venue") or ""),
+            int(r.get("raceNumber") or 0),
+            str(r.get("raceID") or ""),
+        )
+    )
     payload = {
         "schemaVersion": 1,
         "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
         "date": f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}",
         "meaning": "発走前に固定保存したワイド評価と、確定払戻を後から突合した前向き検証。",
+        "ticketPlanAutoEnable": False,
+        "newValidationsThisRun": added,
+        "waitingForResult": waiting,
         "races": races,
     }
-    out = day / "WideValidation.json"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if races or list((day / "wide_odds").glob("*.json")):
+        out.parent.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_suffix(out.suffix + ".tmp")
+        tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        tmp.replace(out)
     return payload
 
 
 if __name__ == "__main__":
-    date8 = datetime.now(JST).strftime("%Y%m%d")
+    date8 = os.environ.get("KEIBAAI_WIDE_VALIDATE_DATE", "").strip() or datetime.now(JST).strftime("%Y%m%d")
     payload = build_date(date8)
-    print("date:", date8, "validated races:", len(payload["races"]))
+    print("date:", date8)
+    print("validated races:", len(payload["races"]))
+    print("new validations:", payload["newValidationsThisRun"])
+    print("waiting:", payload["waitingForResult"])
