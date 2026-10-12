@@ -1,0 +1,52 @@
+name: KeibaAI Signal Sidecar 2026-10-12
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/keibaai-signal-sidecar-20261012.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-signal-sidecar-20261012
+  cancel-in-progress: false
+
+jobs:
+  sync-signals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Configure git
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+      - name: Follow RaceData and publish SignalData immediately
+        shell: bash
+        run: |
+          set -euo pipefail
+          last_hash=''
+          while true; do
+            git pull --rebase origin main
+            current_hash="$(git rev-parse HEAD:RaceData.json)"
+            if [ "$current_hash" != "$last_hash" ]; then
+              echo "RaceData changed: $current_hash"
+              python production/build_signal_data.py
+              if [ -n "$(git status --porcelain -- SignalData.json reports)" ]; then
+                git add SignalData.json reports
+                git commit -m 'Sync validated signals with latest live RaceData' || true
+                git pull --rebase origin main
+                git push origin HEAD:main
+              fi
+              last_hash="$current_hash"
+            fi
+            sleep 20
+          done
