@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "ruleVersion": "wide-ticket-shadow-v1-20261012",
+  "rulesFrozenAtJST": "2026-10-12",
+  "generatedAtJST": "2026-10-12 17:05:24",
+  "purpose": "将来の馬券プラン候補を、後から都合よく閾値変更せず実運用データで検証するための影運用。",
+  "validatedRacesAvailable": 5,
+  "reviewGates": {
+    "minValidatedRaces": 300,
+    "minSelectedBets": 150,
+    "minOverallReturnIndex": 1.0,
+    "minBootstrap95LowerReturnIndex": 1.0,
+    "minRecentHalfReturnIndex": 0.95
+  },
+  "autoBetEnabled": false,
+  "moneyAllocationEnabled": false,
+  "important": "review_candidateになっても自動で馬券プランを有効化しません。データ漏洩、時点、期間安定性を人手で再確認してから別版として判断します。",
+  "profiles": {
+    "安定型候補": {
+      "rule": {
+        "description": "1レース最大1点。保守的期待値1.10以上のみ。",
+        "thresholdEV": 1.1,
+        "topNPerRace": 1
+      },
+      "selectedRaces": 4,
+      "selectedBets": 4,
+      "hits": 0,
+      "hitRatePct": 0.0,
+      "stakeYenAt100PerBet": 400,
+      "returnYenAt100PerBet": 0,
+      "returnIndex": 0.0,
+      "bootstrap95ReturnIndex": {
+        "lower": 0.0,
+        "upper": 0.0,
+        "resamplingUnit": "race",
+        "repetitions": 2000
+      },
+      "recentHalfReturnIndex": 0.0,
+      "maxConsecutiveLosingBets": 4,
+      "reviewGates": {
+        "validatedRaces": false,
+        "selectedBets": false,
+        "overallReturnIndex": false,
+        "bootstrap95Lower": false,
+        "recentHalfReturnIndex": false
+      },
+      "status": "data_collecting"
+    },
+    "バランス型候補": {
+      "rule": {
+        "description": "1レース最大2点。保守的期待値1.10以上のみ。",
+        "thresholdEV": 1.1,
+        "topNPerRace": 2
+      },
+      "selectedRaces": 4,
+      "selectedBets": 7,
+      "hits": 1,
+      "hitRatePct": 14.286,
+      "stakeYenAt100PerBet": 700,
+      "returnYenAt100PerBet": 1690,
+      "returnIndex": 2.4143,
+      "bootstrap95ReturnIndex": {
+        "lower": 0.0,
+        "upper": 6.3375,
+        "resamplingUnit": "race",
+        "repetitions": 2000
+      },
+      "recentHalfReturnIndex": 0.0,
+      "maxConsecutiveLosingBets": 4,
+      "reviewGates": {
+        "validatedRaces": false,
+        "selectedBets": false,
+        "overallReturnIndex": true,
+        "bootstrap95Lower": false,
+        "recentHalfReturnIndex": false
+      },
+      "status": "data_collecting"
+    },
+    "高期待値型候補": {
+      "rule": {
+        "description": "1レース最大3点。保守的期待値1.20以上のみ。大穴型とは別物。",
+        "thresholdEV": 1.2,
+        "topNPerRace": 3
+      },
+      "selectedRaces": 3,
+      "selectedBets": 7,
+      "hits": 0,
+      "hitRatePct": 0.0,
+      "stakeYenAt100PerBet": 700,
+      "returnYenAt100PerBet": 0,
+      "returnIndex": 0.0,
+      "bootstrap95ReturnIndex": {
+        "lower": 0.0,
+        "upper": 0.0,
+        "resamplingUnit": "race",
+        "repetitions": 2000
+      },
+      "recentHalfReturnIndex": 0.0,
+      "maxConsecutiveLosingBets": 7,
+      "reviewGates": {
+        "validatedRaces": false,
+        "selectedBets": false,
+        "overallReturnIndex": false,
+        "bootstrap95Lower": false,
+        "recentHalfReturnIndex": false
+      },
+      "status": "data_collecting"
+    }
+  }
+}
