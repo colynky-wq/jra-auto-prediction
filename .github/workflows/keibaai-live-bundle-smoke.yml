@@ -37,41 +37,74 @@ jobs:
           python -m py_compile production/live_monitor_topk_publish.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
-      - name: Validate SignalData shape and synthetic Wide EV enrichment
+      - name: Validate all-pair Wide EV and immutable archive
         run: |
           python - <<'PY'
-          import json, sys
+          import json, sys, tempfile
+          from pathlib import Path
           sys.path.insert(0, 'production')
           import build_signal_data as base
           import build_signal_data_v2 as v2
+          import wide_odds_runtime as wide
 
           races = json.load(open('RaceData.json', encoding='utf-8'))
           assert races, 'RaceData empty'
-          built = base.build_race_signal(races[0])
+          race = races[0]
+          built = base.build_race_signal(race)
           assert built and built.get('eligible')
-          pair = built['wideEvaluation']['pairs'][0]
-          snapshot = {
-              'raceID': races[0]['raceID'],
-              'capturedAtJST': '2026-10-12 12:00:00',
-              'officialDatetime': '2026-10-12 11:59:00',
-              'pairs': [{
-                  'number1': pair['number1'],
-                  'number2': pair['number2'],
+
+          all_pairs = v2._all_wide_pairs(race)
+          n = len(race['horses'])
+          assert len(all_pairs) == n * (n - 1) // 2, (n, len(all_pairs))
+          built['wideEvaluation']['pairs'] = all_pairs
+
+          snapshot_pairs = [
+              {
+                  'number1': p['number1'],
+                  'number2': p['number2'],
                   'oddsLow': 2.0,
                   'oddsHigh': 3.0,
-                  'popularity': 1,
-              }],
+                  'popularity': i + 1,
+              }
+              for i, p in enumerate(all_pairs)
+          ]
+          snapshot = {
+              'raceDate': race['raceDate'],
+              'raceID': race['raceID'],
+              'venue': race['venue'],
+              'raceNumber': race['raceNumber'],
+              'startTime': race['startTime'],
+              'capturedAtJST': '2026-10-12 10:00:00',
+              'officialDatetime': '2026-10-12 09:59:00',
+              'pairs': snapshot_pairs,
           }
           enriched = v2._enrich_with_wide_odds(built, snapshot)
           got = enriched['wideEvaluation']
           assert got['oddsConnected'] is True
-          assert got['connectedPairCount'] == 1
-          enriched_pair = next(x for x in got['pairs'] if 'wideOddsLow' in x)
-          assert enriched_pair['conservativeExpectedValue'] >= 0
+          assert got['connectedPairCount'] == len(all_pairs)
+          assert got['validationPairCount'] == len(all_pairs)
+          assert len(got['validationPairs']) == len(all_pairs)
+          assert len(got['pairs']) <= 20
+          assert all('conservativeExpectedValue' in x for x in got['validationPairs'])
           assert enriched['ticketPlan']['enabled'] is False
+
+          with tempfile.TemporaryDirectory() as td:
+              wide.REPORTS_DIR = Path(td)
+              archived_path = wide._archive_snapshot(snapshot)
+              assert archived_path is not None and archived_path.exists()
+              archived = json.loads(archived_path.read_text(encoding='utf-8'))
+              assert archived['frozenAtFirstSuccessfulCapture'] is True
+              assert archived['raceID'] == race['raceID']
+              # A second archive must preserve the first file rather than replace it.
+              before = archived_path.read_text(encoding='utf-8')
+              snapshot2 = dict(snapshot)
+              snapshot2['capturedAtJST'] = '2026-10-12 10:01:00'
+              wide._archive_snapshot(snapshot2)
+              assert archived_path.read_text(encoding='utf-8') == before
 
           payload = json.load(open('SignalData.json', encoding='utf-8'))
           assert payload['signalVersion'] == 'keibaai-signals-v2-wide'
           print('SMOKE_OK races=', len(payload['races']))
-          print('synthetic EV=', enriched_pair['conservativeExpectedValue'])
+          print('all Wide pairs=', len(all_pairs))
+          print('app display pairs=', len(got['pairs']))
           PY
