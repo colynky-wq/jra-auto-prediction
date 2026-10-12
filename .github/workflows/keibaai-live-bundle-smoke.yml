@@ -3,13 +3,18 @@ name: KeibaAI Live Bundle Smoke
 on:
   push:
     branches:
-      - research/live-signal-wide-v2
-      - integration/postrace-20261012
+      - main
+      - integration/postrace-20261012-clean
     paths:
       - 'production/live_monitor_topk_publish.py'
       - 'production/wide_odds_runtime.py'
       - 'production/build_signal_data_v2.py'
       - 'production/repair_wide_odds.py'
+      - 'production/wide_forward_validation.py'
+      - 'production/wide_validation_summary.py'
+      - 'production/ticket_plan_shadow.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
       - '.github/workflows/keibaai-live-bundle-smoke.yml'
   workflow_dispatch:
 
@@ -32,12 +37,15 @@ jobs:
         run: |
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
-      - name: Compile new runtime
+      - name: Compile live and validation runtime
         run: |
           python -m py_compile production/wide_odds_runtime.py
           python -m py_compile production/build_signal_data_v2.py
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/repair_wide_odds.py
+          python -m py_compile production/wide_forward_validation.py
+          python -m py_compile production/wide_validation_summary.py
+          python -m py_compile production/ticket_plan_shadow.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
       - name: Validate all-pair Wide practical ranking and immutable archive
