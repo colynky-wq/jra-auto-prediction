@@ -1,0 +1,74 @@
+name: KeibaAI Post-race Audit 2026-10-12
+
+on:
+  push:
+    branches:
+      - integration/postrace-20261012
+    paths:
+      - '.github/workflows/keibaai-postrace-audit-20261012.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Audit today's stored prediction/result/Wide data
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          day = Path('reports/20261012')
+          race_data = json.load(open('RaceData.json', encoding='utf-8'))
+          results = json.load(open(day/'ResultData.json', encoding='utf-8'))
+          signals_payload = json.load(open(day/'SignalData.json', encoding='utf-8'))
+          validations_payload = json.load(open(day/'WideValidation.json', encoding='utf-8'))
+          signals = signals_payload.get('races', signals_payload if isinstance(signals_payload, list) else [])
+          validations = validations_payload.get('races', validations_payload if isinstance(validations_payload, list) else [])
+          snapshots = sorted((day/'wide_odds').glob('*.json'))
+
+          pred_ids = {str(r.get('raceID')) for r in race_data}
+          result_ids = {str(r.get('raceID')) for r in results}
+          signal_ids = {str(r.get('raceID')) for r in signals}
+          validation_ids = {str(r.get('raceID')) for r in validations}
+          snapshot_ids = {p.stem for p in snapshots}
+
+          late = {
+              '東京11R': '202605040511',
+              '東京12R': '202605040512',
+              '京都11R': '202608040511',
+              '京都12R': '202608040512',
+          }
+          late_status = {
+              name: {
+                  'prediction': rid in pred_ids,
+                  'result': rid in result_ids,
+                  'signal': rid in signal_ids,
+                  'wideSnapshot': rid in snapshot_ids,
+                  'wideValidation': rid in validation_ids,
+              }
+              for name, rid in late.items()
+          }
+
+          print('POSTRACE_AUDIT')
+          print(json.dumps({
+              'predictedRaces': len(pred_ids),
+              'resultRaces': len(result_ids),
+              'signalRaces': len(signal_ids),
+              'wideSnapshotRaces': len(snapshot_ids),
+              'wideValidatedRaces': len(validation_ids),
+              'lateRaceStatus': late_status,
+          }, ensure_ascii=False, indent=2))
+
+          # Integrity rules: no post-race backfill of the known missed Kyoto 11R.
+          assert '202608040511' not in pred_ids, 'Kyoto 11R was unexpectedly backfilled after post time'
+          assert pred_ids <= result_ids, f'Predicted races missing results: {sorted(pred_ids-result_ids)}'
+          assert snapshot_ids <= pred_ids, f'Wide snapshots without predictions: {sorted(snapshot_ids-pred_ids)}'
+          print('AUDIT_OK')
+          PY
