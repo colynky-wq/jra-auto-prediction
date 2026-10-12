@@ -114,7 +114,7 @@ def _race_id_from_url(url: str, date8: str) -> str | None:
             return None
 
         m = re.search(
-            r"pw01dde01"
+            r"pw01dde(?:01|10)"
             r"(\d{2})"
             r"(\d{4})"
             r"(\d{2})"
@@ -148,13 +148,13 @@ def _extract_accessd_urls(page_url: str, text: str) -> list[str]:
 
     for a in soup.find_all("a", href=True):
         href = str(a.get("href", ""))
-        if "accessD.html" not in href or "pw01dde01" not in href:
+        if "accessD.html" not in href or not re.search(r"pw01dde(?:01|10)", href):
             continue
         found_urls.append(urljoin(page_url, href))
 
     raw = html_lib.unescape(text)
     patterns = re.findall(
-        r'[^"\']*accessD\.html\?CNAME=pw01dde01[^"\']+',
+        r'[^"\']*accessD\.html\?CNAME=pw01dde(?:01|10)[^"\']+',
         raw,
     )
 
@@ -168,6 +168,11 @@ def _extract_accessd_urls(page_url: str, text: str) -> list[str]:
                 continue
             u = urljoin(ACCESS_D, p[pos:])
         found_urls.append(u)
+
+    # JRA's homepage stores the current entry calendar in doAction calls,
+    # rather than ordinary href links. Recover only observed official tokens.
+    for token in re.findall(r"(?:pw01dli00|pw01dde(?:01|10)\d+)(?:/|%2[Ff])[0-9A-Za-z]{2}", raw):
+        found_urls.append(ACCESS_D + "?" + urlencode({"CNAME": unquote(token)}))
 
     return list(dict.fromkeys(found_urls))
 
@@ -204,13 +209,15 @@ def discover_entry_url(
         max_pages = 32
         print("JRA discovery using routed date seeds:", len(queue), date8)
     else:
-        # Generic fallback. A future production version will populate routed
-        # seeds automatically from the current JRA navigation tree.
-        queue = [direct]
+        # Discover the current entry calendar from JRA's homepage. A bare
+        # per-race CNAME by itself can return a parameter-error page.
+        queue = [JRA_HOST + "/", direct]
         max_pages = 16
 
     visited: set[str] = set()
     url_map: dict[str, str] = {}
+    navigation_fields: dict[str, str] = {}
+    navigation_cname_field: str | None = None
 
     while queue and len(visited) < max_pages:
         page_url = queue.pop(0)
@@ -219,7 +226,14 @@ def discover_entry_url(
         visited.add(page_url)
 
         try:
-            r = session.get(page_url, timeout=20)
+            cname = _get_cname(page_url)
+            if re.fullmatch(r"pw01dli00/[0-9A-Za-z]{2}", cname) and navigation_cname_field:
+                # JRA's public calendar is a form navigation. GET returns a
+                # parameter-error page; use the exact field name from its form.
+                r = session.post(ACCESS_D, data={**navigation_fields, navigation_cname_field: cname},
+                                 headers={"Referer": JRA_HOST + "/"}, timeout=20)
+            else:
+                r = session.get(page_url, timeout=20)
             print(
                 "JRA discovery HTTP:",
                 r.status_code,
@@ -235,6 +249,13 @@ def discover_entry_url(
 
             enc = r.apparent_encoding or "shift_jis"
             text = r.content.decode(enc, errors="replace")
+            form = BeautifulSoup(text, "html.parser").find("form", id="commForm01")
+            if form:
+                field = form.find("input", id="cname")
+                if field and field.get("name"):
+                    navigation_cname_field = str(field["name"])
+                    navigation_fields = {str(item["name"]): str(item.get("value") or "")
+                                         for item in form.find_all("input") if item.get("name")}
             found_urls = _extract_accessd_urls(page_url, text)
 
             for u in found_urls:
@@ -250,7 +271,9 @@ def discover_entry_url(
 
             for u in found_urls:
                 rid = _race_id_from_url(u, date8)
-                if rid and u not in visited and u not in queue:
+                cname = _get_cname(u)
+                navigation = bool(re.fullmatch(r"pw01dli00/[0-9A-Za-z]{2}", cname))
+                if (rid or navigation) and u not in visited and u not in queue:
                     queue.append(u)
 
         except Exception as e:

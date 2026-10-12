@@ -73,7 +73,7 @@ def _race_id_from_result_url(url: str, date8: str) -> str | None:
         return None
 
     m = re.search(
-        r"pw01sde01"
+        r"pw01sde(?:01|10)"
         r"(\d{2})"   # venue
         r"(\d{4})"   # year
         r"(\d{2})"   # meeting
@@ -98,13 +98,13 @@ def _extract_result_urls(page_url: str, text: str) -> list[str]:
 
     for a in soup.find_all("a", href=True):
         href = str(a.get("href", ""))
-        if "accessS.html" not in href or "pw01sde01" not in href:
+        if "accessS.html" not in href or not re.search(r"pw01sde(?:01|10)", href):
             continue
         urls.append(urljoin(page_url, href))
 
     raw = html_lib.unescape(text)
     for m in re.findall(
-        r'[^"\']*accessS\.html\?CNAME=pw01sde01[^"\']+',
+        r'[^"\']*accessS\.html\?CNAME=pw01sde(?:01|10)[^"\']+',
         raw,
     ):
         value = m.strip()
