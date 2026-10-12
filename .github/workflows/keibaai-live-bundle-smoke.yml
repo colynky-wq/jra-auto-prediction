@@ -8,6 +8,7 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/wide_odds_runtime.py'
       - 'production/build_signal_data_v2.py'
+      - 'production/repair_wide_odds.py'
       - '.github/workflows/keibaai-live-bundle-smoke.yml'
   workflow_dispatch:
 
@@ -35,6 +36,7 @@ jobs:
           python -m py_compile production/wide_odds_runtime.py
           python -m py_compile production/build_signal_data_v2.py
           python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/repair_wide_odds.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
       - name: Validate all-pair Wide EV and immutable archive
@@ -95,7 +97,6 @@ jobs:
               archived = json.loads(archived_path.read_text(encoding='utf-8'))
               assert archived['frozenAtFirstSuccessfulCapture'] is True
               assert archived['raceID'] == race['raceID']
-              # A second archive must preserve the first file rather than replace it.
               before = archived_path.read_text(encoding='utf-8')
               snapshot2 = dict(snapshot)
               snapshot2['capturedAtJST'] = '2026-10-12 10:01:00'
