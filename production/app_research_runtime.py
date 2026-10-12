@@ -4,7 +4,7 @@ import math
 from collections import Counter
 
 STYLE_ORDER = ["逃げ", "先行", "差し", "追込"]
-METHOD_VERSION = "history-style-six-races-v1"
+METHOD_VERSION = "history-corner-six-races-v2"
 
 
 def finite(value):

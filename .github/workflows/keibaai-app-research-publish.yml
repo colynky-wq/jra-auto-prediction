@@ -6,6 +6,9 @@ on:
       - 'production/app_research_runtime.py'
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
+      - 'production/formation_runtime.py'
+      - 'production/research_formation.py'
+      - 'production/test_formation_reference.py'
       - '.github/workflows/keibaai-app-research-publish.yml'
       - '.github/workflows/keibaai-live-permanent.yml'
   push:
@@ -14,6 +17,9 @@ on:
       - 'production/app_research_runtime.py'
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
+      - 'production/formation_runtime.py'
+      - 'production/research_formation.py'
+      - 'production/test_formation_reference.py'
       - '.github/workflows/keibaai-app-research-publish.yml'
   schedule:
     - cron: '50 9 * * *' # 18:50 JST; live updates use the existing publisher.
@@ -42,7 +48,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r production/requirements.txt
       - name: Run regression tests
-        run: python -m unittest discover -s production -p 'test_app_research_data.py'
+        run: |
+          python -m unittest discover -s production -p 'test_app_research_data.py'
+          python -m unittest discover -s production -p 'test_formation_reference.py'
+      - name: Evaluate initial-position reference on 2024 and 2025
+        run: python production/research_formation.py
       - name: Build research display and evaluate 2025
         run: python production/build_app_research_data.py --evaluate
       - name: Validate display outputs
@@ -54,13 +64,27 @@ jobs:
           assert payload['stakeSizingEnabled'] is False
           assert payload['formalSignalsChanged'] is False
           assert payload['evaluation2025']['rows'] > 0
+          assert payload['formationValidation']['status'] == 'research_reference_only'
+          assert payload['formationValidation']['paceForecastValidated'] is False
           for race in payload['races']:
+              formation = race['formation']
+              assert formation['paceForecast']['status'] == 'unavailable'
+              if formation['status'] == 'reference_order':
+                  assert formation['coveragePct'] >= 80
+                  assert len(formation['orderedHorseNumbers']) == formation['knownHorses']
+                  assert set(formation['orderedHorseNumbers']) <= {h['number'] for h in race['horses']}
+              else:
+                  assert formation['orderedHorseNumbers'] == []
               for horse in race['horses']:
                   stat = horse['styleTendency']
                   if stat:
                       assert stat['latestHistoryDate'] < race['raceDate']
                       assert 1 <= stat['sampleRaces'] <= 6
                       assert abs(sum(stat['distributionPct'].values()) - 100) < 0.3
+                  position = horse['initialPositionHistory']
+                  if position:
+                      assert position['latestHistoryDate'] < race['raceDate']
+                      assert 0 <= position['meanRelativePosition'] <= 1
           print('APP_RESEARCH_DISPLAY_OK')
           PY
       - uses: actions/upload-artifact@v4
@@ -69,6 +93,7 @@ jobs:
           path: |
             AppResearchData.json
             reports/RunningStyleValidation.json
+            reports/FormationValidation.json
           retention-days: 14
       - name: Publish research display
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -76,7 +101,7 @@ jobs:
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add AppResearchData.json reports/RunningStyleValidation.json reports/*/AppResearchData.json
+          git add AppResearchData.json reports/RunningStyleValidation.json reports/FormationValidation.json reports/*/AppResearchData.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update app research display'
           git pull --rebase origin main
