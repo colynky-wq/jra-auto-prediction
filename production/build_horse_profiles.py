@@ -12,6 +12,7 @@ import pandas as pd
 from horse_profile_runtime import (
     distance_band,
     horse_profile_id,
+    normalize_horse_name,
     race_number_from_race_id,
     venue_from_race_id,
 )
@@ -24,6 +25,7 @@ HISTORY_PATH = HERE / "production_history.parquet"
 OUT_DIR = REPO / "HorseProfiles"
 INDEX_PATH = REPO / "HorseIndex.json"
 MANIFEST_PATH = REPO / "HorseProfileManifest.json"
+RACEDATA_PATH = REPO / "RaceData.json"
 
 RECENT_RACES = int(os.environ.get("KEIBAAI_HORSE_PROFILE_RECENT", "12") or "12")
 LIMIT = int(os.environ.get("KEIBAAI_HORSE_PROFILE_LIMIT", "0") or "0")
@@ -194,7 +196,22 @@ def _profile(horse_key: str, g: pd.DataFrame) -> dict:
     }
 
 
-def build_profiles(df: pd.DataFrame) -> tuple[list[dict], dict[str, dict], dict]:
+def read_runner_names(path: Path = RACEDATA_PATH) -> list[str]:
+    if not path.exists():
+        return []
+    races = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(races, list):
+        raise ValueError("RaceData.json must contain a race list")
+    return sorted({
+        str(horse["name"]).strip()
+        for race in races for horse in race.get("horses", [])
+        if horse.get("name")
+    })
+
+
+def build_profiles(
+    df: pd.DataFrame, runner_names: list[str] | None = None,
+) -> tuple[list[dict], dict[str, dict], dict]:
     required = {
         "レースID", "日付", "馬番", "馬名", "馬キー", "年齢", "斤量", "騎手", "調教師",
         "着順", "人気", "単勝オッズ", "芝ダ", "距離", "クラス", "障害", "馬体重", "増減", "頭数",
@@ -216,9 +233,17 @@ def build_profiles(df: pd.DataFrame) -> tuple[list[dict], dict[str, dict], dict]
     flat = flat[flat["競馬場"].notna()].copy()
 
     keys = flat.groupby("馬キー")["日付"].max().sort_values(ascending=False).index.tolist()
+    base_keys = set(keys[:LIMIT] if LIMIT > 0 else keys)
+    runner_names = runner_names or []
+    runner_lookup = {normalize_horse_name(name) for name in runner_names}
+    # Keep every saved identity for an exact normalized runner name. Do not
+    # substitute similarly named horses when this runner has no saved history.
+    runner_keys = set(flat.loc[
+        flat["馬名"].map(normalize_horse_name).isin(runner_lookup), "馬キー"
+    ])
+    selected_keys = base_keys | runner_keys
     if LIMIT > 0:
-        keys = keys[:LIMIT]
-        flat = flat[flat["馬キー"].isin(keys)].copy()
+        flat = flat[flat["馬キー"].isin(selected_keys)].copy()
 
     profiles: dict[str, dict] = {}
     index = []
@@ -245,6 +270,10 @@ def build_profiles(df: pd.DataFrame) -> tuple[list[dict], dict[str, dict], dict]
 
     index.sort(key=lambda x: (str(x.get("name") or ""), str(x.get("profileID") or "")))
     latest_date = flat["日付"].max().strftime("%Y-%m-%d") if len(flat) else None
+    indexed_names = {normalize_horse_name(item["name"]) for item in index}
+    missing_names = sorted({
+        name for name in runner_names if normalize_horse_name(name) not in indexed_names
+    })
     manifest = {
         "schemaVersion": 1,
         "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
@@ -257,6 +286,15 @@ def build_profiles(df: pd.DataFrame) -> tuple[list[dict], dict[str, dict], dict]
         "identity": "SHA1(existing 馬キー) first 20 hex chars",
         "scope": "JRA flat races only",
         "affinityMethod": "field-size adjusted finish performance, shrunk toward 50 with prior strength 3",
+        "selection": {
+            "recentHorseLimit": LIMIT,
+            "runnerProfilesAddedBeyondLimit": len(runner_keys - base_keys),
+            "runnerCount": len(set(runner_names)),
+            "runnersWithSavedHistory": len(set(runner_names)) - len(missing_names),
+            "runnersWithoutSavedHistory": len(missing_names),
+            "unmatchedRunnerNames": missing_names,
+            "matching": "NFKC and whitespace normalization; no prefix or substring matching",
+        },
     }
     return index, profiles, manifest
 
@@ -269,7 +307,7 @@ def main() -> None:
     print("history rows:", len(df))
     print("history columns:", list(df.columns))
 
-    index, profiles, manifest = build_profiles(df)
+    index, profiles, manifest = build_profiles(df, read_runner_names())
 
     _write_json(INDEX_PATH, {
         "schemaVersion": 1,

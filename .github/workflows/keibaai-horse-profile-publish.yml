@@ -5,6 +5,7 @@ on:
     paths:
       - 'production/horse_profile_runtime.py'
       - 'production/build_horse_profiles.py'
+      - 'production/test_horse_profile_coverage.py'
       - '.github/workflows/keibaai-horse-profile-publish.yml'
   push:
     branches:
@@ -51,12 +52,13 @@ jobs:
       - name: Build horse profile database
         env:
           # PRs only need a representative shape/performance check. Production
-          # publishes the 5,000 most recently active horses first; because keys
-          # are ordered by latest race date this covers current runners while
-          # keeping the static app database light. We can expand later safely.
+          # publishes the 5,000 most recently active horses plus all runners
+          # in RaceData with saved history, including runners returning from
+          # a longer break. PR builds also exercise this coverage guarantee.
           KEIBAAI_HORSE_PROFILE_LIMIT: ${{ github.event_name == 'pull_request' && '250' || '5000' }}
         run: |
           rm -rf HorseProfiles HorseIndex.json HorseProfileManifest.json
+          python -m unittest discover -s production -p 'test_horse_profile_coverage.py'
           python production/build_horse_profiles.py
 
       - name: Validate database shape
@@ -73,6 +75,10 @@ jobs:
           assert manifest['scope'] == 'JRA flat races only'
           assert manifest['latestHistoryDate']
           assert manifest['shardCount'] > 0
+          assert manifest['selection']['runnerCount'] == (
+              manifest['selection']['runnersWithSavedHistory']
+              + manifest['selection']['runnersWithoutSavedHistory']
+          )
           assert len(list(Path('HorseProfiles').glob('*.json'))) == manifest['shardCount']
 
           sample = idx['horses'][0]
