@@ -128,7 +128,14 @@ jobs:
               return 0
             fi
 
+            # Research display failure must not block live predictions. The app
+            # rejects a stale research bundle by comparing its source horses.
+            if ! python production/build_app_research_data.py; then
+              echo 'Research display refresh failed; publishing predictions continues.'
+            fi
+
             git add -A -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}"
+            if [ -f AppResearchData.json ]; then git add AppResearchData.json; fi
             git commit -m "Publish KeibaAI live prediction bundle ${date8}" || true
             git pull --rebase origin main
             git push origin HEAD:main
