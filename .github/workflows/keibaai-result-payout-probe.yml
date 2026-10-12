@@ -8,6 +8,7 @@ on:
       - production/probe_result_payouts.py
       - production/wide_forward_validation.py
       - production/wide_validation_summary.py
+      - production/ticket_plan_shadow.py
       - .github/workflows/keibaai-result-payout-probe.yml
   workflow_dispatch:
     inputs:
@@ -78,4 +79,27 @@ jobs:
           assert s['strategies']['top1_EV110']['returnIndex'] == 1.2, s
           assert s['ticketPlanAutoEnable'] is False, s
           print('WIDE_FORWARD_SUMMARY_OK', s['strategies'])
+          PY
+      - name: Validate shadow ticket-plan remains locked
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'production')
+          import ticket_plan_shadow as t
+
+          rows = [
+              {'date': '2026-10-12', 'raceID': 'R1', 'rankByConservativeEV': 1,
+               'conservativeExpectedValue': 1.30, 'hit': True, 'payoutPer100Yen': 240},
+              {'date': '2026-10-12', 'raceID': 'R1', 'rankByConservativeEV': 2,
+               'conservativeExpectedValue': 1.15, 'hit': False, 'payoutPer100Yen': 0},
+              {'date': '2026-10-12', 'raceID': 'R2', 'rankByConservativeEV': 1,
+               'conservativeExpectedValue': 1.12, 'hit': False, 'payoutPer100Yen': 0},
+          ]
+          p = t.build_payload(rows)
+          assert p['moneyAllocationEnabled'] is False, p
+          assert p['autoBetEnabled'] is False, p
+          assert p['profiles']['安定型候補']['selectedBets'] == 2, p
+          assert p['profiles']['バランス型候補']['selectedBets'] == 3, p
+          assert all(x['status'] == 'data_collecting' for x in p['profiles'].values()), p
+          print('TICKET_SHADOW_LOCK_OK', p['ruleVersion'])
           PY
