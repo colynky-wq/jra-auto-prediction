@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from pathlib import Path
 
 import build_signal_data as base
 import wide_odds_runtime as wide
@@ -34,6 +33,58 @@ def _load_wide_by_race() -> dict[str, dict]:
     return out
 
 
+def _all_wide_pairs(race: dict) -> list[dict]:
+    """Rebuild every horse pair for validation, not only the app's top-20 list."""
+    horses = [dict(h) for h in (race.get("horses") or [])]
+    if len(horses) < 3:
+        return []
+
+    numbers: list[int] = []
+    market_t3: list[float] = []
+    ai_t3: list[float] = []
+    for h in horses:
+        try:
+            numbers.append(int(h.get("number")))
+        except Exception:
+            return []
+        market_t3.append(base.prob_pct(h.get("marketTop3Probability")))
+        ai_t3.append(base.prob_pct(h.get("aiTop3Probability")))
+
+    market_t3 = base.normalized(market_t3, 3.0)
+    ai_t3 = base.normalized(ai_t3, 3.0)
+    market_pair = base.maximum_entropy_top3_pair_probabilities(market_t3)
+    ai_pair = base.maximum_entropy_top3_pair_probabilities(ai_t3)
+
+    pairs = []
+    for i in range(len(horses)):
+        for j in range(i + 1, len(horses)):
+            mp, ap = market_pair[i][j], ai_pair[i][j]
+            edge = ap - mp
+            ratio = ap / max(mp, 1e-9)
+            pairs.append(
+                {
+                    "number1": numbers[i],
+                    "name1": str(horses[i].get("name") or ""),
+                    "number2": numbers[j],
+                    "name2": str(horses[j].get("name") or ""),
+                    "marketWideProbability": round(mp * 100.0, 3),
+                    "aiWideProbability": round(ap * 100.0, 3),
+                    "probabilityEdgePct": round(edge * 100.0, 3),
+                    "aiMarketProbabilityRatio": round(ratio, 4),
+                }
+            )
+
+    pairs.sort(
+        key=lambda x: (
+            -x["probabilityEdgePct"],
+            -x["aiWideProbability"],
+            x["number1"],
+            x["number2"],
+        )
+    )
+    return pairs
+
+
 def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
     signal = dict(signal)
     signal["signalVersion"] = SIGNAL_VERSION
@@ -41,13 +92,15 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
         return signal
 
     wide_eval = dict(signal.get("wideEvaluation") or {})
-    pairs = [dict(x) for x in (wide_eval.get("pairs") or [])]
+    all_pairs = [dict(x) for x in (wide_eval.get("pairs") or [])]
 
     if not snapshot:
         wide_eval["status"] = "probability_only"
         wide_eval["oddsConnected"] = False
+        wide_eval["validationPairCount"] = len(all_pairs)
         wide_eval["note"] = "発走前ワイド実オッズの保存待ち。現時点は同時3着内確率の比較のみです。"
-        wide_eval["pairs"] = pairs
+        wide_eval["pairs"] = all_pairs[:20]
+        wide_eval["validationPairs"] = all_pairs
         signal["wideEvaluation"] = wide_eval
         signal["ticketPlan"] = {
             "status": "wide_odds_pending",
@@ -66,7 +119,7 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
 
     connected = 0
     positive_candidates = 0
-    for row in pairs:
+    for row in all_pairs:
         key = tuple(sorted((int(row["number1"]), int(row["number2"]))))
         odds = odds_map.get(key)
         if not odds:
@@ -95,7 +148,7 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
             row["valueBand"] = "低め"
         connected += 1
 
-    pairs.sort(
+    all_pairs.sort(
         key=lambda x: (
             -(x.get("conservativeExpectedValue") if x.get("conservativeExpectedValue") is not None else -1.0),
             -float(x.get("aiWideProbability") or 0.0),
@@ -111,12 +164,17 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
             "capturedAtJST": snapshot.get("capturedAtJST"),
             "officialDatetime": snapshot.get("officialDatetime"),
             "connectedPairCount": connected,
+            "validationPairCount": len(all_pairs),
             "positiveCandidateCount": positive_candidates,
             "note": (
                 "AI同時3着内確率×発走前ワイド表示オッズの参考期待値。"
                 "下限オッズを使う値を保守的期待値として表示し、実運用成績で検証します。"
             ),
-            "pairs": pairs[:20],
+            # App-facing list is intentionally compact.
+            "pairs": all_pairs[:20],
+            # Forward validator uses all combinations so high-EV pairs are not
+            # lost just because their probability-edge rank is below 20.
+            "validationPairs": all_pairs,
         }
     )
     signal["wideEvaluation"] = wide_eval
@@ -143,6 +201,10 @@ def main() -> None:
         built = base.build_race_signal(race)
         if built is None:
             continue
+        if built.get("eligible"):
+            wide_eval = dict(built.get("wideEvaluation") or {})
+            wide_eval["pairs"] = _all_wide_pairs(race)
+            built["wideEvaluation"] = wide_eval
         rid = str(race.get("raceID") or "")
         output.append(_enrich_with_wide_odds(built, wide_by_race.get(rid)))
 
@@ -163,6 +225,7 @@ def main() -> None:
             "chaosBattleCutoffs": "2024 fixed; evaluated on untouched 2025",
             "wideProbability": "fixed-size Top3 maximum-entropy joint distribution",
             "wideOdds": "first prediction-time live Wide snapshot per race",
+            "wideValidationScope": "all horse pairs; app displays top 20 only",
             "forwardValidation": "2026 live data is not used to fit cutoffs or models",
         },
         "races": output,
