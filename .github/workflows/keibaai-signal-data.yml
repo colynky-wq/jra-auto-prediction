@@ -1,0 +1,56 @@
+name: KeibaAI Signal Data
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'RaceData.json'
+      - 'production/build_signal_data.py'
+      - '.github/workflows/keibaai-signal-data.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-signal-data
+  cancel-in-progress: false
+
+jobs:
+  build-signals:
+    name: Build validated chaos value longshot and wide signals
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Compile signal publisher
+        run: python -m py_compile production/build_signal_data.py
+
+      - name: Build SignalData
+        run: python production/build_signal_data.py
+
+      - name: Publish SignalData when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- SignalData.json reports)" ]; then
+            echo 'No signal changes to publish.'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add SignalData.json reports
+          git commit -m "Update KeibaAI validated race signals"
+          git pull --rebase origin main
+          git push origin HEAD:main
