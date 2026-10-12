@@ -235,16 +235,25 @@ def main() -> None:
             str(r.get("raceID") or ""),
         )
     )
-    payload = {
-        "schemaVersion": 1,
-        "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
-        "date": f"{TARGET_DATE8[:4]}-{TARGET_DATE8[4:6]}-{TARGET_DATE8[6:8]}",
-        "meaning": "発走前に固定したAIワイド評価と実オッズを、レース後の確定ワイド払戻と突合した実運用検証。",
-        "ticketPlanAutoEnable": False,
-        "races": races,
-    }
-    if races or snapshots:
+
+    # Do not rewrite the file just to change a timestamp while waiting. This
+    # keeps the live repository quiet and makes each commit mean a new validated
+    # race was actually added.
+    if added > 0:
+        payload = {
+            "schemaVersion": 1,
+            "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
+            "date": f"{TARGET_DATE8[:4]}-{TARGET_DATE8[4:6]}-{TARGET_DATE8[6:8]}",
+            "meaning": "発走前に固定したAIワイド評価と実オッズを、レース後の確定ワイド払戻と突合した実運用検証。",
+            "ticketPlanAutoEnable": False,
+            "races": races,
+        }
         _write_json(out_path, payload)
+        print("WideValidation updated because new validation was added.")
+    elif out_path.exists():
+        print("No new validated race; preserve WideValidation unchanged.")
+    else:
+        print("No validated race yet; do not create a timestamp-only file.")
 
     print("target:", TARGET_DATE8)
     print("snapshots:", len(snapshots))
