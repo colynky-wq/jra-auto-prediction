@@ -1,0 +1,83 @@
+name: KeibaAI App Research Display
+
+on:
+  pull_request:
+    paths:
+      - 'production/app_research_runtime.py'
+      - 'production/build_app_research_data.py'
+      - 'production/test_app_research_data.py'
+      - '.github/workflows/keibaai-app-research-publish.yml'
+      - '.github/workflows/keibaai-live-permanent.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/app_research_runtime.py'
+      - 'production/build_app_research_data.py'
+      - 'production/test_app_research_data.py'
+      - '.github/workflows/keibaai-app-research-publish.yml'
+  schedule:
+    - cron: '50 9 * * *' # 18:50 JST; live updates use the existing publisher.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-app-research-display
+  cancel-in-progress: false
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+      - name: Run regression tests
+        run: python -m unittest discover -s production -p 'test_app_research_data.py'
+      - name: Build research display and evaluate 2025
+        run: python production/build_app_research_data.py --evaluate
+      - name: Validate display outputs
+        run: |
+          python - <<'PY'
+          import json
+          payload = json.load(open('AppResearchData.json', encoding='utf-8'))
+          assert payload['status'] == 'research_display_only'
+          assert payload['stakeSizingEnabled'] is False
+          assert payload['formalSignalsChanged'] is False
+          assert payload['evaluation2025']['rows'] > 0
+          for race in payload['races']:
+              for horse in race['horses']:
+                  stat = horse['styleTendency']
+                  if stat:
+                      assert stat['latestHistoryDate'] < race['raceDate']
+                      assert 1 <= stat['sampleRaces'] <= 6
+                      assert abs(sum(stat['distributionPct'].values()) - 100) < 0.3
+          print('APP_RESEARCH_DISPLAY_OK')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-app-research-display
+          path: |
+            AppResearchData.json
+            reports/RunningStyleValidation.json
+          retention-days: 14
+      - name: Publish research display
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add AppResearchData.json reports/RunningStyleValidation.json reports/*/AppResearchData.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update app research display'
+          git pull --rebase origin main
+          git push origin HEAD:main
