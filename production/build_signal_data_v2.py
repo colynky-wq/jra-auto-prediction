@@ -7,7 +7,7 @@ import build_signal_data as base
 import wide_odds_runtime as wide
 
 
-SIGNAL_VERSION = "keibaai-signals-v2-wide"
+SIGNAL_VERSION = "keibaai-signals-v2-wide-practical"
 RACEDATA_PATH = base.RACEDATA_PATH
 OUT_PATH = base.OUT_PATH
 REPORTS_DIR = base.REPORTS_DIR
@@ -74,15 +74,51 @@ def _all_wide_pairs(race: dict) -> list[dict]:
                 }
             )
 
+    # Before live Wide odds exist, do not promote a low-hit-rate pair merely
+    # because its AI-vs-market difference is large. The temporary display order
+    # is AI hit probability. Once odds arrive, _enrich_with_wide_odds switches
+    # to a practical hit+value ranking.
     pairs.sort(
         key=lambda x: (
-            -x["probabilityEdgePct"],
             -x["aiWideProbability"],
+            -x["probabilityEdgePct"],
             x["number1"],
             x["number2"],
         )
     )
     return pairs
+
+
+def practical_rank_metrics(ai_probability: float, decimal_odds: float) -> dict:
+    """Return practical ranking metrics using conservative (lower) Wide odds.
+
+    The ranking score is the positive Kelly fraction, expressed as a percent.
+    It is used ONLY to rank candidates, never to allocate money automatically.
+
+    Kelly naturally balances hit probability and price: at the same expected
+    value, a higher-probability/lower-odds ticket receives a higher score than a
+    rare-hit/high-odds ticket. This directly addresses practical usability.
+    """
+    p = max(0.0, min(1.0, float(ai_probability)))
+    odds = max(0.0, float(decimal_odds))
+    expected_value = p * odds
+    break_even_p = (1.0 / odds) if odds > 0 else 1.0
+    probability_cushion = p - break_even_p
+
+    if odds <= 1.0 or expected_value <= 1.0:
+        kelly = 0.0
+    else:
+        kelly = (expected_value - 1.0) / (odds - 1.0)
+        kelly = max(0.0, min(1.0, kelly))
+
+    return {
+        "breakEvenProbabilityPct": round(break_even_p * 100.0, 3),
+        "probabilityCushionPct": round(probability_cushion * 100.0, 3),
+        "kellyFractionPct": round(kelly * 100.0, 3),
+        # practicalScore is deliberately the same quantity as Kelly %. Keeping
+        # a neutral field name makes the app easier to present in Japanese.
+        "practicalScore": round(kelly * 100.0, 3),
+    }
 
 
 def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
@@ -95,10 +131,27 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
     all_pairs = [dict(x) for x in (wide_eval.get("pairs") or [])]
 
     if not snapshot:
+        # Probability-only mode: show the combinations most likely to hit,
+        # rather than the largest model-vs-market gaps.
+        all_pairs.sort(
+            key=lambda x: (
+                -float(x.get("aiWideProbability") or 0.0),
+                -float(x.get("probabilityEdgePct") or 0.0),
+                int(x.get("number1") or 0),
+                int(x.get("number2") or 0),
+            )
+        )
+        for rank, row in enumerate(all_pairs, start=1):
+            row["hitProbabilityRank"] = rank
+
         wide_eval["status"] = "probability_only"
         wide_eval["oddsConnected"] = False
+        wide_eval["rankingMethod"] = "AI的中率順（実オッズ取得前）"
         wide_eval["validationPairCount"] = len(all_pairs)
-        wide_eval["note"] = "発走前ワイド実オッズの保存待ち。現時点は同時3着内確率の比較のみです。"
+        wide_eval["note"] = (
+            "発走前ワイド実オッズの保存待ち。実オッズ取得前は、市場との差ではなく"
+            "AIの同時3着内確率が高い順に表示します。"
+        )
         wide_eval["pairs"] = all_pairs[:20]
         wide_eval["validationPairs"] = all_pairs
         signal["wideEvaluation"] = wide_eval
@@ -136,6 +189,8 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
         row["conservativeExpectedValue"] = round(ev_low, 3)
         row["upperExpectedValue"] = round(ev_high, 3)
         row["oddsPopularity"] = odds.get("popularity")
+        row.update(practical_rank_metrics(p, low))
+
         if ev_low >= 1.10:
             row["valueBand"] = "高め候補"
             positive_candidates += 1
@@ -148,14 +203,20 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
             row["valueBand"] = "低め"
         connected += 1
 
+    # Main app ranking: practicalScore (Kelly %) first. This rewards both a
+    # positive price and a realistic chance of hitting. Expected value and hit
+    # probability remain visible and are used as deterministic tie-breakers.
     all_pairs.sort(
         key=lambda x: (
-            -(x.get("conservativeExpectedValue") if x.get("conservativeExpectedValue") is not None else -1.0),
+            -float(x.get("practicalScore") or 0.0),
             -float(x.get("aiWideProbability") or 0.0),
+            -float(x.get("conservativeExpectedValue") or 0.0),
             int(x.get("number1") or 0),
             int(x.get("number2") or 0),
         )
     )
+    for rank, row in enumerate(all_pairs, start=1):
+        row["practicalRank"] = rank
 
     wide_eval.update(
         {
@@ -166,14 +227,13 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
             "connectedPairCount": connected,
             "validationPairCount": len(all_pairs),
             "positiveCandidateCount": positive_candidates,
+            "rankingMethod": "実戦優先度（AI的中率＋保守的期待値をKelly基準で統合）",
             "note": (
-                "AI同時3着内確率×発走前ワイド表示オッズの参考期待値。"
-                "下限オッズを使う値を保守的期待値として表示し、実運用成績で検証します。"
+                "順位は市場との差の大きさではなく、AI同時3着内確率と発走前ワイド実オッズを"
+                "同時に考慮した実戦優先度です。同じ期待値なら、より当たりやすい組み合わせを上位にします。"
+                "Kelly値は順位付け専用で、購入金額には使用しません。"
             ),
-            # App-facing list is intentionally compact.
             "pairs": all_pairs[:20],
-            # Forward validator uses all combinations so high-EV pairs are not
-            # lost just because their probability-edge rank is below 20.
             "validationPairs": all_pairs,
         }
     )
@@ -182,8 +242,8 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
         "status": "forward_validation",
         "enabled": False,
         "message": (
-            "実ワイドオッズ接続済み。ただし前向き実運用データが十分に蓄積するまでは"
-            "金額配分を有効化しません。"
+            "実ワイドオッズ接続済み。実戦優先度で候補を並べますが、前向き実運用データが"
+            "十分に蓄積するまでは金額配分を有効化しません。"
         ),
     }
     return signal
@@ -225,6 +285,7 @@ def main() -> None:
             "chaosBattleCutoffs": "2024 fixed; evaluated on untouched 2025",
             "wideProbability": "fixed-size Top3 maximum-entropy joint distribution",
             "wideOdds": "first prediction-time live Wide snapshot per race",
+            "wideRanking": "positive Kelly fraction using AI joint hit probability and conservative live Wide odds; ranking only, never stake sizing",
             "wideValidationScope": "all horse pairs; app displays top 20 only",
             "forwardValidation": "2026 live data is not used to fit cutoffs or models",
         },
