@@ -1,0 +1,77 @@
+name: KeibaAI Live Bundle Smoke
+
+on:
+  push:
+    branches:
+      - research/live-signal-wide-v2
+    paths:
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/wide_odds_runtime.py'
+      - 'production/build_signal_data_v2.py'
+      - '.github/workflows/keibaai-live-bundle-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Validate bundled prediction signal pipeline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Compile new runtime
+        run: |
+          python -m py_compile production/wide_odds_runtime.py
+          python -m py_compile production/build_signal_data_v2.py
+          python -m py_compile production/live_monitor_topk_publish.py
+      - name: Build SignalData v2 from current RaceData
+        run: python production/build_signal_data_v2.py
+      - name: Validate SignalData shape and synthetic Wide EV enrichment
+        run: |
+          python - <<'PY'
+          import json, sys
+          sys.path.insert(0, 'production')
+          import build_signal_data as base
+          import build_signal_data_v2 as v2
+
+          races = json.load(open('RaceData.json', encoding='utf-8'))
+          assert races, 'RaceData empty'
+          built = base.build_race_signal(races[0])
+          assert built and built.get('eligible')
+          pair = built['wideEvaluation']['pairs'][0]
+          snapshot = {
+              'raceID': races[0]['raceID'],
+              'capturedAtJST': '2026-10-12 12:00:00',
+              'officialDatetime': '2026-10-12 11:59:00',
+              'pairs': [{
+                  'number1': pair['number1'],
+                  'number2': pair['number2'],
+                  'oddsLow': 2.0,
+                  'oddsHigh': 3.0,
+                  'popularity': 1,
+              }],
+          }
+          enriched = v2._enrich_with_wide_odds(built, snapshot)
+          got = enriched['wideEvaluation']
+          assert got['oddsConnected'] is True
+          assert got['connectedPairCount'] == 1
+          enriched_pair = next(x for x in got['pairs'] if 'wideOddsLow' in x)
+          assert enriched_pair['conservativeExpectedValue'] >= 0
+          assert enriched['ticketPlan']['enabled'] is False
+
+          payload = json.load(open('SignalData.json', encoding='utf-8'))
+          assert payload['signalVersion'] == 'keibaai-signals-v2-wide'
+          print('SMOKE_OK races=', len(payload['races']))
+          print('synthetic EV=', enriched_pair['conservativeExpectedValue'])
+          PY
