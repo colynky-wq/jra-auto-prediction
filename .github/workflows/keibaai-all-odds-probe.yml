@@ -1,0 +1,35 @@
+name: KeibaAI All Odds API Probe
+
+on:
+  push:
+    branches:
+      - research/wide-budget-model-v1
+    paths:
+      - .github/workflows/keibaai-all-odds-probe.yml
+  workflow_dispatch:
+    inputs:
+      race_id:
+        description: JRA netkeiba 12-digit race ID
+        required: false
+        default: '202605040506'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe live all-odds structures safely
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - run: pip install -r production/requirements.txt
+      - name: Probe public odds API
+        env:
+          KEIBAAI_ODDS_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040506' }}
+        run: python production/probe_all_odds_api.py
