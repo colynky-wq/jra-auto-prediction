@@ -39,7 +39,7 @@ jobs:
           python -m py_compile production/repair_wide_odds.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
-      - name: Validate all-pair Wide EV and immutable archive
+      - name: Validate all-pair Wide practical ranking and immutable archive
         run: |
           python - <<'PY'
           import json, sys, tempfile
@@ -48,6 +48,13 @@ jobs:
           import build_signal_data as base
           import build_signal_data_v2 as v2
           import wide_odds_runtime as wide
+
+          # Same EV=1.20: the higher hit-probability / lower-odds ticket must
+          # rank as more practical than the rare-hit / high-odds ticket.
+          stable = v2.practical_rank_metrics(0.40, 3.0)
+          longshot = v2.practical_rank_metrics(0.10, 12.0)
+          assert stable['practicalScore'] > longshot['practicalScore'], (stable, longshot)
+          assert stable['kellyFractionPct'] > longshot['kellyFractionPct']
 
           races = json.load(open('RaceData.json', encoding='utf-8'))
           assert races, 'RaceData empty'
@@ -88,6 +95,8 @@ jobs:
           assert len(got['validationPairs']) == len(all_pairs)
           assert len(got['pairs']) <= 20
           assert all('conservativeExpectedValue' in x for x in got['validationPairs'])
+          assert all('practicalScore' in x for x in got['validationPairs'])
+          assert got['rankingMethod'].startswith('実戦優先度')
           assert enriched['ticketPlan']['enabled'] is False
 
           with tempfile.TemporaryDirectory() as td:
@@ -104,7 +113,8 @@ jobs:
               assert archived_path.read_text(encoding='utf-8') == before
 
           payload = json.load(open('SignalData.json', encoding='utf-8'))
-          assert payload['signalVersion'] == 'keibaai-signals-v2-wide'
+          assert payload['signalVersion'] == 'keibaai-signals-v2-wide-practical'
+          print('PRACTICAL_SCORE_TEST', stable, longshot)
           print('SMOKE_OK races=', len(payload['races']))
           print('all Wide pairs=', len(all_pairs))
           print('app display pairs=', len(got['pairs']))
