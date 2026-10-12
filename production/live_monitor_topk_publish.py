@@ -13,12 +13,17 @@ import live_monitor_topk as topk
 HERE = Path(__file__).resolve().parent
 RACEDATA_PATH = HERE.parent / "RaceData.json"
 
-PUBLISH_TO_APP = (
-    os.environ.get("KEIBAAI_PUBLISH_RACEDATA", "false")
-    .strip()
-    .lower()
-    in {"1", "true", "yes", "on"}
-)
+
+def _env_flag(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+PUBLISH_TO_APP = _env_flag("KEIBAAI_PUBLISH_RACEDATA", False)
+CAPTURE_WIDE_ODDS = _env_flag("KEIBAAI_CAPTURE_WIDE_ODDS", True)
+REFRESH_SIGNALS = _env_flag("KEIBAAI_REFRESH_SIGNALS", True)
 
 
 def _number(value, digits: int = 3) -> float:
@@ -43,6 +48,44 @@ def _load_existing() -> list[dict]:
         raise RuntimeError("RaceData.json root must be a JSON array")
 
     return payload
+
+
+def _refresh_prediction_bundle(published_race: dict) -> None:
+    """Best-effort post-prediction refresh.
+
+    RaceData is always written first. Wide odds and SignalData are deliberately
+    best-effort so a temporary odds/API failure can never erase or block the
+    prediction that was already produced.
+    """
+    if CAPTURE_WIDE_ODDS:
+        try:
+            import wide_odds_runtime as wide
+
+            snapshot = wide.record_first_wide_snapshot(
+                race_id=str(published_race["raceID"]),
+                race_date=str(published_race["raceDate"]),
+                venue=str(published_race.get("venue") or ""),
+                race_number=int(published_race.get("raceNumber") or 0),
+                start_time=str(published_race.get("startTime") or ""),
+            )
+            print(
+                "Wide odds snapshot:",
+                snapshot.get("raceID"),
+                snapshot.get("capturedAtJST"),
+                "pairs=",
+                snapshot.get("pairCount"),
+            )
+        except Exception as exc:
+            print("WARNING: Wide odds snapshot failed; RaceData remains valid:", repr(exc))
+
+    if REFRESH_SIGNALS:
+        try:
+            import build_signal_data_v2 as signals
+
+            signals.main()
+            print("SignalData refreshed immediately after RaceData publish.")
+        except Exception as exc:
+            print("WARNING: SignalData refresh failed; scheduled fallback can repair it:", repr(exc))
 
 
 def publish_race_to_racedata(
@@ -113,14 +156,8 @@ def publish_race_to_racedata(
 
     tmp_path = RACEDATA_PATH.with_suffix(".json.tmp")
     with tmp_path.open("w", encoding="utf-8") as f:
-        json.dump(
-            todays,
-            f,
-            ensure_ascii=False,
-            indent=2,
-        )
+        json.dump(todays, f, ensure_ascii=False, indent=2)
         f.write("\n")
-
     tmp_path.replace(RACEDATA_PATH)
 
     print()
@@ -133,6 +170,11 @@ def publish_race_to_racedata(
     print("RaceData races for target date:", len(todays))
     print("RaceData.json modified: YES")
     print("Top2 / Top3 fields written: YES")
+
+    _refresh_prediction_bundle(published_race)
+
+    print("Wide odds capture requested:", CAPTURE_WIDE_ODDS)
+    print("Immediate signal refresh requested:", REFRESH_SIGNALS)
     print("=" * 110)
 
 
@@ -144,17 +186,10 @@ def predict_live_race_topk_and_publish(
     hist: pd.DataFrame,
     target_date: pd.Timestamp,
 ) -> pd.DataFrame:
-    out = _original_predict(
-        race,
-        hist,
-        target_date,
-    )
+    out = _original_predict(race, hist, target_date)
 
     if PUBLISH_TO_APP:
-        publish_race_to_racedata(
-            race,
-            out,
-        )
+        publish_race_to_racedata(race, out)
     else:
         print("App publish disabled: RaceData.json remains read-only.")
 
@@ -170,9 +205,8 @@ def main() -> None:
 
     if PUBLISH_TO_APP:
         print()
-        print("★★★★★ KEIBAAI TOP2/TOP3 APP PUBLISH RUN COMPLETED")
-        print("If a race was triggered successfully, RaceData.json now contains")
-        print("aiTop2Probability and aiTop3Probability for that race.")
+        print("★★★★★ KEIBAAI APP BUNDLE PUBLISH RUN COMPLETED")
+        print("Prediction publish now attempts RaceData + Wide odds snapshot + SignalData together.")
 
 
 if __name__ == "__main__":
