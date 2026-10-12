@@ -1,0 +1,130 @@
+name: KeibaAI Live Bundle Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - integration/postrace-20261012-clean
+    paths:
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/wide_odds_runtime.py'
+      - 'production/build_signal_data_v2.py'
+      - 'production/repair_wide_odds.py'
+      - 'production/wide_forward_validation.py'
+      - 'production/wide_validation_summary.py'
+      - 'production/ticket_plan_shadow.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
+      - '.github/workflows/keibaai-live-bundle-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Validate bundled prediction signal pipeline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Compile live and validation runtime
+        run: |
+          python -m py_compile production/wide_odds_runtime.py
+          python -m py_compile production/build_signal_data_v2.py
+          python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/repair_wide_odds.py
+          python -m py_compile production/wide_forward_validation.py
+          python -m py_compile production/wide_validation_summary.py
+          python -m py_compile production/ticket_plan_shadow.py
+      - name: Build SignalData v2 from current RaceData
+        run: python production/build_signal_data_v2.py
+      - name: Validate all-pair Wide practical ranking and immutable archive
+        run: |
+          python - <<'PY'
+          import json, sys, tempfile
+          from pathlib import Path
+          sys.path.insert(0, 'production')
+          import build_signal_data as base
+          import build_signal_data_v2 as v2
+          import wide_odds_runtime as wide
+
+          # Same EV=1.20: the higher hit-probability / lower-odds ticket must
+          # rank as more practical than the rare-hit / high-odds ticket.
+          stable = v2.practical_rank_metrics(0.40, 3.0)
+          longshot = v2.practical_rank_metrics(0.10, 12.0)
+          assert stable['practicalScore'] > longshot['practicalScore'], (stable, longshot)
+          assert stable['kellyFractionPct'] > longshot['kellyFractionPct']
+
+          races = json.load(open('RaceData.json', encoding='utf-8'))
+          assert races, 'RaceData empty'
+          race = races[0]
+          built = base.build_race_signal(race)
+          assert built and built.get('eligible')
+
+          all_pairs = v2._all_wide_pairs(race)
+          n = len(race['horses'])
+          assert len(all_pairs) == n * (n - 1) // 2, (n, len(all_pairs))
+          built['wideEvaluation']['pairs'] = all_pairs
+
+          snapshot_pairs = [
+              {
+                  'number1': p['number1'],
+                  'number2': p['number2'],
+                  'oddsLow': 2.0,
+                  'oddsHigh': 3.0,
+                  'popularity': i + 1,
+              }
+              for i, p in enumerate(all_pairs)
+          ]
+          snapshot = {
+              'raceDate': race['raceDate'],
+              'raceID': race['raceID'],
+              'venue': race['venue'],
+              'raceNumber': race['raceNumber'],
+              'startTime': race['startTime'],
+              'capturedAtJST': '2026-10-12 10:00:00',
+              'officialDatetime': '2026-10-12 09:59:00',
+              'pairs': snapshot_pairs,
+          }
+          enriched = v2._enrich_with_wide_odds(built, snapshot)
+          got = enriched['wideEvaluation']
+          assert got['oddsConnected'] is True
+          assert got['connectedPairCount'] == len(all_pairs)
+          assert got['validationPairCount'] == len(all_pairs)
+          assert len(got['validationPairs']) == len(all_pairs)
+          assert len(got['pairs']) <= 20
+          assert all('conservativeExpectedValue' in x for x in got['validationPairs'])
+          assert all('practicalScore' in x for x in got['validationPairs'])
+          assert got['rankingMethod'].startswith('実戦優先度')
+          assert enriched['ticketPlan']['enabled'] is False
+
+          with tempfile.TemporaryDirectory() as td:
+              wide.REPORTS_DIR = Path(td)
+              archived_path = wide._archive_snapshot(snapshot)
+              assert archived_path is not None and archived_path.exists()
+              archived = json.loads(archived_path.read_text(encoding='utf-8'))
+              assert archived['frozenAtFirstSuccessfulCapture'] is True
+              assert archived['raceID'] == race['raceID']
+              before = archived_path.read_text(encoding='utf-8')
+              snapshot2 = dict(snapshot)
+              snapshot2['capturedAtJST'] = '2026-10-12 10:01:00'
+              wide._archive_snapshot(snapshot2)
+              assert archived_path.read_text(encoding='utf-8') == before
+
+          payload = json.load(open('SignalData.json', encoding='utf-8'))
+          assert payload['signalVersion'] == 'keibaai-signals-v2-wide-practical'
+          print('PRACTICAL_SCORE_TEST', stable, longshot)
+          print('SMOKE_OK races=', len(payload['races']))
+          print('all Wide pairs=', len(all_pairs))
+          print('app display pairs=', len(got['pairs']))
+          PY
