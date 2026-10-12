@@ -1,0 +1,47 @@
+name: KeibaAI Result Data Research
+
+on:
+  push:
+    branches:
+      - research/wide-budget-model-v1
+    paths:
+      - .github/workflows/keibaai-result-data-research.yml
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: JST date YYYYMMDD
+        required: false
+        default: '20261012'
+
+permissions:
+  contents: read
+
+jobs:
+  build-result-data:
+    name: Build app-friendly result comparison data
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Compile
+        run: python -m py_compile production/build_result_data.py
+      - name: Build partial ResultData
+        env:
+          KEIBAAI_RESULT_DATE: ${{ github.event.inputs.target_date || '20261012' }}
+          KEIBAAI_AGGREGATE_DATE: ${{ github.event.inputs.target_date || '20261012' }}
+        run: python production/build_result_data.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-result-data-research
+          path: result_data_artifacts/ResultData.json
+          if-no-files-found: error
+          retention-days: 14
