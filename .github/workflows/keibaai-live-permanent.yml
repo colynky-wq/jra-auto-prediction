@@ -38,7 +38,8 @@ jobs:
           html=$(curl -fsSL --retry 2 \
             -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0 Safari/537.36' \
             "https://race.netkeiba.com/top/race_list_sub.html?kaisai_date=${date8}" || true)
-          count=$(printf '%s' "$html" | grep -oE 'race_id=[0-9]{12}' | sort -u | wc -l | tr -d ' ')
+          ids=$(printf '%s' "$html" | grep -oE 'race_id=[0-9]{12}' || true)
+          count=$(printf '%s\n' "$ids" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')
           echo "target_date=${date8}" >> "$GITHUB_OUTPUT"
           if [ "${count:-0}" -gt 0 ]; then
             echo 'has_races=true' >> "$GITHUB_OUTPUT"
@@ -122,7 +123,8 @@ jobs:
             # a missing snapshot after scheduled post time.
             python production/repair_wide_odds.py || true
 
-            if [ -z "$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}")" ]; then
+            changes=$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}")
+            if [ -z "$changes" ]; then
               return 0
             fi
 
