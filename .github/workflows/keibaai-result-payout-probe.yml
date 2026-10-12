@@ -7,6 +7,7 @@ on:
     paths:
       - production/probe_result_payouts.py
       - production/wide_forward_validation.py
+      - production/wide_validation_summary.py
       - .github/workflows/keibaai-result-payout-probe.yml
   workflow_dispatch:
     inputs:
@@ -43,4 +44,38 @@ jobs:
           assert p[(2, 12)] == 350, p
           assert p[(11, 12)] == 820, p
           print('WIDE_PAYOUT_PARSER_OK', p)
+          PY
+      - name: Validate forward summary accounting
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'production')
+          from wide_validation_summary import summarize_validation_payloads
+
+          payload = {
+              'date': '2026-10-12',
+              'races': [
+                  {
+                      'raceID': 'R1', 'venue': '東京', 'raceNumber': 1,
+                      'pairs': [
+                          {'conservativeExpectedValue': 1.20, 'hit': True, 'payoutPer100Yen': 240},
+                          {'conservativeExpectedValue': 1.12, 'hit': False, 'payoutPer100Yen': 0},
+                      ],
+                  },
+                  {
+                      'raceID': 'R2', 'venue': '京都', 'raceNumber': 1,
+                      'pairs': [
+                          {'conservativeExpectedValue': 1.15, 'hit': False, 'payoutPer100Yen': 0},
+                      ],
+                  },
+              ],
+          }
+          s = summarize_validation_payloads([payload])
+          assert s['validatedRaces'] == 2, s
+          assert s['strategies']['all_EV110']['bets'] == 3, s
+          assert s['strategies']['all_EV110']['returnIndex'] == 0.8, s
+          assert s['strategies']['top1_EV110']['bets'] == 2, s
+          assert s['strategies']['top1_EV110']['returnIndex'] == 1.2, s
+          assert s['ticketPlanAutoEnable'] is False, s
+          print('WIDE_FORWARD_SUMMARY_OK', s['strategies'])
           PY
