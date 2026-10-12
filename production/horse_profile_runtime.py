@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import unicodedata
 
 
 JRA_VENUE_MAP = {
@@ -16,6 +17,13 @@ JRA_VENUE_MAP = {
     "09": "阪神",
     "10": "小倉",
 }
+
+
+def normalize_horse_name(name: object) -> str:
+    """Normalize width and whitespace only; never match a name by prefix."""
+    if name is None:
+        return ""
+    return re.sub(r"\s+", "", unicodedata.normalize("NFKC", str(name)))
 
 
 def horse_profile_id(horse_key: object) -> str:
