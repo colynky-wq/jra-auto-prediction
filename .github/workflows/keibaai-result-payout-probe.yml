@@ -6,6 +6,7 @@ on:
       - research/live-signal-wide-v2
     paths:
       - production/probe_result_payouts.py
+      - production/wide_forward_validation.py
       - .github/workflows/keibaai-result-payout-probe.yml
   workflow_dispatch:
     inputs:
@@ -31,3 +32,15 @@ jobs:
         env:
           KEIBAAI_PAYOUT_PROBE_RACE_ID: ${{ github.event.inputs.race_id || '202605040502' }}
         run: python production/probe_result_payouts.py
+      - name: Validate Wide payout parser on a known finished race
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'production')
+          from wide_forward_validation import fetch_wide_payouts
+          p = fetch_wide_payouts('202605040502')
+          assert p[(2, 11)] == 240, p
+          assert p[(2, 12)] == 350, p
+          assert p[(11, 12)] == 820, p
+          print('WIDE_PAYOUT_PARSER_OK', p)
+          PY
