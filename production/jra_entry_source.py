@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import html as html_lib
+import os
 import re
 from datetime import datetime
 from urllib.parse import parse_qs, unquote, urlencode, urljoin, urlparse
@@ -478,6 +479,22 @@ def fetch_entry_table(
             d = _parse_entry_table(text, race_id)
 
             print("JRA official entry parsed:", len(d))
+            if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+                try:
+                    from prerace_snapshot_runtime import persist_snapshot
+                    # Validate capture before any optional extra request or write.
+                    from prerace_snapshot_runtime import parse_snapshot
+                    parse_snapshot(text, race_id, date8, url, fetch_time.to_pydatetime(), d)
+                    track = None
+                    try:
+                        from track_observation_runtime import fetch_track_observation
+                        track = fetch_track_observation(session, str(race_id)[4:6], date8)
+                    except Exception as exc:
+                        print("PRERACE_TRACK_UNAVAILABLE", race_id, str(exc))
+                    saved = persist_snapshot(text, race_id, date8, url, fetch_time.to_pydatetime(), d, track_observation=track)
+                    if saved: print("PRERACE_SNAPSHOT_SAVED", race_id, saved.name)
+                except Exception as exc:
+                    print("PRERACE_SNAPSHOT_SKIPPED", race_id, str(exc))
             return d, fetch_time, url
 
         except Exception as e:

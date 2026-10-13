@@ -20,14 +20,14 @@ VERSION = 'prerace-field-pace-research-v1'
 FEATURES = ['fieldSize','distanceM','earlyDistanceM','styleCoverage','meanPosition','minPosition','positionSpread','escapeCount','frontCount','escapeShare','frontShare','pastLapCoverage','pastLap600Mean','pastLap600Min','pastDistanceMean']
 COLUMNS = ['レースID','日付','馬番','馬キー','初角','頭数','障害','芝ダ','距離']
 
-def replay(history, laps):
+def replay(history, laps, last_year=2025):
     """Metadata whitelist; result updates happen after ALL races on a date."""
     lapmap = {r['raceID']:r for r in laps if eligible_record(r)}
     if len(lapmap) != sum(eligible_record(r) for r in laps):
         raise ValueError('duplicate lap race IDs')
     d = history[COLUMNS].copy()
     d['日付'] = pd.to_datetime(d['日付']).dt.normalize()
-    d = d[(d['日付'].dt.year <= 2025) & ~d['障害'].fillna(False).astype(bool)]
+    d = d[(d['日付'].dt.year <= last_year) & ~d['障害'].fillna(False).astype(bool)]
     if d.duplicated(['レースID','馬番']).any(): raise ValueError('duplicate entrants')
     d = d.sort_values(['日付','レースID','馬番'])
     styles = defaultdict(lambda:deque(maxlen=6))
@@ -51,7 +51,7 @@ def replay(history, laps):
                 if c:
                     clockvalues.append((np.mean([v[1] for v in c]),np.mean([v[2] for v in c])))
                     source_dates.extend(v[0] for v in c)
-            if day.year in (2024,2025) and rid in lapmap:
+            if 2024 <= day.year <= last_year and rid in lapmap:
                 lap = lapmap[rid]
                 if lap['raceDate'] != day.strftime('%Y-%m-%d') or lap['surface'] != surface or lap['distanceM'] != distance:
                     raise ValueError('lap/history metadata mismatch')

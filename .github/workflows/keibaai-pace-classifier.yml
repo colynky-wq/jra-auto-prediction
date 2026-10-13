@@ -1,0 +1,77 @@
+name: KeibaAI Pace Classifier and Pre-race Snapshots
+on:
+  pull_request:
+    paths:
+      - 'production/research_pace_classifier.py'
+      - 'production/research_prerace_pace.py'
+      - 'production/*snapshot*.py'
+      - 'production/*track_observation*.py'
+      - 'production/test_pace_classifier.py'
+      - 'production/jra_entry_source.py'
+      - 'reports/PaceClassifier*.json'
+      - '.github/workflows/keibaai-pace-classifier.yml'
+      - '.github/workflows/keibaai-live-permanent.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt 'scikit-learn==1.8.0' 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Test isolation and snapshot timing
+        run: |
+          python -m unittest discover -s production -p 'test_prerace_pace.py' -v
+          python -m unittest discover -s production -p 'test_pace_classifier.py' -v
+          python -m unittest discover -s production -p 'test_prerace_snapshot.py' -v
+          python -m unittest discover -s production -p 'test_track_observation.py' -v
+          python -m unittest discover -s production -p 'test_jra_route_modes.py' -v
+      - name: Reproduce development-only freeze
+        run: |
+          cp reports/PaceClassifierMethodFreeze.json /tmp/expected-classifier.json
+          python production/research_pace_classifier.py --development-only
+          cmp reports/PaceClassifierMethodFreeze.json /tmp/expected-classifier.json
+      - name: Reproduce held-out evaluation when stored
+        run: |
+          if [ ! -f reports/PaceClassifierValidation.json ]; then exit 0; fi
+          cp reports/PaceClassifierValidation.json /tmp/expected-validation.json
+          python production/research_pace_classifier.py
+          python - <<'PY'
+          import json
+          expected=json.load(open('/tmp/expected-validation.json'))
+          actual=json.load(open('reports/PaceClassifierValidation.json'))
+          for key in ['selectedModel','studyHistorySHA256','lapDataSHA256','evaluation2026','adoptionDecision','methodFreezeSHA256']:
+            assert actual[key]==expected[key],key
+          assert actual['latestSourceDateViolations']==0
+          assert not actual['paceForecastEnabled']
+          assert not actual['formalSignalsChanged']
+          assert not actual['stakeSizingEnabled']
+          PY
+      - name: Inspect actual official track-page structure
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import requests,sys
+          from datetime import datetime
+          from bs4 import BeautifulSoup
+          sys.path.insert(0,'production')
+          from track_observation_runtime import parse_track_observation,JST
+          url='https://www.jra.go.jp/keiba/baba/index.html'
+          r=requests.get(url,timeout=20);r.raise_for_status()
+          text=r.content.decode(r.apparent_encoding or 'utf-8',errors='replace')
+          soup=BeautifulSoup(text,'html.parser')
+          import re
+          heading=next((h.get_text(' ',strip=True) for h in soup.find_all('h2') if '東京競馬' in h.get_text()),'')
+          d=re.search(r'(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日',heading)
+          if d:
+              x=parse_track_observation(text,url,'05',f'{int(d[1]):04d}{int(d[2]):02d}{int(d[3]):02d}',datetime.now(JST))
+              print('OFFICIAL_TRACK_PARSE_OK',x['raceDate'],x['asOfJST'],x['going'],x['eligibleForRaceInput'])
+          else:
+              print('Official venue changed; current Tokyo structural probe not applicable.')
+          PY

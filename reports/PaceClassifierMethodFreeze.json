@@ -1,0 +1,1267 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "prerace-pace-direct-classifier-v2",
+  "selectedModel": "logistic:0.1",
+  "developmentPreferredMethod": "coursePrior",
+  "developmentCandidateQualified": false,
+  "numericFeatures": [
+    "fieldSize",
+    "distanceM",
+    "earlyDistanceM",
+    "styleCoverage",
+    "meanPosition",
+    "minPosition",
+    "positionSpread",
+    "escapeCount",
+    "frontCount",
+    "escapeShare",
+    "frontShare",
+    "pastLapCoverage",
+    "pastLap600Mean",
+    "pastLap600Min",
+    "pastDistanceMean"
+  ],
+  "categoricalFeatures": [
+    "venue",
+    "surface",
+    "raceClass"
+  ],
+  "candidateModels": [
+    "coursePrior",
+    "logistic:0.1",
+    "logistic:1",
+    "forest:20",
+    "forest:40"
+  ],
+  "selectionRule": "Minimum Brier among non-baseline challengers on Sep-Dec 2024; separately record the preferred overall method including coursePrior. Jan-Aug 2024 training and thresholds only. No 2025 or 2026 selection.",
+  "trainingYearsAfterFreeze": [
+    2024,
+    2025
+  ],
+  "evaluationYear": 2026,
+  "evaluationCutoff": "2026-10-12",
+  "development2024": {
+    "coursePrior": {
+      "races": 314,
+      "accuracyPct": 48.41,
+      "balancedAccuracyPct": 33.33,
+      "brierScore": 0.623243,
+      "actualCounts": {
+        "1": 152,
+        "2": 62,
+        "0": 100
+      },
+      "predictedCounts": {
+        "1": 314
+      },
+      "recallPct": {
+        "0": 0.0,
+        "1": 100.0,
+        "2": 0.0
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          0,
+          100,
+          0
+        ],
+        [
+          0,
+          152,
+          0
+        ],
+        [
+          0,
+          62,
+          0
+        ]
+      ],
+      "coursePriorBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "brierScore": 0.623243,
+        "actualCounts": {
+          "1": 152,
+          "2": 62,
+          "0": 100
+        },
+        "predictedCounts": {
+          "1": 314
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        },
+        "confusionMatrixActualRowsPredictedColumns": [
+          [
+            0,
+            100,
+            0
+          ],
+          [
+            0,
+            152,
+            0
+          ],
+          [
+            0,
+            62,
+            0
+          ]
+        ]
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "brierImprovementVsCoursePrior95CI": [
+        0.0,
+        0.0
+      ],
+      "accuracyImprovementVsCoursePrior95CI": [
+        0.0,
+        0.0
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        0.0,
+        0.0
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 47.01,
+            "brierScore": 0.626106,
+            "baselineBrierScore": 0.626106
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 53.97,
+            "brierScore": 0.611836,
+            "baselineBrierScore": 0.611836
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "brierScore": 0.626308,
+            "baselineBrierScore": 0.626308
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 47.62,
+            "brierScore": 0.661408,
+            "baselineBrierScore": 0.661408
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 60.61,
+            "brierScore": 0.551135,
+            "baselineBrierScore": 0.551135
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 45.16,
+            "brierScore": 0.631081,
+            "baselineBrierScore": 0.631081
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 44.44,
+            "brierScore": 0.620402,
+            "baselineBrierScore": 0.620402
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 64.29,
+            "brierScore": 0.568266,
+            "baselineBrierScore": 0.568266
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 44.66,
+            "brierScore": 0.650409,
+            "baselineBrierScore": 0.650409
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 47.14,
+            "brierScore": 0.641807,
+            "baselineBrierScore": 0.641807
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 50.0,
+            "brierScore": 0.629339,
+            "baselineBrierScore": 0.629339
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 37.5,
+            "brierScore": 0.673016,
+            "baselineBrierScore": 0.673016
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "brierScore": 0.589796,
+            "baselineBrierScore": 0.589796
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 53.45,
+            "brierScore": 0.58885,
+            "baselineBrierScore": 0.58885
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "brierScore": 0.665385,
+            "baselineBrierScore": 0.665385
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 44.44,
+            "brierScore": 0.642448,
+            "baselineBrierScore": 0.642448
+          }
+        ],
+        "raceClass": [
+          {
+            "raceClass": "1勝",
+            "races": 150,
+            "accuracyPct": 51.33,
+            "brierScore": 0.629191,
+            "baselineBrierScore": 0.629191
+          },
+          {
+            "raceClass": "2勝",
+            "races": 86,
+            "accuracyPct": 50.0,
+            "brierScore": 0.616651,
+            "baselineBrierScore": 0.616651
+          },
+          {
+            "raceClass": "3勝",
+            "races": 42,
+            "accuracyPct": 45.24,
+            "brierScore": 0.601989,
+            "baselineBrierScore": 0.601989
+          },
+          {
+            "raceClass": "OP",
+            "races": 32,
+            "accuracyPct": 34.38,
+            "brierScore": 0.644612,
+            "baselineBrierScore": 0.644612
+          },
+          {
+            "raceClass": "未勝利",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "brierScore": 0.594108,
+            "baselineBrierScore": 0.594108
+          }
+        ]
+      }
+    },
+    "logistic:0.1": {
+      "races": 314,
+      "accuracyPct": 47.45,
+      "balancedAccuracyPct": 37.35,
+      "brierScore": 0.630066,
+      "actualCounts": {
+        "1": 152,
+        "2": 62,
+        "0": 100
+      },
+      "predictedCounts": {
+        "1": 220,
+        "0": 85,
+        "2": 9
+      },
+      "recallPct": {
+        "0": 41.0,
+        "1": 71.05,
+        "2": 0.0
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          41,
+          58,
+          1
+        ],
+        [
+          36,
+          108,
+          8
+        ],
+        [
+          8,
+          54,
+          0
+        ]
+      ],
+      "coursePriorBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "brierScore": 0.623243,
+        "actualCounts": {
+          "1": 152,
+          "2": 62,
+          "0": 100
+        },
+        "predictedCounts": {
+          "1": 314
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        },
+        "confusionMatrixActualRowsPredictedColumns": [
+          [
+            0,
+            100,
+            0
+          ],
+          [
+            0,
+            152,
+            0
+          ],
+          [
+            0,
+            62,
+            0
+          ]
+        ]
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "brierImprovementVsCoursePrior95CI": [
+        -0.029182,
+        0.017489
+      ],
+      "accuracyImprovementVsCoursePrior95CI": [
+        -0.050508,
+        0.032666
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.050508,
+        0.032666
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 45.82,
+            "brierScore": 0.636532,
+            "baselineBrierScore": 0.626106
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 53.97,
+            "brierScore": 0.604303,
+            "baselineBrierScore": 0.611836
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 75.0,
+            "brierScore": 0.573585,
+            "baselineBrierScore": 0.626308
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 52.38,
+            "brierScore": 0.674463,
+            "baselineBrierScore": 0.661408
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 54.55,
+            "brierScore": 0.61328,
+            "baselineBrierScore": 0.551135
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 48.39,
+            "brierScore": 0.579122,
+            "baselineBrierScore": 0.631081
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 46.03,
+            "brierScore": 0.601094,
+            "baselineBrierScore": 0.620402
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 50.0,
+            "brierScore": 0.596926,
+            "baselineBrierScore": 0.568266
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 42.72,
+            "brierScore": 0.685979,
+            "baselineBrierScore": 0.650409
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 51.43,
+            "brierScore": 0.656484,
+            "baselineBrierScore": 0.641807
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 41.67,
+            "brierScore": 0.684953,
+            "baselineBrierScore": 0.629339
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 35.42,
+            "brierScore": 0.630597,
+            "baselineBrierScore": 0.673016
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 60.0,
+            "brierScore": 0.574406,
+            "baselineBrierScore": 0.589796
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 50.0,
+            "brierScore": 0.597795,
+            "baselineBrierScore": 0.58885
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "brierScore": 0.683058,
+            "baselineBrierScore": 0.665385
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 66.67,
+            "brierScore": 0.590621,
+            "baselineBrierScore": 0.642448
+          }
+        ],
+        "raceClass": [
+          {
+            "raceClass": "1勝",
+            "races": 150,
+            "accuracyPct": 44.0,
+            "brierScore": 0.665458,
+            "baselineBrierScore": 0.629191
+          },
+          {
+            "raceClass": "2勝",
+            "races": 86,
+            "accuracyPct": 51.16,
+            "brierScore": 0.61083,
+            "baselineBrierScore": 0.616651
+          },
+          {
+            "raceClass": "3勝",
+            "races": 42,
+            "accuracyPct": 45.24,
+            "brierScore": 0.61297,
+            "baselineBrierScore": 0.601989
+          },
+          {
+            "raceClass": "OP",
+            "races": 32,
+            "accuracyPct": 56.25,
+            "brierScore": 0.543353,
+            "baselineBrierScore": 0.644612
+          },
+          {
+            "raceClass": "未勝利",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "brierScore": 0.589628,
+            "baselineBrierScore": 0.594108
+          }
+        ]
+      }
+    },
+    "logistic:1": {
+      "races": 314,
+      "accuracyPct": 44.9,
+      "balancedAccuracyPct": 36.6,
+      "brierScore": 0.641313,
+      "actualCounts": {
+        "1": 152,
+        "2": 62,
+        "0": 100
+      },
+      "predictedCounts": {
+        "1": 197,
+        "0": 101,
+        "2": 16
+      },
+      "recallPct": {
+        "0": 47.0,
+        "1": 61.18,
+        "2": 1.61
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          47,
+          52,
+          1
+        ],
+        [
+          45,
+          93,
+          14
+        ],
+        [
+          9,
+          52,
+          1
+        ]
+      ],
+      "coursePriorBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "brierScore": 0.623243,
+        "actualCounts": {
+          "1": 152,
+          "2": 62,
+          "0": 100
+        },
+        "predictedCounts": {
+          "1": 314
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        },
+        "confusionMatrixActualRowsPredictedColumns": [
+          [
+            0,
+            100,
+            0
+          ],
+          [
+            0,
+            152,
+            0
+          ],
+          [
+            0,
+            62,
+            0
+          ]
+        ]
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "brierImprovementVsCoursePrior95CI": [
+        -0.042988,
+        0.009091
+      ],
+      "accuracyImprovementVsCoursePrior95CI": [
+        -0.078439,
+        0.013414
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.078439,
+        0.013414
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 43.43,
+            "brierScore": 0.646995,
+            "baselineBrierScore": 0.626106
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 50.79,
+            "brierScore": 0.618675,
+            "baselineBrierScore": 0.611836
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 75.0,
+            "brierScore": 0.55243,
+            "baselineBrierScore": 0.626308
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 42.86,
+            "brierScore": 0.680849,
+            "baselineBrierScore": 0.661408
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 45.45,
+            "brierScore": 0.63734,
+            "baselineBrierScore": 0.551135
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 48.39,
+            "brierScore": 0.585541,
+            "baselineBrierScore": 0.631081
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 47.62,
+            "brierScore": 0.607642,
+            "baselineBrierScore": 0.620402
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 42.86,
+            "brierScore": 0.624476,
+            "baselineBrierScore": 0.568266
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 40.78,
+            "brierScore": 0.696721,
+            "baselineBrierScore": 0.650409
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 45.71,
+            "brierScore": 0.673868,
+            "baselineBrierScore": 0.641807
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 35.42,
+            "brierScore": 0.696659,
+            "baselineBrierScore": 0.629339
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 45.83,
+            "brierScore": 0.634944,
+            "baselineBrierScore": 0.673016
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "brierScore": 0.565497,
+            "baselineBrierScore": 0.589796
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 46.55,
+            "brierScore": 0.609161,
+            "baselineBrierScore": 0.58885
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "brierScore": 0.708583,
+            "baselineBrierScore": 0.665385
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 55.56,
+            "brierScore": 0.607875,
+            "baselineBrierScore": 0.642448
+          }
+        ],
+        "raceClass": [
+          {
+            "raceClass": "1勝",
+            "races": 150,
+            "accuracyPct": 40.67,
+            "brierScore": 0.678627,
+            "baselineBrierScore": 0.629191
+          },
+          {
+            "raceClass": "2勝",
+            "races": 86,
+            "accuracyPct": 48.84,
+            "brierScore": 0.621369,
+            "baselineBrierScore": 0.616651
+          },
+          {
+            "raceClass": "3勝",
+            "races": 42,
+            "accuracyPct": 45.24,
+            "brierScore": 0.628491,
+            "baselineBrierScore": 0.601989
+          },
+          {
+            "raceClass": "OP",
+            "races": 32,
+            "accuracyPct": 53.12,
+            "brierScore": 0.545841,
+            "baselineBrierScore": 0.644612
+          },
+          {
+            "raceClass": "未勝利",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "brierScore": 0.569259,
+            "baselineBrierScore": 0.594108
+          }
+        ]
+      }
+    },
+    "forest:20": {
+      "races": 314,
+      "accuracyPct": 42.04,
+      "balancedAccuracyPct": 40.56,
+      "brierScore": 0.645918,
+      "actualCounts": {
+        "1": 152,
+        "2": 62,
+        "0": 100
+      },
+      "predictedCounts": {
+        "1": 109,
+        "0": 143,
+        "2": 62
+      },
+      "recallPct": {
+        "0": 60.0,
+        "1": 37.5,
+        "2": 24.19
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          60,
+          29,
+          11
+        ],
+        [
+          59,
+          57,
+          36
+        ],
+        [
+          24,
+          23,
+          15
+        ]
+      ],
+      "coursePriorBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "brierScore": 0.623243,
+        "actualCounts": {
+          "1": 152,
+          "2": 62,
+          "0": 100
+        },
+        "predictedCounts": {
+          "1": 314
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        },
+        "confusionMatrixActualRowsPredictedColumns": [
+          [
+            0,
+            100,
+            0
+          ],
+          [
+            0,
+            152,
+            0
+          ],
+          [
+            0,
+            62,
+            0
+          ]
+        ]
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "brierImprovementVsCoursePrior95CI": [
+        -0.047817,
+        0.004044
+      ],
+      "accuracyImprovementVsCoursePrior95CI": [
+        -0.128127,
+        0.003505
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.128127,
+        0.003505
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 40.64,
+            "brierScore": 0.650964,
+            "baselineBrierScore": 0.626106
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 47.62,
+            "brierScore": 0.625813,
+            "baselineBrierScore": 0.611836
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 75.0,
+            "brierScore": 0.629318,
+            "baselineBrierScore": 0.626308
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 19.05,
+            "brierScore": 0.676376,
+            "baselineBrierScore": 0.661408
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 42.42,
+            "brierScore": 0.65965,
+            "baselineBrierScore": 0.551135
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 48.39,
+            "brierScore": 0.609346,
+            "baselineBrierScore": 0.631081
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 46.03,
+            "brierScore": 0.602068,
+            "baselineBrierScore": 0.620402
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 42.86,
+            "brierScore": 0.658228,
+            "baselineBrierScore": 0.568266
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 38.83,
+            "brierScore": 0.681441,
+            "baselineBrierScore": 0.650409
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 38.57,
+            "brierScore": 0.656204,
+            "baselineBrierScore": 0.641807
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 37.5,
+            "brierScore": 0.682187,
+            "baselineBrierScore": 0.629339
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 47.92,
+            "brierScore": 0.630227,
+            "baselineBrierScore": 0.673016
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 33.33,
+            "brierScore": 0.647006,
+            "baselineBrierScore": 0.589796
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 43.97,
+            "brierScore": 0.634382,
+            "baselineBrierScore": 0.58885
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "brierScore": 0.638544,
+            "baselineBrierScore": 0.665385
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 55.56,
+            "brierScore": 0.609591,
+            "baselineBrierScore": 0.642448
+          }
+        ],
+        "raceClass": [
+          {
+            "raceClass": "1勝",
+            "races": 150,
+            "accuracyPct": 37.33,
+            "brierScore": 0.681701,
+            "baselineBrierScore": 0.629191
+          },
+          {
+            "raceClass": "2勝",
+            "races": 86,
+            "accuracyPct": 43.02,
+            "brierScore": 0.636598,
+            "baselineBrierScore": 0.616651
+          },
+          {
+            "raceClass": "3勝",
+            "races": 42,
+            "accuracyPct": 42.86,
+            "brierScore": 0.616113,
+            "baselineBrierScore": 0.601989
+          },
+          {
+            "raceClass": "OP",
+            "races": 32,
+            "accuracyPct": 59.38,
+            "brierScore": 0.5435,
+            "baselineBrierScore": 0.644612
+          },
+          {
+            "raceClass": "未勝利",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "brierScore": 0.63668,
+            "baselineBrierScore": 0.594108
+          }
+        ]
+      }
+    },
+    "forest:40": {
+      "races": 314,
+      "accuracyPct": 37.9,
+      "balancedAccuracyPct": 39.08,
+      "brierScore": 0.653989,
+      "actualCounts": {
+        "1": 152,
+        "2": 62,
+        "0": 100
+      },
+      "predictedCounts": {
+        "1": 88,
+        "0": 145,
+        "2": 81
+      },
+      "recallPct": {
+        "0": 58.0,
+        "1": 26.97,
+        "2": 32.26
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          58,
+          28,
+          14
+        ],
+        [
+          64,
+          41,
+          47
+        ],
+        [
+          23,
+          19,
+          20
+        ]
+      ],
+      "coursePriorBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "brierScore": 0.623243,
+        "actualCounts": {
+          "1": 152,
+          "2": 62,
+          "0": 100
+        },
+        "predictedCounts": {
+          "1": 314
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        },
+        "confusionMatrixActualRowsPredictedColumns": [
+          [
+            0,
+            100,
+            0
+          ],
+          [
+            0,
+            152,
+            0
+          ],
+          [
+            0,
+            62,
+            0
+          ]
+        ]
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "brierImprovementVsCoursePrior95CI": [
+        -0.054904,
+        -0.006627
+      ],
+      "accuracyImprovementVsCoursePrior95CI": [
+        -0.174456,
+        -0.03299
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.174456,
+        -0.03299
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 37.05,
+            "brierScore": 0.654176,
+            "baselineBrierScore": 0.626106
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 41.27,
+            "brierScore": 0.653246,
+            "baselineBrierScore": 0.611836
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 75.0,
+            "brierScore": 0.676784,
+            "baselineBrierScore": 0.626308
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 19.05,
+            "brierScore": 0.697285,
+            "baselineBrierScore": 0.661408
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 27.27,
+            "brierScore": 0.677891,
+            "baselineBrierScore": 0.551135
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 45.16,
+            "brierScore": 0.617019,
+            "baselineBrierScore": 0.631081
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 44.44,
+            "brierScore": 0.617559,
+            "baselineBrierScore": 0.620402
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 28.57,
+            "brierScore": 0.664932,
+            "baselineBrierScore": 0.568266
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 37.86,
+            "brierScore": 0.67818,
+            "baselineBrierScore": 0.650409
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 35.71,
+            "brierScore": 0.660178,
+            "baselineBrierScore": 0.641807
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 33.33,
+            "brierScore": 0.679912,
+            "baselineBrierScore": 0.629339
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 47.92,
+            "brierScore": 0.635567,
+            "baselineBrierScore": 0.673016
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 33.33,
+            "brierScore": 0.670856,
+            "baselineBrierScore": 0.589796
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 37.07,
+            "brierScore": 0.64734,
+            "baselineBrierScore": 0.58885
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "brierScore": 0.654639,
+            "baselineBrierScore": 0.665385
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 44.44,
+            "brierScore": 0.622866,
+            "baselineBrierScore": 0.642448
+          }
+        ],
+        "raceClass": [
+          {
+            "raceClass": "1勝",
+            "races": 150,
+            "accuracyPct": 29.33,
+            "brierScore": 0.691256,
+            "baselineBrierScore": 0.629191
+          },
+          {
+            "raceClass": "2勝",
+            "races": 86,
+            "accuracyPct": 44.19,
+            "brierScore": 0.639559,
+            "baselineBrierScore": 0.616651
+          },
+          {
+            "raceClass": "3勝",
+            "races": 42,
+            "accuracyPct": 45.24,
+            "brierScore": 0.620863,
+            "baselineBrierScore": 0.601989
+          },
+          {
+            "raceClass": "OP",
+            "races": 32,
+            "accuracyPct": 53.12,
+            "brierScore": 0.556623,
+            "baselineBrierScore": 0.644612
+          },
+          {
+            "raceClass": "未勝利",
+            "races": 4,
+            "accuracyPct": 25.0,
+            "brierScore": 0.693462,
+            "baselineBrierScore": 0.594108
+          }
+        ]
+      }
+    }
+  },
+  "adoptionRule": "must beat coursePrior in 2024 development; non-baseline; held-out Brier and accuracy improvements vs course prior have positive lower 95% day-bootstrap limits; fast and slow recall each >=20%; at least 1000 evaluation races. Still requires prospective snapshots.",
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false
+}
