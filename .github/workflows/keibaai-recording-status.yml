@@ -21,14 +21,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          path: startup-guard
           sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
           sparse-checkout-cone-mode: false
       - name: Validate lightweight startup checkout
         run: |
-          test -f .github/scripts/keibaai-race-day-check.sh
+          test -f startup-guard/.github/scripts/keibaai-race-day-check.sh
           test ! -f production/production_history.parquet
-          bash -n .github/scripts/keibaai-race-day-check.sh
+          bash -n startup-guard/.github/scripts/keibaai-race-day-check.sh
       - uses: actions/checkout@v5
+      - name: Validate complete monitor checkout
+        run: |
+          test -f production/requirements.txt
+          test -f production/production_history.parquet
+          test -f production/live_monitor_topk_publish.py
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
