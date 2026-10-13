@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "prerace-pace-direct-classifier-v2",
+  "selectedModel": "logistic:0.1",
+  "developmentPreferredMethod": "coursePrior",
+  "developmentCandidateQualified": false,
+  "methodFreezeSHA256": "752953f0a6d6a653045482df56576ec5c0fd580da42e8d9a1e2652ba02ca5374",
+  "historySHA256": "f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b",
+  "studyHistorySHA256": "2132170f37d8a106e68d6f9f328c8b9af705c177214656c89cd460e936b0c26e",
+  "lapDataSHA256": "cfcc388a1e00200d9160e4a47a1499a65a9f16b6ef6d459bee9bcb38ff079600",
+  "trainingRaces": 2752,
+  "expected2026ThroughCutoff": 2613,
+  "collected2026ThroughCutoff": 2613,
+  "evaluation2026": {
+    "races": 1053,
+    "accuracyPct": 53.09,
+    "balancedAccuracyPct": 39.45,
+    "brierScore": 0.584737,
+    "actualCounts": {
+      "0": 338,
+      "1": 528,
+      "2": 187
+    },
+    "predictedCounts": {
+      "1": 897,
+      "0": 129,
+      "2": 27
+    },
+    "recallPct": {
+      "0": 22.19,
+      "1": 89.2,
+      "2": 6.95
+    },
+    "confusionMatrixActualRowsPredictedColumns": [
+      [
+        75,
+        257,
+        6
+      ],
+      [
+        49,
+        471,
+        8
+      ],
+      [
+        5,
+        169,
+        13
+      ]
+    ],
+    "coursePriorBaseline": {
+      "races": 1053,
+      "accuracyPct": 50.14,
+      "balancedAccuracyPct": 33.33,
+      "brierScore": 0.6083,
+      "actualCounts": {
+        "0": 338,
+        "1": 528,
+        "2": 187
+      },
+      "predictedCounts": {
+        "1": 1053
+      },
+      "recallPct": {
+        "0": 0.0,
+        "1": 100.0,
+        "2": 0.0
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          0,
+          338,
+          0
+        ],
+        [
+          0,
+          528,
+          0
+        ],
+        [
+          0,
+          187,
+          0
+        ]
+      ]
+    },
+    "alwaysMiddleAccuracyPct": 50.14,
+    "brierImprovementVsCoursePrior95CI": [
+      0.009892,
+      0.0359
+    ],
+    "accuracyImprovementVsCoursePrior95CI": [
+      0.007524,
+      0.050627
+    ],
+    "accuracyImprovementVsMiddle95CI": [
+      0.007524,
+      0.050627
+    ],
+    "byCondition": {
+      "surface": [
+        {
+          "surface": "ダ",
+          "races": 642,
+          "accuracyPct": 50.93,
+          "brierScore": 0.600077,
+          "baselineBrierScore": 0.629392
+        },
+        {
+          "surface": "芝",
+          "races": 411,
+          "accuracyPct": 56.45,
+          "brierScore": 0.560775,
+          "baselineBrierScore": 0.575355
+        }
+      ],
+      "venue": [
+        {
+          "venue": "01",
+          "races": 43,
+          "accuracyPct": 46.51,
+          "brierScore": 0.652068,
+          "baselineBrierScore": 0.666343
+        },
+        {
+          "venue": "02",
+          "races": 60,
+          "accuracyPct": 56.67,
+          "brierScore": 0.580275,
+          "baselineBrierScore": 0.619889
+        },
+        {
+          "venue": "03",
+          "races": 67,
+          "accuracyPct": 38.81,
+          "brierScore": 0.631263,
+          "baselineBrierScore": 0.635883
+        },
+        {
+          "venue": "04",
+          "races": 78,
+          "accuracyPct": 51.28,
+          "brierScore": 0.612185,
+          "baselineBrierScore": 0.648843
+        },
+        {
+          "venue": "05",
+          "races": 158,
+          "accuracyPct": 56.33,
+          "brierScore": 0.55585,
+          "baselineBrierScore": 0.58237
+        },
+        {
+          "venue": "06",
+          "races": 175,
+          "accuracyPct": 57.71,
+          "brierScore": 0.559797,
+          "baselineBrierScore": 0.566401
+        },
+        {
+          "venue": "07",
+          "races": 103,
+          "accuracyPct": 57.28,
+          "brierScore": 0.561912,
+          "baselineBrierScore": 0.57374
+        },
+        {
+          "venue": "08",
+          "races": 182,
+          "accuracyPct": 51.65,
+          "brierScore": 0.586209,
+          "baselineBrierScore": 0.632495
+        },
+        {
+          "venue": "09",
+          "races": 81,
+          "accuracyPct": 48.15,
+          "brierScore": 0.621973,
+          "baselineBrierScore": 0.648357
+        },
+        {
+          "venue": "10",
+          "races": 106,
+          "accuracyPct": 53.77,
+          "brierScore": 0.585774,
+          "baselineBrierScore": 0.600183
+        }
+      ],
+      "distanceM": [
+        {
+          "distanceM": "1150",
+          "races": 16,
+          "accuracyPct": 43.75,
+          "brierScore": 0.668065,
+          "baselineBrierScore": 0.672656
+        },
+        {
+          "distanceM": "1200",
+          "races": 218,
+          "accuracyPct": 51.38,
+          "brierScore": 0.582391,
+          "baselineBrierScore": 0.596336
+        },
+        {
+          "distanceM": "1400",
+          "races": 155,
+          "accuracyPct": 49.68,
+          "brierScore": 0.606987,
+          "baselineBrierScore": 0.604842
+        },
+        {
+          "distanceM": "1600",
+          "races": 119,
+          "accuracyPct": 58.82,
+          "brierScore": 0.540265,
+          "baselineBrierScore": 0.579275
+        },
+        {
+          "distanceM": "1700",
+          "races": 133,
+          "accuracyPct": 50.38,
+          "brierScore": 0.629647,
+          "baselineBrierScore": 0.643222
+        },
+        {
+          "distanceM": "1800",
+          "races": 292,
+          "accuracyPct": 54.79,
+          "brierScore": 0.559623,
+          "baselineBrierScore": 0.611993
+        },
+        {
+          "distanceM": "1900",
+          "races": 14,
+          "accuracyPct": 35.71,
+          "brierScore": 0.689549,
+          "baselineBrierScore": 0.688543
+        },
+        {
+          "distanceM": "2000",
+          "races": 87,
+          "accuracyPct": 58.62,
+          "brierScore": 0.59436,
+          "baselineBrierScore": 0.599231
+        },
+        {
+          "distanceM": "2100",
+          "races": 19,
+          "accuracyPct": 52.63,
+          "brierScore": 0.588803,
+          "baselineBrierScore": 0.582594
+        }
+      ],
+      "raceClass": [
+        {
+          "raceClass": "1勝",
+          "races": 464,
+          "accuracyPct": 53.23,
+          "brierScore": 0.586464,
+          "baselineBrierScore": 0.602412
+        },
+        {
+          "raceClass": "2勝",
+          "races": 254,
+          "accuracyPct": 52.36,
+          "brierScore": 0.59781,
+          "baselineBrierScore": 0.60661
+        },
+        {
+          "raceClass": "3勝",
+          "races": 118,
+          "accuracyPct": 52.54,
+          "brierScore": 0.553602,
+          "baselineBrierScore": 0.572284
+        },
+        {
+          "raceClass": "OP",
+          "races": 111,
+          "accuracyPct": 63.06,
+          "brierScore": 0.499567,
+          "baselineBrierScore": 0.623259
+        },
+        {
+          "raceClass": "未勝利",
+          "races": 106,
+          "accuracyPct": 44.34,
+          "brierScore": 0.669699,
+          "baselineBrierScore": 0.662556
+        }
+      ]
+    }
+  },
+  "evaluationCoveragePct": 40.3,
+  "latestSourceDateViolations": 0,
+  "adoptionDecision": "do_not_enable_pace_forecast",
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false,
+  "limitations": [
+    "2025 is training, not an independent evaluation; 2026 is opened only after 2024 selection and complete collection.",
+    "Current race class, entrants and count are from historical result metadata; pre-race snapshot timing and scratches are not reconstructed.",
+    "Going and inner/outer course layout are not inputs. Thresholds combine all going and are fixed on 2024; distinct from older going-specific labels.",
+    "Past laps are race-leader pace, not individual horse speed; 2023 and earlier lap histories missing.",
+    "Probabilities are not independently calibrated; no live adoption from historical accuracy alone.",
+    "Bootstrap by calendar day preserves shared race-day effects; condition breakdowns are descriptive, not selection criteria."
+  ]
+}

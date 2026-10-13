@@ -39,11 +39,20 @@ jobs:
           cmp reports/PaceClassifierMethodFreeze.json /tmp/expected-classifier.json
       - name: Reproduce held-out evaluation when stored
         run: |
-          if [ -f reports/PaceClassifierValidation.json ]; then
-            cp reports/PaceClassifierValidation.json /tmp/expected-validation.json
-            python production/research_pace_classifier.py
-            cmp reports/PaceClassifierValidation.json /tmp/expected-validation.json
-          fi
+          if [ ! -f reports/PaceClassifierValidation.json ]; then exit 0; fi
+          cp reports/PaceClassifierValidation.json /tmp/expected-validation.json
+          python production/research_pace_classifier.py
+          python - <<'PY'
+          import json
+          expected=json.load(open('/tmp/expected-validation.json'))
+          actual=json.load(open('reports/PaceClassifierValidation.json'))
+          for key in ['selectedModel','studyHistorySHA256','lapDataSHA256','evaluation2026','adoptionDecision','methodFreezeSHA256']:
+            assert actual[key]==expected[key],key
+          assert actual['latestSourceDateViolations']==0
+          assert not actual['paceForecastEnabled']
+          assert not actual['formalSignalsChanged']
+          assert not actual['stakeSizingEnabled']
+          PY
       - name: Inspect actual official track-page structure
         continue-on-error: true
         run: |

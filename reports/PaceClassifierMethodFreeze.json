@@ -33,7 +33,7 @@
     "forest:20",
     "forest:40"
   ],
-  "selectionRule": "Minimum Brier score on Sep-Dec 2024; Jan-Aug 2024 training and reference thresholds only. No 2025 or 2026 selection.",
+  "selectionRule": "Minimum Brier among non-baseline challengers on Sep-Dec 2024; separately record the preferred overall method including coursePrior. Jan-Aug 2024 training and thresholds only. No 2025 or 2026 selection.",
   "trainingYearsAfterFreeze": [
     2024,
     2025
@@ -1260,7 +1260,7 @@
       }
     }
   },
-  "adoptionRule": "non-baseline; held-out Brier and accuracy improvements vs course prior have positive lower 95% day-bootstrap limits; fast and slow recall each >=20%; at least 1000 evaluation races. Still requires prospective snapshots.",
+  "adoptionRule": "must beat coursePrior in 2024 development; non-baseline; held-out Brier and accuracy improvements vs course prior have positive lower 95% day-bootstrap limits; fast and slow recall each >=20%; at least 1000 evaluation races. Still requires prospective snapshots.",
   "paceForecastEnabled": false,
   "formalSignalsChanged": false,
   "stakeSizingEnabled": false

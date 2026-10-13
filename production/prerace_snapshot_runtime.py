@@ -69,7 +69,12 @@ def persist_snapshot(text,rid,date8,url,captured_at,entries,root=None,track_obse
         post=datetime.fromisoformat(observation['scheduledPostJST'])
         if track_capture.tzinfo is None or track_asof.tzinfo is None or track_capture>=post or track_asof>track_capture or track_observation['raceDate']!=observation['raceDate'] or track_observation['venue']!=JRA_VENUE_MAP[rid[4:6]]:
             raise ValueError('track observation identity or pre-post timing mismatch')
-        observation['completeInputAvailableAtJST']=max(captured_at,track_capture).isoformat()
+        available=max(captured_at,track_capture)
+        track_observation=dict(track_observation)
+        age=(available-track_asof).total_seconds()/3600
+        track_observation['eligibleForRaceInput']=track_asof.date()==post.date() and 0<=age<=6
+        track_observation['ageHoursAtInputAvailable']=round(age,3)
+        observation['completeInputAvailableAtJST']=available.isoformat()
         observation['trackConditionObservation']=track_observation
         if not observation['goingObservedInCurrentHeader'] and track_observation['eligibleForRaceInput']:
             observation['going']=track_observation['going']['芝' if observation['surface']=='芝' else 'ダート']

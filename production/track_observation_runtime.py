@@ -29,7 +29,9 @@ def parse_track_observation(text,url,venue_code,date8,captured_at):
     year=int(d[1]);month,day=int(md[1]),int(md[2]);hour,minute=(int(tm[1]),int(tm[2] or 0)) if tm else (12,0)
     asof=datetime(year,month,day,hour,minute,tzinfo=JST)
     race_day=datetime.strptime(date8,'%Y%m%d').date()
-    if asof.date()>race_day:asof=asof.replace(year=year-1)
+    if asof.date()>race_day:
+        if month==12 and race_day.month==1:asof=asof.replace(year=year-1)
+        else:raise ValueError('track as-of date is after the race day')
     if asof>captured_at:raise ValueError('track as-of time is after capture')
     # Traverse only this section, stopping before cushion/moisture explanatory tables.
     strings=[]

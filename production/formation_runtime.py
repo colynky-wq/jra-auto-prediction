@@ -7,7 +7,7 @@ from statistics import mean
 from app_research_runtime import finite
 
 FORMATION_METHOD_VERSION = "initial-corner-six-races-v1"
-PACE_NOTE_VERSION = "lap-collection-ready-20261013-v1"
+PACE_NOTE_VERSION = "pace-validation-hold-20261013-v2"
 MIN_PAST_RACES = 3
 MIN_COVERAGE = 0.80
 
@@ -78,7 +78,7 @@ def formation_reference(horses: list[dict], *, has_corner: bool = True) -> dict:
         "escapeTrendHorseNumbers": sorted(escape), "frontTrendHorseNumbers": sorted(front),
         "paceForecast": {
             "status": "unavailable",
-            "reason": "ペース予想は、脚質と出走メンバーを使った検証を終えてから表示します。",
+            "reason": "ペース予想は、検証で十分な精度を確認できていないため表示を保留しています。",
         },
         "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
     }
