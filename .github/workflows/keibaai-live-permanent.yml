@@ -98,6 +98,7 @@ jobs:
           git config user.email 'keibaai@users.noreply.github.com'
 
       - name: Monitor races and publish one consistent bundle
+        id: session
         if: steps.day.outputs.has_races == 'true'
         env:
           KEIBAAI_LIVE_DATE: ${{ steps.day.outputs.target_date }}
@@ -109,49 +110,22 @@ jobs:
           KEIBAAI_CAPTURE_WIDE_ODDS: 'true'
           KEIBAAI_CAPTURE_PRERACE: 'true'
           KEIBAAI_REFRESH_SIGNALS: 'true'
+          KEIBAAI_OUTBOX: ${{ runner.temp }}/keibaai-live-outbox
         shell: bash
         run: |
           set -euo pipefail
           date8='${{ steps.day.outputs.target_date }}'
+          python production/live_bundle_publisher.py --date "$date8" \
+            --outbox "$KEIBAAI_OUTBOX" --poll-seconds 20 \
+            -- python -u production/live_monitor_topk_publish.py
 
-          publish_if_changed() {
-            # Recording status must not stop the formal bundle publisher.
-            python production/build_pace_recording_status.py || true
-            # repair_wide_odds only acts on predicted races and refuses to make
-            # a missing snapshot after scheduled post time.
-            python production/repair_wide_odds.py || true
-
-            changes=$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}" PaceRecordingStatus.json reports/PaceRecordingStatus.md)
-            if [ -z "$changes" ]; then
-              return 0
-            fi
-
-            # Research display failure must not block live predictions. The app
-            # rejects a stale research bundle by comparing its source horses.
-            if ! python production/build_app_research_data.py; then
-              echo 'Research display refresh failed; publishing predictions continues.'
-            fi
-
-            git add -A -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}" PaceRecordingStatus.json reports/PaceRecordingStatus.md
-            if [ -f AppResearchData.json ]; then git add AppResearchData.json; fi
-            git commit -m "Publish KeibaAI live prediction bundle ${date8}" || true
-            git pull --rebase origin main
-            git push origin HEAD:main
-            echo "Published prediction bundle at $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST')"
-          }
-
-          git pull --rebase origin main
-          publish_if_changed
-
-          python production/live_monitor_topk_publish.py &
-          monitor_pid=$!
-          monitor_exit=0
-
-          while kill -0 "$monitor_pid" 2>/dev/null; do
-            sleep 20
-            publish_if_changed
-          done
-
-          wait "$monitor_pid" || monitor_exit=$?
-          publish_if_changed
-          exit "$monitor_exit"
+      - name: Preserve live outbox for recovery
+        if: always() && steps.day.outputs.has_races == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-live-outbox-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/keibaai-live-outbox/state.json
+            ${{ runner.temp }}/keibaai-live-outbox/blobs
+          if-no-files-found: ignore
+          retention-days: 14

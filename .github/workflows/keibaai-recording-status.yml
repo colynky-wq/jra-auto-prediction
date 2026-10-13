@@ -6,6 +6,12 @@ on:
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_dry_run.py'
       - 'production/test_live_startup_guard.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
+      - 'production/monitor_health_runtime.py'
+      - 'production/sync_monitor_health.py'
+      - 'production/test_monitor_health.py'
+      - '.github/workflows/keibaai-monitor-health.yml'
       - '.github/scripts/keibaai-race-day-check.sh'
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/workflows/keibaai-race-lap-research.yml'
@@ -43,6 +49,8 @@ jobs:
       - name: Test status and source isolation
         run: |
           python -m unittest discover -s production -p 'test_live_startup_guard.py' -v
+          python -m unittest discover -s production -p 'test_live_bundle_publisher.py' -v
+          python -m unittest discover -s production -p 'test_monitor_health.py' -v
           python -m unittest discover -s production -p 'test_pace_recording_status.py' -v
           python -m unittest discover -s production -p 'test_prerace_recording_chain.py' -v
           python -m unittest discover -s production -p 'test_pace_prospective.py' -v
