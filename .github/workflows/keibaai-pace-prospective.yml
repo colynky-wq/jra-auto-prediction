@@ -1,0 +1,55 @@
+name: KeibaAI Prospective Pace Research
+on:
+  pull_request:
+    paths:
+      - 'production/*prospective*.py'
+      - 'production/research_slow_pace.py'
+      - 'production/jra_entry_source.py'
+      - 'research/pace/**'
+      - 'reports/PaceProspective*.json'
+      - 'reports/PaceSlowDiagnostics.json'
+      - '.github/workflows/keibaai-pace-prospective.yml'
+      - '.github/workflows/keibaai-race-lap-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install training verification dependencies
+        run: pip install -r production/requirements.txt 'scikit-learn==1.8.0' 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Test real-time isolation and immutable records
+        run: |
+          python -m unittest discover -s production -p 'test_pace_prospective.py' -v
+          python -m unittest discover -s production -p 'test_prerace_snapshot.py' -v
+          python -m unittest discover -s production -p 'test_track_observation.py' -v
+          python -m unittest discover -s production -p 'test_jra_route_modes.py' -v
+      - name: Reproduce used-history development and JSON export
+        run: |
+          cp reports/PaceSlowDiagnostics.json /tmp/slow-expected.json
+          cp research/pace/ProspectivePaceModel.json /tmp/model-expected.json
+          python production/research_slow_pace.py
+          cmp reports/PaceSlowDiagnostics.json /tmp/slow-expected.json
+          python production/build_prospective_pace_model.py
+          python - <<'PY'
+          import json,sys,numpy as np,pandas as pd
+          sys.path.insert(0,'production')
+          from pace_prospective_runtime import softmax_predict
+          expected=json.load(open('/tmp/model-expected.json'))
+          actual=json.load(open('research/pace/ProspectivePaceModel.json'))
+          assert expected['selectedDevelopmentCandidate']==actual['selectedDevelopmentCandidate']
+          assert expected['numericFeatures']==actual['numericFeatures']
+          assert expected['trainingCutoffDate']==actual['trainingCutoffDate']
+          for key in ['coefficients','intercepts','numericMean','numericScale']:
+              np.testing.assert_allclose(expected[key],actual[key],atol=1e-10,rtol=1e-10)
+          assert not actual['paceForecastEnabled']
+          assert not actual['formalSignalsChanged']
+          PY
+      - name: Score only actual prospective records
+        run: python production/evaluate_prospective_pace.py

@@ -493,6 +493,12 @@ def fetch_entry_table(
                         print("PRERACE_TRACK_UNAVAILABLE", race_id, str(exc))
                     saved = persist_snapshot(text, race_id, date8, url, fetch_time.to_pydatetime(), d, track_observation=track)
                     if saved: print("PRERACE_SNAPSHOT_SAVED", race_id, saved.name)
+                    try:
+                        from pace_prospective_runtime import record_latest_snapshot_prediction
+                        prediction=record_latest_snapshot_prediction(str(race_id), date8)
+                        if prediction: print("RESEARCH_PACE_RECORDED", race_id, prediction.name)
+                    except Exception as exc:
+                        print("RESEARCH_PACE_SKIPPED", race_id, str(exc))
                 except Exception as exc:
                     print("PRERACE_SNAPSHOT_SKIPPED", race_id, str(exc))
             return d, fetch_time, url

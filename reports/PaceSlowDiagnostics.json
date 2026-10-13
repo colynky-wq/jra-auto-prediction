@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "slow-pace-used-history-diagnostics-v3",
+  "status": "development_only",
+  "usedHistoryThrough": "2026-10-12",
+  "independentEvaluation": false,
+  "races": 1053,
+  "actualSlowRaces": 187,
+  "argmaxSlowRecallPct": 6.95,
+  "thresholdGrid": [
+    {
+      "threshold": 0.2,
+      "calledRaces": 423,
+      "trueSlow": 114,
+      "falseSlow": 309,
+      "precisionPct": 26.95,
+      "recallPct": 60.96
+    },
+    {
+      "threshold": 0.25,
+      "calledRaces": 270,
+      "trueSlow": 78,
+      "falseSlow": 192,
+      "precisionPct": 28.89,
+      "recallPct": 41.71
+    },
+    {
+      "threshold": 0.3,
+      "calledRaces": 163,
+      "trueSlow": 58,
+      "falseSlow": 105,
+      "precisionPct": 35.58,
+      "recallPct": 31.02
+    },
+    {
+      "threshold": 0.35,
+      "calledRaces": 91,
+      "trueSlow": 37,
+      "falseSlow": 54,
+      "precisionPct": 40.66,
+      "recallPct": 19.79
+    },
+    {
+      "threshold": 0.4,
+      "calledRaces": 45,
+      "trueSlow": 22,
+      "falseSlow": 23,
+      "precisionPct": 48.89,
+      "recallPct": 11.76
+    },
+    {
+      "threshold": 0.45,
+      "calledRaces": 25,
+      "trueSlow": 13,
+      "falseSlow": 12,
+      "precisionPct": 52.0,
+      "recallPct": 6.95
+    },
+    {
+      "threshold": 0.5,
+      "calledRaces": 11,
+      "trueSlow": 6,
+      "falseSlow": 5,
+      "precisionPct": 54.55,
+      "recallPct": 3.21
+    }
+  ],
+  "calibrationBins": [
+    {
+      "probabilityRange": [
+        0,
+        0.1
+      ],
+      "races": 248,
+      "meanPredictedSlowPct": 6.4,
+      "actualSlowPct": 7.26
+    },
+    {
+      "probabilityRange": [
+        0.1,
+        0.2
+      ],
+      "races": 382,
+      "meanPredictedSlowPct": 14.98,
+      "actualSlowPct": 14.4
+    },
+    {
+      "probabilityRange": [
+        0.2,
+        0.3
+      ],
+      "races": 260,
+      "meanPredictedSlowPct": 24.29,
+      "actualSlowPct": 21.54
+    },
+    {
+      "probabilityRange": [
+        0.3,
+        0.4
+      ],
+      "races": 118,
+      "meanPredictedSlowPct": 34.18,
+      "actualSlowPct": 30.51
+    },
+    {
+      "probabilityRange": [
+        0.4,
+        0.5
+      ],
+      "races": 34,
+      "meanPredictedSlowPct": 44.21,
+      "actualSlowPct": 47.06
+    },
+    {
+      "probabilityRange": [
+        0.5,
+        1.01
+      ],
+      "races": 11,
+      "meanPredictedSlowPct": 55.79,
+      "actualSlowPct": 54.55
+    }
+  ],
+  "chosenResearchSlowFlagThreshold": null,
+  "selectionRule": "At least 30 flags, precision >=50%, slow recall >=20% on USED 2026 history; future observations required, no app adoption.",
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false,
+  "meaning": "Threshold analysis reuses the previously evaluated 2026 period for development. It cannot be presented as independent improvement."
+}

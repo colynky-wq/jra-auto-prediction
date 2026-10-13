@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "prospective-pace-research-v3",
+  "status": "prospective_observations_pending",
+  "independentEvaluation": false,
+  "developmentThrough": "2026-10-12",
+  "candidateResultsOnUsed2026": {
+    "base:0.1": {
+      "races": 1053,
+      "accuracyPct": 53.09,
+      "balancedAccuracyPct": 39.45,
+      "brierScore": 0.584737,
+      "actualCounts": {
+        "0": 338,
+        "1": 528,
+        "2": 187
+      },
+      "predictedCounts": {
+        "1": 897,
+        "0": 129,
+        "2": 27
+      },
+      "recallPct": {
+        "0": 22.19,
+        "1": 89.2,
+        "2": 6.95
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          75,
+          257,
+          6
+        ],
+        [
+          49,
+          471,
+          8
+        ],
+        [
+          5,
+          169,
+          13
+        ]
+      ]
+    },
+    "season:0.1": {
+      "races": 1053,
+      "accuracyPct": 53.94,
+      "balancedAccuracyPct": 41.62,
+      "brierScore": 0.58289,
+      "actualCounts": {
+        "0": 338,
+        "1": 528,
+        "2": 187
+      },
+      "predictedCounts": {
+        "1": 848,
+        "0": 152,
+        "2": 53
+      },
+      "recallPct": {
+        "0": 26.92,
+        "1": 86.17,
+        "2": 11.76
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          91,
+          236,
+          11
+        ],
+        [
+          53,
+          455,
+          20
+        ],
+        [
+          8,
+          157,
+          22
+        ]
+      ]
+    },
+    "season:1": {
+      "races": 1053,
+      "accuracyPct": 54.13,
+      "balancedAccuracyPct": 42.31,
+      "brierScore": 0.58244,
+      "actualCounts": {
+        "0": 338,
+        "1": 528,
+        "2": 187
+      },
+      "predictedCounts": {
+        "1": 830,
+        "0": 163,
+        "2": 60
+      },
+      "recallPct": {
+        "0": 28.7,
+        "1": 84.85,
+        "2": 13.37
+      },
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          97,
+          229,
+          12
+        ],
+        [
+          57,
+          448,
+          23
+        ],
+        [
+          9,
+          153,
+          25
+        ]
+      ]
+    }
+  },
+  "selectedCandidate": "season:1",
+  "trainingRaces": 3805,
+  "modelID": "997524e0361ca8efba514a0d1a5a07c4b65342ec0a4ea01d8c9754a780f6d597",
+  "jsonInferenceMaximumDifference": 1.1102230246251565e-16,
+  "selectedCandidateSlowThresholdGrid": [
+    {
+      "threshold": 0.2,
+      "calledRaces": 442,
+      "trueSlow": 119,
+      "falseSlow": 323,
+      "precisionPct": 26.92,
+      "recallPct": 63.64
+    },
+    {
+      "threshold": 0.25,
+      "calledRaces": 301,
+      "trueSlow": 93,
+      "falseSlow": 208,
+      "precisionPct": 30.9,
+      "recallPct": 49.73
+    },
+    {
+      "threshold": 0.3,
+      "calledRaces": 208,
+      "trueSlow": 72,
+      "falseSlow": 136,
+      "precisionPct": 34.62,
+      "recallPct": 38.5
+    },
+    {
+      "threshold": 0.35,
+      "calledRaces": 128,
+      "trueSlow": 51,
+      "falseSlow": 77,
+      "precisionPct": 39.84,
+      "recallPct": 27.27
+    },
+    {
+      "threshold": 0.4,
+      "calledRaces": 82,
+      "trueSlow": 35,
+      "falseSlow": 47,
+      "precisionPct": 42.68,
+      "recallPct": 18.72
+    },
+    {
+      "threshold": 0.45,
+      "calledRaces": 54,
+      "trueSlow": 23,
+      "falseSlow": 31,
+      "precisionPct": 42.59,
+      "recallPct": 12.3
+    },
+    {
+      "threshold": 0.5,
+      "calledRaces": 33,
+      "trueSlow": 13,
+      "falseSlow": 20,
+      "precisionPct": 39.39,
+      "recallPct": 6.95
+    }
+  ],
+  "slowFlagThreshold": null,
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false,
+  "meaning": "2026 was already evaluated. These comparisons are development only; independent evaluation requires forecasts recorded before future races."
+}
