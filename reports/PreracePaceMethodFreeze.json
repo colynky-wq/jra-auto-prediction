@@ -1,0 +1,1005 @@
+{
+  "methodVersion": "prerace-field-pace-research-v1",
+  "selectedModel": "forest:40",
+  "features": [
+    "fieldSize",
+    "distanceM",
+    "earlyDistanceM",
+    "styleCoverage",
+    "meanPosition",
+    "minPosition",
+    "positionSpread",
+    "escapeCount",
+    "frontCount",
+    "escapeShare",
+    "frontShare",
+    "pastLapCoverage",
+    "pastLap600Mean",
+    "pastLap600Min",
+    "pastDistanceMean"
+  ],
+  "selectionMetric": "2024 Sep-Dec MAE, Jan-Aug training only",
+  "development2024": {
+    "courseMedian": {
+      "races": 314,
+      "accuracyPct": 48.41,
+      "balancedAccuracyPct": 33.33,
+      "meanAbsoluteErrorSeconds": 0.5705,
+      "brierScore": 0.625498,
+      "observedCounts": {
+        "0": 100,
+        "1": 152,
+        "2": 62
+      },
+      "predictedCounts": {
+        "0": 0,
+        "1": 314,
+        "2": 0
+      },
+      "recallPct": {
+        "0": 0.0,
+        "1": 100.0,
+        "2": 0.0
+      },
+      "courseMedianBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "meanAbsoluteErrorSeconds": 0.5705,
+        "brierScore": 0.625498,
+        "observedCounts": {
+          "0": 100,
+          "1": 152,
+          "2": 62
+        },
+        "predictedCounts": {
+          "0": 0,
+          "1": 314,
+          "2": 0
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        }
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "timeImprovementSeconds95CI": [
+        0.0,
+        0.0
+      ],
+      "brierImprovement95CI": [
+        0.0,
+        0.0
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        0.0,
+        0.0
+      ],
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          0,
+          100,
+          0
+        ],
+        [
+          0,
+          152,
+          0
+        ],
+        [
+          0,
+          62,
+          0
+        ]
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 47.01,
+            "errorSeconds": 0.5552,
+            "baselineErrorSeconds": 0.5552
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 53.97,
+            "errorSeconds": 0.6317,
+            "baselineErrorSeconds": 0.6317
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.675,
+            "baselineErrorSeconds": 0.675
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 47.62,
+            "errorSeconds": 0.4786,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 60.61,
+            "errorSeconds": 0.3909,
+            "baselineErrorSeconds": 0.3909
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 45.16,
+            "errorSeconds": 0.6339,
+            "baselineErrorSeconds": 0.6339
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 44.44,
+            "errorSeconds": 0.5698,
+            "baselineErrorSeconds": 0.5698
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 64.29,
+            "errorSeconds": 0.4679,
+            "baselineErrorSeconds": 0.4679
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 44.66,
+            "errorSeconds": 0.633,
+            "baselineErrorSeconds": 0.633
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 47.14,
+            "errorSeconds": 0.4786,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.5,
+            "baselineErrorSeconds": 0.5
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 37.5,
+            "errorSeconds": 0.725,
+            "baselineErrorSeconds": 0.725
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "errorSeconds": 0.5233,
+            "baselineErrorSeconds": 0.5233
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 53.45,
+            "errorSeconds": 0.5569,
+            "baselineErrorSeconds": 0.5569
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "errorSeconds": 0.775,
+            "baselineErrorSeconds": 0.775
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 44.44,
+            "errorSeconds": 0.9111,
+            "baselineErrorSeconds": 0.9111
+          }
+        ]
+      }
+    },
+    "ridge:10": {
+      "races": 314,
+      "accuracyPct": 49.04,
+      "balancedAccuracyPct": 38.88,
+      "meanAbsoluteErrorSeconds": 0.5606,
+      "brierScore": 0.645547,
+      "observedCounts": {
+        "0": 100,
+        "1": 152,
+        "2": 62
+      },
+      "predictedCounts": {
+        "0": 93,
+        "1": 217,
+        "2": 4
+      },
+      "recallPct": {
+        "0": 42.0,
+        "1": 73.03,
+        "2": 1.61
+      },
+      "courseMedianBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "meanAbsoluteErrorSeconds": 0.5705,
+        "brierScore": 0.625498,
+        "observedCounts": {
+          "0": 100,
+          "1": 152,
+          "2": 62
+        },
+        "predictedCounts": {
+          "0": 0,
+          "1": 314,
+          "2": 0
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        }
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "timeImprovementSeconds95CI": [
+        -0.028403,
+        0.049491
+      ],
+      "brierImprovement95CI": [
+        -0.051668,
+        0.01194
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.041543,
+        0.052636
+      ],
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          42,
+          58,
+          0
+        ],
+        [
+          38,
+          111,
+          3
+        ],
+        [
+          13,
+          48,
+          1
+        ]
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 49.0,
+            "errorSeconds": 0.5455,
+            "baselineErrorSeconds": 0.5552
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 49.21,
+            "errorSeconds": 0.6208,
+            "baselineErrorSeconds": 0.6317
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.6894,
+            "baselineErrorSeconds": 0.675
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 33.33,
+            "errorSeconds": 0.5095,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 54.55,
+            "errorSeconds": 0.4384,
+            "baselineErrorSeconds": 0.3909
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 56.45,
+            "errorSeconds": 0.5337,
+            "baselineErrorSeconds": 0.6339
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 41.27,
+            "errorSeconds": 0.5056,
+            "baselineErrorSeconds": 0.5698
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 53.57,
+            "errorSeconds": 0.5153,
+            "baselineErrorSeconds": 0.4679
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 49.51,
+            "errorSeconds": 0.6673,
+            "baselineErrorSeconds": 0.633
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 41.43,
+            "errorSeconds": 0.4888,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 47.92,
+            "errorSeconds": 0.5519,
+            "baselineErrorSeconds": 0.5
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 52.08,
+            "errorSeconds": 0.6447,
+            "baselineErrorSeconds": 0.725
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "errorSeconds": 0.4894,
+            "baselineErrorSeconds": 0.5233
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 52.59,
+            "errorSeconds": 0.5431,
+            "baselineErrorSeconds": 0.5569
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 25.0,
+            "errorSeconds": 0.855,
+            "baselineErrorSeconds": 0.775
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 66.67,
+            "errorSeconds": 0.799,
+            "baselineErrorSeconds": 0.9111
+          }
+        ]
+      }
+    },
+    "ridge:100": {
+      "races": 314,
+      "accuracyPct": 49.04,
+      "balancedAccuracyPct": 38.22,
+      "meanAbsoluteErrorSeconds": 0.5572,
+      "brierScore": 0.644196,
+      "observedCounts": {
+        "0": 100,
+        "1": 152,
+        "2": 62
+      },
+      "predictedCounts": {
+        "0": 86,
+        "1": 226,
+        "2": 2
+      },
+      "recallPct": {
+        "0": 39.0,
+        "1": 75.66,
+        "2": 0.0
+      },
+      "courseMedianBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "meanAbsoluteErrorSeconds": 0.5705,
+        "brierScore": 0.625498,
+        "observedCounts": {
+          "0": 100,
+          "1": 152,
+          "2": 62
+        },
+        "predictedCounts": {
+          "0": 0,
+          "1": 314,
+          "2": 0
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        }
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "timeImprovementSeconds95CI": [
+        -0.021429,
+        0.0486
+      ],
+      "brierImprovement95CI": [
+        -0.046841,
+        0.010818
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.039474,
+        0.054487
+      ],
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          39,
+          61,
+          0
+        ],
+        [
+          35,
+          115,
+          2
+        ],
+        [
+          12,
+          50,
+          0
+        ]
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 49.8,
+            "errorSeconds": 0.5404,
+            "baselineErrorSeconds": 0.5552
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 46.03,
+            "errorSeconds": 0.6243,
+            "baselineErrorSeconds": 0.6317
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.6952,
+            "baselineErrorSeconds": 0.675
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 33.33,
+            "errorSeconds": 0.4943,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 54.55,
+            "errorSeconds": 0.4373,
+            "baselineErrorSeconds": 0.3909
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 51.61,
+            "errorSeconds": 0.5436,
+            "baselineErrorSeconds": 0.6339
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 46.03,
+            "errorSeconds": 0.5062,
+            "baselineErrorSeconds": 0.5698
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 53.57,
+            "errorSeconds": 0.5166,
+            "baselineErrorSeconds": 0.4679
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 49.51,
+            "errorSeconds": 0.6535,
+            "baselineErrorSeconds": 0.633
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 42.86,
+            "errorSeconds": 0.4816,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 43.75,
+            "errorSeconds": 0.5533,
+            "baselineErrorSeconds": 0.5
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 47.92,
+            "errorSeconds": 0.6481,
+            "baselineErrorSeconds": 0.725
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "errorSeconds": 0.4708,
+            "baselineErrorSeconds": 0.5233
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 55.17,
+            "errorSeconds": 0.5414,
+            "baselineErrorSeconds": 0.5569
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "errorSeconds": 0.8112,
+            "baselineErrorSeconds": 0.775
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 55.56,
+            "errorSeconds": 0.8034,
+            "baselineErrorSeconds": 0.9111
+          }
+        ]
+      }
+    },
+    "forest:20": {
+      "races": 314,
+      "accuracyPct": 50.32,
+      "balancedAccuracyPct": 38.3,
+      "meanAbsoluteErrorSeconds": 0.5582,
+      "brierScore": 0.639581,
+      "observedCounts": {
+        "0": 100,
+        "1": 152,
+        "2": 62
+      },
+      "predictedCounts": {
+        "0": 67,
+        "1": 245,
+        "2": 2
+      },
+      "recallPct": {
+        "0": 32.0,
+        "1": 82.89,
+        "2": 0.0
+      },
+      "courseMedianBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "meanAbsoluteErrorSeconds": 0.5705,
+        "brierScore": 0.625498,
+        "observedCounts": {
+          "0": 100,
+          "1": 152,
+          "2": 62
+        },
+        "predictedCounts": {
+          "0": 0,
+          "1": 314,
+          "2": 0
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        }
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "timeImprovementSeconds95CI": [
+        -0.021242,
+        0.045806
+      ],
+      "brierImprovement95CI": [
+        -0.040563,
+        0.012014
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.026667,
+        0.063705
+      ],
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          32,
+          68,
+          0
+        ],
+        [
+          24,
+          126,
+          2
+        ],
+        [
+          11,
+          51,
+          0
+        ]
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 49.4,
+            "errorSeconds": 0.5427,
+            "baselineErrorSeconds": 0.5552
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 53.97,
+            "errorSeconds": 0.6202,
+            "baselineErrorSeconds": 0.6317
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.6513,
+            "baselineErrorSeconds": 0.675
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 42.86,
+            "errorSeconds": 0.4641,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 51.52,
+            "errorSeconds": 0.4334,
+            "baselineErrorSeconds": 0.3909
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 48.39,
+            "errorSeconds": 0.5627,
+            "baselineErrorSeconds": 0.6339
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 50.79,
+            "errorSeconds": 0.5171,
+            "baselineErrorSeconds": 0.5698
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 60.71,
+            "errorSeconds": 0.5446,
+            "baselineErrorSeconds": 0.4679
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 49.51,
+            "errorSeconds": 0.6399,
+            "baselineErrorSeconds": 0.633
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 45.71,
+            "errorSeconds": 0.4788,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 52.08,
+            "errorSeconds": 0.5202,
+            "baselineErrorSeconds": 0.5
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 41.67,
+            "errorSeconds": 0.6714,
+            "baselineErrorSeconds": 0.725
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "errorSeconds": 0.442,
+            "baselineErrorSeconds": 0.5233
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 56.9,
+            "errorSeconds": 0.552,
+            "baselineErrorSeconds": 0.5569
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 25.0,
+            "errorSeconds": 0.8311,
+            "baselineErrorSeconds": 0.775
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 55.56,
+            "errorSeconds": 0.8058,
+            "baselineErrorSeconds": 0.9111
+          }
+        ]
+      }
+    },
+    "forest:40": {
+      "races": 314,
+      "accuracyPct": 49.04,
+      "balancedAccuracyPct": 36.62,
+      "meanAbsoluteErrorSeconds": 0.5538,
+      "brierScore": 0.634115,
+      "observedCounts": {
+        "0": 100,
+        "1": 152,
+        "2": 62
+      },
+      "predictedCounts": {
+        "0": 56,
+        "1": 258,
+        "2": 0
+      },
+      "recallPct": {
+        "0": 25.0,
+        "1": 84.87,
+        "2": 0.0
+      },
+      "courseMedianBaseline": {
+        "races": 314,
+        "accuracyPct": 48.41,
+        "balancedAccuracyPct": 33.33,
+        "meanAbsoluteErrorSeconds": 0.5705,
+        "brierScore": 0.625498,
+        "observedCounts": {
+          "0": 100,
+          "1": 152,
+          "2": 62
+        },
+        "predictedCounts": {
+          "0": 0,
+          "1": 314,
+          "2": 0
+        },
+        "recallPct": {
+          "0": 0.0,
+          "1": 100.0,
+          "2": 0.0
+        }
+      },
+      "alwaysMiddleAccuracyPct": 48.41,
+      "timeImprovementSeconds95CI": [
+        -0.012889,
+        0.045291
+      ],
+      "brierImprovement95CI": [
+        -0.032909,
+        0.015459
+      ],
+      "accuracyImprovementVsMiddle95CI": [
+        -0.037932,
+        0.052311
+      ],
+      "confusionMatrixActualRowsPredictedColumns": [
+        [
+          25,
+          75,
+          0
+        ],
+        [
+          23,
+          129,
+          0
+        ],
+        [
+          8,
+          54,
+          0
+        ]
+      ],
+      "byCondition": {
+        "surface": [
+          {
+            "surface": "ダ",
+            "races": 251,
+            "accuracyPct": 49.0,
+            "errorSeconds": 0.5348,
+            "baselineErrorSeconds": 0.5552
+          },
+          {
+            "surface": "芝",
+            "races": 63,
+            "accuracyPct": 49.21,
+            "errorSeconds": 0.6295,
+            "baselineErrorSeconds": 0.6317
+          }
+        ],
+        "venue": [
+          {
+            "venue": "01",
+            "races": 4,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.6605,
+            "baselineErrorSeconds": 0.675
+          },
+          {
+            "venue": "03",
+            "races": 21,
+            "accuracyPct": 38.1,
+            "errorSeconds": 0.4749,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "venue": "04",
+            "races": 33,
+            "accuracyPct": 51.52,
+            "errorSeconds": 0.4315,
+            "baselineErrorSeconds": 0.3909
+          },
+          {
+            "venue": "05",
+            "races": 62,
+            "accuracyPct": 50.0,
+            "errorSeconds": 0.5606,
+            "baselineErrorSeconds": 0.6339
+          },
+          {
+            "venue": "06",
+            "races": 63,
+            "accuracyPct": 47.62,
+            "errorSeconds": 0.5142,
+            "baselineErrorSeconds": 0.5698
+          },
+          {
+            "venue": "07",
+            "races": 28,
+            "accuracyPct": 60.71,
+            "errorSeconds": 0.5233,
+            "baselineErrorSeconds": 0.4679
+          },
+          {
+            "venue": "08",
+            "races": 103,
+            "accuracyPct": 47.57,
+            "errorSeconds": 0.6334,
+            "baselineErrorSeconds": 0.633
+          }
+        ],
+        "distanceM": [
+          {
+            "distanceM": "1200",
+            "races": 70,
+            "accuracyPct": 41.43,
+            "errorSeconds": 0.4699,
+            "baselineErrorSeconds": 0.4786
+          },
+          {
+            "distanceM": "1400",
+            "races": 48,
+            "accuracyPct": 52.08,
+            "errorSeconds": 0.5109,
+            "baselineErrorSeconds": 0.5
+          },
+          {
+            "distanceM": "1600",
+            "races": 48,
+            "accuracyPct": 43.75,
+            "errorSeconds": 0.6713,
+            "baselineErrorSeconds": 0.725
+          },
+          {
+            "distanceM": "1700",
+            "races": 15,
+            "accuracyPct": 53.33,
+            "errorSeconds": 0.4468,
+            "baselineErrorSeconds": 0.5233
+          },
+          {
+            "distanceM": "1800",
+            "races": 116,
+            "accuracyPct": 55.17,
+            "errorSeconds": 0.5459,
+            "baselineErrorSeconds": 0.5569
+          },
+          {
+            "distanceM": "1900",
+            "races": 8,
+            "accuracyPct": 37.5,
+            "errorSeconds": 0.8368,
+            "baselineErrorSeconds": 0.775
+          },
+          {
+            "distanceM": "2000",
+            "races": 9,
+            "accuracyPct": 44.44,
+            "errorSeconds": 0.8388,
+            "baselineErrorSeconds": 0.9111
+          }
+        ]
+      }
+    }
+  },
+  "developmentTrainingRaces": 745,
+  "developmentValidationRaces": 314,
+  "minimumConditionRaces": 30,
+  "adoptionRule": "non-baseline model; held-out time and Brier improvement 95% CI both above zero; fast and slow recall each at least 20%",
+  "goingUsedAsInput": false,
+  "sameDayResultsUsed": false,
+  "minimumStyleHistoryRaces": 3,
+  "minimumStyleCoverage": 0.8,
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false
+}
