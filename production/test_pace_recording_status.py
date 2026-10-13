@@ -61,6 +61,69 @@ class TestRecordingFaults(unittest.TestCase):
     def board(self, root, history):
         return TestRecordingStatus().run_case(root, history)
 
+    def attempt_sequence(self, root, stages):
+        folder, pred, actual, history, observation = self.setup_case(root)
+        day = folder.parent.parent
+        schedule = {'raceID': observation['raceID'], 'raceDate': observation['raceDate'],
+                    'venue': '東京', 'raceNumber': int(observation['raceID'][-2:]),
+                    'startTime': '09:50', 'scheduledPostJST': (NOW + timedelta(minutes=10)).isoformat()}
+        (day/'PaceRecordingSchedule.json').write_text(json.dumps({'raceDate': observation['raceDate'], 'races': [schedule]}))
+        events = folder/'events'; events.mkdir()
+        for i, stage in enumerate(stages):
+            event = {'raceID': observation['raceID'], 'raceDate': observation['raceDate'],
+                     'atJST': (NOW - timedelta(seconds=len(stages)-i)).isoformat(),
+                     'stage': stage, 'detail': 'test'}
+            (events/f'{i}.json').write_text(json.dumps(event))
+        return folder, pred, history.iloc[:0]
+
+    def test_track_warning_does_not_hide_unsaved_failure(self):
+        for failure in ['capture_failed', 'prediction_failed', 'monitor_failed']:
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                folder, pred, history = self.attempt_sequence(root, [failure, 'track_unavailable'])
+                for now in [NOW, NOW + timedelta(minutes=11)]:
+                    row = TestRecordingStatus().run_case(root, history, now)['races'][0]
+                    self.assertEqual(row['recordingState'], 'failed')
+                    self.assertTrue(row['needsAttention'])
+                    self.assertEqual(row['lastAttemptAtJST'], (NOW-timedelta(seconds=1)).isoformat())
+                    self.assertTrue(row['issues'])
+
+    def test_track_warning_does_not_hide_missed_window_reason(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            folder, pred, history = self.attempt_sequence(root, ['monitor_missed', 'track_unavailable'])
+            row = self.board(root, history)['races'][0]
+            self.assertEqual(row['recordingState'], 'missing')
+            self.assertIn('間に合いません', row['reason'])
+
+    def test_track_warning_alone_keeps_waiting_until_post(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            folder, pred, history = self.attempt_sequence(root, ['track_unavailable'])
+            self.assertEqual(self.board(root, history)['races'][0]['recordingState'], 'waiting')
+            row = TestRecordingStatus().run_case(root, history, NOW+timedelta(minutes=11))['races'][0]
+            self.assertEqual(row['recordingState'], 'missing')
+
+    def test_latest_recording_outcome_wins_over_earlier_outcome(self):
+        for stages, expected in [(['prediction_failed', 'monitor_missed', 'track_unavailable'], 'missing'),
+                                 (['monitor_missed', 'prediction_failed', 'track_unavailable'], 'failed')]:
+            with self.subTest(stages=stages), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                folder, pred, history = self.attempt_sequence(root, stages)
+                self.assertEqual(self.board(root, history)['races'][0]['recordingState'], expected)
+
+    def test_attempt_warnings_keep_valid_saved_or_held_prediction(self):
+        for state in ['predicted', 'held']:
+            with self.subTest(state=state), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                folder, pred, history = self.attempt_sequence(root, ['prediction_failed', 'track_unavailable'])
+                if state == 'held':
+                    pred['status'] = 'held'; pred['holdReason'] = 'insufficient_style_history'
+                path = folder/'PacePrediction.json'; path.write_text(json.dumps(pred)); before = path.read_bytes()
+                row = self.board(root, history)['races'][0]
+                self.assertEqual(row['recordingState'], 'held' if state == 'held' else 'saved')
+                self.assertEqual(path.read_bytes(), before)
+
     def saved_pair(self, root):
         import copy
         folder, pred, actual, history, observation = self.setup_case(root)

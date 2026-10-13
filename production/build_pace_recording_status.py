@@ -109,6 +109,10 @@ def build(reports_root, lap_root, history, models_root, now):
             except READ_ERRORS:
                 issues.append('失敗記録の一部を読み取れません。')
         latest = max(events, key=lambda event: aware_time(event['atJST'])) if events else None
+        # An optional track warning is an attempt, not a recording outcome.
+        # Keep its timestamp and warning without hiding an earlier failure.
+        outcomes = [event for event in events if event['stage'] != 'track_unavailable']
+        latest_outcome = max(outcomes, key=lambda event: aware_time(event['atJST'])) if outcomes else None
         state, reason = 'waiting', '発走前の記録を待っています。'
         result_state, result_label = 'no_prediction', '予測未保存'
         captured = predicted = None
@@ -144,12 +148,12 @@ def build(reports_root, lap_root, history, models_root, now):
             except READ_ERRORS:
                 state, reason = 'invalid', '保存内容・参照ファイル・時刻の整合性を確認できません。'
                 result_state, result_label = 'invalid', '照合保留'
-        elif latest and latest['stage'] in FAILURES:
-            state, reason = 'failed', FAILURES[latest['stage']]
+        elif latest_outcome and latest_outcome['stage'] in FAILURES:
+            state, reason = 'failed', FAILURES[latest_outcome['stage']]
         elif race['fromCompletedHistory'] or (post and now >= post):
             state, reason = 'missing', 'レースは発走済みですが、発走前の研究予測が見つかりません。'
 
-        if latest and latest['stage'] == 'monitor_missed' and pred is None and not pred_error:
+        if latest_outcome and latest_outcome['stage'] == 'monitor_missed' and pred is None and not pred_error:
             state, reason = 'missing', '発走前の記録時間に間に合いませんでした。'
         if any(event['stage'] == 'track_unavailable' for event in events):
             issues.append('馬場情報を取得できない試行がありました。')
