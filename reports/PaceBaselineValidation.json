@@ -1,1 +1,47 @@
-{"schemaVersion":1,"methodVersion":"course-early-lap-reference-2024-v1","status":"incomplete_data","trainingYear":2024,"evaluationYear":2025,"minimumSamples":30,"collectionByYear":{"2024":{"expected":3327,"stored":3300},"2025":{"expected":3335,"stored":288}},"trainingEligibleRaces":3300,"conditionGroups":29,"evaluationRacesWithReference":67,"evaluationCoveragePct":2.01,"observed2025Labels":{"middle":29,"slow":14,"fast":24},"meanAbsoluteErrorSeconds":{"courseAndGoingMedian":0.709,"surfaceAndDistanceMedian":0.6925},"courseMedianImprovementSeconds95CI":[-0.077288,0.040484],"paceForecastEnabled":false,"stakeSizingEnabled":false,"formalSignalsChanged":false,"meaning":"2024年の同条件30レース以上で前半タイムの基準を固定し、2025年で基準の誤差と適用範囲を確認。速い/中間/遅いは基準の25/75%点による独自の実測分類。出走馬の組み合わせによる発走前のペース予想の的中率ではない。","limitations":["仮柵A/B/C、クラス、風、季節を補正していない。","条件別30件未満では保留し、違う馬場や距離の基準を流用しない。","100m/150mから始まる距離は700m/750m地点の実測で別条件として扱う。","2025年と2026年で条件や閾値を選ばず、2026年は評価に使わない。"],"lapDataSHA256":"935c623cce45201578a45a1a45b8fc5732572f467a13d330c0dd87d2458c1a72","historySHA256":"f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b"}
+{
+  "schemaVersion": 1,
+  "methodVersion": "course-early-lap-reference-2024-v1",
+  "status": "incomplete_data",
+  "trainingYear": 2024,
+  "evaluationYear": 2025,
+  "minimumSamples": 30,
+  "collectionByYear": {
+    "2024": {
+      "expected": 3327,
+      "stored": 3327
+    },
+    "2025": {
+      "expected": 3335,
+      "stored": 3334
+    }
+  },
+  "trainingEligibleRaces": 3327,
+  "conditionGroups": 29,
+  "evaluationRacesWithReference": 1265,
+  "evaluationCoveragePct": 37.93,
+  "observed2025Labels": {
+    "middle": 679,
+    "slow": 302,
+    "fast": 284
+  },
+  "meanAbsoluteErrorSeconds": {
+    "courseAndGoingMedian": 0.6051,
+    "surfaceAndDistanceMedian": 0.6596
+  },
+  "courseMedianImprovementSeconds95CI": [
+    0.037586,
+    0.071733
+  ],
+  "paceForecastEnabled": false,
+  "stakeSizingEnabled": false,
+  "formalSignalsChanged": false,
+  "meaning": "2024年の同条件30レース以上で前半タイムの基準を固定し、2025年で基準の誤差と適用範囲を確認。速い/中間/遅いは基準の25/75%点による独自の実測分類。出走馬の組み合わせによる発走前のペース予想の的中率ではない。",
+  "limitations": [
+    "仮柵A/B/C、クラス、風、季節を補正していない。",
+    "条件別30件未満では保留し、違う馬場や距離の基準を流用しない。",
+    "100m/150mから始まる距離は700m/750m地点の実測で別条件として扱う。",
+    "2025年と2026年で条件や閾値を選ばず、2026年は評価に使わない。"
+  ],
+  "lapDataSHA256": "5df6b8f8c0cd693ecfe9ff33e8f4bb47c345709f2dcddc6f046b4be0f8a5bad9",
+  "historySHA256": "f69434032bb0c92f79bc0d134522b27096435963708a64cc48b81a4861e72d6b"
+}
