@@ -19,6 +19,10 @@ class LapParseError(ValueError):
 
 def validate_source_url(url: str, race_id: str, date8: str) -> None:
     parsed = urlparse(url)
+    if parsed.path.startswith("/datafile/seiseki/report/"):
+        from race_lap_pdf_runtime import validate_report_url
+        validate_report_url(url, race_id, date8)
+        return
     hosts = {"www.jra.go.jp", "jra.go.jp", "www.jra.jp", "jra.jp", "own.jra.jp"}
     if parsed.scheme != "https" or parsed.hostname not in hosts or parsed.path != "/JRADB/accessS.html":
         raise LapParseError("not an official desktop JRA result URL")
@@ -32,7 +36,7 @@ def validate_source_url(url: str, race_id: str, date8: str) -> None:
 
 
 def segment_distances(distance: int, lap_count: int) -> list[int]:
-    if distance <= 0 or distance % 100:
+    if distance <= 0 or distance % 50:
         raise LapParseError("unsupported distance")
     first = distance % 200 or 200
     segments = [first] + [200] * ((distance - first) // 200)
