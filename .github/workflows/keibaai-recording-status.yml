@@ -26,6 +26,7 @@ jobs:
       - name: Test status and source isolation
         run: |
           python -m unittest discover -s production -p 'test_pace_recording_status.py' -v
+          python -m unittest discover -s production -p 'test_prerace_recording_chain.py' -v
           python -m unittest discover -s production -p 'test_pace_prospective.py' -v
           python -m unittest discover -s production -p 'test_jra_route_modes.py' -v
       - name: Build and validate app payload
