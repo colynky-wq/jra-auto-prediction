@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from horse_identity_runtime import key_identity
 
 from horse_profile_runtime import (
     distance_band,
@@ -255,6 +256,8 @@ def build_profiles(
             {
                 "profileID": pid,
                 "name": profile["name"],
+                "horseKey": profile["horseKey"],
+                "birthYear": identity[1] if (identity := key_identity(profile["name"], horse_key)) else None,
                 "currentAge": profile["currentAge"],
                 "latestDate": profile["latestDate"],
                 "starts": profile["career"]["starts"],
