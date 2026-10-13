@@ -10,6 +10,7 @@ import pandas as pd
 from research_formation import bootstrap_interval
 from pace_prospective_runtime import LABELS
 from pace_baseline_runtime import eligible_record
+from pace_recording_io import atomic_text, load_laps, load_models, read_object, recording_folders, validate_prediction
 ROOT=Path(__file__).resolve().parent.parent
 START='2026-10-13'
 
@@ -44,42 +45,33 @@ def summarize(rows):
 
 def run(reports_root,lap_root,history,models_root=None):
     models_root=Path(models_root) if models_root else ROOT/'research/pace/models'
-    models={}
-    for path in models_root.glob('*.json'):
-        raw=path.read_bytes();m=json.loads(raw);models[m['modelID']]=(m,hashlib.sha256(raw).hexdigest())
-    laps={}
-    for p in Path(lap_root).glob('*/RaceLapData.json'):
-        for lap in json.loads(p.read_text())['races']:laps[lap['raceID']]=lap
+    models,model_issues=load_models(models_root)
+    laps,lap_issues=load_laps(lap_root)
     groups={rid:g for rid,g in history.groupby('レースID',sort=False)}
     evaluated=defaultdict(list);counts=Counter();examples=[]
-    for index in sorted(Path(reports_root).glob('*/prerace/*/index.json')):
-        date8=index.parents[2].name
-        if len(date8)!=8 or not date8.isdigit() or f'{date8[:4]}-{date8[4:6]}-{date8[6:]}'<START:continue
+    for folder in recording_folders(reports_root,START):
+        index=folder/'index.json'
+        path=folder/'PacePrediction.json'
+        # Event-only failures have no observed entry; the recording board shows them.
+        if not index.exists() and not path.exists():continue
         counts['racesWithObservedEntry']+=1
-        path=index.parent/'PacePrediction.json'
         if not path.exists():counts['missingPrediction']+=1;continue
-        pred=json.loads(path.read_text());counts['recordedFirstAttempts']+=1
-        if pred.get('status')=='held':counts['heldBeforeRace']+=1;continue
-        if pred['raceID'] not in laps or pred['raceID'] not in groups:counts['awaitingCompletedResults']+=1;continue
+        counts['recordedFirstAttempts']+=1
         try:
-            if pred['modelID'] not in models:raise ValueError('unregistered research model')
-            model,modelsha=models[pred['modelID']]
-            if pred['modelFileSHA256']!=modelsha or pred['modelFittedAtJST']!=model['fittedAtJST'] or pred['trainingCutoffDate']!=model['trainingCutoffDate']:raise ValueError('frozen model identity mismatch')
-            filename=pred['snapshotFile']
-            if Path(filename).name!=filename:raise ValueError('invalid snapshot filename')
-            snapshotpath=path.parent/filename;raw=snapshotpath.read_bytes()
-            if hashlib.sha256(raw).hexdigest()!=pred['snapshotSHA256']:raise ValueError('snapshot bytes changed')
-            snapshot=json.loads(raw);g=groups[pred['raceID']]
+            pred,snapshot=validate_prediction(folder,models)
+            if pred['status']=='held':counts['heldBeforeRace']+=1;continue
+            if pred['raceID'] not in laps or pred['raceID'] not in groups:counts['awaitingCompletedResults']+=1;continue
+            g=groups[pred['raceID']]
             row,reason=check_prediction(pred,snapshot,laps[pred['raceID']],g['馬番'].tolist())
             if reason:counts[reason]+=1;continue
             evaluated[pred['modelID']].append(row);counts['evaluatedRaces']+=1
-        except (ValueError,KeyError,OSError,TypeError) as exc:
+        except (ValueError,KeyError,OSError,TypeError,AttributeError,OverflowError) as exc:
             counts['invalidRecords']+=1
-            if len(examples)<20:examples.append({'raceID':pred.get('raceID'),'reason':str(exc)})
-    return {'schemaVersion':1,'methodVersion':'prospective-pace-evaluation-v1','status':'prospective_observations_pending' if not counts['evaluatedRaces'] else 'research_only','evaluationStartDate':START,'selectionRule':'First recorded attempt per race, including holds; changed entrant set is reported and excluded; never backfill a prediction after post.','counts':{k:int(counts[k]) for k in ['racesWithObservedEntry','recordedFirstAttempts','missingPrediction','heldBeforeRace','awaitingCompletedResults','entrant_set_changed','invalidRecords','evaluatedRaces']},'byModel':{key:summarize(rows) for key,rows in evaluated.items()},'invalidExamples':examples,'paceForecastEnabled':False,'formalSignalsChanged':False,'stakeSizingEnabled':False}
+            if len(examples)<20:examples.append({'raceID':folder.name,'reason':str(exc)})
+    return {'schemaVersion':1,'methodVersion':'prospective-pace-evaluation-v1','status':'prospective_observations_pending' if not counts['evaluatedRaces'] else 'research_only','evaluationStartDate':START,'selectionRule':'First recorded attempt per race, including holds; changed entrant set is reported and excluded; never backfill a prediction after post.','counts':{k:int(counts[k]) for k in ['racesWithObservedEntry','recordedFirstAttempts','missingPrediction','heldBeforeRace','awaitingCompletedResults','entrant_set_changed','invalidRecords','evaluatedRaces']},'byModel':{key:summarize(rows) for key,rows in evaluated.items()},'invalidExamples':examples,'warnings':sorted(set(model_issues+list(lap_issues.values()))),'paceForecastEnabled':False,'formalSignalsChanged':False,'stakeSizingEnabled':False}
 
 def main():
     history=pd.read_parquet(ROOT/'production/production_history.parquet',columns=['レースID','馬番'])
     report=run(ROOT/'reports',ROOT/'research/laps',history)
-    out=ROOT/'reports/PaceProspectiveValidation.json';out.write_text(json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False)+'\n');print(json.dumps(report,ensure_ascii=False,indent=2))
+    out=ROOT/'reports/PaceProspectiveValidation.json';atomic_text(out,json.dumps(report,ensure_ascii=False,indent=2,allow_nan=False)+'\n');print(json.dumps(report,ensure_ascii=False,indent=2))
 if __name__=='__main__':main()
