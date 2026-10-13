@@ -68,6 +68,7 @@ jobs:
           python -m unittest discover -s production -p 'test_race_lap_runtime.py'
           python -m unittest discover -s production -p 'test_jra_route_modes.py'
           python -m unittest discover -s production -p 'test_pace_baselines.py'
+          python -m unittest discover -s production -p 'test_lap_backfill_cutoff.py'
       - name: Validate stored sidecars against history
         run: |
           python - <<'PY'
@@ -115,7 +116,7 @@ jobs:
         run: |
           limit=12
           if [ "$BACKFILL_EVENT_NAME" = 'push' ]; then limit=0; fi
-          python production/backfill_race_laps.py --years 2024 2025 --max-reports "$limit" --workers 2 --html-retry --apply --cache-root "$RUNNER_TEMP/jra-lap-reports"
+          python production/backfill_race_laps.py --years 2024 2025 2026 --through-date 20261012 --max-reports "$limit" --workers 2 --html-retry --apply --cache-root "$RUNNER_TEMP/jra-lap-reports"
       - name: Build 2024 references and evaluate 2025
         run: python production/research_pace_baselines.py
       - uses: actions/upload-artifact@v4

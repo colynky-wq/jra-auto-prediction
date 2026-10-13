@@ -45,9 +45,20 @@ def collect_report(task: dict) -> tuple[list, list]:
     return records, failures
 
 
+def validate_years(years: list[int], through_date: str | None, today=None):
+    today = today or datetime.now(JST).date()
+    cutoff = datetime.strptime(through_date, "%Y%m%d").date() if through_date else None
+    if cutoff and cutoff >= today:
+        raise ValueError("cutoff must be before today in JST")
+    if any(year < 2017 or year > today.year or (year == today.year and cutoff is None) for year in years):
+        raise ValueError("current annual reports require an explicit completed-date cutoff")
+    return cutoff
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--years", type=int, nargs="+", default=[2024, 2025])
+    parser.add_argument("--through-date", help="YYYYMMDD, strictly before today JST; required for current-year reports.")
     parser.add_argument("--history", type=Path, default=REPO / "production/production_history.parquet")
     parser.add_argument("--output-root", type=Path, default=REPO / "research/laps")
     parser.add_argument("--cache-root", type=Path, default=REPO / "tmp/lap_reports")
@@ -56,13 +67,16 @@ def main() -> None:
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--html-retry", action="store_true", help="Retry report gaps using the official past-results selector.")
     args = parser.parse_args()
-    if any(year < 2017 or year >= datetime.now(JST).year for year in args.years) or args.max_reports < 0:
-        raise ValueError("only completed annual report years are accepted")
+    cutoff = validate_years(args.years, args.through_date)
+    if args.max_reports < 0:
+        raise ValueError("negative report limits are not accepted")
     before = hashlib.sha256(args.history.read_bytes()).hexdigest()
     history = pd.read_parquet(args.history, columns=["レースID", "日付", "障害", "距離", "芝ダ", "着順", "タイム秒"])
     history = history[~history["障害"].fillna(False).astype(bool)].copy()
     history["date8"] = pd.to_datetime(history["日付"]).dt.strftime("%Y%m%d")
     history = history[history["date8"].str[:4].astype(int).isin(args.years)]
+    if cutoff:
+        history = history[history["date8"] <= cutoff.strftime("%Y%m%d")]
     winner_times = history[pd.to_numeric(history["着順"], errors="coerce") == 1].groupby("レースID")["タイム秒"].min()
     metadata = history.drop_duplicates("レースID").copy()
     existing = {}
@@ -149,7 +163,7 @@ def main() -> None:
     assert before == after, "production history changed during backfill"
     target_ids = set(metadata["レースID"])
     stored = len(target_ids & existing.keys())
-    report = {"years": sorted(set(args.years)), "expectedRaces": expected_total, "storedRaces": stored,
+    report = {"years": sorted(set(args.years)), "throughDate": args.through_date, "expectedRaces": expected_total, "storedRaces": stored,
               "remainingRaces": expected_total-stored, "addedRaces": added, "processedReports": len(requested_tasks),
               "pendingReportsAtStart": len(tasks), "failedRaces": len(failures), "failures": failures[:32],
               "failureExamplesTruncated": len(failures) > 32,
