@@ -1,0 +1,43 @@
+name: KeibaAI Monitor Health
+on:
+  workflow_run:
+    workflows: ['KeibaAI Live Permanent']
+    types: [in_progress, completed]
+    branches: [main]
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: keibaai-monitor-health
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Configure health publisher
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+      - name: Publish monitor health independently
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python production/sync_monitor_health.py
+      - name: Preserve unpublished health for recovery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-monitor-health-outbox-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/keibaai-monitor-health-outbox/state.json
+            ${{ runner.temp }}/keibaai-monitor-health-outbox/blobs
+          if-no-files-found: ignore
+          retention-days: 14

@@ -24,6 +24,8 @@ jobs:
           /tmp/keibaai-profile-checks
           swiftc -swift-version 5 ios/KeibaAI/KeibaAI/KeibaAIHorseIdentity.swift ios/KeibaAI/KeibaAI/KeibaAIHorseProfiles.swift ios/tests/ProfileStoreChecks.swift -o /tmp/keibaai-store-checks
           /tmp/keibaai-store-checks
+          swiftc -swift-version 5 ios/KeibaAI/KeibaAI/KeibaAIRecordingStatusModels.swift ios/tests/RecordingStatusChecks.swift -o /tmp/keibaai-recording-checks
+          /tmp/keibaai-recording-checks
       - name: Build the complete iOS app without signing
         run: |
           xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-build CODE_SIGNING_ALLOWED=NO build

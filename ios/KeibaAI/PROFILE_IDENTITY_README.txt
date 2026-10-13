@@ -14,7 +14,7 @@ KeibaAI 馬プロフィールの世代照合（2026-10-13）
 
 既存プロジェクトへの手動反映
 ・ContentView.swiftとKeibaAI_NewDesignView.swiftを同梱版に置換します。
-・KeibaAIModels.swift、KeibaAIHorseIdentity.swift、KeibaAIHorseProfiles.swiftを同じアプリのターゲットに追加します。
+・KeibaAIModels.swift、KeibaAIHorseIdentity.swift、KeibaAIHorseProfiles.swift、KeibaAIRecordingStatusModels.swiftを同じアプリのターゲットに追加します。
 ・HorseとRaceの定義はKeibaAIModels.swiftへ移動しています。同じ定義を二重に残さないでください。
 ・KeibaAIApp.swift、既存のAssets、RaceData.jsonは元の同梱データを維持しています。
 ・自分のTeam、Bundle ID、既存の署名設定は必要に応じて維持してください。

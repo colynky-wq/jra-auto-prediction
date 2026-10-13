@@ -4676,30 +4676,6 @@ private struct KeibaAITicketPlanView: View {
 
 
 // MARK: - Research recording status
-private struct KeibaAIRecordingStatusData: Decodable {
-    let generatedAtJST: String
-    let recordingStartDate: String
-    let counts: [String: Int]
-    let races: [KeibaAIRecordingStatusRow]
-    let emptyMessage: String
-}
-
-private struct KeibaAIRecordingStatusRow: Decodable, Identifiable {
-    var id: String { raceID }
-    let raceID: String
-    let raceDate: String
-    let venue: String
-    let raceNumber: Int
-    let startTime: String?
-    let recordingState: String
-    let recordingLabel: String
-    let resultLabel: String
-    let reason: String
-    let issues: [String]
-    let lastAttemptAtJST: String?
-    let needsAttention: Bool
-}
-
 @MainActor
 private final class KeibaAIRecordingStatusStore: ObservableObject {
     @Published private(set) var data: KeibaAIRecordingStatusData?
@@ -4712,7 +4688,9 @@ private final class KeibaAIRecordingStatusStore: ObservableObject {
         errorMessage = nil
         defer { isLoading = false }
         do {
-            guard let url = URL(string: "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PaceRecordingStatus.json") else { return }
+            guard var components = URLComponents(string: "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PaceRecordingStatus.json") else { return }
+            components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
+            guard let url = components.url else { return }
             var request = URLRequest(url: url)
             request.cachePolicy = .reloadIgnoringLocalCacheData
             request.timeoutInterval = 20
@@ -4767,10 +4745,32 @@ private struct KeibaAIRecordingStatusScreen: View {
                         Text(error).font(.subheadline).foregroundStyle(.orange)
                     }
                     if let data = statusStore.data {
+                        if let health = data.monitoring {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Label(health.label, systemImage: health.needsAttention ? "exclamationmark.triangle" : "antenna.radiowaves.left.and.right")
+                                    .font(.headline)
+                                    .foregroundStyle(health.needsAttention ? Color.orange : Color.blue)
+                                Text(health.message).font(.subheadline)
+                                Text("\(health.raceDate)・最終確認：\(health.observedAtJST) JST")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                if let url = health.safeDetailsURL {
+                                    Link("詳しい実行状況", destination: url).font(.subheadline)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+                        }
+                        ForEach(Array(data.otherWarnings.enumerated()), id: \.offset) { _, warning in
+                            Text(warning).font(.subheadline).foregroundStyle(.orange)
+                        }
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("対象 \(data.counts["totalRaces", default: 0])件・予測保存済み \(data.counts["saved", default: 0])件")
+                            if data.isTargetCountUnconfirmed {
+                                Text("監視日の対象件数は未確認").font(.headline)
+                            }
+                            Text("記録一覧の対象 \(data.counts["totalRaces", default: 0])件・予測保存済み \(data.counts["saved", default: 0])件")
                                 .font(.headline)
-                            Text("照合済み \(data.counts["matched", default: 0])件・要確認 \(data.counts["needsAttention", default: 0])件")
+                            Text("照合済み \(data.counts["matched", default: 0])件・要確認のレース \(data.counts["needsAttention", default: 0])件")
                             Text("更新：\(data.generatedAtJST) JST")
                                 .font(.caption).foregroundStyle(.secondary)
                             Text("記録開始：\(data.recordingStartDate)")

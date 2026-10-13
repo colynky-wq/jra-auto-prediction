@@ -12,6 +12,8 @@ from pace_recording_io import (
     atomic_text, aware_time, load_laps, load_models, race_day,
     read_object, recording_folders, validate_prediction,
 )
+from monitor_health_runtime import apply_health, load_health
+from pace_recording_display import markdown
 
 ROOT = Path(__file__).resolve().parent.parent
 LABELS = {'waiting': '記録待ち', 'saved': '予測保存済み', 'held': '発走前に保留',
@@ -170,12 +172,13 @@ def build(reports_root, lap_root, history, models_root, now):
         rows.append(row)
 
     counts = Counter(row['recordingState'] for row in rows)
-    warnings = sorted(set(model_issues + list(lap_issues.values()) +
+    monitoring, monitor_issues = load_health(reports_root, now.date().isoformat(), START)
+    warnings = sorted(set(model_issues + list(lap_issues.values()) + monitor_issues +
                           [f'{day}：{issue}' for day, entries in day_issues.items() for issue in entries]))
     empty = '研究記録の対象となる開催予定はまだ保存されていません。次の自動監視で一覧を作成します。'
     if warnings and not rows:
         empty = '記録の一部を読み取れないため、対象件数を確認できません。' + ' '.join(warnings)
-    return {'schemaVersion': 1, 'status': 'recording_active' if rows else
+    data = {'schemaVersion': 1, 'status': 'recording_active' if rows else
             'recording_attention_required' if warnings else 'awaiting_first_schedule',
             'generatedAtJST': now.strftime('%Y-%m-%d %H:%M:%S'), 'recordingStartDate': START,
             'counts': {'totalRaces': len(rows), **{key: int(counts[key]) for key in LABELS},
@@ -184,22 +187,9 @@ def build(reports_root, lap_root, history, models_root, now):
                        'needsAttention': sum(row['needsAttention'] for row in rows)},
             'races': rows, 'warnings': warnings, 'emptyMessage': empty,
             'paceForecastEnabled': False, 'formalSignalsChanged': False, 'stakeSizingEnabled': False}
+    return apply_health(data, monitoring)
 
 
-def markdown(data):
-    lines = ['# 研究記録状況', '', f"更新：{data['generatedAtJST']} JST", '',
-             f"対象 {data['counts']['totalRaces']}件／予測保存済み {data['counts']['saved']}件／要確認 {data['counts']['needsAttention']}件", '',
-             'ペース予想の表示は保留中です。この一覧は研究用データの保存と照合の状況です。', '']
-    if data.get('warnings'):
-        lines += data['warnings'] + ['']
-    if not data['races']:
-        return '\n'.join(lines + [data['emptyMessage'], ''])
-    lines += ['| 日付 | レース | 発走 | 記録 | 結果照合 | 原因・確認事項 |',
-              '|---|---|---|---|---|---|']
-    for row in data['races']:
-        reason = ' '.join([row['reason']] + row['issues']).replace('|', '／').replace('\n', ' ')
-        lines.append(f"| {row['raceDate']} | {row['venue']}{row['raceNumber']}R | {row['startTime'] or '未収録'} | {row['recordingLabel']} | {row['resultLabel']} | {reason} |")
-    return '\n'.join(lines) + '\n'
 
 
 def main():
