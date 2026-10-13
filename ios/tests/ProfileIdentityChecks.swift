@@ -71,8 +71,28 @@ struct ProfileIdentityChecks {
             check(try lookup.select(from: item.candidates)?.profileID == item.expectedID, "recorded entrant \(item.name)")
             let dated = KeibaAIHorseIdentity(name: item.name, horseKey: nil, age: item.age, raceDate: item.raceDate)
             check(try dated.select(from: item.candidates)?.profileID == item.expectedID, "dated age lookup \(item.name)")
+            let olderIndex = item.candidates.map { Candidate(profileID: $0.profileID, name: $0.name,
+                horseKey: nil, birthYear: nil, currentAge: $0.currentAge, latestDate: $0.latestDate) }
+            check(try lookup.select(from: olderIndex)?.profileID == item.expectedID, "legacy index lookup \(item.name)")
         }
         check(cases.count == 242, "full recorded-day coverage")
+
+        let archive = KeibaAIHorseIdentityArchive(schemaVersion: 1, raceDate: "2026-10-11", races: [
+            .init(raceID: "202605040405", horses: [.init(number: 2, name: "アインザッツ", age: 2, horseKey: "アインザッツ_2024")])
+        ])
+        check(try archive.identity(name: "アインザッツ", number: 2, raceID: "202605040405", date: "20261011")?.resolution == .identified(2024), "legacy prediction identification")
+        check(try archive.identity(name: "別馬", number: 2, raceID: "202605040405", date: "2026-10-11") == nil, "different recorded name")
+        check(try archive.identity(name: "アインザッツ", number: 3, raceID: "202605040405", date: "2026-10-11") == nil, "different number")
+        check(try archive.identity(name: "アインザッツ", number: 2, raceID: "202605040406", date: "2026-10-11") == nil, "different race")
+        do {
+            _ = try archive.identity(name: "アインザッツ", number: 2, raceID: "202605040405", date: "2026-10-12")
+            fatalError("archive date must match")
+        } catch KeibaAIHorseIdentityError.mismatch { }
+        let repeated = KeibaAIHorseIdentityArchive(schemaVersion: 1, raceDate: "2026-10-11", races: archive.races + archive.races)
+        do {
+            _ = try repeated.identity(name: "アインザッツ", number: 2, raceID: "202605040405", date: "2026-10-11")
+            fatalError("duplicate archive race must stop")
+        } catch KeibaAIHorseIdentityError.mismatch { }
         print("PROFILE_IDENTITY_OK: synthetic boundaries, real model decoding, \(cases.count) saved entrants")
     }
 }

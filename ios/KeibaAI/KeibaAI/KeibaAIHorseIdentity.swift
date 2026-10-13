@@ -114,3 +114,41 @@ struct KeibaAIHorseIdentity: Hashable {
         return matching.first
     }
 }
+
+struct KeibaAIHorseIdentityArchive: Codable {
+    let schemaVersion: Int
+    let raceDate: String
+    let races: [ArchivedRace]
+
+    struct ArchivedRace: Codable {
+        let raceID: String
+        let horses: [ArchivedHorse]
+    }
+
+    struct ArchivedHorse: Codable {
+        let number: Int
+        let name: String
+        let age: Int
+        let horseKey: String
+    }
+
+    func identity(name: String, number: Int, raceID: String, date: String) throws -> KeibaAIHorseIdentity? {
+        guard schemaVersion == 1, (1...18).contains(number), raceID.count == 12,
+              raceID.allSatisfy({ $0.isASCII && $0.isNumber }),
+              let year = KeibaAIHorseIdentity.year(from: date), Int(raceID.prefix(4)) == year,
+              KeibaAIHorseIdentity.year(from: raceDate) != nil,
+              raceDate.replacingOccurrences(of: "-", with: "") == date.replacingOccurrences(of: "-", with: "") else {
+            throw KeibaAIHorseIdentityError.mismatch
+        }
+        let matchingRaces = races.filter { $0.raceID == raceID }
+        guard matchingRaces.count <= 1 else { throw KeibaAIHorseIdentityError.mismatch }
+        guard let race = matchingRaces.first else { return nil }
+        let numbered = race.horses.filter { $0.number == number }
+        guard numbered.count <= 1 else { throw KeibaAIHorseIdentityError.mismatch }
+        guard let horse = numbered.first,
+              KeibaAIHorseIdentity.normalizedName(horse.name) == KeibaAIHorseIdentity.normalizedName(name) else { return nil }
+        let found = KeibaAIHorseIdentity(name: horse.name, horseKey: horse.horseKey, age: horse.age, raceDate: raceDate)
+        guard case .identified = found.resolution else { throw KeibaAIHorseIdentityError.mismatch }
+        return found
+    }
+}
