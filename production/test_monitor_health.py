@@ -59,6 +59,30 @@ class TestMonitorHealth(unittest.TestCase):
         self.assertEqual(updated['counts'], board['counts'])
         self.assertEqual(health['status'], 'failed')
 
+    def test_markdown_older_rows_cannot_confirm_a_failed_monitor_day(self):
+        from pace_recording_display import markdown
+        row = {'raceID': '202605040501', 'raceDate': '2026-10-16', 'venue': '東京',
+               'raceNumber': 1, 'startTime': '10:00', 'recordingLabel': '予測保存済み',
+               'resultLabel': '照合済み', 'reason': '保存済み', 'issues': []}
+        board = apply_health(baseline([row]), self.health())
+        rendered = markdown(board)
+        self.assertIn('監視日の対象件数は未確認', rendered)
+        self.assertIn('記録一覧の対象 1件', rendered)
+        self.assertIn('2026-10-16', rendered)
+        self.assertEqual(board['races'], [row])
+        self.assertEqual(board['counts']['failed'], 0)
+
+    def test_markdown_known_monitor_day_retains_counts_without_unknown_notice(self):
+        from pace_recording_display import markdown
+        row = {'raceID': '202605040601', 'raceDate': '2026-10-17', 'venue': '東京',
+               'raceNumber': 1, 'startTime': '10:00', 'recordingLabel': '予測保存済み',
+               'resultLabel': '結果待ち', 'reason': '保存済み', 'issues': []}
+        board = apply_health(baseline([row]), self.health())
+        rendered = markdown(board)
+        self.assertNotIn('監視日の対象件数は未確認', rendered)
+        self.assertIn('記録一覧の対象 1件', rendered)
+        self.assertIn('自動監視', rendered)
+
     def test_completed_state_cannot_be_downgraded_by_delayed_start_event(self):
         complete = self.health('success')
         active = health_from_event(event(status='in_progress', conclusion=None), [], NOW)

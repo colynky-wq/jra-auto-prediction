@@ -47,6 +47,42 @@ struct RecordingStatusChecks {
                             "recordingState": "saved", "recordingLabel": "予測保存済み", "resultLabel": "照合済み",
                             "reason": "保存しました。", "issues": [String](), "needsAttention": false]]
         check(try decode(modern).isTargetCountUnconfirmed, "older race rows do not confirm a failed new monitor day")
+
+        var fixtures = original
+        fixtures["races"] = [
+            ["raceID": "saved", "raceDate": "2026-10-17", "venue": "試験", "raceNumber": 1,
+             "recordingState": "saved", "recordingLabel": "予測保存済み", "resultLabel": "結果待ち",
+             "reason": "試験", "issues": [String](), "needsAttention": false],
+            ["raceID": "held", "raceDate": "2026-10-17", "venue": "試験", "raceNumber": 2,
+             "recordingState": "held", "recordingLabel": "履歴不足で保留", "resultLabel": "結果待ち",
+             "reason": "試験", "issues": [String](), "needsAttention": false],
+            ["raceID": "failed", "raceDate": "2026-10-17", "venue": "試験", "raceNumber": 3,
+             "recordingState": "failed", "recordingLabel": "保存失敗", "resultLabel": "未照合",
+             "reason": "試験", "issues": [String](), "needsAttention": true],
+            ["raceID": "missing", "raceDate": "2026-10-18", "venue": "試験", "raceNumber": 1,
+             "recordingState": "missing", "recordingLabel": "記録なし", "resultLabel": "未照合",
+             "reason": "試験", "issues": [String](), "needsAttention": true],
+            ["raceID": "invalid", "raceDate": "2026-10-18", "venue": "試験", "raceNumber": 2,
+             "recordingState": "invalid", "recordingLabel": "記録不整合", "resultLabel": "未照合",
+             "reason": "試験", "issues": [String](), "needsAttention": true],
+            ["raceID": "waiting", "raceDate": "2026-10-18", "venue": "試験", "raceNumber": 3,
+             "recordingState": "waiting", "recordingLabel": "記録待ち", "resultLabel": "結果待ち",
+             "reason": "試験", "issues": [String](), "needsAttention": false]
+        ]
+        fixtures["counts"] = ["totalRaces": 6, "saved": 1, "held": 1, "needsAttention": 3]
+        let board = try decode(fixtures)
+        check(board.recordingDateOptions == ["すべて", "2026-10-18", "2026-10-17"], "distinct dates newest first")
+        check(board.filteredRecordingRows(selectedDate: "すべて", attentionOnly: false).count == 6, "all states stay in the unfiltered list")
+        check(board.filteredRecordingRows(selectedDate: "2026-10-17", attentionOnly: false).map(\.raceID) == ["saved", "held", "failed"], "date filter keeps original order and held records")
+        check(board.filteredRecordingRows(selectedDate: "すべて", attentionOnly: true).map(\.raceID) == ["failed", "missing", "invalid"], "attention filter uses actual race attention")
+        check(board.filteredRecordingRows(selectedDate: "2026-10-17", attentionOnly: true).map(\.raceID) == ["failed"], "date and attention compose")
+        check(board.normalizedRecordingDate("2026-10-16") == "すべて", "removed date resets to all")
+        check(board.filteredRecordingRows(selectedDate: "2026-10-16", attentionOnly: false).count == 6, "removed date cannot hide new records")
+        check(board.normalizedRecordingDate("2026-10-17") == "2026-10-17", "still-available selection survives refresh")
+        check(board.counts["totalRaces"] == 6 && board.races.count == 6, "filtering never changes global counts or records")
+        check(legacy.recordingDateOptions == ["すべて"] && legacy.normalizedRecordingDate("2026-10-17") == "すべて", "empty response has a valid picker selection")
+        check(legacy.filteredRecordingRows(selectedDate: "すべて", attentionOnly: true).isEmpty, "empty filter remains empty")
+        print("RECORDING_FILTER_OK: date, attention, combined filters, removed-date recovery, preserved totals")
         print("RECORDING_STATUS_OK: legacy decoding, monitor failure, real counts, warnings, trusted links")
     }
 }

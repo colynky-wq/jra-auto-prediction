@@ -10,6 +10,21 @@ struct KeibaAIRecordingStatusData: Decodable {
     let monitorWarnings: [String]?
     let monitoring: KeibaAIMonitoringHealth?
 
+    var recordingDateOptions: [String] {
+        ["すべて"] + Array(Set(races.map(\.raceDate))).sorted(by: >)
+    }
+
+    func normalizedRecordingDate(_ selectedDate: String) -> String {
+        recordingDateOptions.contains(selectedDate) ? selectedDate : "すべて"
+    }
+
+    func filteredRecordingRows(selectedDate: String, attentionOnly: Bool) -> [KeibaAIRecordingStatusRow] {
+        let date = normalizedRecordingDate(selectedDate)
+        return races.filter {
+            (date == "すべて" || $0.raceDate == date) && (!attentionOnly || $0.needsAttention)
+        }
+    }
+
     var isTargetCountUnconfirmed: Bool {
         if let health = monitoring, health.needsAttention,
            !races.contains(where: { $0.raceDate == health.raceDate }) { return true }
