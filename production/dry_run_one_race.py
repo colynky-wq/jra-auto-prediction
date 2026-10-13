@@ -24,6 +24,8 @@ from urllib.parse import urlencode
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+
+from horse_identity_runtime import assign_horse_keys
 import requests
 from bs4 import BeautifulSoup
 
@@ -570,24 +572,7 @@ def main() -> None:
         fail("調教師表記変換失敗")
 
     # Same horse-key logic as the formal run.
-    latest_key_df = (
-        hist[["日付", "馬名", "馬キー"]]
-        .dropna(subset=["馬名", "馬キー"])
-        .sort_values("日付")
-        .drop_duplicates("馬名", keep="last")
-    )
-
-    latest_key = dict(
-        zip(
-            latest_key_df["馬名"].astype(str),
-            latest_key_df["馬キー"].astype(str),
-        )
-    )
-
-    entries["馬キー"] = [
-        latest_key.get(name, f"{name}_{test_date.year - int(age)}")
-        for name, age in zip(entries["馬名"], entries["年齢"])
-    ]
+    entries["馬キー"] = assign_horse_keys(entries, hist, test_date)
 
     # Diagnostic guard for the known Kyoto 6R replay.
     check_known_default_inputs(entries)

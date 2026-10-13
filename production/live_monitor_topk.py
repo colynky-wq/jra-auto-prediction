@@ -6,6 +6,8 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+from horse_identity_runtime import assign_horse_keys
+
 import live_monitor_dry_run as base
 from topk_runtime import predict_top2_top3
 
@@ -60,22 +62,7 @@ def predict_live_race_topk(
     if entries["騎手"].isna().any() or entries["調教師"].isna().any():
         raise RuntimeError("jockey/trainer history-name matching failed")
 
-    latest_key_df = (
-        hist[["日付", "馬名", "馬キー"]]
-        .dropna(subset=["馬名", "馬キー"])
-        .sort_values("日付")
-        .drop_duplicates("馬名", keep="last")
-    )
-    latest_key = dict(
-        zip(
-            latest_key_df["馬名"].astype(str),
-            latest_key_df["馬キー"].astype(str),
-        )
-    )
-    entries["馬キー"] = [
-        latest_key.get(name, f"{name}_{target_date.year - int(age)}")
-        for name, age in zip(entries["馬名"], entries["年齢"])
-    ]
+    entries["馬キー"] = assign_horse_keys(entries, hist, target_date)
 
     current = entries.merge(odds, on="馬番", how="inner", validate="one_to_one")
     current["人気"] = current["単勝オッズ"].rank(ascending=True, method="min")
@@ -157,6 +144,8 @@ def predict_live_race_topk(
         {
             "馬番": pred["馬番"].astype(int),
             "馬名": pred["馬名"].astype(str),
+            "年齢": pred["年齢"].astype(int),
+            "馬キー": pred["馬キー"].astype(str),
             "単勝オッズ": pred["単勝オッズ"].astype(float),
             "市場勝率(%)": market_win * 100.0,
             "AI勝率(%)": ai_win * 100.0,

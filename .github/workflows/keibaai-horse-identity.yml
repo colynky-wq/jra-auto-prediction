@@ -1,0 +1,57 @@
+name: KeibaAI Horse Identity
+on:
+  pull_request:
+    paths:
+      - 'production/horse_identity_runtime.py'
+      - 'production/repair_horse_identity.py'
+      - 'production/test_horse_identity.py'
+      - 'production/update_production_history.py'
+      - 'production/live_monitor*.py'
+      - 'production/dry_run_one_race.py'
+      - 'production/build_app_research_data.py'
+      - 'production/pace_prospective_runtime.py'
+      - 'production/prerace_snapshot_runtime.py'
+      - 'production/production_history.parquet'
+      - '.github/workflows/keibaai-horse-identity.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/horse_identity_runtime.py'
+      - 'production/repair_horse_identity.py'
+      - 'production/test_horse_identity.py'
+      - 'production/production_history.parquet'
+      - '.github/workflows/keibaai-horse-identity.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install runtime dependencies
+        run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Test identity, research inputs, and immutable records
+        run: |
+          python -m unittest discover -s production -p 'test_horse_identity.py' -v
+          python -m unittest discover -s production -p 'test_app_research_data.py' -v
+          python -m unittest discover -s production -p 'test_formation_reference.py' -v
+          python -m unittest discover -s production -p 'test_pace_prospective.py' -v
+          python -m unittest discover -s production -p 'test_prerace_snapshot.py' -v
+      - name: Verify stored age and birth year across the full history
+        run: |
+          python - <<'PY'
+          import sys, pandas as pd
+          sys.path.insert(0, 'production')
+          from horse_identity_runtime import identity_mismatch_mask
+          from repair_horse_identity import correct_verified_row
+          history = pd.read_parquet('production/production_history.parquet')
+          assert not identity_mismatch_mask(history).any()
+          corrected, changed, _ = correct_verified_row(history)
+          assert not changed
+          pd.testing.assert_frame_equal(history, corrected)
+          print('HORSE_IDENTITY_OK', len(history))
+          PY

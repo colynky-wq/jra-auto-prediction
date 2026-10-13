@@ -73,14 +73,14 @@ class FormationTests(unittest.TestCase):
         old = seed().assign(馬キー="テスト_2012")
         new = rows([("202404020101", "2024-08-01", "テスト_2022", 1, "芝", 1000)])
         race = {"raceID": "202505010101", "raceDate": "2025-01-01", "horses": [{
-            "number": 1, "name": "テスト", "aiProbability": 3, "marketProbability": 2, "odds": 10}]}
+            "number": 1, "name": "テスト", "age": 3, "aiProbability": 3, "marketProbability": 2, "odds": 10}]}
         horse_data = build_races(pd.concat([old, new]), [race])[0]["horses"][0]
         self.assertIsNone(horse_data["initialPositionHistory"])
         self.assertIsNone(horse_data["styleTendency"])
 
     def test_live_reference_ignores_same_day_and_future_history(self):
         race = {"raceID": "202505010101", "raceDate": "2025-01-01", "horses": [{
-            "number": 1, "name": "テスト", "aiProbability": 3, "marketProbability": 2, "odds": 10}]}
+            "number": 1, "name": "テスト", "age": 3, "aiProbability": 3, "marketProbability": 2, "odds": 10}]}
         later = rows([("202505010101", "2025-01-01", "テスト_2022", 10, "芝", 1600),
                       ("202605010101", "2026-01-01", "テスト_2022", 10, "芝", 1600)])
         self.assertEqual(build_races(seed(), [race]), build_races(pd.concat([seed(), later]), [race]))

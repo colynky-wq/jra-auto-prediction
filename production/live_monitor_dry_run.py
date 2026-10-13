@@ -32,6 +32,8 @@ from pathlib import Path
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+
+from horse_identity_runtime import assign_horse_keys
 import requests
 from bs4 import BeautifulSoup
 
@@ -292,17 +294,7 @@ def predict_live_race(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp)
     if entries["騎手"].isna().any() or entries["調教師"].isna().any():
         raise RuntimeError("jockey/trainer history-name matching failed")
 
-    latest_key_df = (
-        hist[["日付", "馬名", "馬キー"]]
-        .dropna(subset=["馬名", "馬キー"])
-        .sort_values("日付")
-        .drop_duplicates("馬名", keep="last")
-    )
-    latest_key = dict(zip(latest_key_df["馬名"].astype(str), latest_key_df["馬キー"].astype(str)))
-    entries["馬キー"] = [
-        latest_key.get(name, f"{name}_{target_date.year - int(age)}")
-        for name, age in zip(entries["馬名"], entries["年齢"])
-    ]
+    entries["馬キー"] = assign_horse_keys(entries, hist, target_date)
 
     current = entries.merge(odds, on="馬番", how="inner", validate="one_to_one")
     current["人気"] = current["単勝オッズ"].rank(ascending=True, method="min")

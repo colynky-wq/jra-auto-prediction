@@ -12,6 +12,7 @@ import pandas as pd
 
 from app_research_runtime import METHOD_VERSION, STYLE_ORDER, classify_style, finite, practical_candidates, tendency
 from horse_profile_runtime import normalize_horse_name
+from horse_identity_runtime import IDENTITY_METHOD_VERSION, history_key_index, resolve_runner_key
 from formation_runtime import FORMATION_METHOD_VERSION, PACE_NOTE_VERSION, current_race_has_corner, formation_reference, is_straight_race, position_history, relative_position
 
 REPO = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ RACEDATA_PATH = REPO / "RaceData.json"
 OUT_PATH = REPO / "AppResearchData.json"
 VALIDATION_PATH = REPO / "reports/RunningStyleValidation.json"
 FORMATION_VALIDATION_PATH = REPO / "reports/FormationValidation.json"
-HISTORY_COLUMNS = ["レースID", "日付", "馬名", "馬キー", "初角", "頭数", "障害", "芝ダ", "距離"]
+HISTORY_COLUMNS = ["レースID", "日付", "馬番", "馬名", "馬キー", "年齢", "初角", "頭数", "障害", "芝ダ", "距離"]
 JST = timezone(timedelta(hours=9))
 
 
@@ -74,12 +75,25 @@ def build_races(history: pd.DataFrame, races: list[dict]) -> list[dict]:
         cutoff = race_date(race)
         # Same-day results and all future results are excluded, even for replay.
         past = d[d["日付"] < cutoff]
-        latest = past.drop_duplicates("normalizedName", keep="last")
-        keys = dict(zip(latest["normalizedName"], latest["馬キー"]))
+        keys = history_key_index(past)
         groups = {key: group for key, group in past.groupby("馬キー", sort=False)}
+        # Legacy RaceData has no age. For the retrospective DISPLAY only,
+        # recover identity from the exact completed entrant, never its results.
+        # Prospective inference never takes this path or reads target-day rows.
+        entry_ages = {}
+        if "馬番" in d and "年齢" in d:
+            exact = d[(d["レースID"].astype(str) == str(race["raceID"])) & (d["日付"] == cutoff)]
+            for number, name, age in exact[["馬番", "normalizedName", "年齢"]].itertuples(index=False, name=None):
+                entry = (int(number), name)
+                if entry in entry_ages:
+                    raise ValueError("duplicate legacy entrant identity")
+                entry_ages[entry] = age
         horses = []
         for horse in race["horses"]:
-            key = keys.get(normalize_horse_name(horse["name"]))
+            runner = dict(horse)
+            if runner.get("age") is None and runner.get("horseKey") is None:
+                runner["age"] = entry_ages.get((horse["number"], normalize_horse_name(horse["name"])))
+            key = resolve_runner_key(runner, cutoff, keys)
             group = groups.get(key)
             stat = None
             initial_position = None
@@ -167,6 +181,7 @@ def main() -> None:
         "methodVersion": METHOD_VERSION,
         "formationMethodVersion": FORMATION_METHOD_VERSION,
         "paceNoteVersion": PACE_NOTE_VERSION,
+        "horseIdentityMethodVersion": IDENTITY_METHOD_VERSION,
     }
     if OUT_PATH.exists() and not args.evaluate:
         old = json.loads(OUT_PATH.read_text(encoding="utf-8"))

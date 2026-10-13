@@ -17,7 +17,7 @@ def past(rows):
 
 def race(name="テスト", day="2025-01-02"):
     return {"raceID": "202505010201", "raceDate": day, "horses": [{
-        "number": 1, "name": name, "odds": 10.0,
+        "number": 1, "name": name, "age": 3, "odds": 10.0,
         "aiProbability": 3.0, "marketProbability": 2.0,
     }]}
 
