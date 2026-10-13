@@ -59,7 +59,7 @@ class RaceLapTests(unittest.TestCase):
                          parse_official_laps(page(), RACE_ID, DATE8, newer)["lapTimesSeconds"])
 
     def test_distance_and_lap_count_must_agree(self):
-        for distance, count in [(1800, 8), (2100, 10), (1550, 8)]:
+        for distance, count in [(1800, 8), (2100, 10), (1551, 8)]:
             with self.assertRaises(LapParseError):
                 segment_distances(distance, count)
 

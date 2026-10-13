@@ -3,6 +3,8 @@ name: KeibaAI Official Race Lap Research
 on:
   pull_request:
     paths:
+      - 'production/*lap*.py'
+      - 'production/*pace*.py'
       - 'production/race_lap_runtime.py'
       - 'production/collect_race_laps.py'
       - 'production/test_race_lap_runtime.py'
@@ -15,6 +17,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'production/*lap*.py'
+      - 'production/*pace*.py'
       - 'production/race_lap_runtime.py'
       - 'production/collect_race_laps.py'
       - 'production/test_race_lap_runtime.py'
@@ -46,7 +50,7 @@ concurrency:
 jobs:
   validate-and-collect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v5
         with:
@@ -58,10 +62,12 @@ jobs:
         run: |
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+          pip install 'pdfplumber==0.11.9'
       - name: Test parser
         run: |
           python -m unittest discover -s production -p 'test_race_lap_runtime.py'
           python -m unittest discover -s production -p 'test_jra_route_modes.py'
+          python -m unittest discover -s production -p 'test_pace_baselines.py'
       - name: Validate stored sidecars against history
         run: |
           python - <<'PY'
@@ -100,6 +106,18 @@ jobs:
           if [ -n "$TARGET_DATE" ]; then args+=(--date "$TARGET_DATE"); fi
           if [ "$FORCE_REFRESH" = 'true' ]; then args+=(--force); fi
           python production/collect_race_laps.py "${args[@]}"
+      - name: Resume bounded historical lap collection
+        id: backfill
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          BACKFILL_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          limit=12
+          if [ "$BACKFILL_EVENT_NAME" = 'push' ]; then limit=0; fi
+          python production/backfill_race_laps.py --years 2024 2025 --max-reports "$limit" --workers 2 --html-retry --apply --cache-root "$RUNNER_TEMP/jra-lap-reports"
+      - name: Build 2024 references and evaluate 2025
+        run: python production/research_pace_baselines.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -107,6 +125,7 @@ jobs:
           path: |
             research/laps/*/RaceLapData.json
             reports/race_laps/*.json
+            reports/PaceBaselineValidation.json
           retention-days: 14
       - name: Publish independently collected data
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -115,10 +134,11 @@ jobs:
           git config user.email 'keibaai@users.noreply.github.com'
           git add research/laps
           if [ -d reports/race_laps ]; then git add reports/race_laps; fi
+          if [ -f reports/PaceBaselineValidation.json ]; then git add reports/PaceBaselineValidation.json; fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update independent official race lap research data'
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Surface collection failures
-        if: steps.collect.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.backfill.outcome == 'failure'
         run: exit 1
