@@ -1133,6 +1133,7 @@ private final class KeibaAIScheduleStore: ObservableObject {
 }
 
 struct KeibaAINewDesignView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var store = RaceStore()
     @StateObject private var scheduleStore = KeibaAIScheduleStore()
     @StateObject private var resultStore = KeibaAIResultStore()
@@ -1144,6 +1145,7 @@ struct KeibaAINewDesignView: View {
     @StateObject private var budgetStore = KeibaAIBudgetStore()
 
     @State private var mainTab: KeibaAIMainTab = .today
+    @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
     @State private var selectedRaceID: String?
     @State private var detailTab: KeibaAIDetailTab = .prediction
     @State private var showSettings = false
@@ -1155,11 +1157,25 @@ struct KeibaAINewDesignView: View {
     @State private var usePracticalLongshot = false
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(preferredCompactColumn: $preferredCompactColumn) {
             sidebar
                 .navigationSplitViewColumnWidth(min: 320, ideal: 390, max: 470)
         } detail: {
             detail
+                .navigationBarBackButtonHidden(horizontalSizeClass == .compact)
+                .toolbar {
+                    if horizontalSizeClass == .compact {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button {
+                                preferredCompactColumn = .sidebar
+                            } label: {
+                                Label("一覧", systemImage: "chevron.left")
+                            }
+                            .accessibilityLabel("一覧へ戻る")
+                            .accessibilityIdentifier("back-to-list")
+                        }
+                    }
+                }
         }
         .navigationSplitViewStyle(.balanced)
         .task {
@@ -1308,6 +1324,12 @@ struct KeibaAINewDesignView: View {
     private var selectedScheduleItem: KeibaAIScheduleItem? {
         guard let selectedRaceID else { return nil }
         return allScheduleItems.first { $0.raceID == selectedRaceID }
+    }
+
+    private func openRace(_ raceID: String, tab: KeibaAIDetailTab = .prediction) {
+        selectedRaceID = raceID
+        detailTab = tab
+        preferredCompactColumn = .detail
     }
 
     private func chooseFirstRaceIfNeeded() {
@@ -1506,6 +1528,12 @@ struct KeibaAINewDesignView: View {
                     Button {
                         withAnimation(.easeInOut(duration: 0.18)) {
                             mainTab = tab
+                            switch tab {
+                            case .guide, .performance, .ticket:
+                                preferredCompactColumn = .detail
+                            default:
+                                preferredCompactColumn = .sidebar
+                            }
                         }
                     } label: {
                         Label(tab.rawValue, systemImage: tab.icon)
@@ -1519,9 +1547,11 @@ struct KeibaAINewDesignView: View {
                             }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("main-tab-\(tab.rawValue)")
                 }
             }
         }
+        .accessibilityIdentifier("main-tabs")
     }
 
     private var snapshotBar: some View {
@@ -1672,9 +1702,10 @@ struct KeibaAINewDesignView: View {
                         signal: signalStore.signal(for: item.raceID),
                         isSelected: selectedRaceID == item.raceID
                     )
+                    .contentShape(Rectangle())
+                    .accessibilityIdentifier("race-card-\(item.raceID)")
                     .onTapGesture {
-                        selectedRaceID = item.raceID
-                        detailTab = .prediction
+                        openRace(item.raceID)
                     }
                 }
             }
@@ -1715,9 +1746,9 @@ struct KeibaAINewDesignView: View {
                             signal: signalStore.signal(for: race.raceID),
                             isSelected: selectedRaceID == race.raceID
                         )
+                        .contentShape(Rectangle())
                         .onTapGesture {
-                            selectedRaceID = race.raceID
-                            detailTab = .prediction
+                            openRace(race.raceID)
                         }
                     }
                 }
@@ -1778,9 +1809,9 @@ struct KeibaAINewDesignView: View {
                         }
                         .padding(usePracticalLongshot ? 12 : 0)
                         .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+                        .contentShape(Rectangle())
                         .onTapGesture {
-                            selectedRaceID = race.raceID
-                            detailTab = usePracticalLongshot ? .longshot : .prediction
+                            openRace(race.raceID, tab: usePracticalLongshot ? .longshot : .prediction)
                         }
                     }
                 }
@@ -1900,6 +1931,16 @@ struct KeibaAINewDesignView: View {
                     title: "凡例・設計思想",
                     subtitle: "KeibaAIの数字の見方と、しないこと"
                 )
+
+                if horizontalSizeClass == .compact {
+                    Button {
+                        preferredCompactColumn = .detail
+                    } label: {
+                        Label("凡例の全文を開く", systemImage: "book.closed.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("open-full-guide")
+                }
 
                 KeibaAIInfoCard(
                     icon: "waveform.path.ecg",
@@ -4458,6 +4499,7 @@ private struct KeibaAIGuideView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("凡例")
         .navigationBarTitleDisplayMode(.inline)
+        .accessibilityIdentifier("full-guide")
     }
 }
 
