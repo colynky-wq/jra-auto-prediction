@@ -1,0 +1,44 @@
+name: KeibaAI Recording Status
+on:
+  pull_request:
+    paths:
+      - 'production/*recording*.py'
+      - 'production/jra_entry_source.py'
+      - 'production/live_monitor_dry_run.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-race-lap-research.yml'
+      - '.github/workflows/keibaai-recording-status.yml'
+      - 'PaceRecordingStatus.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Test status and source isolation
+        run: |
+          python -m unittest discover -s production -p 'test_pace_recording_status.py' -v
+          python -m unittest discover -s production -p 'test_pace_prospective.py' -v
+          python -m unittest discover -s production -p 'test_jra_route_modes.py' -v
+      - name: Build and validate app payload
+        run: |
+          python production/build_pace_recording_status.py
+          python - <<'PY'
+          import json
+          x=json.load(open('PaceRecordingStatus.json'))
+          assert x['schemaVersion']==1
+          assert x['counts']['totalRaces']==len(x['races'])
+          assert len({r['raceID'] for r in x['races']})==len(x['races'])
+          assert not x['paceForecastEnabled'] and not x['formalSignalsChanged'] and not x['stakeSizingEnabled']
+          for r in x['races']:
+              assert r['recordingState'] in {'waiting','saved','held','missing','failed','invalid'}
+              assert all(k in r for k in ['raceDate','venue','raceNumber','startTime','reason','issues','needsAttention','lastAttemptAtJST'])
+          PY

@@ -474,6 +474,11 @@ def main() -> None:
     if now_jst().strftime("%Y%m%d") != TARGET_DATE8:
         fail("live mode target date must equal the current JST date")
 
+    if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+        try:
+            from pace_recording_events import save_schedule
+            save_schedule(TARGET_DATE8, flat)
+        except Exception as exc:print("RECORDING_SCHEDULE_SKIPPED", str(exc))
     target_date = pd.Timestamp(datetime.strptime(TARGET_DATE8, "%Y%m%d").date())
     hist = load_history(target_date)
     print("history rows:", f"{len(hist):,}", "latest:", hist["日付"].max())
@@ -499,6 +504,9 @@ def main() -> None:
 
             if remaining < WINDOW_LATE_MINUTES:
                 missed.add(rid)
+                if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+                    from pace_recording_events import record_event
+                    record_event(rid, TARGET_DATE8, "monitor_missed", "prediction window missed")
                 print("MISSED window:", rid, f"remaining={remaining:.2f}m")
                 continue
 
@@ -513,6 +521,9 @@ def main() -> None:
                     print("TRIGGER RESULT: SUCCESS", rid)
                 except Exception as exc:
                     failures.append((rid, f"{type(exc).__name__}: {exc}"))
+                    if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+                        from pace_recording_events import record_event
+                        record_event(rid, TARGET_DATE8, "monitor_failed", exc)
                     processed.add(rid)
                     print("TRIGGER RESULT: FAILED", rid, repr(exc))
                 continue

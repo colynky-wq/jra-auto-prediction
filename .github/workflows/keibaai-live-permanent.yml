@@ -120,11 +120,13 @@ jobs:
           date8='${{ steps.day.outputs.target_date }}'
 
           publish_if_changed() {
+            # Recording status must not stop the formal bundle publisher.
+            python production/build_pace_recording_status.py || true
             # repair_wide_odds only acts on predicted races and refuses to make
             # a missing snapshot after scheduled post time.
             python production/repair_wide_odds.py || true
 
-            changes=$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}")
+            changes=$(git status --porcelain -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}" PaceRecordingStatus.json reports/PaceRecordingStatus.md)
             if [ -z "$changes" ]; then
               return 0
             fi
@@ -135,7 +137,7 @@ jobs:
               echo 'Research display refresh failed; publishing predictions continues.'
             fi
 
-            git add -A -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}"
+            git add -A -- RaceData.json SignalData.json WideOddsData.json "reports/${date8}" PaceRecordingStatus.json reports/PaceRecordingStatus.md
             if [ -f AppResearchData.json ]; then git add AppResearchData.json; fi
             git commit -m "Publish KeibaAI live prediction bundle ${date8}" || true
             git pull --rebase origin main
