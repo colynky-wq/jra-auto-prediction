@@ -29,25 +29,19 @@ jobs:
     timeout-minutes: 355
 
     steps:
+      - name: Checkout lightweight startup guard
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
+          sparse-checkout-cone-mode: false
+
       - name: Check whether JRA races exist today
         id: day
         shell: bash
         run: |
           set -euo pipefail
           date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
-          html=$(curl -fsSL --retry 2 \
-            -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0 Safari/537.36' \
-            "https://race.netkeiba.com/top/race_list_sub.html?kaisai_date=${date8}" || true)
-          ids=$(printf '%s' "$html" | grep -oE 'race_id=[0-9]{12}' || true)
-          count=$(printf '%s\n' "$ids" | sed '/^$/d' | sort -u | wc -l | tr -d ' ')
-          echo "target_date=${date8}" >> "$GITHUB_OUTPUT"
-          if [ "${count:-0}" -gt 0 ]; then
-            echo 'has_races=true' >> "$GITHUB_OUTPUT"
-            echo "JRA race day detected: ${date8}, races=${count}"
-          else
-            echo 'has_races=false' >> "$GITHUB_OUTPUT"
-            echo "No JRA races detected for ${date8}; exiting cheaply."
-          fi
+          bash .github/scripts/keibaai-race-day-check.sh "$date8"
 
       - name: Checkout repository
         if: steps.day.outputs.has_races == 'true'

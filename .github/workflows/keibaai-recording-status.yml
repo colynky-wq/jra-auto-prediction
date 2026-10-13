@@ -5,6 +5,8 @@ on:
       - 'production/*recording*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_dry_run.py'
+      - 'production/test_live_startup_guard.py'
+      - '.github/scripts/keibaai-race-day-check.sh'
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/workflows/keibaai-race-lap-research.yml'
       - '.github/workflows/keibaai-recording-status.yml'
@@ -18,6 +20,15 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
+          sparse-checkout-cone-mode: false
+      - name: Validate lightweight startup checkout
+        run: |
+          test -f .github/scripts/keibaai-race-day-check.sh
+          test ! -f production/production_history.parquet
+          bash -n .github/scripts/keibaai-race-day-check.sh
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -25,6 +36,7 @@ jobs:
         run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
       - name: Test status and source isolation
         run: |
+          python -m unittest discover -s production -p 'test_live_startup_guard.py' -v
           python -m unittest discover -s production -p 'test_pace_recording_status.py' -v
           python -m unittest discover -s production -p 'test_prerace_recording_chain.py' -v
           python -m unittest discover -s production -p 'test_pace_prospective.py' -v
