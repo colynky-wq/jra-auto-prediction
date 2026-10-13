@@ -2,6 +2,8 @@
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import hashlib
+import os
+import tempfile
 import json
 from pathlib import Path
 import re
@@ -61,6 +63,19 @@ def parse_snapshot(text,rid,date8,url,captured_at,entries):
     if len({r['number'] for r in runners})!=len(runners) or set(source_rows)!={r['number'] for r in runners}:raise ValueError('entrant set incomplete')
     return {'schemaVersion':1,'methodVersion':VERSION,'raceID':rid,'raceDate':post.date().isoformat(),'capturedAtJST':captured_at.isoformat(timespec='microseconds'),'scheduledPostJST':post.isoformat(),'sourceURL':url,'sourceSHA256':hashlib.sha256(text.encode()).hexdigest(),'sourceHashEncoding':'decoded UTF-8 response text','prePostConfirmed':True,'surface':surface,'distanceM':int(course[1].replace(',','')),'courseDetail':detail,'raceClass':race_class,'going':going[1] if going else None,'goingObservedInCurrentHeader':bool(going),'activeEntrantsAtCapture':sum(not r['withdrawn'] for r in runners),'runners':sorted(runners,key=lambda r:r['number']),'paceForecastEnabled':False,'formalSignalsChanged':False,'stakeSizingEnabled':False}
 
+def write_once_json(path, payload):
+    """Publish complete bytes atomically; the final file can never be overwritten."""
+    path=Path(path)
+    descriptor,name=tempfile.mkstemp(prefix='.prerace-',suffix='.tmp',dir=path.parent)
+    temporary=Path(name)
+    try:
+        with os.fdopen(descriptor,'w',encoding='utf-8') as f:
+            json.dump(payload,f,ensure_ascii=False,indent=2,allow_nan=False);f.write('\n')
+        os.link(temporary,path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def persist_snapshot(text,rid,date8,url,captured_at,entries,root=None,track_observation=None):
     observation=parse_snapshot(text,rid,date8,url,captured_at,entries)
     if track_observation is not None:
@@ -90,7 +105,7 @@ def persist_snapshot(text,rid,date8,url,captured_at,entries,root=None,track_obse
     timestamp=captured_at.astimezone(JST).strftime('%Y%m%dT%H%M%S%f')
     filename=timestamp+'-'+fingerprint[:12]+'.json'
     path=folder/filename
-    with path.open('x',encoding='utf-8') as f:json.dump(observation,f,ensure_ascii=False,indent=2,allow_nan=False);f.write('\n')
+    write_once_json(path,observation)
     index['latestFingerprint']=fingerprint;index['snapshots'].append({'file':filename,'capturedAtJST':observation['capturedAtJST'],'fingerprint':fingerprint})
     temp=indexpath.with_suffix('.tmp');temp.write_text(json.dumps(index,ensure_ascii=False,indent=2)+'\n');temp.replace(indexpath)
     return path
