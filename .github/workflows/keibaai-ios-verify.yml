@@ -1,0 +1,27 @@
+name: KeibaAI iOS Build and Identity
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/keibaai-ios-verify.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/keibaai-ios-verify.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify Xcode and compile the actual model and identity code
+        run: |
+          xcodebuild -version
+          swiftc -swift-version 5 ios/KeibaAI/KeibaAI/KeibaAIModels.swift ios/KeibaAI/KeibaAI/KeibaAIHorseIdentity.swift ios/tests/ProfileIdentityChecks.swift -o /tmp/keibaai-profile-checks
+          /tmp/keibaai-profile-checks
+      - name: Build the complete iOS app without signing
+        run: |
+          xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-build CODE_SIGNING_ALLOWED=NO build

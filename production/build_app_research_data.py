@@ -107,6 +107,8 @@ def build_races(history: pd.DataFrame, races: list[dict]) -> list[dict]:
                 initial_position = position_history(observations)
             horses.append({
                 "number": horse["number"], "name": horse["name"],
+                "age": int(runner["age"]) if runner.get("age") is not None else None,
+                "horseKey": key,
                 "sourceAiProbabilityPct": horse["aiProbability"],
                 "sourceMarketProbabilityPct": horse["marketProbability"],
                 "sourceOdds": horse["odds"], "styleTendency": stat,
@@ -182,6 +184,7 @@ def main() -> None:
         "formationMethodVersion": FORMATION_METHOD_VERSION,
         "paceNoteVersion": PACE_NOTE_VERSION,
         "horseIdentityMethodVersion": IDENTITY_METHOD_VERSION,
+        "profileIdentityVersion": "name-birth-year-v1",
     }
     if OUT_PATH.exists() and not args.evaluate:
         old = json.loads(OUT_PATH.read_text(encoding="utf-8"))
