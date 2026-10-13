@@ -32,6 +32,8 @@ from urllib.parse import urlencode
 
 import numpy as np
 import pandas as pd
+
+from horse_identity_runtime import assign_horse_keys
 import requests
 from bs4 import BeautifulSoup
 
@@ -579,16 +581,6 @@ def build_target_rows(hist: pd.DataFrame, race_ids: list[str], date8: str) -> pd
     hist_jockeys = sorted(set(hist["騎手"].dropna().astype(str)))
     hist_trainers = sorted(set(hist["調教師"].dropna().astype(str)))
 
-    latest_key_df = (
-        hist[["日付", "馬名", "馬キー"]]
-        .dropna(subset=["馬名", "馬キー"])
-        .sort_values("日付")
-        .drop_duplicates("馬名", keep="last")
-    )
-    latest_key = dict(
-        zip(latest_key_df["馬名"].astype(str), latest_key_df["馬キー"].astype(str))
-    )
-
     target_date = pd.Timestamp(datetime.strptime(date8, "%Y%m%d").date())
     all_rows = []
     failures = []
@@ -628,10 +620,7 @@ def build_target_rows(hist: pd.DataFrame, race_ids: list[str], date8: str) -> pd
         lambda x: match_history_name(x, hist_trainers) or compact_name(x)
     )
 
-    current["馬キー"] = [
-        latest_key.get(str(name), f"{name}_{target_date.year - int(age)}")
-        for name, age in zip(current["馬名"], current["年齢"])
-    ]
+    current["馬キー"] = assign_horse_keys(current, hist, target_date)
 
     current = current.drop(columns=["騎手_JRA", "調教師_JRA", "結果状態"])
     current = current[BASE_COLS].copy()

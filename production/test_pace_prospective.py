@@ -15,8 +15,8 @@ def fixture():
     for i,day in enumerate(['2026-10-01','2026-10-03','2026-10-05']):
         rid=f'2026050401{i+1:02d}'
         laps.append(dict(raceID=rid,raceDate=day,earlyRecordedDistanceM=600,earlyRecordedTimeSeconds=36,going='良',validation={'ok':True}))
-        for n in [1,2,3]:h.append({'レースID':rid,'日付':day,'馬番':n,'馬名':f'テスト{n}','馬キー':f'key{n}','初角':n,'頭数':3,'障害':False,'芝ダ':'芝','距離':1200})
-    obs=dict(raceID='202605040601',raceDate='2026-10-17',distanceM=1200,surface='芝',raceClass='1勝',runners=[{'number':n,'name':f'テスト{n}','withdrawn':False} for n in [1,2,3]],activeEntrantsAtCapture=3,capturedAtJST=(NOW-timedelta(minutes=1)).isoformat(),scheduledPostJST=(NOW+timedelta(minutes=10)).isoformat(),prePostConfirmed=True)
+        for n in [1,2,3]:h.append({'レースID':rid,'日付':day,'馬番':n,'馬名':f'テスト{n}','馬キー':f'テスト{n}_2022','初角':n,'頭数':3,'障害':False,'芝ダ':'芝','距離':1200})
+    obs=dict(raceID='202605040601',raceDate='2026-10-17',distanceM=1200,surface='芝',raceClass='1勝',runners=[{'number':n,'name':f'テスト{n}','age':4,'withdrawn':False} for n in [1,2,3]],activeEntrantsAtCapture=3,capturedAtJST=(NOW-timedelta(minutes=1)).isoformat(),scheduledPostJST=(NOW+timedelta(minutes=10)).isoformat(),prePostConfirmed=True)
     m=dict(methodVersion='unit-v3',modelID='unit-model',trainingCutoffDate='2026-10-12',fittedAtJST=datetime(2026,10,13,14,tzinfo=JST).isoformat(),numericFeatures=['fieldSize'],categoricalFeatures=['raceClass'],numericMean=[0],numericScale=[1],categories=[['1勝']],coefficients=[[0,0],[0,0],[0,0]],intercepts=[0,1,0],classes=[0,1,2],references=[{'condition':['05','芝',1200,600],'quantiles':[35,36,37],'prior':[.2,.6,.2]}],slowFlagThreshold=None)
     actual=dict(raceID=obs['raceID'],raceDate=obs['raceDate'],surface='芝',distanceM=1200,earlyRecordedDistanceM=600,earlyRecordedTimeSeconds=38,going='良',validation={'ok':True})
     return pd.DataFrame(h),laps,obs,m,actual
@@ -29,7 +29,9 @@ class TestProspective(unittest.TestCase):
         b=field_features(o,pd.concat([h,extra,future]),laps)
         self.assertEqual(a,b);self.assertLess(a['latestSourceDay'],o['raceDate'])
     def test_same_name_new_generation_not_borrowed(self):
-        h,laps,o,m,_=fixture();new=h.iloc[-3:].copy();new['日付']='2026-10-10';new['馬キー']=['new1','new2','new3'];new['距離']=1000;new['レースID']='202604040401'
+        h,laps,o,m,_=fixture();new=h.iloc[-3:].copy();new['日付']='2026-10-10';new['馬キー']=[f'テスト{n}_2024' for n in [1,2,3]];new['距離']=1000;new['レースID']='202604040401'
+
+        for runner in o['runners']:runner['age']=2
         pred=forecast(o,pd.concat([h,new]),laps,m,NOW)
         self.assertEqual(pred['status'],'held');self.assertEqual(pred['holdReason'],'insufficient_style_history')
     def test_withdrawal_is_removed(self):

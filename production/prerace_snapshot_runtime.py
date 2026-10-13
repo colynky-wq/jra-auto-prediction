@@ -10,10 +10,11 @@ import re
 from urllib.parse import parse_qs, unquote, urlparse
 from bs4 import BeautifulSoup
 from horse_profile_runtime import JRA_VENUE_MAP
+from horse_identity_runtime import resolve_horse_key
 
 JST=timezone(timedelta(hours=9))
 ROOT=Path(__file__).resolve().parent.parent
-VERSION='official-entry-observation-v1'
+VERSION='official-entry-observation-v2'
 
 def parse_snapshot(text,rid,date8,url,captured_at,entries):
     u=urlparse(url);expected=rid[4:6]+rid[:4]+rid[6:]+date8
@@ -54,12 +55,17 @@ def parse_snapshot(text,rid,date8,url,captured_at,entries):
         n=int(number[0])
         if n in source_rows:raise ValueError('duplicate entrant number')
         current=' '.join(td.get_text(' ',strip=True) for td in tds[:4])
-        source_rows[n]=bool(re.search(r'出走取消|競走除外|取消|除外',current))
+        age=re.search(r'(?:牡|牝|せん|セン|セ)\s*(\d+)',tds[3].get_text(' ',strip=True))
+        if not age:raise ValueError('entrant age missing in official source')
+        source_rows[n]={'withdrawn':bool(re.search(r'出走取消|競走除外|取消|除外',current)),'age':int(age[1])}
     runners=[]
     for n,name in entries[['馬番','馬名']].itertuples(index=False,name=None):
         n=int(n)
         if n not in source_rows:raise ValueError('parsed entrant not found in source')
-        runners.append({'number':n,'name':str(name),'withdrawn':source_rows[n]})
+        age=source_rows[n]['age']
+        if '年齢' in entries and entries.loc[entries['馬番'].astype(int)==n,'年齢'].iloc[0]!=age:
+            raise ValueError('parsed entrant age differs from source')
+        runners.append({'number':n,'name':str(name),'age':age,'horseKey':resolve_horse_key(name,age,date8),'withdrawn':source_rows[n]['withdrawn']})
     if len({r['number'] for r in runners})!=len(runners) or set(source_rows)!={r['number'] for r in runners}:raise ValueError('entrant set incomplete')
     return {'schemaVersion':1,'methodVersion':VERSION,'raceID':rid,'raceDate':post.date().isoformat(),'capturedAtJST':captured_at.isoformat(timespec='microseconds'),'scheduledPostJST':post.isoformat(),'sourceURL':url,'sourceSHA256':hashlib.sha256(text.encode()).hexdigest(),'sourceHashEncoding':'decoded UTF-8 response text','prePostConfirmed':True,'surface':surface,'distanceM':int(course[1].replace(',','')),'courseDetail':detail,'raceClass':race_class,'going':going[1] if going else None,'goingObservedInCurrentHeader':bool(going),'activeEntrantsAtCapture':sum(not r['withdrawn'] for r in runners),'runners':sorted(runners,key=lambda r:r['number']),'paceForecastEnabled':False,'formalSignalsChanged':False,'stakeSizingEnabled':False}
 

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from formation_runtime import relative_position,is_straight_race
 from horse_profile_runtime import normalize_horse_name
+from horse_identity_runtime import IDENTITY_METHOD_VERSION, history_key_index, resolve_runner_key
 from pace_baseline_runtime import eligible_record
 from prerace_snapshot_runtime import JST,write_once_json
 
@@ -29,7 +30,7 @@ def softmax_predict(model,features):
     return aligned
 
 def field_features(observation,history,laps):
-    """Resolve latest horse key before excluding straight history, then use past days only."""
+    """Resolve the entrant's generation, then use that horse's past days only."""
     rid=observation['raceID'];day=pd.Timestamp(observation['raceDate']);distance=int(observation['distanceM'])
     active=[r for r in observation['runners'] if not r['withdrawn']];count=len(active)
     if count<3 or count!=observation['activeEntrantsAtCapture']:raise ValueError('invalid active entrant count')
@@ -41,12 +42,12 @@ def field_features(observation,history,laps):
         names_map={name:normalize_horse_name(name) for name in d['馬名'].unique()}
         d['normalizedName']=d['馬名'].map(names_map)
     d=d[d.normalizedName.isin(names)].sort_values(['日付','レースID','馬番'])
-    latest=d.drop_duplicates('normalizedName',keep='last');keys=dict(zip(latest.normalizedName,latest['馬キー']))
+    keys=history_key_index(d)
     bykey={k:g for k,g in d.groupby('馬キー',sort=False)}
     lapmap={r['raceID']:r for r in laps if eligible_record(r) and r['raceDate']<observation['raceDate']}
     known=[];clockvalues=[];source_dates=[]
-    for name in names:
-        g=bykey.get(keys.get(name))
+    for runner in active:
+        g=bykey.get(resolve_runner_key(runner,day,keys))
         if g is None:continue
         positions=[];clocks=[]
         for row in g.to_dict('records'):
@@ -82,6 +83,7 @@ def forecast(observation,history,laps,model,now=None):
     elif ref is None:reason='insufficient_course_reference'
     elif features['raceClass'] not in model['categories'][model['categoricalFeatures'].index('raceClass')]:reason='unknown_race_class'
     result={'schemaVersion':1,'methodVersion':model['methodVersion'],'modelID':model['modelID'],'trainingCutoffDate':model['trainingCutoffDate'],'modelFittedAtJST':model['fittedAtJST'],'raceID':observation['raceID'],'raceDate':observation['raceDate'],'snapshotCapturedAtJST':observation['capturedAtJST'],'inputAvailableAtJST':capture.isoformat(),'predictedAtJST':now.isoformat(timespec='microseconds'),'scheduledPostJST':post.isoformat(),'status':'held' if reason else 'research_forecast','holdReason':reason,'latestSourceDay':features['latestSourceDay'],'courseCondition':condition,'activeEntrantsAtPrediction':features['fieldSize'],'styleCoverage':features['styleCoverage'],'paceForecastEnabled':False,'formalSignalsChanged':False,'stakeSizingEnabled':False,'inputFeatures':{k:features[k] for k in model['numericFeatures']+model['categoricalFeatures']}}
+    result['horseIdentityMethodVersion']=IDENTITY_METHOD_VERSION
     if not reason:
         probabilities=softmax_predict(model,features)
         result.update(probabilities=dict(zip(LABELS,probabilities.tolist())),predictedClass=LABELS[int(probabilities.argmax())],baselineProbabilities=dict(zip(LABELS,ref['prior'])),referenceQuantilesSeconds=ref['quantiles'],slowFlagThreshold=model['slowFlagThreshold'],slowFlag=bool(probabilities[2]>=model['slowFlagThreshold']) if model['slowFlagThreshold'] is not None else None)

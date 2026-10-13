@@ -113,6 +113,8 @@ def publish_race_to_racedata(
             {
                 "number": int(row["馬番"]),
                 "name": str(row["馬名"]),
+                "age": int(row["年齢"]),
+                "horseKey": str(row["馬キー"]),
                 "odds": _number(row["単勝オッズ"], 1),
                 "marketProbability": _number(row["市場勝率(%)"]),
                 "aiProbability": _number(row["AI勝率(%)"]),
