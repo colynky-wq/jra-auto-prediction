@@ -124,9 +124,11 @@ jobs:
       - name: Evaluate actually recorded pre-race research predictions
         id: prospective
         continue-on-error: true
-        run: |
-          python production/evaluate_prospective_pace.py
-          python production/build_pace_recording_status.py
+        run: python production/evaluate_prospective_pace.py
+      - name: Publish recording status independently of evaluation
+        id: recording_status
+        continue-on-error: true
+        run: python production/build_pace_recording_status.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -154,5 +156,5 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Surface collection failures
-        if: steps.collect.outcome == 'failure' || steps.backfill.outcome == 'failure' || steps.prospective.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.backfill.outcome == 'failure' || steps.prospective.outcome == 'failure' || steps.recording_status.outcome == 'failure'
         run: exit 1
