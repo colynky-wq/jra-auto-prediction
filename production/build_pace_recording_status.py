@@ -61,14 +61,18 @@ def build(reports_root,lap_root,history,models_root,now):
         elif pred:
             captured=pred.get('snapshotCapturedAtJST');predicted=pred.get('predictedAtJST')
             try:
+                snapshotcapture=datetime.fromisoformat(pred['snapshotCapturedAtJST'])
                 postpred=datetime.fromisoformat(pred['scheduledPostJST']);predictiontime=datetime.fromisoformat(pred['predictedAtJST']);capturetime=datetime.fromisoformat(pred['inputAvailableAtJST']);fit=datetime.fromisoformat(pred['modelFittedAtJST'])
-                if any(t.tzinfo is None for t in [postpred,predictiontime,capturetime,fit]) or not capturetime<=predictiontime<postpred or not fit<=predictiontime or pred['trainingCutoffDate']>=race['raceDate']:raise ValueError('time')
+                if any(t.tzinfo is None for t in [snapshotcapture,postpred,predictiontime,capturetime,fit]) or not snapshotcapture<=capturetime<=predictiontime<postpred or not fit<=predictiontime or pred['trainingCutoffDate']>=race['raceDate']:raise ValueError('time')
                 if pred['raceID']!=rid or pred['raceDate']!=race['raceDate']:raise ValueError('identity')
                 filename=pred['snapshotFile']
                 if Path(filename).name!=filename:raise ValueError('filename')
                 snapshotpath=folder/filename;snapshot=json.loads(snapshotpath.read_text())
                 if hashlib.sha256(snapshotpath.read_bytes()).hexdigest()!=pred['snapshotSHA256']:raise ValueError('snapshot')
                 if pred['modelID'] not in models or models[pred['modelID']][1]!=pred['modelFileSHA256']:raise ValueError('model')
+                model=models[pred['modelID']][0]
+                if model['fittedAtJST']!=pred['modelFittedAtJST'] or model['trainingCutoffDate']!=pred['trainingCutoffDate']:raise ValueError('model time')
+                if snapshot['raceID']!=rid or snapshot['raceDate']!=race['raceDate'] or snapshot['capturedAtJST']!=pred['snapshotCapturedAtJST'] or snapshot['scheduledPostJST']!=pred['scheduledPostJST'] or datetime.fromisoformat(snapshot.get('completeInputAvailableAtJST',snapshot['capturedAtJST']))!=capturetime or not snapshot.get('prePostConfirmed'):raise ValueError('snapshot identity')
                 if pred['status']=='held':state='held';reason=HOLD.get(pred.get('holdReason'),'発走前の条件確認で保留しました。');result_state='not_evaluated';result_label='照合対象外'
                 elif pred['status']=='research_forecast':
                     state='saved';reason='発走前の研究予測を保存しました。';result_state='awaiting_result';result_label='結果待ち'

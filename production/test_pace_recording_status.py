@@ -44,6 +44,12 @@ class TestRecordingStatus(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);folder,pred,actual,h,o=self.setup_case(root);pred['status']='held';pred['holdReason']='insufficient_style_history';(folder/'PacePrediction.json').write_text(json.dumps(pred))
             data=self.run_case(root,h);self.assertEqual(data['counts']['held'],1);self.assertIn('脚質記録',data['races'][0]['reason'])
+    def test_snapshot_identity_checked_before_result(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);folder,pred,actual,h,o=self.setup_case(root)
+            o['raceDate']='2026-10-18';snap=folder/'sample.json';snap.write_text(json.dumps(o))
+            pred['snapshotSHA256']=hashlib.sha256(snap.read_bytes()).hexdigest();(folder/'PacePrediction.json').write_text(json.dumps(pred))
+            self.assertEqual(self.run_case(root,h)['counts']['invalid'],1)
     def test_empty_first_day_and_old_history(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);h=pd.DataFrame({'レースID':['202605040501'],'日付':['2026-10-12'],'馬番':[1],'障害':[False]})
