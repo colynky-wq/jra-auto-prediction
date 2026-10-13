@@ -1,0 +1,44 @@
+name: KeibaAI Pre-race Pace Validation
+on:
+  pull_request:
+    paths:
+      - 'production/research_prerace_pace.py'
+      - 'production/test_prerace_pace.py'
+      - 'reports/PreracePace*.json'
+      - '.github/workflows/keibaai-prerace-pace-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install research dependencies
+        run: pip install -r production/requirements.txt 'scikit-learn==1.8.0'
+      - name: Test historical input isolation
+        run: python -m unittest discover -s production -p 'test_prerace_pace.py' -v
+      - name: Reproduce fixed research
+        run: |
+          cp reports/PreracePaceValidation.json /tmp/expected-pace.json
+          python production/research_prerace_pace.py
+          python - <<'PY'
+          import json
+          expected=json.load(open('/tmp/expected-pace.json'))
+          actual=json.load(open('reports/PreracePaceValidation.json'))
+          assert actual['selectedModel']==expected['selectedModel']
+          assert actual['evaluation2025']==expected['evaluation2025']
+          assert actual['latestSourceDateViolations']==0
+          assert actual['adoptionDecision']=='do_not_enable_pace_forecast'
+          assert actual['paceForecastEnabled'] is False
+          assert actual['formalSignalsChanged'] is False
+          assert actual['stakeSizingEnabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prerace-pace-research
+          path: reports/PreracePace*.json
