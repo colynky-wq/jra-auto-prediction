@@ -4716,13 +4716,11 @@ private struct KeibaAIRecordingStatusScreen: View {
     @State private var attentionOnly = false
 
     private var dateOptions: [String] {
-        ["すべて"] + Array(Set(statusStore.data?.races.map(\.raceDate) ?? [])).sorted(by: >)
+        statusStore.data?.recordingDateOptions ?? ["すべて"]
     }
 
     private var visibleRows: [KeibaAIRecordingStatusRow] {
-        (statusStore.data?.races ?? []).filter {
-            (selectedDate == "すべて" || $0.raceDate == selectedDate) && (!attentionOnly || $0.needsAttention)
-        }
+        statusStore.data?.filteredRecordingRows(selectedDate: selectedDate, attentionOnly: attentionOnly) ?? []
     }
 
     private func statusColor(_ state: String) -> Color {
@@ -4781,6 +4779,8 @@ private struct KeibaAIRecordingStatusScreen: View {
                         }
                         .pickerStyle(.menu)
                         Toggle("要確認のレースだけ表示", isOn: $attentionOnly)
+                        Text("表示中 \(visibleRows.count)件")
+                            .font(.caption).foregroundStyle(.secondary)
                         if data.races.isEmpty {
                             Text(data.emptyMessage).foregroundStyle(.secondary)
                                 .padding(.vertical, 20)
@@ -4836,6 +4836,9 @@ private struct KeibaAIRecordingStatusScreen: View {
             }
             .task { await statusStore.load() }
             .refreshable { await statusStore.load() }
+            .onChange(of: dateOptions) { _, options in
+                if !options.contains(selectedDate) { selectedDate = "すべて" }
+            }
         }
     }
 }
