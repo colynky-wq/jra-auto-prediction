@@ -70,6 +70,7 @@ jobs:
           python -m unittest discover -s production -p 'test_pace_baselines.py'
           python -m unittest discover -s production -p 'test_lap_backfill_cutoff.py'
           python -m unittest discover -s production -p 'test_pace_prospective.py'
+          python -m unittest discover -s production -p 'test_pace_recording_status.py'
       - name: Validate stored sidecars against history
         run: |
           python - <<'PY'
@@ -123,7 +124,9 @@ jobs:
       - name: Evaluate actually recorded pre-race research predictions
         id: prospective
         continue-on-error: true
-        run: python production/evaluate_prospective_pace.py
+        run: |
+          python production/evaluate_prospective_pace.py
+          python production/build_pace_recording_status.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -133,6 +136,8 @@ jobs:
             reports/race_laps/*.json
             reports/PaceBaselineValidation.json
             reports/PaceProspectiveValidation.json
+            PaceRecordingStatus.json
+            reports/PaceRecordingStatus.md
           retention-days: 14
       - name: Publish independently collected data
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -143,6 +148,7 @@ jobs:
           if [ -d reports/race_laps ]; then git add reports/race_laps; fi
           if [ -f reports/PaceBaselineValidation.json ]; then git add reports/PaceBaselineValidation.json; fi
           if [ -f reports/PaceProspectiveValidation.json ]; then git add reports/PaceProspectiveValidation.json; fi
+          if [ -f PaceRecordingStatus.json ]; then git add PaceRecordingStatus.json reports/PaceRecordingStatus.md; fi
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'Update independent official race lap research data'
           git pull --rebase origin main
