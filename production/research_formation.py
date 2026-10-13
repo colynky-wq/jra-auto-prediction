@@ -137,7 +137,7 @@ def run(history: pd.DataFrame) -> dict:
             "All runners on a day are predicted before that day's results are added.",
             "Top-three includes ties and unknown leaders count as misses; random baseline uses the same known-horse pool.",
             "Initial-corner order is a rough reference, not the full race formation or a leader probability.",
-            "No race-level early sectional/lap target is stored; S/M/H pace cannot be validated.",
+            "This reference evaluates first-corner order only; early-lap pace forecasts require separate validation.",
             "Straight races, debut-heavy fields and fields below 80% coverage are not given a race-wide reference.",
         ],
     }

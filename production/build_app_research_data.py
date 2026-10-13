@@ -12,7 +12,7 @@ import pandas as pd
 
 from app_research_runtime import METHOD_VERSION, STYLE_ORDER, classify_style, finite, practical_candidates, tendency
 from horse_profile_runtime import normalize_horse_name
-from formation_runtime import FORMATION_METHOD_VERSION, current_race_has_corner, formation_reference, is_straight_race, position_history, relative_position
+from formation_runtime import FORMATION_METHOD_VERSION, PACE_NOTE_VERSION, current_race_has_corner, formation_reference, is_straight_race, position_history, relative_position
 
 REPO = Path(__file__).resolve().parent.parent
 HISTORY_PATH = REPO / "production/production_history.parquet"
@@ -166,6 +166,7 @@ def main() -> None:
         "historySHA256": hashlib.sha256(HISTORY_PATH.read_bytes()).hexdigest(),
         "methodVersion": METHOD_VERSION,
         "formationMethodVersion": FORMATION_METHOD_VERSION,
+        "paceNoteVersion": PACE_NOTE_VERSION,
     }
     if OUT_PATH.exists() and not args.evaluate:
         old = json.loads(OUT_PATH.read_text(encoding="utf-8"))
