@@ -7,6 +7,8 @@ from urllib.parse import urlencode
 
 from bs4 import BeautifulSoup
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from race_lap_runtime import parse_official_laps
 
@@ -39,6 +41,11 @@ class HistoricalResults:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers["User-Agent"] = "Mozilla/5.0 KeibaAI-research/1.0"
+        # Calendar POSTs only navigate public results. Retry temporary service
+        # errors twice; authentication/access denials are not retry statuses.
+        retry = Retry(total=2, backoff_factor=1, status_forcelist=[502, 503, 504],
+                      allowed_methods={"GET", "POST"}, raise_on_status=False)
+        self.session.mount(HOST+"/", HTTPAdapter(max_retries=retry))
         response = self.session.get(HOST+"/", timeout=30)
         response.raise_for_status()
         html = decode(response)
