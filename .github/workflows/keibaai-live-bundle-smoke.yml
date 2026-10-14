@@ -61,6 +61,8 @@ jobs:
           python -m py_compile production/ticket_plan_shadow.py
           python -m py_compile production/wide_axis_rules.py
           python -m py_compile production/wide_axis_shadow.py
+      - name: Verify Wide-axis selection and independent final result identity
+        run: python production/test_wide_axis_rules.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
       - name: Validate all-pair Wide practical ranking and immutable archive

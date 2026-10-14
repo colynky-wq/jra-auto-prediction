@@ -30,6 +30,15 @@ def fixture():
     return race,signal
 
 
+def write_actual_result(day, race):
+    ranks = {1:1,6:2,4:3,2:4,3:5,5:6,7:7,8:8}
+    rows = [{**h, 'finishPosition':ranks[h['number']], 'resultStatus':'確定'} for h in race['horses']]
+    result = {k:race[k] for k in ('raceID','raceDate','startTime')}
+    result.update(fieldSize=len(rows), resultUpdatedAtJST='2026-10-17 10:01:00', horses=rows)
+    (day/'ResultData.json').write_text(json.dumps([result]))
+    return result
+
+
 class AxisChecks(unittest.TestCase):
     def test_top3_axis_not_win_longshot(self):
         race,signal=fixture()
@@ -112,12 +121,14 @@ class AxisChecks(unittest.TestCase):
             self.assertEqual(shadow.build(root)['counts']['awaitingResults'],1)
             rows=[]
             for x in s['wideEvaluation']['validationPairs']:
+                key=(x['number1'],x['number2'])
+                payouts={(1,6):410,(1,4):100,(4,6):450}
                 rows.append({**x,'oddsLow':x['wideOddsLow'],'oddsHigh':x['wideOddsHigh'],
-                             'hit':(x['number1'],x['number2'])==(1,6),
-                             'payoutPer100Yen':410 if (x['number1'],x['number2'])==(1,6) else 0})
+                             'hit':key in payouts,'payoutPer100Yen':payouts.get(key,0)})
             result={'races':[{'raceID':race['raceID'],'validationScope':'all_pairs',
                 'snapshotCapturedAtJST':'2026-10-17 09:50:00','pairs':rows}]}
             q=p.parent.parent/'WideValidation.json';q.write_text(json.dumps(result))
+            write_actual_result(p.parent.parent, race)
             report=shadow.build(root)
             self.assertEqual(report['counts']['matched'],1)
             self.assertAlmostEqual(report['returnIndex'],410/300,places=4)
@@ -126,6 +137,64 @@ class AxisChecks(unittest.TestCase):
             self.assertEqual(shadow.build(root)['counts']['entrantChanged'],1)
             p.write_text('{}')
             self.assertEqual(shadow.build(root)['counts']['invalid'],1)
+
+    def test_actual_result_identity_and_cancellations_are_independent(self):
+        race,s=fixture()
+        with tempfile.TemporaryDirectory() as t:
+            p=axis.record_first(t,race,s,datetime.fromisoformat('2026-10-17T09:51:00+09:00'))
+            day=p.parent.parent
+            actual=write_actual_result(day, race)
+            # The saved forecast names stay unchanged while the actual roster changes.
+            actual['horses'][0]['name']='結果側の別馬'
+            (day/'ResultData.json').write_text(json.dumps([actual]))
+            report=shadow.build(t)
+            self.assertEqual(report['counts']['entrantChanged'],1)
+            self.assertEqual(report['counts']['matched'],0)
+            self.assertIsNone(report['returnIndex'])
+            for status in ['取消','除外']:
+                actual=write_actual_result(day, race)
+                actual['horses'][5].update(finishPosition=None,resultStatus=status)
+                (day/'ResultData.json').write_text(json.dumps([actual]))
+                self.assertEqual(shadow.build(t)['counts']['entrantChanged'],1)
+            for status in ['中止','失格']:
+                actual=write_actual_result(day, race)
+                actual['horses'][5].update(finishPosition=None,resultStatus=status)
+                (day/'ResultData.json').write_text(json.dumps([actual]))
+                post=datetime.fromisoformat('2026-10-17T10:00:00+09:00')
+                self.assertIsNone(shadow.actual_result_state(day,json.loads(p.read_text()),post))
+
+    def test_actual_result_missing_incomplete_corrupt_and_day_mismatch(self):
+        race,s=fixture()
+        with tempfile.TemporaryDirectory() as t:
+            p=axis.record_first(t,race,s,datetime.fromisoformat('2026-10-17T09:51:00+09:00'))
+            day=p.parent.parent
+            self.assertEqual(shadow.build(t)['counts']['awaitingResults'],1)
+            actual=write_actual_result(day, race)
+            actual['horses'][0].update(finishPosition=None,resultStatus='不明')
+            (day/'ResultData.json').write_text(json.dumps([actual]))
+            self.assertEqual(shadow.build(t)['counts']['awaitingResults'],1)
+            actual=write_actual_result(day, race);actual['raceDate']='2026-10-18'
+            (day/'ResultData.json').write_text(json.dumps([actual]))
+            self.assertEqual(shadow.build(t)['counts']['invalid'],1)
+            actual=write_actual_result(day, race);actual['resultUpdatedAtJST']='2026-10-17 09:59:00'
+            (day/'ResultData.json').write_text(json.dumps([actual]))
+            self.assertEqual(shadow.build(t)['counts']['invalid'],1)
+            actual=write_actual_result(day, race);actual['horses']={}
+            (day/'ResultData.json').write_text(json.dumps([actual]))
+            self.assertEqual(shadow.build(t)['counts']['invalid'],1)
+            (day/'ResultData.json').write_text('{broken')
+            self.assertEqual(shadow.build(t)['counts']['invalid'],1)
+
+    def test_actual_result_next_day_refresh_preserves_race_day(self):
+        race,s=fixture()
+        with tempfile.TemporaryDirectory() as t:
+            p=axis.record_first(t,race,s,datetime.fromisoformat('2026-10-17T09:51:00+09:00'))
+            actual=write_actual_result(p.parent.parent, race)
+            actual['resultUpdatedAtJST']='2026-10-18 00:10:00'
+            (p.parent.parent/'ResultData.json').write_text(json.dumps([actual]))
+            # The payout validation is still absent; identity can be checked without
+            # counting it as a matched result or replacing the final payout.
+            self.assertEqual(shadow.build(t)['counts']['awaitingResults'],1)
 
 
 if __name__=='__main__':
