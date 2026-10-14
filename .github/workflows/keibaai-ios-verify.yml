@@ -31,6 +31,10 @@ jobs:
           python3 ios/tests/build_recording_store_checks.py --source ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift --checks ios/tests/RecordingStatusStoreChecks.swift --output /tmp/KeibaAIRecordingStoreChecks.swift
           swiftc -swift-version 5 -parse-as-library ios/KeibaAI/KeibaAI/KeibaAIRecordingStatusModels.swift /tmp/KeibaAIRecordingStoreChecks.swift -o /tmp/keibaai-recording-store-checks
           /tmp/keibaai-recording-store-checks
+      - name: Verify reference ticket budgets and summary refresh
+        run: |
+          swiftc -swift-version 5 -parse-as-library ios/KeibaAI/KeibaAI/KeibaAIReferenceTicketModels.swift ios/tests/ReferenceTicketChecks.swift -o /tmp/keibaai-reference-checks
+          /tmp/keibaai-reference-checks
       - name: Build the complete iOS app without signing
         run: |
           xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-build CODE_SIGNING_ALLOWED=NO build

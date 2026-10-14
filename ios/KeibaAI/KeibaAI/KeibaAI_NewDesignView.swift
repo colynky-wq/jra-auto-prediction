@@ -1143,6 +1143,8 @@ struct KeibaAINewDesignView: View {
     @StateObject private var horseProfileStore = KeibaAIHorseProfileStore()
     @StateObject private var appResearchStore = KeibaAIAppResearchStore()
     @StateObject private var budgetStore = KeibaAIBudgetStore()
+    @StateObject private var ticketShadowStore = KeibaAITicketShadowStore()
+    @State private var referenceProfile = KeibaAIReferenceProfile.balanced
 
     @State private var mainTab: KeibaAIMainTab = .today
     @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
@@ -1187,7 +1189,8 @@ struct KeibaAINewDesignView: View {
             async let performance: Void = performanceStore.load()
             async let horses: Void = horseProfileStore.loadIndex()
             async let research: Void = appResearchStore.load(date8: selectedDate8)
-            _ = await (schedule, results, signals, wide, performance, horses, research)
+            async let tickets: Void = ticketShadowStore.load()
+            _ = await (schedule, results, signals, wide, performance, horses, research, tickets)
             chooseFirstRaceIfNeeded()
         }
         .task(id: selectedDate8) {
@@ -1202,6 +1205,7 @@ struct KeibaAINewDesignView: View {
                     await signalStore.load(date8: selectedDate8, force: true)
                     await wideValidationStore.load(date8: selectedDate8, force: true)
                     await performanceStore.load(force: true)
+                    await ticketShadowStore.load()
                     await appResearchStore.load(date8: selectedDate8, force: true)
                 }
 
@@ -1494,6 +1498,7 @@ struct KeibaAINewDesignView: View {
                     await signalStore.load(date8: selectedDate8, force: true)
                     await wideValidationStore.load(date8: selectedDate8, force: true)
                     await performanceStore.load(force: true)
+                    await ticketShadowStore.load()
                     await horseProfileStore.loadIndex(force: true)
                     await appResearchStore.load(date8: selectedDate8, force: true)
                     chooseFirstRaceIfNeeded()
@@ -1835,13 +1840,13 @@ struct KeibaAINewDesignView: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader(
                     title: "馬券プラン",
-                    subtitle: "確率評価は接続済み / 金額配分はまだ行わない"
+                    subtitle: "検証中の参考プラン / 1点100円の仮配分"
                 )
 
                 KeibaAIInfoCard(
                     icon: "checkmark.shield.fill",
-                    title: "ワイド確率まで接続済み",
-                    message: "荒れ度・勝負度・大穴候補に加え、発走前ワイド実オッズ・AI的中率・保守的期待値・実戦優先度まで接続済みです。金額配分は検証件数が十分に貯まるまでロックします。"
+                    title: "正式公開前の参考表示",
+                    message: "条件に合うワイドを1点100円で仮配分します。予算全額は使わず、残額を表示します。詳しい候補と途中の検証状況は詳細画面で確認できます。"
                 )
 
                 KeibaAIBudgetCard(store: budgetStore)
@@ -2034,7 +2039,9 @@ struct KeibaAINewDesignView: View {
                 selectedPeriodID: selectedPerformancePeriodID
             )
         } else if mainTab == .ticket {
-            KeibaAITicketPlanView(budgetStore: budgetStore)
+            KeibaAITicketPlanView(budgetStore: budgetStore, shadowStore: ticketShadowStore,
+                                  profile: $referenceProfile, date8: selectedDate8,
+                                  items: allScheduleItems, signals: signalStore.racesByID)
         } else if let item = selectedScheduleItem {
             if let race = item.prediction {
                 KeibaAIRaceDetailNew(
@@ -2044,6 +2051,7 @@ struct KeibaAINewDesignView: View {
                     wideValidation: wideValidationStore.race(for: race.raceID),
                     research: appResearchStore.race(for: race),
                     horseProfileStore: horseProfileStore,
+                    onOpenTicketPlan: { mainTab = .ticket; preferredCompactColumn = .detail },
                     selectedTab: $detailTab
                 )
             } else {
@@ -2348,6 +2356,7 @@ private struct KeibaAIRaceDetailNew: View {
     let wideValidation: KeibaAIWideValidationRace?
     let research: KeibaAIAppResearchRace?
     @ObservedObject var horseProfileStore: KeibaAIHorseProfileStore
+    let onOpenTicketPlan: () -> Void
     @Binding var selectedTab: KeibaAIDetailTab
     @State private var selectedHorseForProfile: Horse?
     @ScaledMetric(relativeTo: .caption) private var summaryMinimumWidth: CGFloat = 140
@@ -2708,6 +2717,10 @@ private struct KeibaAIRaceDetailNew: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("ワイド評価")
                 .font(.title3.weight(.bold))
+
+            Button("検証中の参考プランを見る", action: onOpenTicketPlan)
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("open-reference-plan")
 
             KeibaAIInfoCard(
                 icon: "target",
@@ -3962,7 +3975,7 @@ private struct KeibaAIBudgetCard: View {
 
             Text("設定額を使い切る必要はありません。見送りや残額を認める目安として保存します。購入実績・当日の使用額はまだ管理していません。")
                 .font(.caption).foregroundStyle(.secondary)
-            Label("購入金額の自動配分は待機中", systemImage: "lock.fill")
+            Label("参考プランは1点100円 / 正式な金額配分は検証中", systemImage: "flask")
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
         }
         .padding(16)
@@ -4457,7 +4470,8 @@ private struct KeibaAIGuideView: View {
                         KeibaAIGuideDefinition(term: "参考隊列", text: "過去の初角の平均位置を前→後に並べた研究表示です。過去3走以上の履歴が出走馬の80%以上あるレースに限ります。直線コースは除き、履歴不足の馬は順に含めません。レース全体の実際の並びを当てた表示ではありません。")
                         KeibaAIGuideDefinition(term: "競馬場の参考点", text: "競馬場ごとの着順を頭数で補正し、0〜100点にまとめます。少ない出走では50点へ近づける補正をします。勝率を表す数字ではなく、相手の強さや距離の違いは調整していません。")
                         KeibaAIGuideDefinition(term: "ワイド評価", text: "2頭が両方3着以内に入る同時確率。発走前実オッズ取得後は、AI的中率と保守的期待値を合わせた「実戦優先度」で並べます。同じ期待値なら、より当たりやすい組み合わせを上位にします。Kelly値は順位付け専用で購入金額には使いません。")
-                        KeibaAIGuideDefinition(term: "予算設定", text: "馬券プランで1レースの予算と1日の上限を別々に変更できます。100円単位の任意入力・プリセットに対応し、この端末に保存します。設定額を使い切る必要はなく、購入実績の集計や自動配分にはまだ接続していません。")
+                        KeibaAIGuideDefinition(term: "予算設定", text: "馬券プランで1レースの予算と1日の上限を別々に変更できます。検証中の参考プランは1点100円で仮配分し、取得済みの全競馬場のレース合計にも上限を適用します。残額は使わず、購入実績や実際の残高とは区別します。")
+                        KeibaAIGuideDefinition(term: "検証中の参考プラン", text: "既存の安定型・バランス型・高期待値型の候補条件を使う参考表示です。発走前に取得した確率と実ワイドオッズが対応する場合だけ表示します。途中の回収率は1点100円で全候補を検証した値で、端末の予算制限後の配分成績ではありません。300レース等の基準を満たしても正式公開は別途判断します。")
                     }
                 }
 
@@ -4502,7 +4516,7 @@ private struct KeibaAIGuideView: View {
                         KeibaAIDesignPrinciple(number: "3", title: "必ず結果と突合する", text: "AI順位、実着順、最終オッズを比較し、良かった予測だけでなく外れも蓄積します。")
                         KeibaAIDesignPrinciple(number: "4", title: "全レースを買う前提にしない", text: "『見送り』を重要な判断として扱い、AIが得意そうなレースを選ぶ方向を目指します。")
                         KeibaAIDesignPrinciple(number: "5", title: "回収率は実運用で確認する", text: "過去データで良く見えても利益確定とは考えません。発走前に保存したライブ予測だけを使って結果を確認します。")
-                        KeibaAIDesignPrinciple(number: "6", title: "馬券プランは検証後に有効化", text: "ワイドなどの同時確率と実際のオッズを確認してから、予算配分機能へ進みます。")
+                        KeibaAIDesignPrinciple(number: "6", title: "参考表示と正式公開を分ける", text: "検証中は条件に合うワイドを1点100円で仮配分します。正式な金額配分は、発走前記録と実運用成績を確認してから判断します。")
                     }
                 }
 
@@ -4703,43 +4717,147 @@ private struct KeibaAIDesignPrinciple: View {
 
 private struct KeibaAITicketPlanView: View {
     @ObservedObject var budgetStore: KeibaAIBudgetStore
+    @ObservedObject var shadowStore: KeibaAITicketShadowStore
+    @Binding var profile: KeibaAIReferenceProfile
+    let date8: String
+    let items: [KeibaAIScheduleItem]
+    let signals: [String: KeibaAIRaceSignal]
+    @ScaledMetric(relativeTo: .subheadline) private var metricWidth: CGFloat = 135
+
+    private var plans: [KeibaAIReferenceRacePlan] {
+        let inputs = items.map { item in
+            let signal = signals[item.raceID]
+            let horses = item.prediction?.horses ?? []
+            let uniqueHorses = Set(horses.map(\.number)).count == horses.count
+            let names = uniqueHorses ? Dictionary(uniqueKeysWithValues: horses.map { ($0.number, $0.name) }) : [:]
+            let matched = KeibaAIReferencePlanner.date8(item.prediction?.raceDate) == date8 &&
+                KeibaAIReferencePlanner.date8(signal?.raceDate) == date8 &&
+                signal?.startTime == item.startTime && uniqueHorses
+            let pairs = (signal?.wideEvaluation?.pairs ?? []).compactMap { p -> KeibaAIReferencePair? in
+                guard let low = p.wideOddsLow, let high = p.wideOddsHigh,
+                      let ev = p.conservativeExpectedValue else { return nil }
+                return KeibaAIReferencePair(number1: p.number1, name1: p.name1, number2: p.number2,
+                    name2: p.name2, probabilityPct: p.aiWideProbability, oddsLow: low, oddsHigh: high, expectedValue: ev)
+            }
+            return KeibaAIReferenceRaceInput(raceID: item.raceID, raceDate: item.raceDate,
+                startTime: item.startTime, eligible: matched && signal?.eligible == true,
+                horses: names, oddsConnected: signal?.wideEvaluation?.oddsConnected == true,
+                capturedAtJST: signal?.wideEvaluation?.capturedAtJST, pairs: pairs)
+        }
+        return KeibaAIReferencePlanner.plans(inputs: inputs, date: date8, profile: profile,
+                                             perRace: budgetStore.perRaceYen, dailyLimit: budgetStore.dailyLimitYen)
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("馬券プラン")
-                    .font(.largeTitle.weight(.heavy))
-
-                Text("1レースの予算と1日の上限を設定できます。購入金額の自動配分は検証後に進めます。")
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-
-                KeibaAIBudgetCard(store: budgetStore)
-
-                KeibaAIInfoCard(
-                    icon: "checkmark.shield.fill",
-                    title: "確率モデルは接続済み / 金額配分は待機",
-                    message: "荒れ度・勝負度・大穴候補・ワイド同時3着内確率に加え、発走前ワイド実オッズと実戦優先度まで接続済みです。現在は実運用結果を蓄積し、購入金額の自動配分を解禁できるか検証しています。"
-                )
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Label("1. 荒れ度・勝負度", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    Label("2. 大穴候補", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    Label("3. ワイド同時3着内確率", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    Label("4. ワイド実オッズ・実戦優先度", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    Label("5. 予算別の金額配分", systemImage: "lock.fill").foregroundStyle(.secondary)
+                Text("検証中の参考プラン").font(.largeTitle.weight(.heavy))
+                Text("表示日 \(date8) / 取得済みの全競馬場が対象")
+                    .font(.caption).foregroundStyle(.secondary)
+                KeibaAIInfoCard(icon: "flask", title: "1点100円の仮配分",
+                    message: "正式公開前の参考表示です。実オッズが取得できた候補だけを表示し、予算全額は使いません。過去日を選んだ場合は保存時点の参考表示です。")
+                Picker("参考プランの種類", selection: $profile) {
+                    ForEach(KeibaAIReferenceProfile.allCases) { p in Text(p.label).tag(p) }
                 }
-                .font(.headline)
-                .padding(18)
-                .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 20))
-
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("reference-profile")
+                Text(String(format: "下限オッズでの期待倍率 %.2f以上・1レース最大%d点・期待倍率順", profile.threshold, profile.maxPairs))
+                    .font(.caption).foregroundStyle(.secondary)
+                Text("期待倍率はAI的中率×オッズ下限です。1.10は100円あたり平均110円という計算上の値で、実際の払戻しとは異なります。")
+                    .font(.caption).foregroundStyle(.secondary)
+                KeibaAIBudgetCard(store: budgetStore)
+                validationCard
+                let total = plans.reduce(0) { $0 + $1.totalYen }
+                Text("取得済みレースの仮合計 \(KeibaAIBudgetAmount.label(total))")
+                    .font(.headline).accessibilityIdentifier("reference-day-total")
+                if let limit = budgetStore.dailyLimitYen {
+                    Text("1日の仮残額 \(KeibaAIBudgetAmount.label(max(0, limit - total)))")
+                        .font(.subheadline.monospacedDigit())
+                }
+                Text("取得済みレースを発走時刻順に計算し、新しいデータや設定で再計算します。実際の購入額・残高の管理ではありません。")
+                    .font(.caption).foregroundStyle(.secondary)
+                if items.isEmpty {
+                    KeibaAIInfoCard(icon: "clock", title: "当日のレースデータ待ち",
+                        message: "開催日に予定表を取得し、発走約8〜12分前の予測と実ワイドオッズが保存されたレースから表示します。")
+                }
+                ForEach(plans) { plan in
+                    if let item = items.first(where: { $0.raceID == plan.id }) {
+                        planCard(plan, item: item)
+                    }
+                }
             }
-            .padding(28)
+            .padding(22)
             .frame(maxWidth: 900, alignment: .leading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("馬券プラン")
+        .navigationBarTitleDisplayMode(.inline)
+        .accessibilityIdentifier("reference-ticket-plan")
+        .refreshable { await shadowStore.load() }
+    }
+
+    private var validationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("途中の検証状況").font(.headline)
+                Spacer()
+                Button("更新") { Task { await shadowStore.load() } }
+                    .disabled(shadowStore.isLoading)
+            }
+            if let error = shadowStore.errorMessage {
+                Text(error).font(.caption).foregroundStyle(.orange)
+            }
+            if let data = shadowStore.data, let summary = data.profiles[profile.rawValue] {
+                Text("候補条件に合うレース \(summary.selectedRaces) / 300件・買い目 \(summary.selectedBets)件")
+                    .font(.subheadline.monospacedDigit()).accessibilityIdentifier("reference-validation-count")
+                Text(summary.returnIndex.map { String(format: "途中の回収率 %.1f%%", $0 * 100) } ?? "回収率は検証データ待ち")
+                    .font(.subheadline.monospacedDigit()).accessibilityIdentifier("reference-validation-return")
+                Text(summary.status == "review_candidate" ? "正式公開の再確認対象です。公開は別途判断します。" : "データ蓄積中です。300件に達しても成績の条件を確認します。")
+                    .font(.caption).foregroundStyle(.secondary)
+                Text("更新 \(data.generatedAtJST)").font(.caption2).foregroundStyle(.secondary)
+                Text("既存の1点100円均等・全候補の検証です。端末の予算上限を適用した仮配分の成績ではありません。少数の結果は大きく変動します。")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text(shadowStore.isLoading ? "検証状況を取得中…" : "検証件数・回収率は未確認です")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func planCard(_ plan: KeibaAIReferenceRacePlan, item: KeibaAIScheduleItem) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("\(item.venue) \(item.raceNumber)R  \(item.startTime)").font(.headline)
+            Text(item.raceName).font(.title3.weight(.bold)).fixedSize(horizontal: false, vertical: true)
+            if let reason = plan.reason { Text(reason).font(.caption).foregroundStyle(.secondary) }
+            ForEach(plan.pairs) { pair in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("ワイド \(pair.id)  仮配分100円")
+                        .font(.headline).accessibilityIdentifier("reference-pair-" + plan.id + "-" + pair.id)
+                    Text("\(pair.name1) × \(pair.name2)").font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: metricWidth))], alignment: .leading, spacing: 8) {
+                        Text(String(format: "AI的中率 %.1f%%", pair.probabilityPct))
+                        Text(String(format: "実オッズ %.1f〜%.1f倍", pair.oddsLow, pair.oddsHigh))
+                        Text(String(format: "期待倍率 %.2f", pair.selectionExpectedValue))
+                    }
+                    .font(.subheadline.monospacedDigit())
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(12)
+                .background(.blue.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+            }
+            Text("仮配分合計 \(KeibaAIBudgetAmount.label(plan.totalYen)) / レース予算の残額 \(KeibaAIBudgetAmount.label(plan.remainingYen))")
+                .font(.subheadline.monospacedDigit()).fixedSize(horizontal: false, vertical: true)
+            if !plan.pairs.isEmpty, let capture = plan.capturedAtJST {
+                Text("発走前オッズ取得 \(capture)").font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 }
+
 
 // ============================================================
 // MARK: - Preview

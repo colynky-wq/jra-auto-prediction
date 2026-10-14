@@ -3,6 +3,52 @@ import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
     @MainActor
+    func testReferencePlanAndBudgetLimits() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
+        app.launch()
+        let race = app.descendants(matching: .any).matching(identifier:"race-card-202605040601").firstMatch
+        XCTAssertTrue(race.waitForExistence(timeout:20))
+        let tabs = app.scrollViews["main-tabs"]
+        let menu = app.buttons["main-tab-馬券プラン"]
+        for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
+        menu.tap()
+        let screen = app.scrollViews["reference-ticket-plan"]
+        XCTAssertTrue(screen.waitForExistence(timeout:5))
+        let count = app.staticTexts["reference-validation-count"]
+        for _ in 0..<5 { if count.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(count.label.contains("4 / 300件"))
+        XCTAssertTrue(app.staticTexts["reference-validation-return"].label.contains("80.0%"))
+        let total = app.staticTexts["reference-day-total"]
+        for _ in 0..<5 { if total.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(total.label.contains("300円"),"daily limit caps two venues together")
+        for _ in 0..<7 { if app.buttons["安定型"].isHittable { break }; screen.swipeDown() }
+        app.buttons["安定型"].tap()
+        for _ in 0..<5 { if total.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(total.label.contains("200円"),"stable profile allocates only one per race")
+        for _ in 0..<7 { if app.buttons["バランス型"].isHittable { break }; screen.swipeDown() }
+        app.buttons["バランス型"].tap()
+        let pair = app.staticTexts["reference-pair-202605040601-1-2"]
+        for _ in 0..<5 { if pair.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(pair.isHittable)
+        XCTAssertTrue(pair.label.contains("仮配分100円"))
+        let shot = XCTAttachment(screenshot:app.screenshot())
+        shot.name = "reference-ticket-plan-100yen"; shot.lifetime = .keepAlways; add(shot)
+        for _ in 0..<8 { if app.buttons["予算を変更"].isHittable { break }; screen.swipeDown() }
+        app.buttons["予算を変更"].tap()
+        let field = app.textFields["1レースの予算を円で入力"]
+        XCTAssertTrue(field.waitForExistence(timeout:5))
+        field.tap()
+        field.typeText(String(repeating:XCUIKeyboardKey.delete.rawValue,count:8)+"0")
+        app.buttons["保存"].tap()
+        for _ in 0..<5 { if total.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(total.label.contains("0円"),"zero budget recomputes all plans immediately")
+        print("PHONE_REFERENCE_TICKET_OK: reference candidates, summary, cross-venue daily cap, zero-budget recompute")
+    }
+
+    @MainActor
     func testReadableRaceNameAndProbabilities() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
