@@ -12,6 +12,23 @@ enum KeibaAIUITestTransport {
         sample["raceNumber"] = 1
         sample["startTime"] = "10:00"
         sample["raceName"] = "操作確認レース"
+        if ProcessInfo.processInfo.environment["KEIBAAI_UI_LAYOUT"] == "1" {
+            sample["raceName"] = "オクトーバー"
+            sample["startTime"] = "15:30"
+            var horses = sample["horses"] as! [[String: Any]]
+            for index in horses.indices { horses[index]["aiProbability"] = 1.0 }
+            horses[0]["name"] = "アスクセクシーモア"
+            horses[0]["marketProbability"] = 22.6
+            horses[0]["aiProbability"] = 22.4
+            horses[0]["aiTop2Probability"] = 35.8
+            horses[0]["aiTop3Probability"] = 100.0
+            horses[0]["marketTop2Probability"] = 41.2
+            horses[0]["marketTop3Probability"] = 57.4
+            horses[0]["aiMarketRatio"] = 0.99
+            horses[0]["odds"] = 3.5
+            horses[0]["expectedIndex"] = 78.7
+            sample["horses"] = horses
+        }
         PhoneFixtureProtocol.races = try! JSONSerialization.data(withJSONObject: [sample])
         PhoneFixtureProtocol.schedule = try! JSONSerialization.data(withJSONObject: [
             ["raceID": "202605040601", "venue": "東京", "raceNumber": 1, "startTime": "10:00",

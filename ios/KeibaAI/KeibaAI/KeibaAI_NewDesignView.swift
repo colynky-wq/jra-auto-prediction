@@ -1773,8 +1773,18 @@ struct KeibaAINewDesignView: View {
 
                 sectionHeader(
                     title: usePracticalLongshot ? "大穴v2 比較" : "大穴候補",
-                    subtitle: usePracticalLongshot ? appResearchStore.sourceMessage : "v1条件：市場6番手以下・8倍以上・AI1%以上・AI÷市場1.20以上"
+                    subtitle: usePracticalLongshot ? appResearchStore.sourceMessage : "人気・オッズ・AIと市場の評価差で絞った候補"
                 )
+
+                KeibaAIInfoCard(
+                    icon: "sparkles",
+                    title: "大穴＝人気薄の高配当候補",
+                    message: KeibaAILongshotExplanation.meaning + "\n\n" + KeibaAILongshotExplanation.value
+                )
+                Text(KeibaAILongshotExplanation.conditions)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if usePracticalLongshot {
                     KeibaAIInfoCard(
@@ -2076,7 +2086,7 @@ private struct KeibaAIRaceCard: View {
 
             Text(item.raceName)
                 .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
                 Text(item.course)
@@ -2250,28 +2260,11 @@ private struct KeibaAIUnpredictedRaceDetail: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("\(item.venue) \(item.raceNumber)R")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.blue)
-
-                            Text(item.raceName)
-                                .font(.largeTitle.weight(.heavy))
-
-                            HStack(spacing: 12) {
-                                Label(item.startTime, systemImage: "clock")
-                                Label(item.course, systemImage: "map")
-                                if let fieldSize = item.fieldSize {
-                                    Label("\(fieldSize)頭", systemImage: "person.3.fill")
-                                }
-                            }
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        }
-
+                    HStack {
+                        Text("\(item.venue) \(item.raceNumber)R")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.blue)
                         Spacer()
-
                         Label(status.rawValue, systemImage: status.icon)
                             .font(.caption.weight(.bold))
                             .foregroundStyle(status.tint)
@@ -2279,6 +2272,20 @@ private struct KeibaAIUnpredictedRaceDetail: View {
                             .padding(.vertical, 7)
                             .background(status.tint.opacity(0.10), in: Capsule())
                     }
+
+                    Text(item.raceName)
+                        .font(.title.weight(.heavy))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("race-detail-name")
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 10) {
+                        if !item.startTime.isEmpty { Label(item.startTime, systemImage: "clock") }
+                        Label(item.course, systemImage: "map")
+                        if let fieldSize = item.fieldSize { Label("\(fieldSize)頭", systemImage: "person.3.fill") }
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
 
                     Divider()
 
@@ -2343,6 +2350,7 @@ private struct KeibaAIRaceDetailNew: View {
     @ObservedObject var horseProfileStore: KeibaAIHorseProfileStore
     @Binding var selectedTab: KeibaAIDetailTab
     @State private var selectedHorseForProfile: Horse?
+    @ScaledMetric(relativeTo: .caption) private var summaryMinimumWidth: CGFloat = 140
 
     private var sortedHorses: [Horse] {
         race.horses.sorted { $0.aiProbability > $1.aiProbability }
@@ -2375,6 +2383,7 @@ private struct KeibaAIRaceDetailNew: View {
             .frame(maxWidth: 1050, alignment: .leading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .accessibilityIdentifier("race-detail")
         .navigationTitle("\(race.venue) \(race.raceNumber)R")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedHorseForProfile) { horse in
@@ -2396,45 +2405,41 @@ private struct KeibaAIRaceDetailNew: View {
 
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\(race.venue) \(race.raceNumber)R")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.blue)
-
-                    Text(race.raceName)
-                        .font(.largeTitle.weight(.heavy))
-
-                    HStack(spacing: 12) {
-                        Label(race.startTime, systemImage: "clock")
-                        Label(race.course, systemImage: "map")
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                        Label("\(race.horses.count)頭", systemImage: "person.3.fill")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                }
-
+            HStack {
+                Text("\(race.venue) \(race.raceNumber)R")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.blue)
                 Spacer()
-
-                VStack(alignment: .trailing, spacing: 8) {
-                    Text(result == nil ? "AI予測済" : "結果取得済")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(result == nil ? Color.green : Color.secondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background((result == nil ? Color.green : Color.secondary).opacity(0.10), in: Capsule())
-
-                    Text("Race ID \(race.raceID)")
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
-                }
+                Text(result == nil ? "AI予測済" : "結果取得済")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(result == nil ? Color.green : Color.secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background((result == nil ? Color.green : Color.secondary).opacity(0.10), in: Capsule())
             }
+
+            Text(race.raceName)
+                .font(.title.weight(.heavy))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("race-detail-name")
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 10) {
+                if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
+                Label(race.course, systemImage: "map")
+                Label("\(race.horses.count)頭", systemImage: "person.3.fill")
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+
+            Text("Race ID \(race.raceID)")
+                .font(.caption2.monospaced())
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Divider()
 
-            HStack(spacing: 12) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: summaryMinimumWidth), spacing: 12, alignment: .top)], alignment: .leading, spacing: 12) {
                 KeibaAISummaryTile(
                     title: "荒れ度",
                     value: signal?.chaos?.stars ?? "--",
@@ -2454,7 +2459,7 @@ private struct KeibaAIRaceDetailNew: View {
                 KeibaAISummaryTile(
                     title: "大穴候補",
                     value: "\(signal?.longshotCandidates?.count ?? 0)頭",
-                    note: "v1条件",
+                    note: "人気薄・高配当候補",
                     icon: "sparkles",
                     tint: .pink
                 )
@@ -3066,6 +3071,11 @@ private struct KeibaAIRaceDetailNew: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("大穴v2 比較・研究").font(.title3.weight(.bold))
             KeibaAIInfoCard(
+                icon: "sparkles",
+                title: "大穴＝人気薄の高配当候補",
+                message: KeibaAILongshotExplanation.meaning + "\n\n" + KeibaAILongshotExplanation.value
+            )
+            KeibaAIInfoCard(
                 icon: "flask",
                 title: "勝率と価格を一緒に見る",
                 message: "市場6番手以下・単勝8倍以上・AI勝率1%以上を比較対象にします。理論期待倍率はAI勝率×保存オッズです。同じ期待倍率なら、より当たりやすい候補が上位になります。順位は研究用で、購入金額は配分しません。"
@@ -3154,14 +3164,17 @@ private struct KeibaAISummaryTile: View {
                 Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(value)
                     .font(.headline)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Text(note)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(12)
@@ -3178,6 +3191,7 @@ private struct KeibaAIHorseCard: View {
     let rank: Int
     let horse: Horse
     let onOpenProfile: () -> Void
+    @ScaledMetric(relativeTo: .subheadline) private var metricMinimumWidth: CGFloat = 110
 
     private var researchLabel: String {
         if horse.aiMarketRatio >= 1.20 {
@@ -3246,7 +3260,7 @@ private struct KeibaAIHorseCard: View {
             Divider()
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5),
+                columns: [GridItem(.adaptive(minimum: metricMinimumWidth), spacing: 10, alignment: .top)],
                 spacing: 10
             ) {
                 KeibaAIValueCell(title: "市場", value: pct(horse.marketProbability))
@@ -3299,12 +3313,13 @@ private struct KeibaAIValueCell: View {
             Text(title)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(value)
                 .font(.subheadline.weight(.bold).monospacedDigit())
                 .foregroundStyle(emphasis ? .blue : .primary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.75)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -4358,6 +4373,12 @@ private struct KeibaAIPerformanceBreakdown: View {
 // MARK: - Legend / Design Philosophy
 // ============================================================
 
+private enum KeibaAILongshotExplanation {
+    static let meaning = "大穴は、人気が低めで、当たれば高い払戻しが期待できる馬のことです。たとえば単勝20倍なら、100円の的中で払戻しは2,000円です（購入額込み）。"
+    static let value = "「オッズの妙味」は、当たりやすさに対して払戻しが見合うか、という意味です。このアプリでは、高いオッズに加えてAIが市場より高く評価する馬を候補にします。高配当でも当たりにくければ割に合わず、候補に入っても利益が出るとは限りません。"
+    static let conditions = "従来v1の条件：市場の評価順位6番手以下、単勝8倍以上、AI勝率1%以上、AIの勝率評価が市場の1.20倍以上。単勝の候補条件で、馬券の購入指示ではありません。"
+}
+
 private struct KeibaAIGuideView: View {
     var body: some View {
         ScrollView {
@@ -4408,6 +4429,18 @@ private struct KeibaAIGuideView: View {
                 }
 
                 KeibaAIGuideSection(
+                    icon: "sparkles",
+                    title: "大穴の見方",
+                    subtitle: "高い払戻しと、割に合うかを分けて見る"
+                ) {
+                    VStack(alignment: .leading, spacing: 11) {
+                        KeibaAIGuideDefinition(term: "大穴とは", text: KeibaAILongshotExplanation.meaning)
+                        KeibaAIGuideDefinition(term: "オッズの妙味", text: KeibaAILongshotExplanation.value)
+                        KeibaAIGuideDefinition(term: "候補になる条件", text: KeibaAILongshotExplanation.conditions)
+                    }
+                }
+
+                KeibaAIGuideSection(
                     icon: "chart.bar.doc.horizontal",
                     title: "主なAI表示",
                     subtitle: "市場とAIを並べて見るための数字"
@@ -4418,7 +4451,7 @@ private struct KeibaAIGuideView: View {
                         KeibaAIGuideDefinition(term: "AI 2着内 / 3着内", text: "2着以内・3着以内に入る推定確率。単勝とは別モデルで補正しています。")
                         KeibaAIGuideDefinition(term: "AI÷市場", text: "AI評価 ÷ 市場評価。1.00より大きいほど、市場よりAIが高く見ている馬です。大きいだけで買いを意味しません。")
                         KeibaAIGuideDefinition(term: "期待指数", text: "10分前の単勝オッズとAI勝率を掛け合わせた参考指数。100超は理論上の妙味候補ですが、確率誤差やオッズ変動があるため利益を保証しません。")
-                        KeibaAIGuideDefinition(term: "大穴候補", text: "v1は市場順位6番手以下・単勝8倍以上・AI勝率1%以上・AI÷市場1.20以上。単なる高オッズ馬とは区別します。歴史検証と約10分前運用の差は実運用成績で確認します。")
+                        KeibaAIGuideDefinition(term: "大穴候補", text: "人気薄・高配当の馬のうち、AIが市場より高く評価する候補です。条件と具体例は「大穴の見方」を参照してください。単勝8倍以上を含むため、一般にいう極端な高配当だけに限定していません。")
                         KeibaAIGuideDefinition(term: "大穴v2比較", text: "大穴画面で研究表示へ切り替えると、AI勝率・保存オッズ・理論期待倍率を比較できます。正式なv1候補条件や購入金額の配分は変えません。")
                         KeibaAIGuideDefinition(term: "脚質傾向", text: "レース当日より前の最大6走から、逃げ・先行・差し・追込の割合を表示します。割合は過去の頻度で、次走の戦法の確率ではありません。参考度は出走数と傾向のまとまりの目安です。")
                         KeibaAIGuideDefinition(term: "参考隊列", text: "過去の初角の平均位置を前→後に並べた研究表示です。過去3走以上の履歴が出走馬の80%以上あるレースに限ります。直線コースは除き、履歴不足の馬は順に含めません。レース全体の実際の並びを当てた表示ではありません。")
