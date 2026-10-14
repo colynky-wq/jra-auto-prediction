@@ -1,6 +1,15 @@
 name: KeibaAI Live Bundle Smoke
 
 on:
+  pull_request:
+    paths:
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/build_signal_data_v2.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/wide_axis*.py'
+      - 'production/test_wide_axis_rules.py'
+      - '.github/workflows/keibaai-live-result-sync.yml'
+      - '.github/workflows/keibaai-live-bundle-smoke.yml'
   push:
     branches:
       - main
@@ -13,6 +22,8 @@ on:
       - 'production/wide_forward_validation.py'
       - 'production/wide_validation_summary.py'
       - 'production/ticket_plan_shadow.py'
+      - 'production/wide_axis_rules.py'
+      - 'production/wide_axis_shadow.py'
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/workflows/keibaai-live-result-sync.yml'
       - '.github/workflows/keibaai-live-bundle-smoke.yml'
@@ -46,6 +57,8 @@ jobs:
           python -m py_compile production/wide_forward_validation.py
           python -m py_compile production/wide_validation_summary.py
           python -m py_compile production/ticket_plan_shadow.py
+          python -m py_compile production/wide_axis_rules.py
+          python -m py_compile production/wide_axis_shadow.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
       - name: Validate all-pair Wide practical ranking and immutable archive

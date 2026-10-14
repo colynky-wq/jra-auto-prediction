@@ -71,6 +71,26 @@ struct ReferenceTicketChecks {
             oddsLow:3.665,oddsHigh:4,expectedValue:1.100)
         check(plans([race("boundary",pairs:[boundary])])[0].pairs.isEmpty,
               "rounded display EV must not promote a below-threshold validation candidate")
+        let contract = try JSONSerialization.jsonObject(with:Data(contentsOf:URL(fileURLWithPath:"/tmp/wide-axis-contract.json"))) as! [String:Any]
+        let axis = try JSONDecoder().decode(KeibaAIWideAxisEvaluation.self,from:JSONSerialization.data(withJSONObject:contract["evaluation"]!))
+        let rawRace = contract["race"] as! [String:Any]
+        let rawHorses = rawRace["horses"] as! [[String:Any]]
+        var input = KeibaAIReferenceRaceInput(raceID:rawRace["raceID"] as! String,raceDate:rawRace["raceDate"] as? String,
+            startTime:"10:00",eligible:true,
+            horses:Dictionary(uniqueKeysWithValues:rawHorses.map { ($0["number"] as! Int,$0["name"] as! String) }),
+            oddsConnected:true,capturedAtJST:axis.capturedAtJST,pairs:axis.pairs,axisEvaluation:axis,
+            aiTop3ByNumber:Dictionary(uniqueKeysWithValues:rawHorses.map { ($0["number"] as! Int,($0["aiTop3Probability"] as! NSNumber).doubleValue) }),
+            marketTop3ByNumber:Dictionary(uniqueKeysWithValues:rawHorses.map { ($0["number"] as! Int,($0["marketTop3Probability"] as! NSNumber).doubleValue) }))
+        let axisPlan = plans([input],.wideAxis)[0]
+        check(axisPlan.axis?.number == 6 && axisPlan.pairs.map(\.id) == ["1-6","2-6","3-6"] && axisPlan.totalYen == 300,
+              "Python selection and real Swift display/budget agree on Top3 hole-axis")
+        let limited = plans([input],.wideAxis,budget:100)[0]
+        check(limited.pairs.count == 1 && limited.totalYen == 100,"axis budget reduction preserves the axis")
+        input.aiTop3ByNumber[6] = 20
+        check(plans([input],.wideAxis)[0].totalYen == 0,"updated individual Top3 data cannot reuse stale axis")
+        let axisBytes = try Data(contentsOf:URL(fileURLWithPath:"reports/WideAxisShadow.json"))
+        let axisReport = try KeibaAIWideAxisShadowData.decode(axisBytes)
+        check(axisReport.counts.recordedRaces == 0 && axisReport.returnIndex == nil,"new report excludes old ticket history")
         let bytes = try Data(contentsOf: URL(fileURLWithPath:"reports/TicketPlanShadow.json"))
         let decoded = try KeibaAITicketShadowData.decode(bytes)
         check(decoded.profiles.count == 3 && !decoded.moneyAllocationEnabled,"real summary decodes")
@@ -97,6 +117,7 @@ struct ReferenceTicketChecks {
               "malformed refresh keeps the last value and explains staleness")
         check(ShadowProtocol.requests.allSatisfy { $0.httpMethod == "GET" && $0.url!.query!.contains("t=") },
               "transport read-only and cache-busted")
+        print("WIDE_AXIS_NATIVE_OK: Python contract, Top3 identity, bounded refund-safe preview, separate zero-start summary")
         print("REFERENCE_TICKET_OK: budgets, daily cross-venue cap, skips, source validity, real summary, failed refresh and recovery")
     }
 }

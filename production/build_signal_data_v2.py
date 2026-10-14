@@ -266,7 +266,10 @@ def main() -> None:
             wide_eval["pairs"] = _all_wide_pairs(race)
             built["wideEvaluation"] = wide_eval
         rid = str(race.get("raceID") or "")
-        output.append(_enrich_with_wide_odds(built, wide_by_race.get(rid)))
+        enriched = _enrich_with_wide_odds(built, wide_by_race.get(rid))
+        from wide_axis_rules import display_evaluation
+        enriched['wideAxisEvaluation'] = display_evaluation(REPORTS_DIR.parent, race, enriched)
+        output.append(enriched)
 
     output.sort(
         key=lambda r: (

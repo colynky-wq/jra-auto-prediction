@@ -180,7 +180,7 @@ class Outbox:
             if Path(path).stem != str(health['runID']) or health['raceDate'] != self.day:
                 raise PublishError('monitor journal identity mismatch')
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
-        immutable = ('/prerace/' in path and not path.endswith('/index.json')) or path.endswith('/PaceRecordingSchedule.json')
+        immutable = ('/prerace/' in path and not path.endswith('/index.json')) or path.endswith('/PaceRecordingSchedule.json') or '/wide_axis_v1/' in path
         if immutable and remote is not None and remote != data:
             raise PublishError(f'既存の発走前記録と競合しています: {path}')
         if '/prerace/' in path and path.endswith('/index.json') and remote is not None and remote != data:

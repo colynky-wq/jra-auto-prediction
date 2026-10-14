@@ -61,6 +61,8 @@ jobs:
           python -m py_compile production/wide_forward_validation.py
           python -m py_compile production/wide_validation_summary.py
           python -m py_compile production/ticket_plan_shadow.py
+          python -m py_compile production/wide_axis_rules.py
+          python -m py_compile production/wide_axis_shadow.py
 
       - name: Build app ResultData
         env:
@@ -82,6 +84,9 @@ jobs:
 
       - name: Evaluate preregistered ticket-plan rules in shadow mode
         run: python production/ticket_plan_shadow.py
+
+      - name: Evaluate the frozen new Wide-axis rule separately
+        run: python production/wide_axis_shadow.py
 
       - name: Commit results and validation when changed
         shell: bash
