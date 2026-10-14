@@ -23,7 +23,7 @@ struct ReferenceTicketChecks {
     }
     static func pair(_ a: Int, _ b: Int, _ p: Double, _ odds: Double) -> KeibaAIReferencePair {
         KeibaAIReferencePair(number1: a, name1: "馬\(a)", number2: b, name2: "馬\(b)",
-            probabilityPct: p, oddsLow: odds, oddsHigh: odds + 1, expectedValue: p / 100 * odds)
+            probabilityPct: p, oddsLow: odds, oddsHigh: odds + 1, expectedValue: (p / 100 * odds * 10000).rounded() / 10000)
     }
     static func race(_ id: String, time: String = "10:00", date: String = "2026-10-17",
                      capture: String = "2026-10-17 09:50:00", pairs: [KeibaAIReferencePair]? = nil,

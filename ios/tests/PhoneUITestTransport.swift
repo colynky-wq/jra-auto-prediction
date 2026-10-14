@@ -45,7 +45,7 @@ enum KeibaAIUITestTransport {
                 ["number1":a,"name1":horses[a-1]["name"]!,"number2":b,"name2":horses[b-1]["name"]!,
                  "marketWideProbability":p-1,"aiWideProbability":p,"probabilityEdgePct":1.0,
                  "aiMarketProbabilityRatio":1.1,"wideOddsLow":odds,"wideOddsHigh":odds+1,
-                 "conservativeExpectedValue":p/100*odds]
+                 "conservativeExpectedValue":(p/100*odds*10000).rounded()/10000]
             }
             let evaluation: [String:Any] = ["status":"odds_connected","oddsConnected":true,
                 "capturedAtJST":day+" 09:50:00","pairs":[pair(1,2,30,4),pair(1,3,20,6),pair(2,3,10,12)]]
