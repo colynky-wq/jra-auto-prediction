@@ -49,11 +49,19 @@ jobs:
           xcrun simctl boot "$phone_test_udid" || true
           xcrun simctl bootstatus "$phone_test_udid" -b
           xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAIPhoneUITests -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=$phone_test_udid" -parallel-testing-enabled NO -derivedDataPath /tmp/KeibaAI-phone-build -resultBundlePath /tmp/KeibaAI-phone-tests.xcresult CODE_SIGNING_ALLOWED=NO test
+      - name: Export iPhone screenshots for visual review
+        if: always()
+        run: |
+          if [ -d /tmp/KeibaAI-phone-tests.xcresult ]; then
+            xcrun xcresulttool export attachments --path /tmp/KeibaAI-phone-tests.xcresult --output-path /tmp/KeibaAI-phone-screenshots
+          fi
       - name: Preserve iPhone UI test diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: keibaai-phone-ui-tests-${{ github.run_id }}
-          path: /tmp/KeibaAI-phone-tests.xcresult
+          path: |
+            /tmp/KeibaAI-phone-tests.xcresult
+            /tmp/KeibaAI-phone-screenshots
           if-no-files-found: ignore
           retention-days: 7
