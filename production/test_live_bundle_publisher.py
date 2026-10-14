@@ -152,6 +152,14 @@ class TestLiveBundlePublisher(unittest.TestCase):
         self.assertEqual(len(json.loads(self.remote_read('RaceData.json'))), 1)
         self.assertEqual(set(publisher.state['pending']), {path})
 
+    def test_wide_axis_first_record_cannot_be_replaced(self):
+        path = 'reports/20261017/wide_axis_v1/202605040601.json'
+        self.write(path, {'raceID':'202605040601','axis':6})
+        sender = self.publisher();sender.capture();self.assertTrue(sender.publish())
+        self.write(path, {'raceID':'202605040601','axis':7})
+        sender.capture();self.assertFalse(sender.publish())
+        self.assertEqual(json.loads(self.remote_read(path))['axis'],6)
+
     def test_partial_json_is_not_published_and_other_files_continue(self):
         self.write('SignalData.json', '{unfinished')
         self.write('RaceData.json', [self.race()])

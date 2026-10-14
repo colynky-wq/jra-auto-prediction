@@ -3,6 +3,36 @@ import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
     @MainActor
+    func testWideAxisEvaluationAndRefund() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_AXIS"] = "1"
+        app.launch()
+        XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
+        let tabs = app.scrollViews["main-tabs"]
+        let menu = app.buttons["main-tab-馬券プラン"]
+        for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
+        menu.tap()
+        let screen = app.scrollViews["reference-ticket-plan"]
+        XCTAssertTrue(screen.waitForExistence(timeout:5))
+        let count = app.staticTexts["axis-validation-count"]
+        for _ in 0..<8 { if count.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(count.label.contains("記録 2件 / 結果照合 1件"))
+        let axis = app.staticTexts["wide-axis-202605040601"]
+        for _ in 0..<8 { if axis.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(axis.label.contains("穴軸 6番"))
+        let refund = app.staticTexts["axis-refund-202605040601"]
+        XCTAssertTrue(refund.label.contains("410円 / 仮合計 300円"))
+        let pair = app.staticTexts["reference-pair-202605040601-1-6"]
+        XCTAssertTrue(pair.exists)
+        let shot = XCTAttachment(screenshot:app.screenshot())
+        shot.name = "wide-axis-top3-and-minimum-refund";shot.lifetime = .keepAlways;add(shot)
+        print("PHONE_WIDE_AXIS_OK: Top3 hole-axis, joint-pair evaluation, minimum single-hit refund and separate new-rule statistics")
+    }
+
+    @MainActor
     func testReferencePlanAndBudgetLimits() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -17,6 +47,8 @@ final class PhoneNavigationUITests: XCTestCase {
         menu.tap()
         let screen = app.scrollViews["reference-ticket-plan"]
         XCTAssertTrue(screen.waitForExistence(timeout:5))
+        for _ in 0..<4 { if app.buttons["バランス型"].isHittable { break }; screen.swipeUp() }
+        app.buttons["バランス型"].tap()
         let count = app.staticTexts["reference-validation-count"]
         for _ in 0..<5 { if count.isHittable { break }; screen.swipeUp() }
         XCTAssertTrue(count.label.contains("4 / 300件"))

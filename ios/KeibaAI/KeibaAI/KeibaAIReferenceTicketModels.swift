@@ -3,16 +3,18 @@ import Combine
 
 // A local 100-yen preview of the frozen shadow rules. No purchase or server write.
 enum KeibaAIReferenceProfile: String, CaseIterable, Identifiable {
+    case wideAxis = "ワイド穴軸"
     case stable = "安定型候補"
     case balanced = "バランス型候補"
     case highValue = "高期待値型候補"
     var id: String { rawValue }
-    var label: String { String(rawValue.dropLast(2)) }
+    static var shadowCases: [Self] { [.stable, .balanced, .highValue] }
+    var label: String { self == .wideAxis ? "穴軸流し" : String(rawValue.dropLast(2)) }
     var threshold: Double { self == .highValue ? 1.20 : 1.10 }
     var maxPairs: Int { self == .stable ? 1 : (self == .balanced ? 2 : 3) }
 }
 
-struct KeibaAIReferencePair: Identifiable {
+struct KeibaAIReferencePair: Identifiable, Codable, Hashable {
     let number1: Int
     let name1: String
     let number2: Int
@@ -26,6 +28,25 @@ struct KeibaAIReferencePair: Identifiable {
     var selectionExpectedValue: Double { (probabilityPct / 100 * oddsLow * 10000).rounded() / 10000 }
 }
 
+struct KeibaAIWideAxisEvaluation: Codable, Hashable {
+    struct Axis: Codable, Hashable {
+        let number: Int
+        let name: String
+        let aiTop3Pct: Double
+        let marketTop3Pct: Double
+        let marketTop3Rank: Int
+    }
+    let schemaVersion: Int
+    let ruleVersion: String
+    let status: String
+    let message: String
+    let axis: Axis?
+    let pairs: [KeibaAIReferencePair]
+    let totalYen: Int
+    let minimumSingleHitReturnYen: Double?
+    let capturedAtJST: String?
+}
+
 struct KeibaAIReferenceRaceInput {
     let raceID: String
     let raceDate: String?
@@ -35,6 +56,9 @@ struct KeibaAIReferenceRaceInput {
     let oddsConnected: Bool
     let capturedAtJST: String?
     let pairs: [KeibaAIReferencePair]
+    var axisEvaluation: KeibaAIWideAxisEvaluation? = nil
+    var aiTop3ByNumber: [Int: Double] = [:]
+    var marketTop3ByNumber: [Int: Double] = [:]
 }
 
 struct KeibaAIReferenceRacePlan: Identifiable {
@@ -43,6 +67,7 @@ struct KeibaAIReferenceRacePlan: Identifiable {
     let reason: String?
     let capturedAtJST: String?
     let budgetYen: Int
+    var axis: KeibaAIWideAxisEvaluation.Axis? = nil
     var totalYen: Int { pairs.count * 100 }
     var remainingYen: Int { max(0, budgetYen - totalYen) }
 }
@@ -82,6 +107,36 @@ enum KeibaAIReferencePlanner {
             guard counts[race.raceID] == 1, date8(date) == date,
                   date8(race.raceDate) == date else { return held("対象日・レースの対応を確認できません") }
             guard race.eligible else { return held("予測データ待ち、または対象外のレースです") }
+            var checkedAxis: KeibaAIWideAxisEvaluation.Axis?
+            if profile == .wideAxis {
+                guard let e = race.axisEvaluation, e.schemaVersion == 1,
+                      e.ruleVersion == "wide-axis-v1-20261014" else { return held("ワイド専用の軸評価データ待ちです") }
+                guard e.status == "ready" else { return held(e.message) }
+                guard let a = e.axis, a.name == race.horses[a.number],
+                      a.aiTop3Pct.isFinite, a.marketTop3Pct.isFinite,
+                      a.aiTop3Pct > a.marketTop3Pct, a.aiTop3Pct <= 100, a.marketTop3Pct >= 0,
+                      a.marketTop3Rank >= 6,
+                      race.aiTop3ByNumber.count == race.horses.count,
+                      race.marketTop3ByNumber.count == race.horses.count,
+                      Set(race.aiTop3ByNumber.keys) == Set(race.horses.keys),
+                      Set(race.marketTop3ByNumber.keys) == Set(race.horses.keys),
+                      race.aiTop3ByNumber.values.allSatisfy({ $0.isFinite && (0...100).contains($0) }),
+                      race.marketTop3ByNumber.values.allSatisfy({ $0.isFinite && (0...100).contains($0) }),
+                      abs(race.aiTop3ByNumber.values.reduce(0,+)-300) <= 0.05,
+                      abs(race.marketTop3ByNumber.values.reduce(0,+)-300) <= 0.05,
+                      abs((race.aiTop3ByNumber[a.number] ?? -1000) - a.aiTop3Pct) < 0.005,
+                      abs((race.marketTop3ByNumber[a.number] ?? -1000) - a.marketTop3Pct) < 0.005,
+                      race.marketTop3ByNumber.values.filter({ $0 > a.marketTop3Pct }).count + 1 == a.marketTop3Rank,
+                      e.capturedAtJST == race.capturedAtJST, (1...3).contains(e.pairs.count),
+                      e.totalYen == e.pairs.count * 100,
+                      e.minimumSingleHitReturnYen.map({ $0.isFinite && $0 >= Double(e.totalYen) }) == true,
+                      e.pairs.allSatisfy({ p in
+                          (p.number1 == a.number || p.number2 == a.number) && p.selectionExpectedValue >= 1.10 &&
+                          p.oddsLow * 100 >= Double(e.totalYen) &&
+                          p.probabilityPct <= min(race.aiTop3ByNumber[p.number1] ?? -1, race.aiTop3ByNumber[p.number2] ?? -1) + 0.01
+                      }) else { return held("軸の3着内評価・相手・合計金額の対応を確認できません") }
+                checkedAxis = a
+            }
             guard race.oddsConnected, !race.pairs.isEmpty else { return held("発走前の実ワイドオッズ待ちです") }
             let postFormatter = formatter("yyyyMMdd HH:mm")
             let captureFormatter = formatter("yyyy-MM-dd HH:mm:ss")
@@ -93,17 +148,19 @@ enum KeibaAIReferencePlanner {
                   formatter("yyyyMMdd").string(from: capture) == date,
                   capture < post else { return held("発走前の取得時刻を確認できません") }
             var seen = Set<String>()
-            for p in race.pairs {
+            let inputPairs = profile == .wideAxis ? (race.axisEvaluation?.pairs ?? []) : race.pairs
+            for p in inputPairs {
                 guard p.number1 > 0, p.number2 > 0, p.number1 != p.number2,
                       race.horses[p.number1] == p.name1, race.horses[p.number2] == p.name2,
                       seen.insert(p.id).inserted,
                       p.probabilityPct.isFinite, p.probabilityPct >= 0, p.probabilityPct <= 100,
                       p.oddsLow.isFinite, p.oddsHigh.isFinite, p.expectedValue.isFinite,
+                      p.oddsHigh <= Double.greatestFiniteMagnitude / 100,
                       p.oddsLow >= 1, p.oddsHigh >= p.oddsLow,
                       abs(p.expectedValue - p.probabilityPct / 100 * p.oddsLow) <= 0.000005 * p.oddsLow + 0.00051
                 else { return held("出走馬・確率・オッズの対応を確認できません") }
             }
-            let candidates = race.pairs.filter { $0.selectionExpectedValue >= profile.threshold }.sorted {
+            let candidates = profile == .wideAxis ? inputPairs : inputPairs.filter { $0.selectionExpectedValue >= profile.threshold }.sorted {
                 if $0.selectionExpectedValue != $1.selectionExpectedValue { return $0.selectionExpectedValue > $1.selectionExpectedValue }
                 if $0.probabilityPct != $1.probabilityPct { return $0.probabilityPct > $1.probabilityPct }
                 return ($0.number1, $0.number2) < ($1.number1, $1.number2)
@@ -113,9 +170,11 @@ enum KeibaAIReferencePlanner {
             guard count > 0 else { return held(perRace == 0 ? "1レースの予算が0円のため見送りです" : "1日の仮配分上限に達しました") }
             let chosen = Array(candidates.prefix(count))
             dayRemaining -= chosen.count * 100
-            return KeibaAIReferenceRacePlan(id: race.raceID, pairs: chosen,
+            var plan = KeibaAIReferenceRacePlan(id: race.raceID, pairs: chosen,
                 reason: chosen.count < min(profile.maxPairs, candidates.count) ? "予算上限に合わせて点数を減らしています" : nil,
                 capturedAtJST: rawCapture, budgetYen: perRace)
+            plan.axis = checkedAxis
+            return plan
         }
     }
 }
@@ -156,7 +215,7 @@ struct KeibaAITicketShadowData: Decodable {
               data.reviewGates.minOverallReturnIndex == 1,
               data.reviewGates.minBootstrap95LowerReturnIndex == 1,
               data.reviewGates.minRecentHalfReturnIndex == 0.95 else { throw URLError(.cannotParseResponse) }
-        for key in KeibaAIReferenceProfile.allCases {
+        for key in KeibaAIReferenceProfile.shadowCases {
             guard let p = data.profiles[key.rawValue], p.rule.thresholdEV == key.threshold,
                   p.rule.topNPerRace == key.maxPairs, p.selectedRaces >= 0,
                   p.selectedRaces <= data.validatedRacesAvailable,
@@ -169,10 +228,44 @@ struct KeibaAITicketShadowData: Decodable {
     }
 }
 
+struct KeibaAIWideAxisShadowData: Decodable {
+    struct Counts: Decodable {
+        let recordedRaces: Int
+        let held: Int
+        let awaitingResults: Int
+        let matched: Int
+        let entrantChanged: Int
+        let invalid: Int
+        let selectedBets: Int
+    }
+    let schemaVersion: Int
+    let ruleVersion: String
+    let generatedAtJST: String
+    let counts: Counts
+    let returnIndex: Double?
+    let autoBetEnabled: Bool
+    let moneyAllocationEnabled: Bool
+
+    static func decode(_ bytes: Data) throws -> Self {
+        let d = try JSONDecoder().decode(Self.self, from: bytes)
+        let c = d.counts
+        guard d.schemaVersion == 1, d.ruleVersion == "wide-axis-v1-20261014",
+              !d.autoBetEnabled, !d.moneyAllocationEnabled,
+              [c.recordedRaces,c.held,c.awaitingResults,c.matched,c.entrantChanged,c.invalid,c.selectedBets].allSatisfy({ $0 >= 0 && $0 <= Int.max / 8 }),
+              c.recordedRaces == c.held + c.awaitingResults + c.matched + c.entrantChanged + c.invalid,
+              c.selectedBets >= c.matched,
+              d.returnIndex.map({ $0.isFinite && $0 >= 0 }) ?? (c.matched == 0)
+        else { throw URLError(.cannotParseResponse) }
+        return d
+    }
+}
+
 @MainActor
 final class KeibaAITicketShadowStore: ObservableObject {
     @Published private(set) var data: KeibaAITicketShadowData?
     @Published private(set) var errorMessage: String?
+    @Published private(set) var axisData: KeibaAIWideAxisShadowData?
+    @Published private(set) var axisErrorMessage: String?
     @Published private(set) var isLoading = false
     private let session: URLSession
     init(session: URLSession = .shared) { self.session = session }
@@ -195,6 +288,21 @@ final class KeibaAITicketShadowStore: ObservableObject {
             errorMessage = nil
         } catch {
             errorMessage = data == nil ? "検証状況を取得できません。件数・回収率は未確認です。" : "検証状況の更新に失敗しました。前回の取得値を表示しています。"
+        }
+        do {
+            var url = URLComponents(string: "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/reports/WideAxisShadow.json")!
+            url.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
+            var request = URLRequest(url: url.url!)
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.timeoutInterval = 15
+            let (bytes, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw URLError(.badServerResponse) }
+            let next = try KeibaAIWideAxisShadowData.decode(bytes)
+            try Task.checkCancellation()
+            axisData = next
+            axisErrorMessage = nil
+        } catch {
+            axisErrorMessage = axisData == nil ? "新しい穴軸評価の検証件数・回収率は未確認です。" : "新評価の更新に失敗しました。前回の取得値を表示しています。"
         }
     }
 }

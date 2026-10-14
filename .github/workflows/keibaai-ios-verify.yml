@@ -14,7 +14,7 @@ permissions:
 jobs:
   verify:
     runs-on: xcode-27
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - name: Verify Xcode and compile the actual model and identity code
@@ -33,6 +33,8 @@ jobs:
           /tmp/keibaai-recording-store-checks
       - name: Verify reference ticket budgets and summary refresh
         run: |
+          python3 production/test_wide_axis_rules.py --emit-contract /tmp/wide-axis-contract.json
+          python3 -m unittest discover -s production -p test_live_bundle_publisher.py
           swiftc -swift-version 5 -parse-as-library ios/KeibaAI/KeibaAI/KeibaAIReferenceTicketModels.swift ios/tests/ReferenceTicketChecks.swift -o /tmp/keibaai-reference-checks
           /tmp/keibaai-reference-checks
       - name: Build the complete iOS app without signing

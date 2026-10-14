@@ -23,13 +23,28 @@ def _load_races() -> list[dict]:
     return value
 
 
-def _load_wide_by_race() -> dict[str, dict]:
+def _load_wide_by_race(races: list[dict] | None = None) -> dict[str, dict]:
     payload = wide._load_payload(WIDE_ODDS_PATH)
     out: dict[str, dict] = {}
     for item in payload.get("snapshots", []):
         rid = str(item.get("raceID") or "")
         if rid and rid not in out:
             out[rid] = item
+    # The live bundle may be rebuilt after its transient combined file is gone.
+    # Reuse the immutable first capture, without fetching odds or recording a race.
+    for race in races or []:
+        rid = str(race.get("raceID") or "")
+        day = str(race.get("raceDate") or "").replace("-", "")
+        if not (len(rid) == 12 and rid.isdigit() and len(day) == 8 and day.isdigit()):
+            continue
+        path = REPORTS_DIR / day / "wide_odds" / (rid + ".json")
+        if path.exists():
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
+                    or saved.get("startTime") != race.get("startTime")
+                    or saved.get("frozenAtFirstSuccessfulCapture") is not True):
+                raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
+            out[rid] = saved
     return out
 
 
@@ -255,7 +270,7 @@ def main() -> None:
         print("RaceData.json missing or empty; nothing to publish.")
         return
 
-    wide_by_race = _load_wide_by_race()
+    wide_by_race = _load_wide_by_race(races)
     output = []
     for race in races:
         built = base.build_race_signal(race)
@@ -266,7 +281,10 @@ def main() -> None:
             wide_eval["pairs"] = _all_wide_pairs(race)
             built["wideEvaluation"] = wide_eval
         rid = str(race.get("raceID") or "")
-        output.append(_enrich_with_wide_odds(built, wide_by_race.get(rid)))
+        enriched = _enrich_with_wide_odds(built, wide_by_race.get(rid))
+        from wide_axis_rules import display_evaluation
+        enriched['wideAxisEvaluation'] = display_evaluation(REPORTS_DIR.parent, race, enriched)
+        output.append(enriched)
 
     output.sort(
         key=lambda r: (

@@ -519,6 +519,7 @@ private struct KeibaAIRaceSignal: Identifiable, Codable, Hashable {
     let longshotCandidates: [KeibaAILongshotSignal]?
     let wideEvaluation: KeibaAIWideEvaluationSignal?
     let ticketPlan: KeibaAITicketSignal?
+    let wideAxisEvaluation: KeibaAIWideAxisEvaluation?
 }
 
 private struct KeibaAISignalData: Codable, Hashable {
@@ -1144,7 +1145,7 @@ struct KeibaAINewDesignView: View {
     @StateObject private var appResearchStore = KeibaAIAppResearchStore()
     @StateObject private var budgetStore = KeibaAIBudgetStore()
     @StateObject private var ticketShadowStore = KeibaAITicketShadowStore()
-    @State private var referenceProfile = KeibaAIReferenceProfile.balanced
+    @State private var referenceProfile = KeibaAIReferenceProfile.wideAxis
 
     @State private var mainTab: KeibaAIMainTab = .today
     @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
@@ -1840,13 +1841,13 @@ struct KeibaAINewDesignView: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionHeader(
                     title: "馬券プラン",
-                    subtitle: "検証中の参考プラン / 1点100円の仮配分"
+                    subtitle: "ワイドの穴軸評価 / 1点100円の仮配分"
                 )
 
                 KeibaAIInfoCard(
                     icon: "checkmark.shield.fill",
                     title: "正式公開前の参考表示",
-                    message: "条件に合うワイドを1点100円で仮配分します。予算全額は使わず、残額を表示します。詳しい候補と途中の検証状況は詳細画面で確認できます。"
+                    message: "単勝の穴馬評価と分け、軸の3着内確率と相手との同時3着内確率・実オッズで評価します。全買い目の合計に対して下限払戻しを確認し、1点100円の仮配分を表示します。"
                 )
 
                 KeibaAIBudgetCard(store: budgetStore)
@@ -2718,6 +2719,10 @@ private struct KeibaAIRaceDetailNew: View {
             Text("ワイド評価")
                 .font(.title3.weight(.bold))
 
+            if let axis = signal?.wideAxisEvaluation?.axis, signal?.wideAxisEvaluation?.status == "ready" {
+                KeibaAIInfoCard(icon: "scope", title: "ワイド向け穴軸：\(axis.number)番 \(axis.name)",
+                    message: String(format: "AI3着内 %.1f%%・市場3着内 %.1f%%。単勝の評価とは分けています。相手・仮合計・下限払戻しは参考プランで確認できます。", axis.aiTop3Pct, axis.marketTop3Pct))
+            }
             Button("検証中の参考プランを見る", action: onOpenTicketPlan)
                 .buttonStyle(.bordered)
                 .accessibilityIdentifier("open-reference-plan")
@@ -4470,8 +4475,9 @@ private struct KeibaAIGuideView: View {
                         KeibaAIGuideDefinition(term: "参考隊列", text: "過去の初角の平均位置を前→後に並べた研究表示です。過去3走以上の履歴が出走馬の80%以上あるレースに限ります。直線コースは除き、履歴不足の馬は順に含めません。レース全体の実際の並びを当てた表示ではありません。")
                         KeibaAIGuideDefinition(term: "競馬場の参考点", text: "競馬場ごとの着順を頭数で補正し、0〜100点にまとめます。少ない出走では50点へ近づける補正をします。勝率を表す数字ではなく、相手の強さや距離の違いは調整していません。")
                         KeibaAIGuideDefinition(term: "ワイド評価", text: "2頭が両方3着以内に入る同時確率。発走前実オッズ取得後は、AI的中率と保守的期待値を合わせた「実戦優先度」で並べます。同じ期待値なら、より当たりやすい組み合わせを上位にします。Kelly値は順位付け専用で購入金額には使いません。")
+                        KeibaAIGuideDefinition(term: "ワイドの穴軸流し", text: "同じ軸馬と複数の相手を組み合わせる買い方です。市場の3着内評価が6番手以下で、AIが市場より高く評価する馬から、AI3着内確率を優先して軸を選びます。単勝の人気順ではありません。相手は2頭同時3着内確率と実オッズで最大3点。保存時のオッズ下限で1点の払戻しが全点の合計以上になる点数を選びますが、最終オッズや同着で変わります。軸が3着以内に入らなければ全点が外れます。新評価の成績は従来プランと分けて検証します。")
                         KeibaAIGuideDefinition(term: "予算設定", text: "馬券プランで1レースの予算と1日の上限を別々に変更できます。検証中の参考プランは1点100円で仮配分し、取得済みの全競馬場のレース合計にも上限を適用します。残額は使わず、購入実績や実際の残高とは区別します。")
-                        KeibaAIGuideDefinition(term: "検証中の参考プラン", text: "既存の安定型・バランス型・高期待値型の候補条件を使う参考表示です。発走前に取得した確率と実ワイドオッズが対応する場合だけ表示します。途中の回収率は1点100円で全候補を検証した値で、端末の予算制限後の配分成績ではありません。300レース等の基準を満たしても正式公開は別途判断します。")
+                        KeibaAIGuideDefinition(term: "検証中の参考プラン", text: "ワイド専用の穴軸流しと、従来の安定型・バランス型・高期待値型を比較する参考表示です。発走前に取得した確率と実ワイドオッズが対応する場合だけ表示します。途中の回収率は1点100円で全候補を検証した値で、端末の予算制限後の配分成績ではありません。300レース等の基準を満たしても正式公開は別途判断します。")
                     }
                 }
 
@@ -4742,7 +4748,10 @@ private struct KeibaAITicketPlanView: View {
             return KeibaAIReferenceRaceInput(raceID: item.raceID, raceDate: item.raceDate,
                 startTime: item.startTime, eligible: matched && signal?.eligible == true,
                 horses: names, oddsConnected: signal?.wideEvaluation?.oddsConnected == true,
-                capturedAtJST: signal?.wideEvaluation?.capturedAtJST, pairs: pairs)
+                capturedAtJST: signal?.wideEvaluation?.capturedAtJST, pairs: pairs,
+                axisEvaluation: signal?.wideAxisEvaluation,
+                aiTop3ByNumber: uniqueHorses ? Dictionary(uniqueKeysWithValues: horses.compactMap { h in h.aiTop3Probability.map { (h.number, $0) } }) : [:],
+                marketTop3ByNumber: uniqueHorses ? Dictionary(uniqueKeysWithValues: horses.compactMap { h in h.marketTop3Probability.map { (h.number, $0) } }) : [:])
         }
         return KeibaAIReferencePlanner.plans(inputs: inputs, date: date8, profile: profile,
                                              perRace: budgetStore.perRaceYen, dailyLimit: budgetStore.dailyLimitYen)
@@ -4761,12 +4770,19 @@ private struct KeibaAITicketPlanView: View {
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("reference-profile")
-                Text(String(format: "下限オッズでの期待倍率 %.2f以上・1レース最大%d点・期待倍率順", profile.threshold, profile.maxPairs))
-                    .font(.caption).foregroundStyle(.secondary)
+                if profile == .wideAxis {
+                    KeibaAIInfoCard(icon: "scope", title: "ワイド専用の穴軸評価",
+                        message: "市場の3着内評価が6番手以下で、AIが市場より3着内を高く評価する馬が対象です。軸はAI3着内確率、相手は2頭同時3着内確率で評価します。期待倍率1.10以上・最大3点です。")
+                    Text("1点100円で、1点的中時の下限払戻しが合計金額以上になる組み合わせを選びます。保存時のオッズによる参考計算で、最終オッズや同着で払戻しは変わります。軸が圏外なら全点が外れます。")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text(String(format: "従来の組み合わせ比較：期待倍率 %.2f以上・最大%d点・期待倍率順", profile.threshold, profile.maxPairs))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Text("期待倍率はAI的中率×オッズ下限です。1.10は100円あたり平均110円という計算上の値で、実際の払戻しとは異なります。")
                     .font(.caption).foregroundStyle(.secondary)
                 KeibaAIBudgetCard(store: budgetStore)
-                validationCard
+                if profile == .wideAxis { axisValidationCard } else { validationCard }
                 let total = plans.reduce(0) { $0 + $1.totalYen }
                 Text("取得済みレースの仮合計 \(KeibaAIBudgetAmount.label(total))")
                     .font(.headline).accessibilityIdentifier("reference-day-total")
@@ -4794,6 +4810,32 @@ private struct KeibaAITicketPlanView: View {
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("reference-ticket-plan")
         .refreshable { await shadowStore.load() }
+    }
+
+    private var axisValidationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("新しい穴軸評価の検証").font(.headline)
+                Spacer()
+                Button("更新") { Task { await shadowStore.load() } }.disabled(shadowStore.isLoading)
+            }
+            if let error = shadowStore.axisErrorMessage { Text(error).font(.caption).foregroundStyle(.orange) }
+            if let data = shadowStore.axisData {
+                Text("新ルールの発走前記録 \(data.counts.recordedRaces)件 / 結果照合 \(data.counts.matched)件")
+                    .font(.subheadline.monospacedDigit()).accessibilityIdentifier("axis-validation-count")
+                Text(data.returnIndex.map { String(format: "新評価の途中回収率 %.1f%%", $0 * 100) } ?? "回収率は新しい結果照合待ちです")
+                    .font(.subheadline.monospacedDigit())
+                Text("見送り \(data.counts.held)件・結果待ち \(data.counts.awaitingResults)件・出走馬変更 \(data.counts.entrantChanged)件・不整合 \(data.counts.invalid)件")
+                    .font(.caption).foregroundStyle(data.counts.invalid > 0 ? .orange : .secondary)
+                Text("更新 \(data.generatedAtJST)").font(.caption2).foregroundStyle(.secondary)
+            } else {
+                Text("新ルールの検証状況を確認中です").font(.caption).foregroundStyle(.secondary)
+            }
+            Text("新ルールの発走前保存だけを検証します。従来プランの成績や過去日の再計算は合算しません。1点100円の基準で、端末の予算制限後の配分成績ではありません。正式公開は検証後に判断します。")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var validationCard: some View {
@@ -4831,6 +4873,16 @@ private struct KeibaAITicketPlanView: View {
             Text("\(item.venue) \(item.raceNumber)R  \(item.startTime)").font(.headline)
             Text(item.raceName).font(.title3.weight(.bold)).fixedSize(horizontal: false, vertical: true)
             if let reason = plan.reason { Text(reason).font(.caption).foregroundStyle(.secondary) }
+            if let axis = plan.axis {
+                Text("穴軸 \(axis.number)番 \(axis.name)")
+                    .font(.headline).accessibilityIdentifier("wide-axis-" + plan.id)
+                Text(String(format: "AI3着内 %.1f%% / 市場3着内 %.1f%% / 市場の3着内評価%d番手", axis.aiTop3Pct, axis.marketTop3Pct, axis.marketTop3Rank))
+                    .font(.subheadline.monospacedDigit()).fixedSize(horizontal: false, vertical: true)
+                if let minimum = plan.pairs.map({ $0.oddsLow * 100 }).min() {
+                    Text(String(format: "1点的中時の下限払戻し %.0f円 / 仮合計 %d円", minimum, plan.totalYen))
+                        .font(.subheadline.monospacedDigit()).accessibilityIdentifier("axis-refund-" + plan.id)
+                }
+            }
             ForEach(plan.pairs) { pair in
                 VStack(alignment: .leading, spacing: 8) {
                     Text("ワイド \(pair.id)  仮配分100円")

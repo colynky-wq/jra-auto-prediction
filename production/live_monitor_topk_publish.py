@@ -86,6 +86,18 @@ def _refresh_prediction_bundle(published_race: dict) -> None:
             print("SignalData refreshed immediately after RaceData publish.")
         except Exception as exc:
             print("WARNING: SignalData refresh failed; scheduled fallback can repair it:", repr(exc))
+            return
+        try:
+            from datetime import datetime
+            import wide_axis_rules as axis
+            bundle = json.loads(signals.OUT_PATH.read_text())
+            current = next((s for s in bundle['races'] if s['raceID'] == published_race['raceID']), None)
+            if current is not None:
+                saved = axis.record_first(RACEDATA_PATH.parent, published_race, current, datetime.now(axis.JST))
+                if saved:
+                    print('WIDE_AXIS_RECORDED', saved)
+        except Exception as exc:
+            print("WARNING: Wide-axis record failed; keep the prediction and do not backfill after post:", repr(exc))
 
 
 def publish_race_to_racedata(

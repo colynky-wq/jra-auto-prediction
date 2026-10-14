@@ -47,11 +47,34 @@ enum KeibaAIUITestTransport {
                  "aiMarketProbabilityRatio":1.1,"wideOddsLow":odds,"wideOddsHigh":odds+1,
                  "conservativeExpectedValue":(p/100*odds*10000).rounded()/10000]
             }
+            if ProcessInfo.processInfo.environment["KEIBAAI_UI_AXIS"] == "1" {
+                var hs = Array((sample["horses"] as! [[String:Any]]).prefix(8))
+                let ai = [60.0,55,45,35,30,40,25,10], market = [70.0,60,50,35,30,25,20,10]
+                for i in hs.indices { hs[i]["aiTop3Probability"] = ai[i]; hs[i]["marketTop3Probability"] = market[i] }
+                sample["horses"] = hs; other["horses"] = hs
+                PhoneFixtureProtocol.races = try! JSONSerialization.data(withJSONObject:[sample,other])
+            }
             let evaluation: [String:Any] = ["status":"odds_connected","oddsConnected":true,
                 "capturedAtJST":day+" 09:50:00","pairs":[pair(1,2,30,4),pair(1,3,20,6),pair(2,3,10,12)]]
-            let signals: [[String:Any]] = [sample,other].map { r in
+            var signals: [[String:Any]] = [sample,other].map { r in
                 ["raceID":r["raceID"]!,"raceDate":day,"startTime":r["startTime"]!,
                  "eligible":true,"wideEvaluation":evaluation]
+            }
+            if ProcessInfo.processInfo.environment["KEIBAAI_UI_AXIS"] == "1" {
+                func axisPair(_ a: Int, _ prob: Double, _ odds: Double) -> [String:Any] {
+                    ["number1":a,"name1":horses[a-1]["name"]!,"number2":6,"name2":horses[5]["name"]!,
+                     "probabilityPct":prob,"oddsLow":odds,"oddsHigh":odds+1,"expectedValue":prob/100*odds]
+                }
+                let node: [String:Any] = ["schemaVersion":1,"ruleVersion":"wide-axis-v1-20261014","status":"ready",
+                    "message":"ワイド向けの穴軸・相手を評価しました。", "axis":["number":6,"name":horses[5]["name"]!,
+                        "aiTop3Pct":40.0,"marketTop3Pct":25.0,"marketTop3Rank":6],
+                    "pairs":[axisPair(1,28,4.1),axisPair(2,25,5),axisPair(3,20,6)],"totalYen":300,
+                    "minimumSingleHitReturnYen":410.0,"capturedAtJST":day+" 09:50:00"]
+                for i in signals.indices { signals[i]["wideAxisEvaluation"] = node }
+                PhoneFixtureProtocol.axisShadow = try! JSONSerialization.data(withJSONObject:["schemaVersion":1,
+                    "ruleVersion":"wide-axis-v1-20261014","generatedAtJST":day+" 09:50:00",
+                    "counts":["recordedRaces":2,"held":0,"awaitingResults":1,"matched":1,"entrantChanged":0,"invalid":0,"selectedBets":3],
+                    "returnIndex":1.1,"autoBetEnabled":false,"moneyAllocationEnabled":false])
             }
             PhoneFixtureProtocol.signals = try! JSONSerialization.data(withJSONObject:
                 ["schemaVersion":2,"signalVersion":"v2","generatedAtJST":day+" 09:50:00","formalSignals":true,"races":signals])
@@ -83,6 +106,7 @@ private final class PhoneFixtureProtocol: URLProtocol {
     static var schedule = Data()
     static var signals = Data()
     static var shadow = Data()
+    static var axisShadow = Data()
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -91,6 +115,7 @@ private final class PhoneFixtureProtocol: URLProtocol {
         let code: Int
         if path.hasSuffix("/RaceData.json") { data = Self.races; code = 200 }
         else if path.hasSuffix("/SignalData.json"), !Self.signals.isEmpty { data = Self.signals; code = 200 }
+        else if path.hasSuffix("/WideAxisShadow.json"), !Self.axisShadow.isEmpty { data = Self.axisShadow; code = 200 }
         else if path.hasSuffix("/TicketPlanShadow.json"), !Self.shadow.isEmpty { data = Self.shadow; code = 200 }
         else if path.hasSuffix("/ScheduleData.json") { data = Self.schedule; code = 200 }
         else { data = Data(); code = 404 }
