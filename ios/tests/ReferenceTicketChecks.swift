@@ -67,6 +67,10 @@ struct ReferenceTicketChecks {
             check(plans([race("a",pairs:[p])])[0].totalYen == 0,"invalid number held")
         }
         check(KeibaAIReferencePlanner.date8("2026-02-30") == nil, "invalid calendar day rejected")
+        let boundary = KeibaAIReferencePair(number1:1,name1:"馬1",number2:2,name2:"馬2",probabilityPct:30,
+            oddsLow:3.665,oddsHigh:4,expectedValue:1.100)
+        check(plans([race("boundary",pairs:[boundary])])[0].pairs.isEmpty,
+              "rounded display EV must not promote a below-threshold validation candidate")
         let bytes = try Data(contentsOf: URL(fileURLWithPath:"reports/TicketPlanShadow.json"))
         let decoded = try KeibaAITicketShadowData.decode(bytes)
         check(decoded.profiles.count == 3 && !decoded.moneyAllocationEnabled,"real summary decodes")

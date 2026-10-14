@@ -4839,7 +4839,7 @@ private struct KeibaAITicketPlanView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: metricWidth))], alignment: .leading, spacing: 8) {
                         Text(String(format: "AI的中率 %.1f%%", pair.probabilityPct))
                         Text(String(format: "実オッズ %.1f〜%.1f倍", pair.oddsLow, pair.oddsHigh))
-                        Text(String(format: "期待倍率 %.2f", pair.expectedValue))
+                        Text(String(format: "期待倍率 %.2f", pair.selectionExpectedValue))
                     }
                     .font(.subheadline.monospacedDigit())
                     .fixedSize(horizontal: false, vertical: true)

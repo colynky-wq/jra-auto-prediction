@@ -22,6 +22,8 @@ struct KeibaAIReferencePair: Identifiable {
     let oddsHigh: Double
     let expectedValue: Double
     var id: String { "\(min(number1, number2))-\(max(number1, number2))" }
+    // Match the four-decimal forward validator, not the three-decimal signal display.
+    var selectionExpectedValue: Double { (probabilityPct / 100 * oddsLow * 10000).rounded() / 10000 }
 }
 
 struct KeibaAIReferenceRaceInput {
@@ -98,11 +100,11 @@ enum KeibaAIReferencePlanner {
                       p.probabilityPct.isFinite, p.probabilityPct >= 0, p.probabilityPct <= 100,
                       p.oddsLow.isFinite, p.oddsHigh.isFinite, p.expectedValue.isFinite,
                       p.oddsLow >= 1, p.oddsHigh >= p.oddsLow,
-                      abs(p.expectedValue - p.probabilityPct / 100 * p.oddsLow) <= 0.000005 * p.oddsLow + 0.00011
+                      abs(p.expectedValue - p.probabilityPct / 100 * p.oddsLow) <= 0.000005 * p.oddsLow + 0.00051
                 else { return held("出走馬・確率・オッズの対応を確認できません") }
             }
-            let candidates = race.pairs.filter { $0.expectedValue >= profile.threshold }.sorted {
-                if $0.expectedValue != $1.expectedValue { return $0.expectedValue > $1.expectedValue }
+            let candidates = race.pairs.filter { $0.selectionExpectedValue >= profile.threshold }.sorted {
+                if $0.selectionExpectedValue != $1.selectionExpectedValue { return $0.selectionExpectedValue > $1.selectionExpectedValue }
                 if $0.probabilityPct != $1.probabilityPct { return $0.probabilityPct > $1.probabilityPct }
                 return ($0.number1, $0.number2) < ($1.number1, $1.number2)
             }
