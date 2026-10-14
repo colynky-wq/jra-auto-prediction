@@ -1,0 +1,112 @@
+name: KeibaAI Laps After History
+on:
+  pull_request:
+    paths:
+      - 'production/lap_after_history.py'
+      - 'production/test_lap_after_history.py'
+      - '.github/workflows/keibaai-lap-after-history.yml'
+  workflow_run:
+    workflows: ['KeibaAI Production History Update']
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check actual applied history selection without network or forecasts
+        run: python -m unittest discover -s production -p 'test_lap_after_history.py' -v
+  collect:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main' &&
+      (github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    concurrency:
+      group: keibaai-race-lap-research
+      cancel-in-progress: false
+    steps:
+      - name: Checkout lightweight applied-history selector from trusted main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          path: startup-guard
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /production/lap_after_history.py
+            /reports/history_updates/*.json
+      - name: Select the day actually applied by the completed run
+        id: plan
+        run: python3 startup-guard/production/lap_after_history.py --event "$GITHUB_EVENT_PATH" --reports-root startup-guard/reports/history_updates --github-output "$GITHUB_OUTPUT"
+      - name: Checkout latest main for that completed day
+        if: steps.plan.outputs.should_collect == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        if: steps.plan.outputs.should_collect == 'true'
+        with:
+          python-version: '3.13'
+      - name: Install collection dependencies only for an applied day
+        if: steps.plan.outputs.should_collect == 'true'
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2' 'pdfplumber==0.11.9'
+      - name: Collect final official laps and reuse existing valid records
+        if: steps.plan.outputs.should_collect == 'true'
+        id: laps
+        continue-on-error: true
+        env:
+          TARGET_DATE: ${{ steps.plan.outputs.target_date }}
+        run: python production/collect_race_laps.py --date "$TARGET_DATE" --apply
+      - name: Evaluate only predictions actually saved before post
+        if: steps.plan.outputs.should_collect == 'true'
+        id: evaluation
+        continue-on-error: true
+        run: python production/evaluate_prospective_pace.py
+      - name: Publish recording status independently of evaluation
+        if: steps.plan.outputs.should_collect == 'true'
+        id: recording
+        continue-on-error: true
+        run: python production/build_pace_recording_status.py
+      - name: Preserve the collected day and recording diagnostics
+        if: always() && steps.plan.outputs.should_collect == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-laps-after-history-${{ github.run_id }}
+          path: |
+            research/laps/${{ steps.plan.outputs.target_date }}/RaceLapData.json
+            reports/race_laps/${{ steps.plan.outputs.target_date }}.json
+            reports/PaceProspectiveValidation.json
+            PaceRecordingStatus.json
+            reports/PaceRecordingStatus.md
+          retention-days: 14
+      - name: Publish successful records even when another race failed
+        if: steps.plan.outputs.should_collect == 'true'
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add research/laps
+          if [ -d reports/race_laps ]; then git add reports/race_laps; fi
+          if [ -f reports/PaceProspectiveValidation.json ]; then git add reports/PaceProspectiveValidation.json; fi
+          if [ -f PaceRecordingStatus.json ]; then git add PaceRecordingStatus.json reports/PaceRecordingStatus.md; fi
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Collect official laps after applied history update'
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Surface collection or evaluation failures
+        if: steps.laps.outcome == 'failure' || steps.evaluation.outcome == 'failure' || steps.recording.outcome == 'failure'
+        run: exit 1
