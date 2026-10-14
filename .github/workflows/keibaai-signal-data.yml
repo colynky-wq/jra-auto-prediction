@@ -7,6 +7,8 @@ on:
     paths:
       - 'RaceData.json'
       - 'production/build_signal_data.py'
+      - 'production/build_signal_data_v2.py'
+      - 'production/wide_axis_rules.py'
       - '.github/workflows/keibaai-signal-data.yml'
   schedule:
     # GitHub Actions does not start another workflow from a GITHUB_TOKEN push.
@@ -41,10 +43,13 @@ jobs:
           python-version: '3.13'
 
       - name: Compile signal publisher
-        run: python -m py_compile production/build_signal_data.py
+        run: python -m py_compile production/build_signal_data.py production/build_signal_data_v2.py production/wide_axis_rules.py
+
+      - name: Install signal runtime dependencies
+        run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
       - name: Build SignalData
-        run: python production/build_signal_data.py
+        run: python production/build_signal_data_v2.py
 
       - name: Publish SignalData when changed
         shell: bash

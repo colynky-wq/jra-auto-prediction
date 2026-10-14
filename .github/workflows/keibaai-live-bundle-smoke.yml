@@ -9,6 +9,7 @@ on:
       - 'production/wide_axis*.py'
       - 'production/test_wide_axis_rules.py'
       - '.github/workflows/keibaai-live-result-sync.yml'
+      - '.github/workflows/keibaai-signal-data.yml'
       - '.github/workflows/keibaai-live-bundle-smoke.yml'
   push:
     branches:
@@ -26,6 +27,7 @@ on:
       - 'production/wide_axis_shadow.py'
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/workflows/keibaai-live-result-sync.yml'
+      - '.github/workflows/keibaai-signal-data.yml'
       - '.github/workflows/keibaai-live-bundle-smoke.yml'
   workflow_dispatch:
 
@@ -128,11 +130,24 @@ jobs:
               archived = json.loads(archived_path.read_text(encoding='utf-8'))
               assert archived['frozenAtFirstSuccessfulCapture'] is True
               assert archived['raceID'] == race['raceID']
+              v2.REPORTS_DIR = Path(td)
+              v2.WIDE_ODDS_PATH = Path(td) / 'WideOddsData.json'
+              assert v2._load_wide_by_race([race])[race['raceID']] == archived
+              later = dict(snapshot, capturedAtJST='2026-10-12 10:01:00')
+              v2.WIDE_ODDS_PATH.write_text(json.dumps({'snapshots': [later]}))
+              assert v2._load_wide_by_race([race])[race['raceID']] == archived
               before = archived_path.read_text(encoding='utf-8')
               snapshot2 = dict(snapshot)
               snapshot2['capturedAtJST'] = '2026-10-12 10:01:00'
               wide._archive_snapshot(snapshot2)
               assert archived_path.read_text(encoding='utf-8') == before
+              damaged = dict(archived, startTime='00:00')
+              archived_path.write_text(json.dumps(damaged))
+              try:
+                  v2._load_wide_by_race([race])
+                  raise AssertionError('mismatched archived post time accepted')
+              except ValueError:
+                  pass
 
           payload = json.load(open('SignalData.json', encoding='utf-8'))
           assert payload['signalVersion'] == 'keibaai-signals-v2-wide-practical'
