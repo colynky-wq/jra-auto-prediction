@@ -2,6 +2,7 @@ import Foundation
 
 private final class ShadowProtocol: URLProtocol {
     static var bytes = Data()
+    static var axisBytes = Data()
     static var code = 200
     static var requests = [URLRequest]()
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -10,7 +11,7 @@ private final class ShadowProtocol: URLProtocol {
         Self.requests.append(request)
         client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: Self.code,
                 httpVersion: nil, headerFields: nil)!, cacheStoragePolicy: .notAllowed)
-        client?.urlProtocol(self, didLoad: Self.bytes)
+        client?.urlProtocol(self, didLoad: request.url!.path.hasSuffix("/WideAxisShadow.json") ? Self.axisBytes : Self.bytes)
         client?.urlProtocolDidFinishLoading(self)
     }
     override func stopLoading() {}
@@ -108,13 +109,23 @@ struct ReferenceTicketChecks {
         ShadowProtocol.code = 500
         await store.load()
         check(store.data == nil && store.errorMessage != nil,"first failure is unknown, not zero")
-        ShadowProtocol.code = 200; ShadowProtocol.bytes = bytes
+        check(store.axisData == nil && store.axisErrorMessage != nil,"new-rule first failure is unknown, not zero")
+        ShadowProtocol.code = 200; ShadowProtocol.bytes = bytes; ShadowProtocol.axisBytes = axisBytes
         await store.load()
         check(store.data != nil && store.errorMessage == nil,"HTTP recovery shows actual data")
+        check(store.axisData?.generatedAtJST == axisReport.generatedAtJST && store.axisErrorMessage == nil,
+              "new-rule HTTP recovery uses its separate report")
+        ShadowProtocol.axisBytes = Data("{}".utf8)
+        await store.load()
+        check(store.data != nil && store.errorMessage == nil && store.axisErrorMessage != nil &&
+              store.axisData?.generatedAtJST == axisReport.generatedAtJST,
+              "new-rule malformed refresh preserves its last value without breaking old statistics")
+        ShadowProtocol.axisBytes = axisBytes
         ShadowProtocol.bytes = Data("{}".utf8)
         await store.load()
         check(store.data?.generatedAtJST == decoded.generatedAtJST && store.errorMessage != nil,
               "malformed refresh keeps the last value and explains staleness")
+        check(store.axisData != nil && store.axisErrorMessage == nil,"new-rule recovery is independent of old-report failure")
         check(ShadowProtocol.requests.allSatisfy { $0.httpMethod == "GET" && $0.url!.query!.contains("t=") },
               "transport read-only and cache-busted")
         print("WIDE_AXIS_NATIVE_OK: Python contract, Top3 identity, bounded refund-safe preview, separate zero-start summary")
