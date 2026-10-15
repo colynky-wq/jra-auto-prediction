@@ -1,0 +1,27 @@
+name: KeibaAI All Bet Research Check
+on:
+  pull_request:
+    paths:
+      - 'production/*all_bet*.py'
+      - 'production/*win5*.py'
+      - '.github/workflows/keibaai-all-bet-research-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/*all_bet*.py'
+      - 'production/*win5*.py'
+      - '.github/workflows/keibaai-all-bet-research-check.yml'
+permissions:
+  contents: read
+jobs:
+  source-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'beautifulsoup4==4.13.4'
+      - name: Read completed-race odds and current official WIN5 formats without saving observations
+        run: python production/probe_all_bet_sources.py
