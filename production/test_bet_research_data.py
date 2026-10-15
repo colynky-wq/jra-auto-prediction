@@ -58,7 +58,7 @@ class ProjectionTests(unittest.TestCase):
             self.assertFalse(value['autoBetEnabled']);self.assertFalse(value['stakeSizingEnabled'])
             self.assertEqual(self.row(value,'support')['candidates'][0]['unitYen'],200)
             self.assertIsNone(self.row(value,'win5')['candidates'][0]['oddsLow'])
-            self.assertEqual(self.row(value,'wide')['candidates'][0]['probabilityPct'],28)
+            self.assertAlmostEqual(self.row(value,'wide')['candidates'][0]['probabilityPct'],28)
 
     def test_zero_old_history_and_missing_are_distinct(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -122,6 +122,9 @@ class ProjectionTests(unittest.TestCase):
                     self.assertFalse(self.row(value,kind)['candidates'])
 
     def test_win5_top_three_heap_agrees_with_exhaustive_small_distribution(self):
+        tiny=ui.candidate('01',['馬'],1e-15,1e-16)
+        self.assertGreater(tiny['probabilityPct'],0)
+        self.assertGreater(tiny['marketProbabilityPct'],0)
         predictions=[]
         for i in range(5):
             r=forecast(2);r['raceNumber']=i+1;r['venue']='試験'

@@ -45,7 +45,7 @@ struct KeibaAIBetResearchRow: Codable, Identifiable {
     let candidates: [KeibaAIBetResearchCandidate]
     var needsAttention: Bool { ["invalid", "failed", "missing_record"].contains(status) }
     var title: String {
-        betType == "win5" ? "WIN5 対象5レース" : raceNumber.map { "\(venue)\($0)R" } ?? "レース記録"
+        betType == "win5" ? "WIN5 対象5レース" : raceNumber.map { "\(venue)\($0)R" } ?? "レースID \(raceID)"
     }
 }
 

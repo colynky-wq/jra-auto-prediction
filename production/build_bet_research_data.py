@@ -83,8 +83,8 @@ def row_for(race,kind,state,record=None,reason=None):
 
 
 def candidate(key,names,ai,market,low=None,high=None,unit=100):
-    return {'id':key,'label':' → '.join(names),'probabilityPct':round(ai*100,8),
-            'marketProbabilityPct':round(market*100,8) if market is not None else None,
+    return {'id':key,'label':' → '.join(names),'probabilityPct':ai*100,
+            'marketProbabilityPct':market*100 if market is not None else None,
             'oddsLow':low,'oddsHigh':high,'expectedMultiplierLow':ai*low if low is not None else None,
             'expectedMultiplierHigh':ai*high if high is not None else None,
             'unitYen':unit,'hit':None,'payoutYen':None}
