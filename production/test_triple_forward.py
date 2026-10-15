@@ -60,6 +60,13 @@ class ForwardTests(unittest.TestCase):
             p=self.save(Path(tmp)); before=p.read_bytes()
             self.save(Path(tmp),fetch=lambda *_:self.fail('existing record refetched'))
             self.assertEqual(before,p.read_bytes())
+            source=json.loads(before)
+            self.assertEqual(source['apiStatus'],'middle')
+            self.assertEqual(source['apiType'],7)
+            self.assertIn('race_id='+source['prediction']['raceID'],source['sourceURL'])
+            source['apiStatus']='result';source.pop('recordFingerprint')
+            source['recordFingerprint']=f.digest(source)
+            with self.assertRaises(ValueError):f.validate(source)
             d=json.loads(before);d['odds']['010203']=2
             with self.assertRaises(ValueError):f.validate(d)
 

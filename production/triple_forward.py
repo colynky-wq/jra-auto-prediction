@@ -77,10 +77,13 @@ def request_bytes(url):
     return data
 
 
+def source_url(rid, kind):
+    return (f'https://race.netkeiba.com/api/api_get_jra_odds.html?race_id={rid}'
+            f'&type={TYPES[kind]}&action=init&compress=0&output=json')
+
+
 def fetch_odds(rid, kind):
-    url = (f'https://race.netkeiba.com/api/api_get_jra_odds.html?race_id={rid}'
-           f'&type={TYPES[kind]}&action=init&compress=0&output=json')
-    return json.loads(request_bytes(url))
+    return json.loads(request_bytes(source_url(rid,kind)))
 
 
 def record_path(root, race, kind):
@@ -112,6 +115,10 @@ def validate(record):
     if record['status'] not in {'ready', 'odds_unavailable'}:
         raise ValueError('unknown capture status')
     if record['status'] == 'ready':
+        if (record.get('apiStatus') != 'middle' or record.get('apiType') != TYPES[kind]
+                or record.get('sourceURL') != source_url(rid,kind)
+                or not re.fullmatch('[a-f0-9]{64}', record.get('sourceFingerprint',''))):
+            raise ValueError('pre-race source evidence mismatch')
         odds = record['odds']
         if set(odds) != expected_keys(kind, numbers):
             raise ValueError('frozen odds coverage mismatch')
@@ -154,6 +161,7 @@ def record_first(root, race, kind, prediction_available, *, fetch=fetch_odds,
         raw = fetch(rid, kind)
         record.update(odds=odds_map(raw, kind, numbers),
                       officialDatetime=raw['data']['official_datetime'],
+                      apiStatus=raw.get('status'), apiType=TYPES[kind], sourceURL=source_url(rid,kind),
                       sourceFingerprint=digest(raw), status='ready')
     except (OSError, ValueError, KeyError, TypeError) as error:
         record.update(status='odds_unavailable', odds={}, reason=type(error).__name__)
