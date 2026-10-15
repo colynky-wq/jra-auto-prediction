@@ -52,6 +52,11 @@ def main():
     assert confirmed,'no upcoming official WIN5 target parsed; source/date coverage needs inspection'
     for target in confirmed[:2]:
         print('WIN5_OFFICIAL_PARSE_OK',json.dumps(target,ensure_ascii=False))
+    archive=BeautifulSoup(request_bytes('https://race.netkeiba.com/top/win5.html?date=20261012'),'html.parser')
+    print('WIN5_ARCHIVE_TITLE_SCHEMA',archive.title.get_text() if archive.title else None)
+    for table in archive.select('table'):
+        if 'win5' in ' '.join(table.get('class',[])):
+            print('WIN5_ARCHIVE_TABLE_SCHEMA',str(table)[:10500])
 
 
 if __name__ == '__main__':
