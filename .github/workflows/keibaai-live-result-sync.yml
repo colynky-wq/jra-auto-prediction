@@ -96,12 +96,16 @@ jobs:
         continue-on-error: true
         run: python production/evaluate_all_bet_forward.py
 
+      - name: Build reference-only app research display from frozen records
+        continue-on-error: true
+        run: python production/build_bet_research_data.py
+
       - name: Commit results and validation when changed
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json reports)" ]; then
+          if [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json reports)" ]; then
             echo 'No result/performance/validation changes to publish.'
             exit 0
           fi
@@ -109,6 +113,7 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
           git add ResultData.json PerformanceData.json reports
+          if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
           git commit -m "Update KeibaAI results and forward validation"
 
           if ! git push origin HEAD:main; then

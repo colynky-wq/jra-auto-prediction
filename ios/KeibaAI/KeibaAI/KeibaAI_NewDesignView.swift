@@ -34,6 +34,7 @@ private enum KeibaAIMainTab: String, CaseIterable, Identifiable {
     case focus = "注目レース"
     case longshot = "大穴"
     case ticket = "馬券プラン"
+    case research = "券種別研究"
     case performance = "成績"
     case guide = "凡例"
 
@@ -45,6 +46,7 @@ private enum KeibaAIMainTab: String, CaseIterable, Identifiable {
         case .focus: return "scope"
         case .longshot: return "sparkles"
         case .ticket: return "ticket"
+        case .research: return "flask"
         case .performance: return "chart.line.uptrend.xyaxis"
         case .guide: return "book.closed.fill"
         }
@@ -1153,6 +1155,7 @@ struct KeibaAINewDesignView: View {
     @State private var detailTab: KeibaAIDetailTab = .prediction
     @State private var showSettings = false
     @State private var showRecordingStatus = false
+    @State private var betResearchRefreshID = UUID()
 
     @State private var selectedVenue = "全場"
     @State private var sortOption: KeibaAISortOption = .startTime
@@ -1208,6 +1211,7 @@ struct KeibaAINewDesignView: View {
                     await performanceStore.load(force: true)
                     await ticketShadowStore.load()
                     await appResearchStore.load(date8: selectedDate8, force: true)
+                    betResearchRefreshID = UUID()
                 }
 
                 do {
@@ -1502,6 +1506,7 @@ struct KeibaAINewDesignView: View {
                     await ticketShadowStore.load()
                     await horseProfileStore.loadIndex(force: true)
                     await appResearchStore.load(date8: selectedDate8, force: true)
+                    betResearchRefreshID = UUID()
                     chooseFirstRaceIfNeeded()
                 }
             } label: {
@@ -1535,7 +1540,7 @@ struct KeibaAINewDesignView: View {
                         withAnimation(.easeInOut(duration: 0.18)) {
                             mainTab = tab
                             switch tab {
-                            case .guide, .performance, .ticket:
+                            case .guide, .performance, .ticket, .research:
                                 preferredCompactColumn = .detail
                             default:
                                 preferredCompactColumn = .sidebar
@@ -1580,6 +1585,7 @@ struct KeibaAINewDesignView: View {
                                 await signalStore.load(date8: selectedDate8, force: true)
                                 await wideValidationStore.load(date8: selectedDate8, force: true)
                                 await appResearchStore.load(date8: selectedDate8, force: true)
+                                betResearchRefreshID = UUID()
                                 selectedVenue = "全場"
                                 chooseFirstRaceIfNeeded()
                             }
@@ -1679,6 +1685,15 @@ struct KeibaAINewDesignView: View {
             longshotList
         case .ticket:
             ticketSidebar
+        case .research:
+            VStack(alignment: .leading, spacing: 14) {
+                Text("全券種の研究情報").font(.title3.bold())
+                Text("発走前の保存・保留理由・結果照合と、比較用の参考候補を確認できます。")
+                    .font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                Button("券種別研究を開く") { preferredCompactColumn = .detail }
+                    .buttonStyle(.borderedProminent)
+                Spacer()
+            }.padding(16)
         case .performance:
             performanceSidebar
         case .guide:
@@ -2043,6 +2058,8 @@ struct KeibaAINewDesignView: View {
             KeibaAITicketPlanView(budgetStore: budgetStore, shadowStore: ticketShadowStore,
                                   profile: $referenceProfile, date8: selectedDate8,
                                   items: allScheduleItems, signals: signalStore.racesByID)
+        } else if mainTab == .research {
+            KeibaAIBetResearchView(date8: selectedDate8, refreshID: betResearchRefreshID)
         } else if let item = selectedScheduleItem {
             if let race = item.prediction {
                 KeibaAIRaceDetailNew(
@@ -4470,6 +4487,7 @@ private struct KeibaAIGuideView: View {
                         KeibaAIGuideDefinition(term: "AI÷市場", text: "AI評価 ÷ 市場評価。1.00より大きいほど、市場よりAIが高く見ている馬です。大きいだけで買いを意味しません。")
                         KeibaAIGuideDefinition(term: "期待指数", text: "10分前の単勝オッズとAI勝率を掛け合わせた参考指数。100超は理論上の妙味候補ですが、確率誤差やオッズ変動があるため利益を保証しません。")
                         KeibaAIGuideDefinition(term: "大穴候補", text: "人気薄・高配当の馬のうち、AIが市場より高く評価する候補です。条件と具体例は「大穴の見方」を参照してください。単勝8倍以上を含むため、一般にいう極端な高配当だけに限定していません。")
+                        KeibaAIGuideDefinition(term: "券種別研究", text: "全券種の保存状況と結果照合、発走前に保存した比較用の参考候補を確認できます。新しい券種の候補はAI確率順の最大3件です。おすすめ馬券への採用や回収率の優劣は検証中で、記録がない場合は待機・未確認と表示します。")
                         KeibaAIGuideDefinition(term: "大穴v2比較", text: "大穴画面で研究表示へ切り替えると、AI勝率・保存オッズ・理論期待倍率を比較できます。正式なv1候補条件や購入金額の配分は変えません。")
                         KeibaAIGuideDefinition(term: "脚質傾向", text: "レース当日より前の最大6走から、逃げ・先行・差し・追込の割合を表示します。割合は過去の頻度で、次走の戦法の確率ではありません。参考度は出走数と傾向のまとまりの目安です。")
                         KeibaAIGuideDefinition(term: "参考隊列", text: "過去の初角の平均位置を前→後に並べた研究表示です。過去3走以上の履歴が出走馬の80%以上あるレースに限ります。直線コースは除き、履歴不足の馬は順に含めません。レース全体の実際の並びを当てた表示ではありません。")

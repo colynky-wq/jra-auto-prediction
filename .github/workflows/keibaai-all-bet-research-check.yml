@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'production/*all_bet*.py'
+      - 'production/*bet_research_data.py'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -17,6 +18,7 @@ on:
     branches: [main]
     paths:
       - 'production/*all_bet*.py'
+      - 'production/*bet_research_data.py'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -41,6 +43,7 @@ jobs:
       - name: Verify added pool math, first records, independent payouts and WIN5 common deadline
         run: |
           python -m unittest discover -s production -p 'test_all_bet*.py'
+          python production/test_bet_research_data.py
           python -m unittest discover -s production -p 'test_win5*.py'
           python -m unittest discover -s production -p test_live_bundle_publisher.py
       - name: Check existing Triple and entry observations still pass
