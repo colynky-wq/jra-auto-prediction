@@ -146,7 +146,7 @@ def build(root,fetch=request_bytes,clock=lambda:datetime.now(JST)):
             if any(not path_for(root,race,k).exists() for k in ('win','place')):
                 counts['support']['missingRecords'] += 1
     from win5_research import build_validation
-    win5 = build_validation(root,clock=clock)
+    win5 = build_validation(root,clock=clock,fetch=fetch)
     existing = {}
     for key,path in {'wide':'reports/WideAxisShadow.json','trio':'reports/TripleForwardValidation.json',
                      'trifecta':'reports/TripleForwardValidation.json'}.items():
@@ -156,6 +156,8 @@ def build(root,fetch=request_bytes,clock=lambda:datetime.now(JST)):
             try:
                 data = json.loads(file.read_text()); item['status'] = data.get('status')
                 item['counts'] = data.get('counts',{}).get(key) if key != 'wide' else data.get('counts')
+                if data.get('status')=='attention_required':
+                    warnings.append(path+': existing research requires attention')
             except (OSError,ValueError,AttributeError,TypeError):
                 item['status'] = 'unreadable'; warnings.append(path+': unreadable existing research report')
         else:

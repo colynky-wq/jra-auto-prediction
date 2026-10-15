@@ -6,6 +6,7 @@ from triple_forward import JST,request_bytes
 from all_bet_forward import parse_table,payout_map
 from all_bet_baseline import probabilities
 from win5_research import official_targets
+from win5_payouts import payout_document
 
 
 def main():
@@ -52,11 +53,14 @@ def main():
     assert confirmed,'no upcoming official WIN5 target parsed; source/date coverage needs inspection'
     for target in confirmed[:2]:
         print('WIN5_OFFICIAL_PARSE_OK',json.dumps(target,ensure_ascii=False))
-    archive=BeautifulSoup(request_bytes('https://race.netkeiba.com/top/win5.html?date=20261012'),'html.parser')
-    print('WIN5_ARCHIVE_TITLE_SCHEMA',archive.title.get_text() if archive.title else None)
-    for table in archive.select('table'):
-        if 'win5' in ' '.join(table.get('class',[])):
-            print('WIN5_ARCHIVE_TABLE_SCHEMA',str(table)[:10500])
+    raw=request_bytes('https://race.netkeiba.com/top/win5.html?date=20261012')
+    archive=BeautifulSoup(raw,'html.parser')
+    for node in archive.find_all(string=lambda s:s and s.strip() in {'払戻金','的中票数'}):
+        print('WIN5_PAYOUT_FIELD_SCHEMA',str(node.parent.parent)[:2500])
+    payout=payout_document(raw,'2026-10-12',['202608040509','202605040510','202608040510','202605040511','202608040511'])
+    assert payout['payoutPer100Yen']==35100
+    assert [r['number'] for r in payout['winners']]==[4,11,5,2,1]
+    print('WIN5_PAYOUT_PARSE_OK',json.dumps(payout,ensure_ascii=False))
 
 
 if __name__ == '__main__':

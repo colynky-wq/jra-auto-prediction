@@ -189,9 +189,9 @@ def probability_score(record,results):
             'assumption':'レース間の条件付き独立を仮定した勝率の積。全組は積の形で保持し、点数分を購入する意味ではない。'}
 
 
-def build_validation(root,clock=lambda:datetime.now(JST)):
+def build_validation(root,clock=lambda:datetime.now(JST),fetch=request_bytes):
     root = Path(root)
-    counts = {k:0 for k in ('records','ready','held','awaiting_results','entrant_changed','dead_heat_excluded','invalid','probability_matched','missingRecords','failedSessions')}
+    counts = {k:0 for k in ('records','ready','held','awaiting_results','entrant_changed','dead_heat_excluded','invalid','probability_matched','matched','payouts_pending','missingRecords','failedSessions')}
     rows,warnings,sessions = [],[],[]
     for path in sorted((root/'reports').glob('*/win5_v1/session.json')):
         counts['records'] += 1
@@ -205,6 +205,14 @@ def build_validation(root,clock=lambda:datetime.now(JST)):
             if any(stamp(r['resultUpdatedAtJST']) > clock() for r in results.values()):
                 raise ValueError('future WIN5 result')
             score = probability_score(record,results); counts[score['status']] += 1
+            if score['status']=='probability_matched':
+                from win5_payouts import saved_payout,PayoutNotReady
+                try:
+                    payout=saved_payout(root,record,score,fetch=fetch,clock=clock)
+                except (OSError,PayoutNotReady):
+                    score['status']='payouts_pending';counts['payouts_pending']+=1
+                else:
+                    score.update(status='matched',payout=payout);counts['matched']+=1
             rows.append({'raceDate':day,**score})
         except (OSError,ValueError,KeyError,TypeError,OverflowError) as error:
             counts['invalid'] += 1; warnings.append(str(path.relative_to(root))+': '+type(error).__name__)
@@ -226,9 +234,9 @@ def build_validation(root,clock=lambda:datetime.now(JST)):
             warnings.append(str(path.relative_to(root))+': '+type(error).__name__)
     return {'version':VERSION,'counts':counts,'races':rows,'sessions':sessions,'warnings':warnings,
             'status':'attention_required' if warnings or counts['invalid'] or counts['missingRecords'] or counts['failedSessions'] else 'collecting',
-            'payoutResearchStatus':'not_connected','returnIndex':None,'selectedBets':0,
+            'payoutResearchStatus':'dated_source_connected','returnIndex':None,'selectedBets':0,
             'autoBetEnabled':False,'appDisplayEnabled':False,
-            'meaning':'5レース共通締切前の確率研究。WIN5の確定払戻・回収率の検証は未接続。単勝オッズ5本の積をWIN5オッズにしない。'}
+            'meaning':'5レース共通締切前の確率研究と独立した日付別確定払戻の照合。買い目選択・回収率研究は未実施。単勝オッズ5本の積をWIN5オッズにしない。'}
 
 
 def main():

@@ -41,7 +41,7 @@ jobs:
       - name: Verify added pool math, first records, independent payouts and WIN5 common deadline
         run: |
           python -m unittest discover -s production -p 'test_all_bet*.py'
-          python production/test_win5_research.py
+          python -m unittest discover -s production -p 'test_win5*.py'
           python -m unittest discover -s production -p test_live_bundle_publisher.py
       - name: Check existing Triple and entry observations still pass
         run: |

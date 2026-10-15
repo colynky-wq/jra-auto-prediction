@@ -121,7 +121,7 @@ class WIN5Tests(unittest.TestCase):
             root=Path(tmp);p=self.save(root)
             out=w.build_validation(root,clock=lambda:NOW)
             self.assertEqual(out['counts']['awaiting_results'],1)
-            self.assertEqual(out['payoutResearchStatus'],'not_connected');self.assertIsNone(out['returnIndex'])
+            self.assertEqual(out['payoutResearchStatus'],'dated_source_connected');self.assertIsNone(out['returnIndex'])
             self.assertEqual(w.build_validation(root,clock=lambda:NOW-timedelta(days=1))['counts']['invalid'],1)
             p.unlink();journal={'hasTarget':True,'raceDate':DAY,'status':'failed'}
             (p.parent.parent/'win5_status.json').write_text(json.dumps(journal))
