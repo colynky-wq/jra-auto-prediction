@@ -31,7 +31,9 @@ def predict_live_race_topk(
     if race.get("surface") not in {"芝", "ダ"} or not race.get("distance"):
         raise RuntimeError(f"course could not be resolved: {race}")
 
-    odds, _ = base.fetch_win_odds(rid)
+    odds_requested = base.now_jst()
+    odds, win_odds_payload = base.fetch_win_odds(rid)
+    odds_received = base.now_jst()
     if len(odds) < 2:
         raise RuntimeError("insufficient live win odds")
 
@@ -42,6 +44,7 @@ def predict_live_race_topk(
     )
     print("JRA official entry parsed:", len(entries), "fetched_at:", entry_time)
     print("JRA entry URL:", entry_url)
+    research_entry_evidence = entries.attrs.get('allBetEntryEvidence')
 
     active = set(odds["馬番"].astype(int))
     entries = entries.loc[entries["馬番"].astype(int).isin(active)].copy()
@@ -158,6 +161,9 @@ def predict_live_race_topk(
         }
     )
     out["研究候補"] = (out["AI÷市場"] >= 1.20) & (out["期待払戻指数"] >= 100)
+    out.attrs['allBetEntryEvidence'] = research_entry_evidence
+    out.attrs['winOddsSource'] = {'payload':win_odds_payload,
+        'requestStartedAtJST':odds_requested.isoformat(),'receivedAtJST':odds_received.isoformat()}
 
     p1 = ai_win
     p2 = topk["ai_top2"]

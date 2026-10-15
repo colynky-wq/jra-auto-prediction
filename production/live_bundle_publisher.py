@@ -69,7 +69,7 @@ class Outbox:
     def __init__(self, root, folder, date8, git=None, today=None, role='live'):
         self.root, self.folder = Path(root).resolve(), Path(folder).resolve()
         self.date8 = date8
-        if role not in {'live', 'health'}:
+        if role not in {'live', 'health', 'research'}:
             raise ValueError('invalid publisher role')
         self.role = role
         self.day = datetime.strptime(date8, '%Y%m%d').date().isoformat()
@@ -102,6 +102,8 @@ class Outbox:
             return False
         if path.endswith(('.tmp', '.lock')):
             return False
+        if self.role == 'research':
+            return path == f'reports/{self.date8}/win5_status.json' or path.startswith(f'reports/{self.date8}/win5_v1/')
         if self.role == 'health':
             return path in {'PaceRecordingStatus.json', 'reports/PaceRecordingStatus.md'} or path.startswith(f'reports/{self.date8}/monitor_sessions/')
         return path in ROOT_FILES or path.startswith(f'reports/{self.date8}/')
@@ -180,7 +182,9 @@ class Outbox:
             if Path(path).stem != str(health['runID']) or health['raceDate'] != self.day:
                 raise PublishError('monitor journal identity mismatch')
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
-        immutable = ('/prerace/' in path and not path.endswith('/index.json')) or path.endswith('/PaceRecordingSchedule.json') or '/wide_axis_v1/' in path or '/triple_v1/' in path
+        immutable = (('/prerace/' in path and not path.endswith('/index.json'))
+                     or path.endswith('/PaceRecordingSchedule.json')
+                     or any(part in path for part in ('/wide_axis_v1/','/triple_v1/','/all_bet_v1/','/win5_v1/')))
         if immutable and remote is not None and remote != data:
             raise PublishError(f'既存の発走前記録と競合しています: {path}')
         if '/prerace/' in path and path.endswith('/index.json') and remote is not None and remote != data:

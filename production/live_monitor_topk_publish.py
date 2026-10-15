@@ -192,6 +192,12 @@ def publish_race_to_racedata(
     except Exception as exc:
         print('WARNING: TRIPLE_RESEARCH_NOT_SCHEDULED; keep prediction:', type(exc).__name__)
 
+    try:
+        from all_bet_runtime import schedule as schedule_all_bets
+        schedule_all_bets(RACEDATA_PATH.parent, published_race, out.attrs.get('allBetEntryEvidence'))
+    except Exception as exc:
+        print('WARNING: ALL_BET_RESEARCH_NOT_SCHEDULED; keep prediction:', type(exc).__name__)
+
     _refresh_prediction_bundle(published_race)
 
     print("Wide odds capture requested:", CAPTURE_WIDE_ODDS)

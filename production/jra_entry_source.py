@@ -478,6 +478,15 @@ def fetch_entry_table(
             text = r.content.decode(enc, errors="replace")
             d = _parse_entry_table(text, race_id)
 
+            # Optional metadata only. A research-parser failure must never
+            # change the existing model input or block app predictions.
+            try:
+                from all_bet_entry import parse_entry
+                d.attrs['allBetEntryEvidence'] = parse_entry(
+                    text, str(race_id), date8, url, fetch_time.to_pydatetime(), d)
+            except Exception as exc:
+                print('ALL_BET_ENTRY_METADATA_UNAVAILABLE', type(exc).__name__)
+
             print("JRA official entry parsed:", len(d))
             if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
                 try:

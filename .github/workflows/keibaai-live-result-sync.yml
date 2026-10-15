@@ -92,6 +92,10 @@ jobs:
         continue-on-error: true
         run: python production/evaluate_triple_forward.py
 
+      - name: Compare all added pools, equal Win Place packages and early WIN5 records
+        continue-on-error: true
+        run: python production/evaluate_all_bet_forward.py
+
       - name: Commit results and validation when changed
         shell: bash
         run: |
