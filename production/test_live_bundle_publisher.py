@@ -160,6 +160,15 @@ class TestLiveBundlePublisher(unittest.TestCase):
         sender.capture();self.assertFalse(sender.publish())
         self.assertEqual(json.loads(self.remote_read(path))['axis'],6)
 
+    def test_triple_first_record_cannot_be_replaced(self):
+        path = 'reports/20261017/triple_v1/trifecta/202605040601.json'
+        self.write(path, {'first':1})
+        sender=self.publisher();sender.capture();self.assertTrue(sender.publish())
+        self.write(path, {'first':2});self.write('RaceData.json',[self.race()])
+        sender.capture();self.assertFalse(sender.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),{'first':1})
+        self.assertEqual(len(json.loads(self.remote_read('RaceData.json'))),1)
+
     def test_partial_json_is_not_published_and_other_files_continue(self):
         self.write('SignalData.json', '{unfinished')
         self.write('RaceData.json', [self.race()])
