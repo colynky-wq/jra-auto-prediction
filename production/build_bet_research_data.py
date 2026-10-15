@@ -264,6 +264,7 @@ def build(root,clock=lambda:datetime.now(JST)):
     for path in sorted((root/'reports').glob('*/win5_v1/session.json')):
         day=datetime.strptime(path.parent.parent.name,'%Y%m%d').date().isoformat()
         try:
+            checked_results(path.parent.parent/'ResultData.json',day,now)
             record=win5.validate(read(path))
             if record['plan']['raceDate']!=day or added.stamp(record['recordedAtJST'])>now:raise ValueError('WIN5 path/time mismatch')
             found=win_states.get(day,{});state=found.get('status','invalid')

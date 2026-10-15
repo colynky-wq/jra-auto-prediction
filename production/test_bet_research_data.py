@@ -117,7 +117,7 @@ class ProjectionTests(unittest.TestCase):
                 if mode=='future':actual['resultUpdatedAtJST']='2026-10-18 10:30:00'
                 (root/'reports/20261017/ResultData.json').write_text('{broken' if mode=='broken' else json.dumps([actual]))
                 value=ui.build(root,clock=lambda:win5_tests.NOW)
-                for kind in (*ui.single.TYPES,'trio','trifecta','wide'):
+                for kind in (*ui.single.TYPES,'trio','trifecta','wide','win5'):
                     self.assertEqual(self.row(value,kind)['status'],'invalid')
                     self.assertFalse(self.row(value,kind)['candidates'])
 
@@ -132,6 +132,26 @@ class ProjectionTests(unittest.TestCase):
         self.assertEqual(len({c['id'] for c in actual}),3)
         for c,p in zip(actual,weights):self.assertAlmostEqual(c['probabilityPct'],p*100,places=7)
         self.assertTrue(all(c['oddsLow'] is None and c['payoutYen'] is None for c in actual))
+
+    def test_wide_actual_payouts_match_frozen_pairs_and_reject_disagreement(self):
+        from test_wide_axis_rules import write_actual_result
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);race,signal=wide_fixture()
+            p=ui.wide.record_first(root,race,signal,NOW.replace(hour=9,minute=51))
+            write_actual_result(p.parent.parent,race)
+            pairs=[]
+            for value in signal['wideEvaluation']['validationPairs']:
+                key=(value['number1'],value['number2']);yen={(1,6):410,(1,4):100,(4,6):450}.get(key,0)
+                pairs.append({**value,'oddsLow':value['wideOddsLow'],'oddsHigh':value['wideOddsHigh'],
+                              'hit':yen>0,'payoutPer100Yen':yen})
+            data={'races':[{'raceID':race['raceID'],'validationScope':'all_pairs',
+                  'snapshotCapturedAtJST':signal['wideEvaluation']['capturedAtJST'],'pairs':pairs}]}
+            cache=p.parent.parent/'WideValidation.json';cache.write_text(json.dumps(data))
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual(row['status'],'matched');self.assertEqual(row['candidates'][0]['payoutYen'],410)
+            data['races'][0]['snapshotCapturedAtJST']='2026-10-17 09:49:00';cache.write_text(json.dumps(data))
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual(row['status'],'invalid');self.assertFalse(row['candidates'])
 
 
 if __name__=='__main__':
