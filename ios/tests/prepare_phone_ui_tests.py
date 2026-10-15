@@ -43,6 +43,10 @@ def prepare():
     text = text.replace('21C9F968307B46C400A81BC9 /* ContentView.swift in Sources */,', f'{ids["transport_build"]},\n21C9F968307B46C400A81BC9 /* ContentView.swift in Sources */,')
     text = text.replace('21C9F935307B28F200A81BC9 /* KeibaAI */,', f'21C9F935307B28F200A81BC9 /* KeibaAI */,\n{ids["target"]},')
     path.write_text(text)
+    transport=Path('ios/tests/PhoneUITestTransport.swift')
+    fixture=Path('/tmp/bet-research-contract.json').read_text()
+    assert '__BET_RESEARCH_FIXTURE__' in transport.read_text()
+    transport.write_text(transport.read_text().replace('__BET_RESEARCH_FIXTURE__',fixture))
     app = Path('ios/KeibaAI/KeibaAI/KeibaAIApp.swift')
     body = app.read_text()
     assert body.count('struct KeibaAIApp: App {') == 1

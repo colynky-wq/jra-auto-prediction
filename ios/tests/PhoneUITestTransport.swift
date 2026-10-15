@@ -6,6 +6,39 @@ enum KeibaAIUITestTransport {
     static func enableIfRequested() {
         guard ProcessInfo.processInfo.environment["KEIBAAI_UI_FIXTURE"] == "1" else { return }
         let data = NSDataAsset(name: "RaceData")!.data
+        let dateFormatter=DateFormatter();dateFormatter.dateFormat="yyyy-MM-dd";dateFormatter.timeZone=TimeZone(identifier:"Asia/Tokyo")
+        let today=dateFormatter.string(from:Date())
+        let researchFixture = #"""
+        __BET_RESEARCH_FIXTURE__
+        """#
+        var research = try! JSONSerialization.jsonObject(with:Data(researchFixture.replacingOccurrences(of:"2026-10-17",with:today).replacingOccurrences(of:"WIN5-20261017",with:"WIN5-"+today.replacingOccurrences(of:"-",with:"")).utf8)) as! [String:Any]
+        var researchRows=research["races"] as! [[String:Any]]
+        for index in researchRows.indices {
+            if researchRows[index]["betType"] as? String == "trifecta" {
+                researchRows[index]["raceName"]="オクトーバー特別・秋季研究レース"
+                var cs=researchRows[index]["candidates"] as! [[String:Any]]
+                cs[0]["probabilityPct"]=0.000123
+                cs[0]["label"]="1番 アスクセクシーモア → 2番 ロングネームホース → 3番 オクトーバー"
+                researchRows[index]["candidates"]=cs
+            }
+            if researchRows[index]["betType"] as? String == "frame_quinella" {
+                researchRows[index]["status"]="held";researchRows[index]["statusLabel"]="条件不足で保留"
+                researchRows[index]["reason"]="公式出馬表の枠番号を確認できないため保留しています。"
+                researchRows[index]["candidates"]=[];researchRows[index]["isSaved"]=false
+            }
+        }
+        if ProcessInfo.processInfo.environment["KEIBAAI_UI_BET_EMPTY"] == "1" {
+            researchRows=[]
+            var types=research["catalog"] as! [[String:Any]]
+            for index in types.indices {
+                var counts=types[index]["cumulative"] as! [String:Int]
+                for key in counts.keys { counts[key]=0 };types[index]["cumulative"]=counts
+            }
+            research["catalog"]=types
+        }
+        research["races"]=researchRows
+        PhoneFixtureProtocol.research=try! JSONSerialization.data(withJSONObject:research)
+        PhoneFixtureProtocol.researchFails=ProcessInfo.processInfo.environment["KEIBAAI_UI_BET_ERROR"] == "1"
         var sample = (try! JSONSerialization.jsonObject(with: data) as! [[String: Any]])[0]
         sample["raceID"] = "202605040601"
         sample["venue"] = "東京"
@@ -107,6 +140,8 @@ private final class PhoneFixtureProtocol: URLProtocol {
     static var signals = Data()
     static var shadow = Data()
     static var axisShadow = Data()
+    static var research = Data()
+    static var researchFails = false
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -118,6 +153,7 @@ private final class PhoneFixtureProtocol: URLProtocol {
         else if path.hasSuffix("/WideAxisShadow.json"), !Self.axisShadow.isEmpty { data = Self.axisShadow; code = 200 }
         else if path.hasSuffix("/TicketPlanShadow.json"), !Self.shadow.isEmpty { data = Self.shadow; code = 200 }
         else if path.hasSuffix("/ScheduleData.json") { data = Self.schedule; code = 200 }
+        else if path.hasSuffix("/BetResearchData.json") { data=Self.research;code=Self.researchFails ? 503 : 200 }
         else { data = Data(); code = 404 }
         client?.urlProtocol(self, didReceive: HTTPURLResponse(url: request.url!, statusCode: code,
                            httpVersion: nil, headerFields: ["Content-Type": "application/json"])!,

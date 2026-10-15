@@ -3,6 +3,66 @@ import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
     @MainActor
+    private func openResearch(_ app:XCUIApplication) -> XCUIElement {
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"]="1"
+        app.launchEnvironment["KEIBAAI_UI_TICKET"]="1"
+        app.launch()
+        XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
+        let tabs=app.scrollViews["main-tabs"],button=app.buttons["main-tab-券種別研究"]
+        for _ in 0..<5 { if button.isHittable { break };tabs.swipeLeft() }
+        button.tap()
+        let screen=app.scrollViews["bet-research-screen"]
+        XCTAssertTrue(screen.waitForExistence(timeout:5));return screen
+    }
+
+    @MainActor
+    func testAllBetResearchReferenceAndDecimals() throws {
+        continueAfterFailure=false
+        let app=XCUIApplication(),screen=openResearch(app)
+        XCTAssertTrue(app.buttons["bet-type-win5"].waitForExistence(timeout:10))
+        for kind in ["win","place","frame_quinella","quinella","wide","exacta","trio","trifecta","support","win5"] {
+            XCTAssertTrue(app.buttons["bet-type-"+kind].exists,"every pool is selectable")
+        }
+        app.buttons["bet-type-trifecta"].tap()
+        let candidate=app.staticTexts["bet-candidate-trifecta-010203"]
+        for _ in 0..<6 { if candidate.isHittable { break };screen.swipeUp() }
+        XCTAssertTrue(candidate.label.contains("アスクセクシーモア"))
+        let percent=app.staticTexts.matching(NSPredicate(format:"label == %@","0.000123%")).firstMatch
+        for _ in 0..<3 { if percent.isHittable { break };screen.swipeUp() }
+        XCTAssertTrue(percent.isHittable,"tiny decimals are fully displayed")
+        let shot=XCTAttachment(screenshot:app.screenshot());shot.name="all-bet-trifecta-full-names-decimals";shot.lifetime = .keepAlways;add(shot)
+        for kind in ["support","win5","frame_quinella"] {
+            let button=app.buttons["bet-type-"+kind]
+            for _ in 0..<12 { if button.isHittable { break };screen.swipeDown() };button.tap()
+            let label:XCUIElement
+            if kind == "support" { label=app.staticTexts.matching(NSPredicate(format:"label CONTAINS %@","計200円の組合せ")).firstMatch }
+            else if kind == "win5" { label=app.staticTexts.matching(NSPredicate(format:"identifier BEGINSWITH %@","bet-candidate-win5-")).firstMatch }
+            else { label=app.staticTexts["公式出馬表の枠番号を確認できないため保留しています。"] }
+            for _ in 0..<7 { if label.isHittable { break };screen.swipeUp() }
+            XCTAssertTrue(label.isHittable)
+            if kind == "win5" { XCTAssertEqual(label.label.components(separatedBy:"\n").count,5) }
+            let shot=XCTAttachment(screenshot:app.screenshot());shot.name="all-bet-"+kind;shot.lifetime = .keepAlways;add(shot)
+        }
+        print("PHONE_ALL_BET_OK: ten pools, full names, tiny decimals, 200-yen support, five WIN5 legs and held reason")
+    }
+
+    @MainActor
+    func testBetResearchEmptyAndFailureAreDistinct() throws {
+        continueAfterFailure=false
+        let app=XCUIApplication();app.launchEnvironment["KEIBAAI_UI_BET_EMPTY"]="1"
+        let screen=openResearch(app)
+        let empty=app.staticTexts["bet-research-empty"]
+        for _ in 0..<6 { if empty.isHittable { break };screen.swipeUp() }
+        XCTAssertTrue(empty.label.contains("まだ確認できません"));XCTAssertFalse(app.staticTexts["bet-research-error"].exists)
+        let shot=XCTAttachment(screenshot:app.screenshot());shot.name="all-bet-zero-records";shot.lifetime = .keepAlways;add(shot)
+        app.terminate();app.launchEnvironment["KEIBAAI_UI_BET_ERROR"]="1"
+        _=openResearch(app)
+        XCTAssertTrue(app.staticTexts["bet-research-error"].waitForExistence(timeout:10))
+        XCTAssertFalse(app.staticTexts["bet-research-empty"].exists,"failed fetch is not a successful empty list")
+        let errorShot=XCTAttachment(screenshot:app.screenshot());errorShot.name="all-bet-fetch-error";errorShot.lifetime = .keepAlways;add(errorShot)
+        print("PHONE_ALL_BET_EMPTY_ERROR_OK")
+    }
+    @MainActor
     func testWideAxisEvaluationAndRefund() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
