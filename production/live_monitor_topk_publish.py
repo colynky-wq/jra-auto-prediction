@@ -185,6 +185,13 @@ def publish_race_to_racedata(
     print("RaceData.json modified: YES")
     print("Top2 / Top3 fields written: YES")
 
+    # Separate bounded background worker; never delay Win/Top2/Top3/Wide.
+    try:
+        from triple_research_runtime import schedule
+        schedule(RACEDATA_PATH.parent, published_race)
+    except Exception as exc:
+        print('WARNING: TRIPLE_RESEARCH_NOT_SCHEDULED; keep prediction:', type(exc).__name__)
+
     _refresh_prediction_bundle(published_race)
 
     print("Wide odds capture requested:", CAPTURE_WIDE_ODDS)

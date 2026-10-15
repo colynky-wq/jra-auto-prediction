@@ -4,6 +4,11 @@ on:
     paths:
       - 'production/research_triple_baseline.py'
       - 'production/test_triple_baseline.py'
+      - 'production/*triple*.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
+      - '.github/workflows/keibaai-live-result-sync.yml'
       - 'research/triple_parallel_v1.md'
       - '.github/workflows/keibaai-triple-research-check.yml'
   push:
@@ -11,6 +16,11 @@ on:
     paths:
       - 'production/research_triple_baseline.py'
       - 'production/test_triple_baseline.py'
+      - 'production/*triple*.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
+      - '.github/workflows/keibaai-live-result-sync.yml'
       - '.github/workflows/keibaai-triple-research-check.yml'
 permissions:
   contents: read
@@ -25,5 +35,21 @@ jobs:
           python-version: '3.13'
       - name: Check research math, result identity and separation
         run: python production/test_triple_baseline.py
+      - run: pip install 'beautifulsoup4==4.13.4'
+      - name: Test first-capture, post-time guards, payouts and publisher isolation
+        run: |
+          python production/test_triple_forward.py
+          python -m unittest discover -s production -p test_live_bundle_publisher.py
       - name: Audit existing saved inputs without writing production data
         run: python production/research_triple_baseline.py --root . > "$RUNNER_TEMP/triple-audit.json"
+  source-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'beautifulsoup4==4.13.4'
+      - name: Read public completed-race schema without recording observations
+        run: python production/probe_triple_sources.py

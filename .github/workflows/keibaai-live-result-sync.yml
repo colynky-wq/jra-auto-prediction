@@ -88,6 +88,10 @@ jobs:
       - name: Evaluate the frozen new Wide-axis rule separately
         run: python production/wide_axis_shadow.py
 
+      - name: Join frozen Trio and Trifecta research records separately
+        continue-on-error: true
+        run: python production/evaluate_triple_forward.py
+
       - name: Commit results and validation when changed
         shell: bash
         run: |
