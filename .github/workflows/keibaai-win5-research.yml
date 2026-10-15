@@ -1,0 +1,67 @@
+name: KeibaAI WIN5 Research
+on:
+  schedule:
+    # Separate noon cohort, before all five legs' common deadline (JST).
+    - cron: '0 3 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: keibaai-win5-research
+  cancel-in-progress: false
+jobs:
+  early-research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'beautifulsoup4==4.13.4'
+      - name: Check today's official WIN5 targets without running a model
+        id: targets
+        run: python production/win5_research.py --check
+      - name: Install fixed model runtime only for an official WIN5 day
+        if: steps.targets.outputs.has_target == 'true'
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5'
+      - name: Freeze five early predictions before the common deadline
+        if: steps.targets.outputs.has_target == 'true'
+        env:
+          KEIBAAI_CAPTURE_PRERACE: 'false'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -u production/win5_research.py
+      - name: Publish only research reports, preserving app files and concurrent changes
+        if: always()
+        env:
+          RESEARCH_OUTBOX: ${{ runner.temp }}/keibaai-win5-outbox
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          python - <<'PY'
+          from datetime import datetime
+          import os,sys
+          from pathlib import Path
+          sys.path.insert(0,'production')
+          from live_bundle_publisher import Outbox,JST
+          box=Outbox(Path.cwd(),os.environ['RESEARCH_OUTBOX'],datetime.now(JST).strftime('%Y%m%d'),role='research')
+          box.capture()
+          for attempt in range(3):
+              if box.publish():
+                  break
+          else:
+              raise SystemExit('WIN5 research reports remain in the preserved outbox')
+          PY
+      - name: Preserve failed or pending research uploads
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-win5-outbox-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/keibaai-win5-outbox/state.json
+            ${{ runner.temp }}/keibaai-win5-outbox/blobs
+          if-no-files-found: ignore
+          retention-days: 14

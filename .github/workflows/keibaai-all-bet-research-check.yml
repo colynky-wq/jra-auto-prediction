@@ -4,16 +4,62 @@ on:
     paths:
       - 'production/*all_bet*.py'
       - 'production/*win5*.py'
+      - 'production/jra_entry_source.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
       - '.github/workflows/keibaai-all-bet-research-check.yml'
+      - '.github/workflows/keibaai-win5-research.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
+      - 'research/all_bets_v1.md'
   push:
     branches: [main]
     paths:
       - 'production/*all_bet*.py'
       - 'production/*win5*.py'
+      - 'production/jra_entry_source.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
       - '.github/workflows/keibaai-all-bet-research-check.yml'
+      - '.github/workflows/keibaai-win5-research.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
 permissions:
   contents: read
 jobs:
+  research-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install 'beautifulsoup4==4.13.4' 'pandas==2.2.3' 'requests==2.32.5'
+      - name: Verify added pool math, first records, independent payouts and WIN5 common deadline
+        run: |
+          python -m unittest discover -s production -p 'test_all_bet*.py'
+          python production/test_win5_research.py
+          python -m unittest discover -s production -p test_live_bundle_publisher.py
+      - name: Check existing Triple and entry observations still pass
+        run: |
+          python production/test_triple_baseline.py
+          python production/test_triple_forward.py
+          python production/test_prerace_snapshot.py
+          python production/test_jra_route_modes.py
+      - name: Read current research state without production writes
+        run: |
+          python - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'production')
+          from evaluate_all_bet_forward import build
+          value=build(Path.cwd(),fetch=lambda _:(_ for _ in ()).throw(OSError('CI payout network disabled')))
+          Path(os.environ['RUNNER_TEMP'],'all-bet-audit.json').write_text(json.dumps(value,ensure_ascii=False))
+          print('ALL_BET_CURRENT_STATE',json.dumps(value['counts']),'WIN5',value['win5']['counts'])
+          PY
   source-compatibility:
     runs-on: ubuntu-24.04
     timeout-minutes: 4

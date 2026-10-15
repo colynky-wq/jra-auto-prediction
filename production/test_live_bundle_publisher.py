@@ -38,6 +38,30 @@ class ControlledGit(Git):
 
 
 class TestLiveBundlePublisher(unittest.TestCase):
+    def test_research_role_only_publishes_own_reports_and_preserves_app_files(self):
+        path='reports/20261017/win5_v1/session.json'
+        self.write(path,{'frozen':1})
+        self.write('reports/20261017/win5_status.json',{'status':'ready'})
+        self.write('RaceData.json',[self.race()])
+        publisher=Outbox(self.root,self.outbox,DATE8,today=lambda:DAY,role='research')
+        self.assertFalse(publisher.allowed('RaceData.json'))
+        self.assertFalse(publisher.allowed('reports/20261017/ResultData.json'))
+        publisher.capture();self.assertTrue(publisher.publish())
+        self.assertEqual(json.loads(self.remote_read('RaceData.json'))[0]['raceDate'],'2026-10-16')
+        self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
+        self.write(path,{'frozen':2});publisher.capture()
+        self.assertFalse(publisher.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
+
+    def test_added_pool_first_capture_conflict_does_not_block_prediction(self):
+        path='reports/20261017/all_bet_v1/place/202605040601.json'
+        self.write(path,{'frozen':1});publisher=self.publisher();publisher.capture()
+        self.assertTrue(publisher.publish())
+        self.write(path,{'frozen':2});self.write('RaceData.json',[self.race()]);publisher.capture()
+        self.assertFalse(publisher.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
+        self.assertEqual(json.loads(self.remote_read('RaceData.json'))[0]['raceDate'],DAY)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)/'monitor'; self.root.mkdir()
