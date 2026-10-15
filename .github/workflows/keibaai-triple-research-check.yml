@@ -1,0 +1,29 @@
+name: KeibaAI Triple Research Check
+on:
+  pull_request:
+    paths:
+      - 'production/research_triple_baseline.py'
+      - 'production/test_triple_baseline.py'
+      - 'research/triple_parallel_v1.md'
+      - '.github/workflows/keibaai-triple-research-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/research_triple_baseline.py'
+      - 'production/test_triple_baseline.py'
+      - '.github/workflows/keibaai-triple-research-check.yml'
+permissions:
+  contents: read
+jobs:
+  research-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check research math, result identity and separation
+        run: python production/test_triple_baseline.py
+      - name: Audit existing saved inputs without writing production data
+        run: python production/research_triple_baseline.py --root . > "$RUNNER_TEMP/triple-audit.json"
