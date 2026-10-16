@@ -1,6 +1,11 @@
 name: KeibaAI Early Prediction
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'production/early_prediction_runtime.py'
+      - '.github/workflows/keibaai-early-prediction.yml'
   schedule:
     # 20:00 JST: snapshot for the next day
     - cron: '0 11 * * *'
