@@ -27,16 +27,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-          cache: pip
-          cache-dependency-path: production/requirements.txt
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r production/requirements.txt
-          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
       - name: Resolve target and stage
         id: target
         shell: bash
@@ -57,14 +48,46 @@ jobs:
           fi
           echo "date8=$date8" >> "$GITHUB_OUTPUT"
           echo "stage=$stage" >> "$GITHUB_OUTPUT"
+          echo "Early snapshot target=$date8 stage=$stage"
+
+      - name: Check whether JRA races exist on target date
+        id: day
+        shell: bash
+        run: bash .github/scripts/keibaai-race-day-check.sh '${{ steps.target.outputs.date8 }}'
+
+      - uses: actions/setup-python@v6
+        if: steps.day.outputs.has_races == 'true'
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Install dependencies
+        if: steps.day.outputs.has_races == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
+      - name: Compile early prediction runtime
+        if: steps.day.outputs.has_races == 'true'
+        run: python -m py_compile production/early_prediction_runtime.py
+
       - name: Build early prediction snapshot
+        if: steps.day.outputs.has_races == 'true'
         env:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/early_prediction_runtime.py
+
       - name: Publish snapshot if produced
+        if: steps.day.outputs.has_races == 'true'
         shell: bash
         run: |
+          if [ ! -f EarlyPredictionData.json ]; then
+            echo 'EarlyPredictionData.json was not produced.'
+            exit 1
+          fi
           if git diff --quiet -- EarlyPredictionData.json; then
             echo 'No EarlyPredictionData change.'
             exit 0
