@@ -1,0 +1,35 @@
+name: Temporary fix early prediction color
+on:
+  push:
+    branches: [chatgpt/early-vs-final-prediction-20261017]
+    paths:
+      - '.github/workflows/fix-early-color.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: chatgpt/early-vs-final-prediction-20261017
+          fetch-depth: 0
+      - name: Fix Swift color ternary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('ios/KeibaAI/KeibaAI/KeibaAIBetResearchView.swift')
+          s=p.read_text()
+          old='.foregroundStyle(snapshot == nil ? .secondary : .blue)'
+          new='.foregroundStyle(snapshot == nil ? Color.gray : Color.blue)'
+          if old not in s:
+              raise SystemExit('target line not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add ios/KeibaAI/KeibaAI/KeibaAIBetResearchView.swift
+          git commit -m 'Fix early prediction status color type'
+          git push origin HEAD:chatgpt/early-vs-final-prediction-20261017
