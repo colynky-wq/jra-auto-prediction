@@ -167,7 +167,7 @@ struct KeibaAIBetResearchView: View {
             Text(label).font(.caption).foregroundStyle(.secondary)
             Text(snapshot == nil ? "未取得" : "取得済")
                 .font(.subheadline.bold())
-                .foregroundStyle(snapshot == nil ? .secondary : .blue)
+                .foregroundStyle(snapshot == nil ? Color.gray : Color.blue)
             if let at = snapshot?.capturedAtJST {
                 Text(shortTime(at)).font(.caption2).foregroundStyle(.secondary)
             }
