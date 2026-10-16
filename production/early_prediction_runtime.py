@@ -97,6 +97,11 @@ def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> 
 
 
 def _snapshot(date8: str, stage: str) -> dict:
+    # The shared live modules read TARGET_DATE8 internally when they fetch the
+    # official entry table. Override it explicitly for next-day evening runs.
+    base.TARGET_DATE8 = date8
+    live.base.TARGET_DATE8 = date8
+
     target_date = pd.Timestamp(f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}")
     hist = base.load_history(target_date)
     races = base.fetch_schedule(date8)
@@ -135,11 +140,7 @@ def _snapshot(date8: str, stage: str) -> dict:
             "horses": horses,
         })
 
-    return {
-        "stage": stage,
-        "capturedAtJST": datetime.now(JST).isoformat(),
-        "races": output,
-    }
+    return {"stage": stage, "capturedAtJST": datetime.now(JST).isoformat(), "races": output}
 
 
 def _load_existing() -> dict:
