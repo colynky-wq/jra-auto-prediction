@@ -55,6 +55,7 @@ struct KeibaAIBetResearchView: View {
                             Text("記録開始：\(item.recordingStartDate)").font(.caption).foregroundStyle(.secondary)
                         }.padding(16).frame(maxWidth:.infinity,alignment:.leading)
                             .background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:16))
+                        KeibaAIResearchPolicyCard(betType:selectedType)
                         Text("表示日 \(chosenDay) / \(rows.count)件").font(.headline)
                         if rows.isEmpty {
                             Text(chosenDay < item.recordingStartDate ? "選択日はこの券種の研究開始前です。" : "この日の初回記録はまだ確認できません。次の開催で保存状況を確認します。")
