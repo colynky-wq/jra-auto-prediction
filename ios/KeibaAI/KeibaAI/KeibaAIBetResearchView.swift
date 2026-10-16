@@ -1,11 +1,14 @@
 import SwiftUI
+import Combine
 
 struct KeibaAIBetResearchView: View {
     let date8: String
     let refreshID: UUID
     @StateObject private var store = KeibaAIBetResearchStore()
+    @StateObject private var earlyStore = KeibaAIEarlyPredictionStore()
     @State private var selectedType = "win"
     @State private var selectedDay = ""
+    @State private var showEarlyPredictions = false
 
     private var chosenDate8: String { selectedDay.isEmpty ? date8 : selectedDay }
     private var chosenDay: String {
@@ -36,6 +39,9 @@ struct KeibaAIBetResearchView: View {
                             Text(dateLabel(value)).tag(value)
                         }
                     }.pickerStyle(.menu).accessibilityIdentifier("bet-research-date")
+
+                    earlyPredictionSection
+
                     LazyVGrid(columns:[GridItem(.adaptive(minimum:92))],spacing:8) {
                         ForEach(data.catalog) { item in
                             Button { selectedType = item.id } label: {
@@ -80,14 +86,135 @@ struct KeibaAIBetResearchView: View {
         .accessibilityIdentifier("bet-research-screen")
         .toolbar {
             ToolbarItem(placement:.primaryAction) {
-                Button { Task { await store.load(date8:chosenDate8) } } label:{Image(systemName:"arrow.clockwise")}
+                Button {
+                    Task {
+                        await store.load(date8:chosenDate8)
+                        await earlyStore.load(date8:chosenDate8, force:true)
+                    }
+                } label:{Image(systemName:"arrow.clockwise")}
                     .accessibilityLabel("券種別研究を更新").disabled(store.isLoading)
             }
         }
-        .refreshable { await store.load(date8:chosenDate8) }
-        .task(id:chosenDate8) { await store.load(date8:chosenDate8) }
-        .task(id:refreshID) { await store.load(date8:chosenDate8) }
+        .refreshable {
+            await store.load(date8:chosenDate8)
+            await earlyStore.load(date8:chosenDate8, force:true)
+        }
+        .task(id:chosenDate8) {
+            await store.load(date8:chosenDate8)
+            await earlyStore.load(date8:chosenDate8)
+        }
+        .task(id:refreshID) {
+            await store.load(date8:chosenDate8)
+            await earlyStore.load(date8:chosenDate8, force:true)
+        }
         .onChange(of:date8) { _,_ in selectedDay = "" }
+    }
+
+    @ViewBuilder
+    private var earlyPredictionSection: some View {
+        VStack(alignment:.leading,spacing:10) {
+            Button {
+                withAnimation { showEarlyPredictions.toggle() }
+            } label: {
+                HStack {
+                    Label("前日・朝予想（研究）",systemImage:"sunrise.fill")
+                        .font(.headline)
+                    Spacer()
+                    Image(systemName: showEarlyPredictions ? "chevron.up" : "chevron.down")
+                }
+            }.buttonStyle(.plain)
+
+            if let data = earlyStore.data {
+                let evening = data.snapshots["previous_evening"]
+                let morning = data.snapshots["morning"]
+                HStack(spacing:12) {
+                    earlyStatus("前日", snapshot:evening)
+                    earlyStatus("朝", snapshot:morning)
+                }
+                Text("最終予想は各レース発走8〜12分前のオッズ・当日情報で『今日』画面に反映されます。前日・朝予想は研究用で、正式推奨ではありません。")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+
+                if showEarlyPredictions {
+                    let raceIDs = Array(Set((evening?.races.map(\.raceID) ?? []) + (morning?.races.map(\.raceID) ?? []))).sorted()
+                    if raceIDs.isEmpty {
+                        Text("この時点で予測できたレースはありません。")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(raceIDs,id:\.self) { rid in
+                            let e = evening?.races.first { $0.raceID == rid }
+                            let m = morning?.races.first { $0.raceID == rid }
+                            earlyRaceCard(evening:e,morning:m)
+                        }
+                    }
+                }
+            } else if earlyStore.isLoading {
+                ProgressView("前日・朝予想を確認中…")
+            } else {
+                Text(earlyStore.errorMessage ?? "前日・朝予想はまだありません。")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                Text("本日分は朝予想から開始できます。次回開催からは前日20:00と当日7:30の2回を自動保存します。")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth:.infinity,alignment:.leading)
+        .background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:16))
+        .accessibilityIdentifier("early-prediction-section")
+    }
+
+    private func earlyStatus(_ label:String, snapshot:KeibaAIEarlyPredictionSnapshot?) -> some View {
+        VStack(alignment:.leading,spacing:3) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(snapshot == nil ? "未取得" : "取得済")
+                .font(.subheadline.bold())
+                .foregroundStyle(snapshot == nil ? Color.gray : Color.blue)
+            if let at = snapshot?.capturedAtJST {
+                Text(shortTime(at)).font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth:.infinity,alignment:.leading)
+        .padding(10)
+        .background(Color.blue.opacity(0.05),in:RoundedRectangle(cornerRadius:10))
+    }
+
+    private func earlyRaceCard(evening:KeibaAIEarlyPredictionRace?, morning:KeibaAIEarlyPredictionRace?) -> some View {
+        let race = morning ?? evening
+        return VStack(alignment:.leading,spacing:8) {
+            HStack {
+                Text("\(race?.venue ?? "") \(race?.raceNumber ?? 0)R")
+                    .font(.subheadline.bold())
+                Spacer()
+                Text(race?.startTime ?? "").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            if let name = race?.raceName, !name.isEmpty {
+                Text(name).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }
+            HStack(alignment:.top,spacing:12) {
+                earlyTop3("前日",race:evening)
+                earlyTop3("朝",race:morning)
+            }
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.04),in:RoundedRectangle(cornerRadius:12))
+    }
+
+    private func earlyTop3(_ label:String, race:KeibaAIEarlyPredictionRace?) -> some View {
+        VStack(alignment:.leading,spacing:4) {
+            Text(label).font(.caption.bold()).foregroundStyle(.secondary)
+            if let race {
+                ForEach(Array(race.horses.prefix(3))) { horse in
+                    Text("\(horse.rank)位  \(horse.number)番 \(horse.name)  \(String(format:"%.1f",horse.aiProbability))% / \(String(format:"%.1f",horse.odds))倍")
+                        .font(.caption).fixedSize(horizontal:false,vertical:true)
+                }
+            } else {
+                Text("未取得").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth:.infinity,alignment:.leading)
+    }
+
+    private func shortTime(_ value:String) -> String {
+        value.replacingOccurrences(of:"T",with:" ").prefix(16).description
     }
 
     private func dateLabel(_ value: String) -> String {
@@ -295,6 +422,85 @@ private struct KeibaAIResearchPolicyCard: View {
                 .foregroundStyle(.secondary)
             Text(value)
                 .font(.subheadline.bold().monospacedDigit())
+        }
+    }
+}
+
+private struct KeibaAIEarlyPredictionHorse: Codable, Hashable, Identifiable {
+    var id: Int { number }
+    let rank: Int
+    let number: Int
+    let name: String
+    let odds: Double
+    let marketProbability: Double
+    let aiProbability: Double
+    let aiTop2Probability: Double
+    let aiTop3Probability: Double
+    let aiMarketRatio: Double
+}
+
+private struct KeibaAIEarlyPredictionRace: Codable, Hashable, Identifiable {
+    var id: String { raceID }
+    let raceID: String
+    let raceDate: String
+    let venue: String
+    let raceNumber: Int
+    let startTime: String
+    let raceName: String
+    let horses: [KeibaAIEarlyPredictionHorse]
+}
+
+private struct KeibaAIEarlyPredictionSnapshot: Codable, Hashable {
+    let stage: String
+    let capturedAtJST: String
+    let races: [KeibaAIEarlyPredictionRace]
+}
+
+private struct KeibaAIEarlyPredictionData: Codable, Hashable {
+    let schemaVersion: Int
+    let status: String
+    let formalRecommendation: Bool
+    let raceDate: String
+    let method: String
+    let snapshots: [String: KeibaAIEarlyPredictionSnapshot]
+}
+
+@MainActor
+private final class KeibaAIEarlyPredictionStore: ObservableObject {
+    @Published private(set) var data: KeibaAIEarlyPredictionData?
+    @Published private(set) var isLoading = false
+    @Published var errorMessage: String?
+    private var loadedDate8: String?
+
+    func load(date8: String, force: Bool = false) async {
+        if isLoading { return }
+        if !force, loadedDate8 == date8 { return }
+        isLoading = true
+        defer { isLoading = false }
+        errorMessage = nil
+
+        guard var components = URLComponents(string:"https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/EarlyPredictionData.json") else { return }
+        components.queryItems = [URLQueryItem(name:"t",value:String(Date().timeIntervalSince1970))]
+        guard let url = components.url else { return }
+        do {
+            var request = URLRequest(url:url)
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.timeoutInterval = 15
+            request.setValue("KeibaAI-iPad/2.2",forHTTPHeaderField:"User-Agent")
+            let (payload,response) = try await URLSession.shared.data(for:request)
+            guard let http = response as? HTTPURLResponse,(200...299).contains(http.statusCode) else { throw URLError(.badServerResponse) }
+            let decoded = try JSONDecoder().decode(KeibaAIEarlyPredictionData.self,from:payload)
+            guard decoded.raceDate.replacingOccurrences(of:"-",with:"") == date8 else {
+                data = nil
+                loadedDate8 = date8
+                return
+            }
+            data = decoded
+            loadedDate8 = date8
+        } catch {
+            data = nil
+            errorMessage = "前日・朝予想はまだありません。"
+            loadedDate8 = date8
         }
     }
 }
