@@ -1,32 +1,26 @@
 from __future__ import annotations
 
-"""Early KeibaAI prediction snapshot.
+"""KeibaAI early-prediction research snapshot.
 
-Purpose
-- Produce an early same-day / previous-evening snapshot separately from the formal
-  8-12 minute live prediction.
-- Reuse the fixed 2025 models and current market odds, but never overwrite
-  RaceData.json (the formal live prediction bundle).
-- Store the output in EarlyPredictionData.json so the iOS app can show
-  "early" vs "final" side by side.
+This is deliberately separate from the formal 8-12 minute RaceData prediction.
+It records either the previous-evening or same-day-morning market state, never
+replaces RaceData.json, and is displayed as research-only in the app.
 
-Important
-- Early prediction is a research snapshot, not a formal recommendation.
-- When current body weight/change is not yet published, use each horse's latest
-  historical body-weight state as a forward-safe fallback. No future result data
-  are used.
+When the current body weight/change is not yet published, the latest historical
+body state for that horse is used as a forward-safe fallback. The snapshot is
+therefore useful for comparison research but is NOT treated as the formal live
+prediction until it has accumulated validation data.
 """
 
 import json
 import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-import live_monitor_topk as live
 import live_monitor_dry_run as base
+import live_monitor_topk as live
 
 
 HERE = Path(__file__).resolve().parent
@@ -45,23 +39,18 @@ def _latest_body_state(hist: pd.DataFrame, horse_key: str) -> tuple[float, float
 
 
 def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> pd.DataFrame:
-    """Run the normal Top2/Top3 path; if unpublished body weight causes missing
-    features, retry with latest historical body state only for the current rows.
-    """
     try:
         return live.predict_live_race_topk(race, hist, target_date)
     except RuntimeError as exc:
-        message = str(exc)
-        if "37 features contain missing values" not in message:
+        if "37 features contain missing values" not in str(exc):
             raise
 
-    # Rebuild the same current table but fill unpublished body state before the
-    # shared feature engine runs. This code deliberately mirrors live runtime.
     race = base.fetch_meta(race)
     rid = race["race_id"]
     odds, _ = base.fetch_win_odds(rid)
     if len(odds) < 2:
         raise RuntimeError("insufficient live win odds")
+
     entries, _, _ = base.fetch_jra_entry_table(rid, base.TARGET_DATE8, base.JST)
     active = set(odds["馬番"].astype(int))
     entries = entries.loc[entries["馬番"].astype(int).isin(active)].copy().sort_values("馬番").reset_index(drop=True)
@@ -78,26 +67,25 @@ def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> 
     from horse_identity_runtime import assign_horse_keys
     entries["馬キー"] = assign_horse_keys(entries, hist, target_date)
     current = entries.merge(odds, on="馬番", how="inner", validate="one_to_one")
-    current["人気"] = current["単勝オッズ"].rank(ascending=True, method="min")
 
     for i, row in current.iterrows():
-        if pd.isna(row.get("馬体重")) or pd.isna(row.get("増減")):
+        body_missing = pd.isna(row.get("馬体重"))
+        diff_missing = pd.isna(row.get("増減"))
+        if body_missing or diff_missing:
             body, diff = _latest_body_state(hist, str(row["馬キー"]))
-            if pd.isna(row.get("馬体重")):
+            if body_missing:
                 current.at[i, "馬体重"] = body
-            if pd.isna(row.get("増減")):
+            if diff_missing:
                 current.at[i, "増減"] = diff
 
-    # Temporarily replace JRA entry fetch result so the normal prediction path
-    # receives the forward-safe filled body state without changing formal live code.
     original_fetch = base.fetch_jra_entry_table
 
     def patched_fetch(*args, **kwargs):
-        e = entries.copy()
+        filled = entries.copy()
         by_no = current.set_index("馬番")
-        e["馬体重"] = e["馬番"].map(by_no["馬体重"])
-        e["増減"] = e["馬番"].map(by_no["増減"])
-        return e, datetime.now(JST), "early-fallback://latest-historical-body-state"
+        filled["馬体重"] = filled["馬番"].map(by_no["馬体重"])
+        filled["増減"] = filled["馬番"].map(by_no["増減"])
+        return filled, datetime.now(JST), "early-fallback://latest-historical-body-state"
 
     base.fetch_jra_entry_table = patched_fetch
     live.base.fetch_jra_entry_table = patched_fetch
@@ -108,7 +96,7 @@ def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> 
         live.base.fetch_jra_entry_table = original_fetch
 
 
-def build_snapshot(date8: str) -> dict:
+def _snapshot(date8: str, stage: str) -> dict:
     target_date = pd.Timestamp(f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}")
     hist = base.load_history(target_date)
     races = base.fetch_schedule(date8)
@@ -148,23 +136,48 @@ def build_snapshot(date8: str) -> dict:
         })
 
     return {
-        "schemaVersion": 1,
-        "status": "research_early_snapshot",
-        "formalRecommendation": False,
-        "raceDate": f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}",
+        "stage": stage,
         "capturedAtJST": datetime.now(JST).isoformat(),
-        "method": "fixed2025 models + available early win odds + latest historical body-state fallback when current weight unavailable",
         "races": output,
     }
 
 
+def _load_existing() -> dict:
+    if not OUT_PATH.exists():
+        return {}
+    try:
+        data = json.loads(OUT_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
 def main() -> None:
     date8 = os.environ.get("KEIBAAI_EARLY_DATE", "").strip() or datetime.now(JST).strftime("%Y%m%d")
-    payload = build_snapshot(date8)
+    stage = os.environ.get("KEIBAAI_EARLY_STAGE", "morning").strip() or "morning"
+    if stage not in {"previous_evening", "morning"}:
+        raise RuntimeError(f"unsupported KEIBAAI_EARLY_STAGE: {stage}")
+
+    snap = _snapshot(date8, stage)
+    race_date = f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}"
+    existing = _load_existing()
+    snapshots = existing.get("snapshots", {}) if existing.get("raceDate") == race_date else {}
+    if not isinstance(snapshots, dict):
+        snapshots = {}
+    snapshots[stage] = snap
+
+    payload = {
+        "schemaVersion": 1,
+        "status": "research_early_snapshot",
+        "formalRecommendation": False,
+        "raceDate": race_date,
+        "method": "fixed2025 models + available early win odds; current body state uses latest historical fallback when unpublished",
+        "snapshots": snapshots,
+    }
     tmp = OUT_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(OUT_PATH)
-    print("EARLY_PREDICTION_WRITTEN", OUT_PATH, "races=", len(payload["races"]), "captured=", payload["capturedAtJST"])
+    print("EARLY_PREDICTION_WRITTEN", OUT_PATH, "stage=", stage, "races=", len(snap["races"]), "captured=", snap["capturedAtJST"])
 
 
 if __name__ == "__main__":
