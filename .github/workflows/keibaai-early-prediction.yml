@@ -88,13 +88,16 @@ jobs:
             echo 'EarlyPredictionData.json was not produced.'
             exit 1
           fi
-          if git diff --quiet -- EarlyPredictionData.json; then
+          date8='${{ steps.target.outputs.date8 }}'
+          mkdir -p "reports/${date8}"
+          cp EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"
+          if git diff --quiet -- EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"; then
             echo 'No EarlyPredictionData change.'
             exit 0
           fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add EarlyPredictionData.json
+          git add EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"
           git commit -m "Update early prediction ${{ steps.target.outputs.date8 }} ${{ steps.target.outputs.stage }}"
           git pull --rebase origin main
           git push origin HEAD:main
