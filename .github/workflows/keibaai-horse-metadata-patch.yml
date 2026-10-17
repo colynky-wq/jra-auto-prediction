@@ -29,204 +29,110 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          def replace(path, old, new):
+          def load(path):
               p = Path(path)
-              text = p.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected exactly one match, got {count}')
-              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+              return p, p.read_text(encoding='utf-8')
 
-          replace(
+          def save(p, text):
+              p.write_text(text, encoding='utf-8')
+
+          def insert_after_stripped(path, needle, block):
+              p = Path(path)
+              lines = p.read_text(encoding='utf-8').splitlines()
+              hits = [i for i, line in enumerate(lines) if line.strip() == needle]
+              if len(hits) != 1:
+                  raise SystemExit(f'{path}: {needle!r} expected once, got {len(hits)}')
+              i = hits[0]
+              indent = lines[i][:len(lines[i]) - len(lines[i].lstrip())]
+              additions = [indent + line if line else '' for line in block]
+              lines[i + 1:i + 1] = additions
+              p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+
+          # Live prediction DataFrame already has these pre-race values; carry them to the publisher.
+          insert_after_stripped(
               'production/live_monitor_topk.py',
-              '''            "年齢": pred["年齢"].astype(int),
-                          "馬キー": pred["馬キー"].astype(str),
-                          "単勝オッズ": pred["単勝オッズ"].astype(float),''',
-              '''            "年齢": pred["年齢"].astype(int),
-                          "馬キー": pred["馬キー"].astype(str),
-                          "騎手": pred["騎手"].astype(str),
-                          "斤量": pred["斤量"].astype(float),
-                          "人気": pred["人気"].astype(float),
-                          "馬体重": pred["馬体重"].astype(float),
-                          "増減": pred["増減"].astype(float),
-                          "単勝オッズ": pred["単勝オッズ"].astype(float),'''
+              '"馬キー": pred["馬キー"].astype(str),',
+              [
+                  '"騎手": pred["騎手"].astype(str),',
+                  '"斤量": pred["斤量"].astype(float),',
+                  '"人気": pred["人気"].astype(float),',
+                  '"馬体重": pred["馬体重"].astype(float),',
+                  '"増減": pred["増減"].astype(float),',
+              ],
           )
 
-          replace(
+          # JSON-safe optional values: unpublished body weight must become null, never NaN.
+          p, text = load('production/live_monitor_topk_publish.py')
+          marker = '\ndef _target_date_text() -> str:\n'
+          if text.count(marker) != 1:
+              raise SystemExit('live_monitor_topk_publish.py: target-date marker mismatch')
+          helpers = '''\ndef _optional_text(value) -> str | None:\n    if pd.isna(value):\n        return None\n    text = str(value).strip()\n    return text or None\n\n\ndef _optional_number(value, digits: int = 1) -> float | None:\n    if pd.isna(value):\n        return None\n    return round(float(value), digits)\n\n\ndef _optional_int(value) -> int | None:\n    if pd.isna(value):\n        return None\n    return int(value)\n\n'''
+          text = text.replace(marker, helpers + marker, 1)
+          save(p, text)
+
+          insert_after_stripped(
               'production/live_monitor_topk_publish.py',
-              '''def _number(value, digits: int = 3) -> float:
-              return round(float(value), digits)
-
-
-          def _target_date_text() -> str:''',
-              '''def _number(value, digits: int = 3) -> float:
-              return round(float(value), digits)
-
-
-          def _optional_text(value) -> str | None:
-              if pd.isna(value):
-                  return None
-              text = str(value).strip()
-              return text or None
-
-
-          def _optional_number(value, digits: int = 1) -> float | None:
-              if pd.isna(value):
-                  return None
-              return round(float(value), digits)
-
-
-          def _optional_int(value) -> int | None:
-              if pd.isna(value):
-                  return None
-              return int(value)
-
-
-          def _target_date_text() -> str:'''
+              '"horseKey": str(row["馬キー"]),',
+              [
+                  '"jockey": _optional_text(row.get("騎手")),',
+                  '"carriedWeight": _optional_number(row.get("斤量"), 1),',
+                  '"popularity": _optional_int(row.get("人気")),',
+                  '"bodyWeight": _optional_int(row.get("馬体重")),',
+                  '"bodyWeightChange": _optional_int(row.get("増減")),',
+              ],
           )
 
-          replace(
-              'production/live_monitor_topk_publish.py',
-              '''                "age": int(row["年齢"]),
-                              "horseKey": str(row["馬キー"]),
-                              "odds": _number(row["単勝オッズ"], 1),''',
-              '''                "age": int(row["年齢"]),
-                              "horseKey": str(row["馬キー"]),
-                              "jockey": _optional_text(row.get("騎手")),
-                              "carriedWeight": _optional_number(row.get("斤量"), 1),
-                              "popularity": _optional_int(row.get("人気")),
-                              "bodyWeight": _optional_int(row.get("馬体重")),
-                              "bodyWeightChange": _optional_int(row.get("増減")),
-                              "odds": _number(row["単勝オッズ"], 1),'''
-          )
-
-          replace(
+          # Keep old saved RaceData decodable by making every newly displayed field optional.
+          insert_after_stripped(
               'ios/KeibaAI/KeibaAI/KeibaAIModels.swift',
-              '''    var age: Int? = nil
-              var horseKey: String? = nil
-          }''',
-              '''    var age: Int? = nil
-              var horseKey: String? = nil
-
-              // 発走前のJRA出馬表から取得。旧RaceDataとの互換性のためOptional。
-              var jockey: String? = nil
-              var carriedWeight: Double? = nil
-              var popularity: Int? = nil
-              var bodyWeight: Int? = nil
-              var bodyWeightChange: Int? = nil
-          }'''
+              'var horseKey: String? = nil',
+              [
+                  '',
+                  '// 発走前のJRA出馬表から取得。旧RaceDataとの互換性のためOptional。',
+                  'var jockey: String? = nil',
+                  'var carriedWeight: Double? = nil',
+                  'var popularity: Int? = nil',
+                  'var bodyWeight: Int? = nil',
+                  'var bodyWeightChange: Int? = nil',
+              ],
           )
 
-          replace(
-              'ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift',
-              '''    private var researchLabel: String {
-              if horse.aiMarketRatio >= 1.20 {
-                  return "高乖離候補"
-              } else if horse.aiMarketRatio >= 1.10 {
-                  return "注目"
-              } else if horse.aiMarketRatio >= 1.05 {
-                  return "やや高評価"
-              } else if horse.aiMarketRatio >= 0.95 {
-                  return "市場並み"
-              } else {
-                  return "AI低評価"
-              }
-          }
+          # Only edit the horse-card section in the large Swift view.
+          path = 'ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift'
+          p, text = load(path)
+          start = text.index('private struct KeibaAIHorseCard: View {')
+          end = text.index('private struct KeibaAIValueCell: View {', start)
+          section = text[start:end]
 
-          var body: some View {''',
-              '''    private var researchLabel: String {
-              if horse.aiMarketRatio >= 1.20 {
-                  return "高乖離候補"
-              } else if horse.aiMarketRatio >= 1.10 {
-                  return "注目"
-              } else if horse.aiMarketRatio >= 1.05 {
-                  return "やや高評価"
-              } else if horse.aiMarketRatio >= 0.95 {
-                  return "市場並み"
-              } else {
-                  return "AI低評価"
-              }
-          }
+          body_marker = '\n    var body: some View {'
+          if section.count(body_marker) != 1:
+              raise SystemExit('HorseCard body marker mismatch')
+          computed = '''\n    private var bodyWeightText: String {\n        guard let weight = horse.bodyWeight else { return "馬体重 未発表" }\n        guard let change = horse.bodyWeightChange else { return "馬体重 \\(weight)kg" }\n        let diff = change > 0 ? "+\\(change)" : "\\(change)"\n        return "馬体重 \\(weight)kg（\\(diff)）"\n    }\n\n    private var carriedWeightText: String {\n        guard let value = horse.carriedWeight else { return "斤量 --" }\n        if value.rounded() == value { return "斤量 \\(Int(value))kg" }\n        return String(format: "斤量 %.1fkg", value)\n    }\n'''
+          section = section.replace(body_marker, computed + body_marker, 1)
 
-          private var bodyWeightText: String {
-              guard let weight = horse.bodyWeight else { return "馬体重 未発表" }
-              guard let change = horse.bodyWeightChange else { return "馬体重 \\(weight)kg" }
-              let diff = change > 0 ? "+\\(change)" : "\\(change)"
-              return "馬体重 \\(weight)kg（\\(diff)）"
-          }
+          name_at = section.index('Text(horse.name)')
+          research_at = section.index('                            HStack(spacing: 5) {', name_at)
+          metadata = '''                            Text(horse.jockey.map { "\\($0) 騎手" } ?? "騎手 --")\n                                .font(.caption)\n                                .foregroundStyle(.secondary)\n                                .lineLimit(1)\n\n                            HStack(spacing: 8) {\n                                Text(bodyWeightText)\n                                Text(carriedWeightText)\n                            }\n                            .font(.caption2.monospacedDigit())\n                            .foregroundStyle(.secondary)\n                            .lineLimit(1)\n\n'''
+          section = section[:research_at] + metadata + section[research_at:]
 
-          private var carriedWeightText: String {
-              guard let value = horse.carriedWeight else { return "斤量 --" }
-              if value.rounded() == value { return "斤量 \\(Int(value))kg" }
-              return String(format: "斤量 %.1fkg", value)
-          }
+          old_odds_label = '''                    Text("単勝")\n                        .font(.caption2)\n                        .foregroundStyle(.secondary)'''
+          new_odds_label = '''                    Text(horse.popularity.map { "\\($0)人気・単勝" } ?? "単勝")\n                        .font(.caption2)\n                        .foregroundStyle(.secondary)'''
+          if section.count(old_odds_label) != 1:
+              raise SystemExit(f'HorseCard odds-label mismatch: {section.count(old_odds_label)}')
+          section = section.replace(old_odds_label, new_odds_label, 1)
 
-          var body: some View {'''
-          )
-
-          replace(
-              'ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift',
-              '''                        VStack(alignment: .leading, spacing: 3) {
-                              Text(horse.name)
-                                  .font(.headline)
-                                  .foregroundStyle(.primary)
-
-                              HStack(spacing: 5) {
-                                  Text(researchLabel)
-                                      .font(.caption2.weight(.semibold))
-                                      .foregroundStyle(labelTint)
-                                  Text("馬データを見る")
-                                      .font(.caption2)
-                                      .foregroundStyle(.blue)
-                              }
-                          }''',
-              '''                        VStack(alignment: .leading, spacing: 3) {
-                              Text(horse.name)
-                                  .font(.headline)
-                                  .foregroundStyle(.primary)
-
-                              Text(horse.jockey.map { "\\($0) 騎手" } ?? "騎手 --")
-                                  .font(.caption)
-                                  .foregroundStyle(.secondary)
-                                  .lineLimit(1)
-
-                              HStack(spacing: 8) {
-                                  Text(bodyWeightText)
-                                  Text(carriedWeightText)
-                              }
-                              .font(.caption2.monospacedDigit())
-                              .foregroundStyle(.secondary)
-                              .lineLimit(1)
-
-                              HStack(spacing: 5) {
-                                  Text(researchLabel)
-                                      .font(.caption2.weight(.semibold))
-                                      .foregroundStyle(labelTint)
-                                  Text("馬データを見る")
-                                      .font(.caption2)
-                                      .foregroundStyle(.blue)
-                              }
-                          }'''
-          )
-
-          replace(
-              'ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift',
-              '''                    Text("単勝")
-                                  .font(.caption2)
-                                  .foregroundStyle(.secondary)''',
-              '''                    Text(horse.popularity.map { "\\($0)人気・単勝" } ?? "単勝")
-                                  .font(.caption2)
-                                  .foregroundStyle(.secondary)'''
-          )
+          text = text[:start] + section + text[end:]
+          save(p, text)
           PY
 
-      - name: Validate Python source and patch markers
+      - name: Validate patched source
         shell: bash
         run: |
           python -m py_compile production/live_monitor_topk.py production/live_monitor_topk_publish.py
           grep -q 'bodyWeightChange' ios/KeibaAI/KeibaAI/KeibaAIModels.swift
           grep -q '馬体重 未発表' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
           grep -q 'popularity.map' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          git diff --check
 
       - name: Commit source changes and remove one-time workflow
         shell: bash
