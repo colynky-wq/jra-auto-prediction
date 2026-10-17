@@ -19,6 +19,11 @@ before counting matched races, selected bets, stake or return, matching the
 reference display. Reports expose deadHeatExcluded and missingRecords separately
 from held/no-candidate, awaiting results and invalid inputs. Frozen rule inputs,
 thresholds and first prediction records are unchanged.
+The existing v1 held count remains an aggregate of no-candidate and ties, so
+already installed clients retain their recorded-count balance. New clients use
+noCandidate and deadHeatExcluded separately, alongside missingRecords. The old
+native test's permanent-zero assumption is replaced by the actual count of
+saved new-rule files, plus isolated zero-record and exclusion contract checks.
 
 Validation uses synthetic temporary fixtures and copies of existing main data,
 with payout fetching disabled. The 2026-10-17 saved counts remain 34 per pool:

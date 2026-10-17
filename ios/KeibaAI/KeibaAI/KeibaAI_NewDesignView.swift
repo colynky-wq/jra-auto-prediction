@@ -4869,7 +4869,8 @@ private struct KeibaAITicketPlanView: View {
                     .font(.subheadline.monospacedDigit()).accessibilityIdentifier("axis-validation-count")
                 Text(data.returnIndex.map { String(format: "新評価の途中回収率 %.1f%%", $0 * 100) } ?? "回収率は新しい結果照合待ちです")
                     .font(.subheadline.monospacedDigit())
-                Text("見送り \(data.counts.held)件・結果待ち \(data.counts.awaitingResults)件・出走馬変更 \(data.counts.entrantChanged)件・不整合 \(data.counts.invalid)件")
+                Text("見送り \(data.counts.noCandidate ?? data.counts.held)件・同着除外 \(data.counts.deadHeatExcluded ?? 0)件・未記録 \(data.counts.missingRecords ?? 0)件")
+                Text("結果待ち \(data.counts.awaitingResults)件・出走馬変更 \(data.counts.entrantChanged)件・不整合 \(data.counts.invalid)件")
                     .font(.caption).foregroundStyle(data.counts.invalid > 0 ? .orange : .secondary)
                 Text("更新 \(data.generatedAtJST)").font(.caption2).foregroundStyle(.secondary)
             } else {

@@ -56,7 +56,7 @@ def actual_result_state(day, record, post):
 def build(root, clock=lambda:datetime.now(JST)):
     root = Path(root)
     counts = dict(recordedRaces=0, held=0, awaitingResults=0, matched=0, entrantChanged=0,
-                  deadHeatExcluded=0, invalid=0, selectedBets=0, missingRecords=0)
+                  deadHeatExcluded=0, noCandidate=0, invalid=0, selectedBets=0, missingRecords=0)
     stake = returned = 0
     warnings = []
     missing = []
@@ -77,12 +77,17 @@ def build(root, clock=lambda:datetime.now(JST)):
                 raise ValueError('evaluation rule mismatch')
             if e['status'] == 'no_candidate':
                 counts['held'] += 1
+                counts['noCandidate'] += 1
                 continue
             if e['status'] != 'ready' or not 1 <= len(e['pairs']) <= 3 or e['totalYen'] != 100*len(e['pairs']):
                 raise ValueError('invalid saved selection')
             result_state = actual_result_state(path.parent.parent, r, post)
             if result_state:
                 counts[result_state] += 1
+                # Keep the v1 aggregate balanced for already installed clients.
+                # New clients use noCandidate and deadHeatExcluded separately.
+                if result_state == 'deadHeatExcluded':
+                    counts['held'] += 1
                 continue
             validation_path = path.parent.parent/'WideValidation.json'
             if not validation_path.exists():
