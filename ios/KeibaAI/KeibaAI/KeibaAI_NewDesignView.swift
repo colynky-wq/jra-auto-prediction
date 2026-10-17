@@ -3242,6 +3242,19 @@ private struct KeibaAIHorseCard: View {
         }
     }
 
+    private var bodyWeightText: String {
+        guard let weight = horse.bodyWeight else { return "馬体重 未発表" }
+        guard let change = horse.bodyWeightChange else { return "馬体重 \(weight)kg" }
+        let diff = change > 0 ? "+\(change)" : "\(change)"
+        return "馬体重 \(weight)kg（\(diff)）"
+    }
+
+    private var carriedWeightText: String {
+        guard let value = horse.carriedWeight else { return "斤量 --" }
+        if value.rounded() == value { return "斤量 \(Int(value))kg" }
+        return String(format: "斤量 %.1fkg", value)
+    }
+
     var body: some View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
@@ -3262,6 +3275,19 @@ private struct KeibaAIHorseCard: View {
                             Text(horse.name)
                                 .font(.headline)
                                 .foregroundStyle(.primary)
+
+                            Text(horse.jockey.map { "\($0) 騎手" } ?? "騎手 --")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+
+                            HStack(spacing: 8) {
+                                Text(bodyWeightText)
+                                Text(carriedWeightText)
+                            }
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
 
                             HStack(spacing: 5) {
                                 Text(researchLabel)
@@ -3286,7 +3312,7 @@ private struct KeibaAIHorseCard: View {
                     Text(String(format: "%.1f倍", horse.odds))
                         .font(.headline.monospacedDigit())
 
-                    Text("単勝")
+                    Text(horse.popularity.map { "\($0)人気・単勝" } ?? "単勝")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

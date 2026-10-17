@@ -30,6 +30,25 @@ def _number(value, digits: int = 3) -> float:
     return round(float(value), digits)
 
 
+def _optional_text(value) -> str | None:
+    if pd.isna(value):
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _optional_number(value, digits: int = 1) -> float | None:
+    if pd.isna(value):
+        return None
+    return round(float(value), digits)
+
+
+def _optional_int(value) -> int | None:
+    if pd.isna(value):
+        return None
+    return int(value)
+
+
 def _target_date_text() -> str:
     value = str(base.TARGET_DATE8)
     if len(value) != 8 or not value.isdigit():
@@ -127,6 +146,11 @@ def publish_race_to_racedata(
                 "name": str(row["馬名"]),
                 "age": int(row["年齢"]),
                 "horseKey": str(row["馬キー"]),
+                "jockey": _optional_text(row.get("騎手")),
+                "carriedWeight": _optional_number(row.get("斤量"), 1),
+                "popularity": _optional_int(row.get("人気")),
+                "bodyWeight": _optional_int(row.get("馬体重")),
+                "bodyWeightChange": _optional_int(row.get("増減")),
                 "odds": _number(row["単勝オッズ"], 1),
                 "marketProbability": _number(row["市場勝率(%)"]),
                 "aiProbability": _number(row["AI勝率(%)"]),

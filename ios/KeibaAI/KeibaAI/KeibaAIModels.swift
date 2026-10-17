@@ -22,6 +22,13 @@ struct Horse: Identifiable, Hashable, Codable {
 
     var age: Int? = nil
     var horseKey: String? = nil
+
+    // 発走前のJRA出馬表から取得。旧RaceDataとの互換性のためOptional。
+    var jockey: String? = nil
+    var carriedWeight: Double? = nil
+    var popularity: Int? = nil
+    var bodyWeight: Int? = nil
+    var bodyWeightChange: Int? = nil
 }
 
 // ============================================================
