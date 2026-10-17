@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "all-bet-forward-v1-20261015",
   "scope": "JRA domestic flat races",
-  "generatedAtJST": "2026-10-17T15:59:05.138902+09:00",
+  "generatedAtJST": "2026-10-17T16:00:20.629611+09:00",
   "evaluationStartJST": "2026-10-15T17:47:37+09:00",
   "betTypes": {
     "win": "単勝",
@@ -154,15 +154,15 @@
       "dead_heat_excluded": 0,
       "invalid": 0,
       "probability_matched": 1,
-      "matched": 0,
-      "payouts_pending": 1,
+      "matched": 1,
+      "payouts_pending": 0,
       "missingRecords": 0,
       "failedSessions": 0
     },
     "races": [
       {
         "raceDate": "2026-10-17",
-        "status": "payouts_pending",
+        "status": "matched",
         "winningOutcome": [
           "06",
           "04",
@@ -179,7 +179,42 @@
         "marketTopOneAllFiveHit": false,
         "aiTopOneLegHits": 1,
         "marketTopOneLegHits": 1,
-        "assumption": "レース間の条件付き独立を仮定した勝率の積。全組は積の形で保持し、点数分を購入する意味ではない。"
+        "assumption": "レース間の条件付き独立を仮定した勝率の積。全組は積の形で保持し、点数分を購入する意味ではない。",
+        "payout": {
+          "raceDate": "2026-10-17",
+          "raceIDs": [
+            "202608040610",
+            "202605040610",
+            "202604040111",
+            "202608040611",
+            "202605040611"
+          ],
+          "winners": [
+            {
+              "number": 6,
+              "name": "チェルヴァーラ"
+            },
+            {
+              "number": 4,
+              "name": "ライノ"
+            },
+            {
+              "number": 6,
+              "name": "ベイビーキッス"
+            },
+            {
+              "number": 10,
+              "name": "マジックローズ"
+            },
+            {
+              "number": 13,
+              "name": "シュガークン"
+            }
+          ],
+          "winningTicketCount": 42,
+          "payoutPer100Yen": 7118940,
+          "payoutStatus": "paid"
+        }
       }
     ],
     "sessions": [
