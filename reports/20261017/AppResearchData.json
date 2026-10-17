@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 1,
+  "status": "research_display_only",
+  "generatedAtJST": "2026-10-17 09:33:48",
+  "stakeSizingEnabled": false,
+  "formalSignalsChanged": false,
+  "sourceInputs": {
+    "predictionSHA256": "920d6baab374371abf4974f79077ac3a59433acd600f49ac08d07dd25dac3e99",
+    "historySHA256": "6980e57bd7aa337ca5955e7f77b82989e45623fbd54172ba41de99fa5b75be61",
+    "methodVersion": "history-corner-six-races-v2",
+    "formationMethodVersion": "initial-corner-six-races-v1",
+    "paceNoteVersion": "pace-validation-hold-20261013-v2",
+    "horseIdentityMethodVersion": "exact-name-birth-year-v1",
+    "profileIdentityVersion": "name-birth-year-v1"
+  },
+  "evaluation2025": {
+    "schemaVersion": 1,
+    "methodVersion": "history-corner-six-races-v2",
+    "evaluationYear": 2025,
+    "rows": 40938,
+    "lastStyleExactPct": 43.03,
+    "lastSixExactPct": 42.95,
+    "lastStyleAdjacentPct": 87.19,
+    "lastSixAdjacentPct": 87.01,
+    "meaning": "各レースより前の履歴だけで比較。2026年は評価や条件選びに使わない。脚質割合は過去の観測頻度であり、次走の戦法の確率ではない。"
+  },
+  "formationValidation": {
+    "schemaVersion": 1,
+    "methodVersion": "initial-corner-six-races-v1",
+    "status": "research_reference_only",
+    "fixedMethod": "mean of normalized first-corner positions in last six valid past flat races",
+    "minimumPastRaces": 3,
+    "minimumCoveragePct": 80.0,
+    "development2024": {
+      "year": 2024,
+      "horseRows": 45411,
+      "labeledHorseRowsWithThreePastRuns": 31543,
+      "normalizedPositionMAE": {
+        "last": 0.24249,
+        "six": 0.211697,
+        "middle": 0.268535
+      },
+      "positionImprovementVsLast95CI": [
+        0.028716,
+        0.032802
+      ],
+      "allRaces": 3303,
+      "eligibleRaces": 1861,
+      "skippedForCoverage": 1442,
+      "skippedMissingLeader": 0,
+      "leaderTop1Pct": 33.42,
+      "leaderTop3Pct": 63.73,
+      "lastPositionLeaderTop3Pct": 60.02,
+      "randomKnownHorseLeaderTop1Pct": 7.71,
+      "randomKnownHorseLeaderTop3Pct": 23.14,
+      "leaderTop3ImprovementVsRandom95CI": [
+        0.385407,
+        0.426684
+      ],
+      "pairwiseOrderAgreementPct": 72.68,
+      "evaluationDays": 106
+    },
+    "evaluation2025": {
+      "year": 2025,
+      "horseRows": 46130,
+      "labeledHorseRowsWithThreePastRuns": 32113,
+      "normalizedPositionMAE": {
+        "last": 0.243398,
+        "six": 0.212592,
+        "middle": 0.267907
+      },
+      "positionImprovementVsLast95CI": [
+        0.028897,
+        0.032781
+      ],
+      "allRaces": 3313,
+      "eligibleRaces": 1877,
+      "skippedForCoverage": 1436,
+      "skippedMissingLeader": 0,
+      "leaderTop1Pct": 31.01,
+      "leaderTop3Pct": 60.79,
+      "lastPositionLeaderTop3Pct": 58.92,
+      "randomKnownHorseLeaderTop1Pct": 7.63,
+      "randomKnownHorseLeaderTop3Pct": 22.88,
+      "leaderTop3ImprovementVsRandom95CI": [
+        0.36106,
+        0.398629
+      ],
+      "pairwiseOrderAgreementPct": 72.03,
+      "evaluationDays": 109
+    },
+    "paceForecastValidated": false,
+    "stakeSizingEnabled": false,
+    "formalSignalsChanged": false,
+    "limitations": [
+      "2025 is evaluated after the method is accepted using 2024; 2026 is excluded.",
+      "All runners on a day are predicted before that day's results are added.",
+      "Top-three includes ties and unknown leaders count as misses; random baseline uses the same known-horse pool.",
+      "Initial-corner order is a rough reference, not the full race formation or a leader probability.",
+      "This reference evaluates first-corner order only; early-lap pace forecasts require separate validation.",
+      "Straight races, debut-heavy fields and fields below 80% coverage are not given a race-wide reference."
+    ],
+    "historySHA256": "6980e57bd7aa337ca5955e7f77b82989e45623fbd54172ba41de99fa5b75be61"
+  },
+  "races": [
+    {
+      "raceID": "202604040101",
+      "raceDate": "2026-10-17",
+      "horses": [
+        {
+          "number": 1,
+          "name": "ウメヒナタ",
+          "age": 2,
+          "horseKey": "ウメヒナタ_2024",
+          "sourceAiProbabilityPct": 2.414,
+          "sourceMarketProbabilityPct": 2.284,
+          "sourceOdds": 34.6,
+          "styleTendency": {
+            "sampleRaces": 2,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 50.0,
+              "差し": 50.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-07-11"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.377778,
+            "minRelativePosition": 0.2,
+            "maxRelativePosition": 0.555556,
+            "latestHistoryDate": "2026-07-11"
+          }
+        },
+        {
+          "number": 2,
+          "name": "ドラゴンドール",
+          "age": 2,
+          "horseKey": "ドラゴンドール_2024",
+          "sourceAiProbabilityPct": 9.773,
+          "sourceMarketProbabilityPct": 9.522,
+          "sourceOdds": 8.3,
+          "styleTendency": {
+            "sampleRaces": 1,
+            "dominantStyle": "追込",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 0.0,
+              "差し": 0.0,
+              "追込": 100.0
+            },
+            "latestHistoryDate": "2026-06-21"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.875,
+            "minRelativePosition": 0.875,
+            "maxRelativePosition": 0.875,
+            "latestHistoryDate": "2026-06-21"
+          }
+        },
+        {
+          "number": 3,
+          "name": "イザベル",
+          "age": 2,
+          "horseKey": "イザベル_2024",
+          "sourceAiProbabilityPct": 4.251,
+          "sourceMarketProbabilityPct": 4.622,
+          "sourceOdds": 17.1,
+          "styleTendency": {
+            "sampleRaces": 4,
+            "dominantStyle": "先行",
+            "confidence": "中",
+            "distributionPct": {
+              "逃げ": 25.0,
+              "先行": 50.0,
+              "差し": 25.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-08-08"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 4,
+            "meanRelativePosition": 0.21875,
+            "minRelativePosition": 0.0,
+            "maxRelativePosition": 0.375,
+            "latestHistoryDate": "2026-08-08"
+          }
+        },
+        {
+          "number": 4,
+          "name": "ルージュラボルタ",
+          "age": 2,
+          "horseKey": "ルージュラボルタ_2024",
+          "sourceAiProbabilityPct": 9.346,
+          "sourceMarketProbabilityPct": 10.399,
+          "sourceOdds": 7.6,
+          "styleTendency": {
+            "sampleRaces": 1,
+            "dominantStyle": "追込",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 0.0,
+              "差し": 0.0,
+              "追込": 100.0
+            },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.714286,
+            "minRelativePosition": 0.714286,
+            "maxRelativePosition": 0.714286,
+            "latestHistoryDate": "2026-09-26"
+          }
+        },
+        {
+          "number": 5,
+          "name": "サムワンユーラヴド",
+          "age": 2,
+          "horseKey": "サムワンユーラヴド_2024",
+          "sourceAiProbabilityPct": 0.778,
+          "sourceMarketProbabilityPct": 0.918,
+          "sourceOdds": 86.1,
+          "styleTendency": {
+            "sampleRaces": 2,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 100.0,
+              "差し": 0.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.240909,
+            "minRelativePosition": 0.181818,
+            "maxRelativePosition": 0.3,
+            "latestHistoryDate": "2026-09-26"
+          }
+        },
+        {
+          "number": 6,
+          "name": "スイートアリッサム",
+          "age": 2,
+          "horseKey": "スイートアリッサム_2024",
+          "sourceAiProbabilityPct": 24.452,
+          "sourceMarketProbabilityPct": 23.95,
+          "sourceOdds": 3.3,
+          "styleTendency": {
+            "sampleRaces": 2,
+            "dominantStyle": "差し",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 0.0,
+              "差し": 100.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-08-23"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.619048,
+            "minRelativePosition": 0.571429,
+            "maxRelativePosition": 0.666667,
+            "latestHistoryDate": "2026-08-23"
+          }
+        },
+        {
+          "number": 7,
+          "name": "サノノファイター",
+          "age": 2,
+          "horseKey": "サノノファイター_2024",
+          "sourceAiProbabilityPct": 17.127,
+          "sourceMarketProbabilityPct": 17.563,
+          "sourceOdds": 4.5,
+          "styleTendency": {
+            "sampleRaces": 2,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 50.0,
+              "差し": 50.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.276224,
+            "minRelativePosition": 0.090909,
+            "maxRelativePosition": 0.461538,
+            "latestHistoryDate": "2026-09-19"
+          }
+        },
+        {
+          "number": 8,
+          "name": "シャインフォード",
+          "age": 2,
+          "horseKey": "シャインフォード_2024",
+          "sourceAiProbabilityPct": 2.497,
+          "sourceMarketProbabilityPct": 2.214,
+          "sourceOdds": 35.7,
+          "styleTendency": {
+            "sampleRaces": 1,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 100.0,
+              "差し": 0.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-06-27"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.3,
+            "minRelativePosition": 0.3,
+            "maxRelativePosition": 0.3,
+            "latestHistoryDate": "2026-06-27"
+          }
+        },
+        {
+          "number": 9,
+          "name": "クシェドゥソレイユ",
+          "age": 2,
+          "horseKey": "クシェドゥソレイユ_2024",
+          "sourceAiProbabilityPct": 10.549,
+          "sourceMarketProbabilityPct": 9.879,
+          "sourceOdds": 8.0,
+          "styleTendency": {
+            "sampleRaces": 2,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 50.0,
+              "差し": 50.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-09-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 2,
+            "meanRelativePosition": 0.229167,
+            "minRelativePosition": 0.125,
+            "maxRelativePosition": 0.333333,
+            "latestHistoryDate": "2026-09-22"
+          }
+        },
+        {
+          "number": 10,
+          "name": "グリーンアイランド",
+          "age": 2,
+          "horseKey": "グリーンアイランド_2024",
+          "sourceAiProbabilityPct": 12.149,
+          "sourceMarketProbabilityPct": 12.159,
+          "sourceOdds": 6.5,
+          "styleTendency": {
+            "sampleRaces": 1,
+            "dominantStyle": "先行",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 100.0,
+              "差し": 0.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-08-22"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.153846,
+            "minRelativePosition": 0.153846,
+            "maxRelativePosition": 0.153846,
+            "latestHistoryDate": "2026-08-22"
+          }
+        },
+        {
+          "number": 11,
+          "name": "エコロテラ",
+          "age": 2,
+          "horseKey": "エコロテラ_2024",
+          "sourceAiProbabilityPct": 3.591,
+          "sourceMarketProbabilityPct": 3.436,
+          "sourceOdds": 23.0,
+          "styleTendency": {
+            "sampleRaces": 3,
+            "dominantStyle": "差し",
+            "confidence": "中",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 0.0,
+              "差し": 66.7,
+              "追込": 33.3
+            },
+            "latestHistoryDate": "2026-09-26"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 3,
+            "meanRelativePosition": 0.646465,
+            "minRelativePosition": 0.545455,
+            "maxRelativePosition": 0.727273,
+            "latestHistoryDate": "2026-09-26"
+          }
+        },
+        {
+          "number": 12,
+          "name": "ルナロマンティカ",
+          "age": 2,
+          "horseKey": "ルナロマンティカ_2024",
+          "sourceAiProbabilityPct": 3.075,
+          "sourceMarketProbabilityPct": 3.052,
+          "sourceOdds": 25.9,
+          "styleTendency": {
+            "sampleRaces": 1,
+            "dominantStyle": "差し",
+            "confidence": "低",
+            "distributionPct": {
+              "逃げ": 0.0,
+              "先行": 0.0,
+              "差し": 100.0,
+              "追込": 0.0
+            },
+            "latestHistoryDate": "2026-09-19"
+          },
+          "initialPositionHistory": {
+            "sampleRaces": 1,
+            "meanRelativePosition": 0.466667,
+            "minRelativePosition": 0.466667,
+            "maxRelativePosition": 0.466667,
+            "latestHistoryDate": "2026-09-19"
+          }
+        }
+      ],
+      "longshotCandidates": [
+        {
+          "number": 2,
+          "name": "ドラゴンドール",
+          "odds": 8.3,
+          "marketRank": 6,
+          "aiProbabilityPct": 9.773,
+          "aiMarketRatio": 1.0264,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.8112,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 1
+        },
+        {
+          "number": 3,
+          "name": "イザベル",
+          "odds": 17.1,
+          "marketRank": 7,
+          "aiProbabilityPct": 4.251,
+          "aiMarketRatio": 0.9197,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.7269,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 2
+        },
+        {
+          "number": 11,
+          "name": "エコロテラ",
+          "odds": 23.0,
+          "marketRank": 8,
+          "aiProbabilityPct": 3.591,
+          "aiMarketRatio": 1.0451,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.8259,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 3
+        },
+        {
+          "number": 12,
+          "name": "ルナロマンティカ",
+          "odds": 25.9,
+          "marketRank": 9,
+          "aiProbabilityPct": 3.075,
+          "aiMarketRatio": 1.0075,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.7964,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 4
+        },
+        {
+          "number": 8,
+          "name": "シャインフォード",
+          "odds": 35.7,
+          "marketRank": 11,
+          "aiProbabilityPct": 2.497,
+          "aiMarketRatio": 1.1278,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.8914,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 5
+        },
+        {
+          "number": 1,
+          "name": "ウメヒナタ",
+          "odds": 34.6,
+          "marketRank": 10,
+          "aiProbabilityPct": 2.414,
+          "aiMarketRatio": 1.0569,
+          "legacyV1Eligible": false,
+          "expectedValue": 0.8352,
+          "practicalScore": 0.0,
+          "shadowGates": {
+            "balanced_2pct_ev105": false,
+            "balanced_3pct_ev110": false,
+            "hit_5pct_ev105": false,
+            "value_ev120": false
+          },
+          "practicalRank": 6
+        }
+      ],
+      "formation": {
+        "methodVersion": "initial-corner-six-races-v1",
+        "status": "insufficient_history",
+        "knownHorses": 2,
+        "unknownHorses": 10,
+        "totalHorses": 12,
+        "coveragePct": 16.7,
+        "minimumPastRaces": 3,
+        "minimumCoveragePct": 80.0,
+        "orderedHorseNumbers": [],
+        "escapeTrendHorseNumbers": [],
+        "frontTrendHorseNumbers": [
+          3
+        ],
+        "paceForecast": {
+          "status": "unavailable",
+          "reason": "ペース予想は、検証で十分な精度を確認できていないため表示を保留しています。"
+        },
+        "meaning": "初角の相対位置を過去最大6走で平均した参考順。同値は馬番順で、厳密な順位差を意味しません。逃げ・先行の頭数は過去頻度が50%以上の収録済み馬だけを数えます。",
+        "validation2025": {
+          "eligibleRaces": 1877,
+          "leaderTop1Pct": 31.01,
+          "leaderTop3Pct": 60.79,
+          "pairwiseOrderAgreementPct": 72.03
+        }
+      }
+    }
+  ]
+}
