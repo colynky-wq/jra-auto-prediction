@@ -1,0 +1,38 @@
+name: KeibaAI Horse Metadata Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-horse-metadata-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Build complete KeibaAI app without signing
+        run: |
+          xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-horse-metadata-build CODE_SIGNING_ALLOWED=NO build
+
+      - name: Remove one-time build workflow after success
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          rm .github/workflows/keibaai-horse-metadata-build.yml
+          git add .github/workflows/keibaai-horse-metadata-build.yml
+          git commit -m 'Remove one-time horse metadata build workflow'
+          if ! git push origin HEAD:main; then
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
