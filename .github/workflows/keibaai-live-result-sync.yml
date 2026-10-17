@@ -12,10 +12,15 @@ on:
         description: 'JST date YYYYMMDD. Leave blank to use today.'
         required: false
         default: ''
+      max_minutes:
+        description: 'Optional continuous sync runtime for manual testing.'
+        required: false
+        default: '120'
   schedule:
-    # Every 5 minutes from 09:00 through 17:59 JST.
-    # On non-race/stale-data days the scripts exit without meaningful changes.
-    - cron: '*/5 0-8 * * *'
+    # Keep one runner alive instead of relying on GitHub's best-effort 5-minute cron.
+    # 08:45 JST through roughly 14:15 JST, then a late session through roughly 17:15 JST.
+    - cron: '45 23 * * *'
+    - cron: '15 5 * * *'
 
 permissions:
   contents: write
@@ -26,9 +31,9 @@ concurrency:
 
 jobs:
   sync-results:
-    name: Publish results and forward validation
+    name: Continuously publish results and forward validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 345
 
     steps:
       - name: Checkout latest main
@@ -36,10 +41,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
-      - name: Synchronize latest main before building
-        shell: bash
-        run: git pull --ff-only origin main
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -63,61 +64,108 @@ jobs:
           python -m py_compile production/ticket_plan_shadow.py
           python -m py_compile production/wide_axis_rules.py
           python -m py_compile production/wide_axis_shadow.py
+          python -m py_compile production/evaluate_triple_forward.py
+          python -m py_compile production/evaluate_all_bet_forward.py
+          python -m py_compile production/build_bet_research_data.py
 
-      - name: Build app ResultData
-        env:
-          KEIBAAI_RESULT_DATE: ${{ github.event.inputs.target_date || '' }}
-          KEIBAAI_RESULT_DELAY_MINUTES: '5'
-          PYTHONDONTWRITEBYTECODE: '1'
-        run: python production/build_result_data_live.py
-
-      - name: Build app PerformanceData
-        run: python production/build_performance_data.py
-
-      - name: Join frozen Wide snapshots with final payouts
-        env:
-          KEIBAAI_WIDE_VALIDATE_DATE: ${{ github.event.inputs.target_date || '' }}
-        run: python production/wide_forward_validation.py
-
-      - name: Rebuild cumulative Wide validation summary
-        run: python production/wide_validation_summary.py
-
-      - name: Evaluate preregistered ticket-plan rules in shadow mode
-        run: python production/ticket_plan_shadow.py
-
-      - name: Evaluate the frozen new Wide-axis rule separately
-        run: python production/wide_axis_shadow.py
-
-      - name: Join frozen Trio and Trifecta research records separately
-        continue-on-error: true
-        run: python production/evaluate_triple_forward.py
-
-      - name: Compare all added pools, equal Win Place packages and early WIN5 records
-        continue-on-error: true
-        run: python production/evaluate_all_bet_forward.py
-
-      - name: Build reference-only app research display from frozen records
-        continue-on-error: true
-        run: python production/build_bet_research_data.py
-
-      - name: Commit results and validation when changed
+      - name: Choose continuous session runtime
+        id: runtime
         shell: bash
         run: |
           set -euo pipefail
-
-          if [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json reports)" ]; then
-            echo 'No result/performance/validation changes to publish.'
-            exit 0
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
+            minutes='${{ github.event.inputs.max_minutes }}'
+          elif [ "${{ github.event_name }}" = 'push' ]; then
+            # A workflow-file change should start the repaired monitor immediately.
+            minutes='240'
+          elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then
+            minutes='330'
+          else
+            minutes='180'
           fi
+          case "$minutes" in
+            ''|*[!0-9]*) echo 'Invalid runtime minutes' >&2; exit 2 ;;
+          esac
+          if [ "$minutes" -lt 1 ] || [ "$minutes" -gt 335 ]; then
+            echo 'Runtime must be between 1 and 335 minutes.' >&2
+            exit 2
+          fi
+          echo "minutes=$minutes" >> "$GITHUB_OUTPUT"
+          echo "continuous result sync runtime: $minutes minutes"
+
+      - name: Continuously publish results and validation
+        env:
+          KEIBAAI_RESULT_DATE: ${{ github.event.inputs.target_date || '' }}
+          KEIBAAI_WIDE_VALIDATE_DATE: ${{ github.event.inputs.target_date || '' }}
+          KEIBAAI_RESULT_DELAY_MINUTES: '5'
+          KEIBAAI_RESULT_POLL_SECONDS: '60'
+          KEIBAAI_RESULT_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        shell: bash
+        run: |
+          set -uo pipefail
 
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add ResultData.json PerformanceData.json reports
-          if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
-          git commit -m "Update KeibaAI results and forward validation"
 
-          if ! git push origin HEAD:main; then
-            echo 'Main moved while this run was building; rebasing once and retrying.'
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
+          max_seconds=$((KEIBAAI_RESULT_MAX_MINUTES * 60))
+          end_epoch=$(($(date +%s) + max_seconds))
+          cycle=0
+
+          while [ "$(date +%s)" -lt "$end_epoch" ]; do
+            cycle=$((cycle + 1))
+            echo "===== result sync cycle $cycle: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST') ====="
+
+            # This checkout is dedicated to result publishing. Always rebuild from the
+            # newest main so prediction commits that arrive between cycles are visible.
+            if ! git fetch --no-tags origin main; then
+              echo '::warning::Could not fetch latest main; retrying next cycle.'
+            else
+              git reset --hard origin/main
+              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json >/dev/null 2>&1 || true
+
+              cycle_failed=0
+              python production/build_result_data_live.py || cycle_failed=1
+              if [ "$cycle_failed" -eq 0 ]; then python production/build_performance_data.py || cycle_failed=1; fi
+              if [ "$cycle_failed" -eq 0 ]; then python production/wide_forward_validation.py || cycle_failed=1; fi
+              if [ "$cycle_failed" -eq 0 ]; then python production/wide_validation_summary.py || cycle_failed=1; fi
+              if [ "$cycle_failed" -eq 0 ]; then python production/ticket_plan_shadow.py || cycle_failed=1; fi
+              if [ "$cycle_failed" -eq 0 ]; then python production/wide_axis_shadow.py || cycle_failed=1; fi
+
+              # Research displays are useful but must never stop live result publication.
+              python production/evaluate_triple_forward.py || echo '::warning::Triple research evaluation failed for this cycle.'
+              python production/evaluate_all_bet_forward.py || echo '::warning::All-bet research evaluation failed for this cycle.'
+              python production/build_bet_research_data.py || echo '::warning::Bet research display build failed for this cycle.'
+
+              if [ "$cycle_failed" -ne 0 ]; then
+                echo '::warning::Core result/validation build failed; retrying next cycle.'
+              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json reports)" ]; then
+                echo 'No result/performance/validation changes to publish.'
+              else
+                git add ResultData.json PerformanceData.json reports
+                if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
+                git commit -m "Update KeibaAI results and forward validation" || true
+
+                if ! git push origin HEAD:main; then
+                  # Do not leave this long-running checkout in a conflicted state. The
+                  # next cycle refetches main and deterministically rebuilds any result
+                  # that lost this push race.
+                  echo '::warning::Main moved while publishing; latest results will be rebuilt next cycle.'
+                  git fetch --no-tags origin main || true
+                  git reset --hard origin/main || true
+                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json >/dev/null 2>&1 || true
+                fi
+              fi
+            fi
+
+            now=$(date +%s)
+            remaining=$((end_epoch - now))
+            if [ "$remaining" -le 0 ]; then
+              break
+            fi
+            sleep_for="$KEIBAAI_RESULT_POLL_SECONDS"
+            if [ "$remaining" -lt "$sleep_for" ]; then sleep_for="$remaining"; fi
+            sleep "$sleep_for"
+          done
+
+          echo "Continuous result sync finished at $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST')."
