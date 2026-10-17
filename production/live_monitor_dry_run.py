@@ -279,12 +279,28 @@ def predict_live_race(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp)
     print("JRA official entry parsed:", len(entries), "fetched_at:", entry_time)
     print("JRA entry URL:", entry_url)
 
+    # JRA's official current entry table is authoritative for scratches.
+    # Some odds feeds can temporarily retain a withdrawn horse (for example
+    # with a sentinel price), which must not block the prediction for the
+    # remaining active runners.
+    official_active = set(entries["馬番"].astype(int))
+    odds_numbers = set(odds["馬番"].astype(int))
+    ignored_odds = sorted(odds_numbers - official_active)
+    if ignored_odds:
+        print("Ignoring odds for non-active JRA entrants:", ignored_odds)
+
+    odds = odds.loc[odds["馬番"].astype(int).isin(official_active)].copy()
+    odds = odds.sort_values("馬番").reset_index(drop=True)
     active = set(odds["馬番"].astype(int))
     entries = entries.loc[entries["馬番"].astype(int).isin(active)].copy()
     entries = entries.sort_values("馬番").reset_index(drop=True)
 
-    if len(entries) != len(odds):
-        raise RuntimeError(f"entry/odds count mismatch: {len(entries)} / {len(odds)}")
+    if len(entries) != len(odds) or active != official_active:
+        missing_odds = sorted(official_active - active)
+        raise RuntimeError(
+            f"active entry/odds mismatch: entries={len(official_active)} "
+            f"odds={len(odds)} missing_odds={missing_odds}"
+        )
 
     hist_jockeys = sorted(set(hist["騎手"].dropna().astype(str)))
     hist_trainers = sorted(set(hist["調教師"].dropna().astype(str)))
