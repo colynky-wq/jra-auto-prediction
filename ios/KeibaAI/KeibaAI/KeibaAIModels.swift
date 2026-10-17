@@ -24,6 +24,7 @@ struct Horse: Identifiable, Hashable, Codable {
     var horseKey: String? = nil
 
     // 発走前のJRA出馬表から取得。旧RaceDataとの互換性のためOptional。
+    // 馬カードでは騎手→馬体重増減→斤量→人気・オッズの順で表示します。
     var jockey: String? = nil
     var carriedWeight: Double? = nil
     var popularity: Int? = nil
