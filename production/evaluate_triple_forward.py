@@ -8,6 +8,7 @@ import research_triple_baseline as baseline
 from triple_forward import (JST, START, VERSION, TYPES, LABELS, digest, evaluate, payout_map,
                             request_bytes, validate, stamp)
 from live_bundle_publisher import atomic
+from all_bet_recording_coverage import expected_races, missing_reason
 
 
 def saved_payouts(root, record, fetch=request_bytes, clock=lambda:datetime.now(JST)):
@@ -89,14 +90,15 @@ def build(root, fetch=request_bytes, clock=lambda:datetime.now(JST)):
         except (OSError, ValueError, KeyError, TypeError, OverflowError) as error:
             counts[kind]['invalid'] += 1
             warnings.append(str(path.relative_to(root))+': '+type(error).__name__)
-    if (root/'RaceData.json').exists():
-        for race in baseline.load_rows(root/'RaceData.json'):
-            if race['raceDate'] < START.date().isoformat():
-                continue
-            for kind in TYPES:
-                target = root/'reports'/race['raceDate'].replace('-','')/'triple_v1'/kind/(race['raceID']+'.json')
-                if not target.exists():
-                    counts[kind]['missingRecords'] += 1
+    expected, coverage_warnings = expected_races(root, START, clock())
+    warnings.extend(coverage_warnings)
+    for race in expected:
+        for kind in TYPES:
+            target = root/'reports'/race['raceDate'].replace('-','')/'triple_v1'/kind/(race['raceID']+'.json')
+            if not target.exists():
+                counts[kind]['missingRecords'] += 1
+                rows.append({'raceDate':race['raceDate'],'raceID':race['raceID'],'betType':kind,
+                             'status':'missing_record','reason':missing_reason(root,race,clock())})
     return {'schemaVersion': 1, 'version': VERSION, 'evaluationStartJST': START.isoformat(),
             'counts': counts, 'races': rows, 'warnings': warnings,
             'status': 'attention_required' if warnings or any(c['invalid'] or c['missingRecords'] for c in counts.values())
