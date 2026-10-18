@@ -36,6 +36,7 @@ import pandas as pd
 from horse_identity_runtime import assign_horse_keys
 import requests
 from bs4 import BeautifulSoup
+from history_update_source import fetch_day, target_date
 
 
 # ============================================================
@@ -49,10 +50,12 @@ HISTORY_PATH = HERE / "production_history.parquet"
 REPORT_ROOT = REPO / "reports" / "history_updates"
 
 NOW_JST = datetime.now(JST)
-TARGET_DATE8 = (
-    os.environ.get("KEIBAAI_HISTORY_DATE", "").strip()
-    or NOW_JST.strftime("%Y%m%d")
+TARGET_DATE8 = target_date(
+    os.environ.get("KEIBAAI_HISTORY_DATE", "").strip(),
+    os.environ.get("KEIBAAI_HISTORY_RUN_CREATED_AT", "").strip(),
+    os.environ.get("GITHUB_EVENT_NAME", ""), NOW_JST,
 )
+RACE_LIST_EVIDENCE = {}
 APPLY = os.environ.get("KEIBAAI_HISTORY_APPLY", "false").strip().lower() in {
     "1", "true", "yes", "on"
 }
@@ -333,14 +336,8 @@ def parse_race_meta(text: str) -> dict:
 # ============================================================
 
 def fetch_day_race_ids(date8: str) -> list[str]:
-    url = "https://race.netkeiba.com/top/race_list_sub.html"
-    r = SESSION.get(url, params={"kaisai_date": date8}, timeout=30)
-    print("race-list HTTP:", r.status_code, "bytes:", len(r.content), "url:", r.url)
-    if r.status_code != 200:
-        raise RuntimeError(f"race list HTTP {r.status_code}")
-
-    text = r.content.decode("utf-8", errors="replace")
-    race_ids = sorted(set(re.findall(r"race_id=(\d{12})", text)))
+    global RACE_LIST_EVIDENCE
+    race_ids, RACE_LIST_EVIDENCE = fetch_day(SESSION, date8)
     print("race ids for target date:", len(race_ids))
     return race_ids
 
@@ -667,6 +664,8 @@ def main() -> None:
         fail(f"history file not found: {HISTORY_PATH}")
 
     target_date = pd.Timestamp(datetime.strptime(TARGET_DATE8, "%Y%m%d").date())
+    if target_date.date() > NOW_JST.date():
+        fail("future history target is not accepted")
 
     hist = pd.read_parquet(HISTORY_PATH)
     missing = [c for c in BASE_COLS if c not in hist.columns]
@@ -708,8 +707,12 @@ def main() -> None:
 
     race_ids = fetch_day_race_ids(TARGET_DATE8)
     if not race_ids:
+        schedule = REPO / "reports" / TARGET_DATE8 / "PaceRecordingSchedule.json"
+        if schedule.exists() and json.loads(schedule.read_text(encoding="utf-8")).get("races"):
+            fail("official calendar says no meeting but saved monitoring schedule has races")
         print()
-        print("No JRA races found for target date; nothing to update.")
+        print("Official JRA monthly calendar confirms no scheduled meeting:",
+              json.dumps(RACE_LIST_EVIDENCE, ensure_ascii=False))
         print("★★★★★ KEIBAAI PRODUCTION HISTORY UPDATE: SKIP")
         return
 
@@ -788,6 +791,7 @@ def main() -> None:
         "duplicateRaceHorseKeys": int(combined_dups),
         "parquetBytes": int(tmp_path.stat().st_size),
         "status": "validated",
+        "raceListSource": RACE_LIST_EVIDENCE,
     }
 
     print()
