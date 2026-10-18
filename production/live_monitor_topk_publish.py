@@ -76,6 +76,7 @@ def _refresh_prediction_bundle(published_race: dict) -> None:
     best-effort so a temporary odds/API failure can never erase or block the
     prediction that was already produced.
     """
+    snapshot = None
     if CAPTURE_WIDE_ODDS:
         try:
             import wide_odds_runtime as wide
@@ -100,23 +101,25 @@ def _refresh_prediction_bundle(published_race: dict) -> None:
     if REFRESH_SIGNALS:
         try:
             import build_signal_data_v2 as signals
-
-            signals.main()
-            print("SignalData refreshed immediately after RaceData publish.")
-        except Exception as exc:
-            print("WARNING: SignalData refresh failed; scheduled fallback can repair it:", repr(exc))
-            return
-        try:
             from datetime import datetime
             import wide_axis_rules as axis
-            bundle = json.loads(signals.OUT_PATH.read_text())
-            current = next((s for s in bundle['races'] if s['raceID'] == published_race['raceID']), None)
+            # Freeze the evaluation from this race's inputs before writing the
+            # shared display bundle. A display-write failure must not lose it.
+            current = signals.build_live_race_signal(published_race, snapshot)
             if current is not None:
                 saved = axis.record_first(RACEDATA_PATH.parent, published_race, current, datetime.now(axis.JST))
                 if saved:
                     print('WIDE_AXIS_RECORDED', saved)
+                else:
+                    print('WIDE_AXIS_NOT_RECORDED', published_race['raceID'], axis.evaluate(published_race, current)['status'])
         except Exception as exc:
             print("WARNING: Wide-axis record failed; keep the prediction and do not backfill after post:", repr(exc))
+        try:
+            import build_signal_data_v2 as signals
+            signals.main()
+            print("SignalData refreshed immediately after RaceData publish.")
+        except Exception as exc:
+            print("WARNING: SignalData refresh failed; saved research remains independent:", repr(exc))
 
 
 def publish_race_to_racedata(

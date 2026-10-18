@@ -49,6 +49,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # Scheduled runs can wait behind the morning session. Read its final
+          # records at checkout time, rather than the SHA from queue creation.
+          ref: main
 
       - name: Set up Python
         if: steps.day.outputs.has_races == 'true'

@@ -3,6 +3,8 @@ from __future__ import annotations
 import itertools
 import json
 import math
+import os
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -285,11 +287,19 @@ def build_race_signal(race: dict) -> dict | None:
 
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    with tmp.open("w", encoding="utf-8") as f:
-        json.dump(value, f, ensure_ascii=False, indent=2)
-        f.write("\n")
-    tmp.replace(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile('w', dir=path.parent, prefix=path.name+'.',
+                                         suffix='.tmp', delete=False, encoding='utf-8') as f:
+            temporary = Path(f.name)
+            json.dump(value, f, ensure_ascii=False, indent=2, allow_nan=False)
+            f.write('\n')
+            f.flush()
+            os.fsync(f.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def main() -> None:
