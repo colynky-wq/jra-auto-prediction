@@ -5,6 +5,11 @@ on:
       - 'production/*recording*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_dry_run.py'
+      - 'production/live_recording_resume.py'
+      - 'production/test_live_recording_resume.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/wide_odds_runtime.py'
+      - 'production/build_signal_data*.py'
       - 'production/test_live_startup_guard.py'
       - 'production/live_bundle_publisher.py'
       - 'production/test_live_bundle_publisher.py'
@@ -51,6 +56,7 @@ jobs:
       - name: Test status and source isolation
         run: |
           python -m unittest discover -s production -p 'test_live_startup_guard.py' -v
+          python -m unittest discover -s production -p 'test_live_recording_resume.py' -v
           python -m unittest discover -s production -p 'test_live_bundle_publisher.py' -v
           python -m unittest discover -s production -p 'test_inspect_live_outbox.py' -v
           python -m unittest discover -s production -p 'test_monitor_health.py' -v

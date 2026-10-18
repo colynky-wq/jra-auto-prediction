@@ -184,9 +184,21 @@ class Outbox:
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
         immutable = (('/prerace/' in path and not path.endswith('/index.json'))
                      or path.endswith('/PaceRecordingSchedule.json')
-                     or any(part in path for part in ('/wide_axis_v1/','/triple_v1/','/all_bet_v1/','/win5_v1/')))
+                     or any(part in path for part in ('/wide_odds/','/wide_axis_v1/','/triple_v1/','/all_bet_v1/','/win5_v1/')))
         if immutable and remote is not None and remote != data:
             raise PublishError(f'既存の発走前記録と競合しています: {path}')
+        if path == 'WideOddsData.json' and remote is not None:
+            local, prior = json.loads(data), json.loads(remote)
+            # This is a rotating display cache; keep the already published first
+            # snapshot of each race. Per-race archives reject conflicting bytes.
+            snapshots = {r['raceID']: r for r in local['snapshots'] if r['raceDate'] == self.day}
+            for row in prior['snapshots']:
+                if row['raceDate'] > self.day:
+                    raise PublishError('newer Wide snapshot day already published')
+                if row['raceDate'] == self.day:
+                    snapshots[row['raceID']] = row
+            local['snapshots'] = sorted(snapshots.values(), key=lambda r:(r.get('startTime',''),r['raceID']))
+            return (json.dumps(local,ensure_ascii=False,indent=2)+'\n').encode()
         if '/prerace/' in path and path.endswith('/index.json') and remote is not None and remote != data:
             local, prior = json.loads(data), json.loads(remote)
             if local['raceID'] != prior['raceID']:

@@ -38,6 +38,22 @@ class ControlledGit(Git):
 
 
 class TestLiveBundlePublisher(unittest.TestCase):
+    def test_wide_archive_conflict_keeps_original_and_rotating_cache_first_snapshot(self):
+        path='reports/20261017/wide_odds/202605040601.json'
+        first={'raceDate':DAY,'raceID':'202605040601','startTime':'10:00','capturedAtJST':'09:48'}
+        later={**first,'capturedAtJST':'09:51'}
+        self.advance_peer(path,first)
+        self.advance_peer('WideOddsData.json',{'snapshots':[first]})
+        self.write(path,later)
+        other={**first,'raceID':'202605040602'}
+        self.write('WideOddsData.json',{'snapshots':[later,other]})
+        publisher=self.publisher();publisher.capture()
+        self.assertFalse(publisher.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),first)
+        saved=json.loads(self.remote_read('WideOddsData.json'))['snapshots']
+        self.assertEqual(saved,[first,other])
+        self.assertEqual(set(publisher.state['pending']),{path})
+
     def test_research_role_only_publishes_own_reports_and_preserves_app_files(self):
         path='reports/20261017/win5_v1/session.json'
         self.write(path,{'frozen':1})

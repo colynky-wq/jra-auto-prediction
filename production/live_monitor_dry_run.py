@@ -493,6 +493,10 @@ def main() -> None:
 
     deadline = now_jst() + timedelta(minutes=MAX_RUNTIME_MINUTES)
     processed: set[str] = set()
+    if os.environ.get('KEIBAAI_PUBLISH_RACEDATA', '').lower() in {'true','1'}:
+        from live_recording_resume import published_race_ids
+        processed = published_race_ids(HERE.parent, TARGET_DATE8, flat)
+        print('LIVE_RESUME_PUBLISHED', sorted(processed))
     missed: set[str] = set()
     failures: list[tuple[str, str]] = []
 

@@ -264,6 +264,18 @@ def _enrich_with_wide_odds(signal: dict, snapshot: dict | None) -> dict:
     return signal
 
 
+def build_live_race_signal(race: dict, snapshot: dict | None = None) -> dict | None:
+    """Build one race from saved inputs, independently of shared display writes."""
+    built = base.build_race_signal(race)
+    if built is None:
+        return None
+    if built.get('eligible'):
+        wide_eval = dict(built.get('wideEvaluation') or {})
+        wide_eval['pairs'] = _all_wide_pairs(race)
+        built['wideEvaluation'] = wide_eval
+    return _enrich_with_wide_odds(built, snapshot)
+
+
 def main() -> None:
     races = _load_races()
     if not races:
@@ -273,15 +285,11 @@ def main() -> None:
     wide_by_race = _load_wide_by_race(races)
     output = []
     for race in races:
-        built = base.build_race_signal(race)
+        rid = str(race.get('raceID') or '')
+        built = build_live_race_signal(race, wide_by_race.get(rid))
         if built is None:
             continue
-        if built.get("eligible"):
-            wide_eval = dict(built.get("wideEvaluation") or {})
-            wide_eval["pairs"] = _all_wide_pairs(race)
-            built["wideEvaluation"] = wide_eval
-        rid = str(race.get("raceID") or "")
-        enriched = _enrich_with_wide_odds(built, wide_by_race.get(rid))
+        enriched = built
         from wide_axis_rules import display_evaluation
         enriched['wideAxisEvaluation'] = display_evaluation(REPORTS_DIR.parent, race, enriched)
         output.append(enriched)

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import fcntl
+import os
+import tempfile
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -53,9 +56,8 @@ def _load_payload(path: Path = WIDE_ODDS_PATH) -> dict:
 
 def _write_payload(payload: dict, path: Path = WIDE_ODDS_PATH) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    from live_bundle_publisher import atomic
+    atomic(path, (json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False)+'\n').encode())
 
 
 def _date8(race_date: str | None) -> str | None:
@@ -96,12 +98,19 @@ def _archive_snapshot(snapshot: dict) -> Path | None:
     archived["purpose"] = "発走前ワイド実オッズを後から確定払戻と突合するための固定スナップショット"
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(archived, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    if path.exists():
-        tmp.unlink(missing_ok=True)
-        return path
-    tmp.replace(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile('w',dir=path.parent,suffix='.tmp',delete=False,encoding='utf-8') as f:
+            temporary = Path(f.name)
+            json.dump(archived,f,ensure_ascii=False,indent=2,allow_nan=False)
+            f.write('\n');f.flush();os.fsync(f.fileno())
+        try:
+            os.link(temporary,path)
+        except FileExistsError:
+            pass
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
     return path
 
 
@@ -214,35 +223,39 @@ def record_first_wide_snapshot(
     immutable reports/YYYYMMDD/wide_odds/<raceID>.json copy is also written so
     historical forward validation never depends on the rotating root file.
     """
-    payload = _load_payload(path)
-    snapshots = [
-        item
-        for item in payload.get("snapshots", [])
-        if str(item.get("raceDate") or "") == str(race_date)
-    ]
+    archive = REPORTS_DIR / race_date.replace('-', '') / 'wide_odds' / (str(race_id)+'.json')
 
-    for item in snapshots:
-        if str(item.get("raceID") or "") == str(race_id):
-            _archive_snapshot(item)
-            return item
+    def original():
+        if not archive.exists():
+            return None
+        saved = json.loads(archive.read_text())
+        if (saved.get('raceID') != str(race_id) or saved.get('raceDate') != race_date
+                or saved.get('startTime') != start_time
+                or saved.get('frozenAtFirstSuccessfulCapture') is not True):
+            raise ValueError('invalid immutable Wide archive')
+        return saved
 
-    snapshot = fetch_wide_snapshot(
-        race_id,
-        race_date=race_date,
-        venue=venue,
-        race_number=race_number,
-        start_time=start_time,
-    )
-    snapshots.append(snapshot)
-    snapshots.sort(key=lambda x: (str(x.get("startTime") or ""), str(x.get("raceID") or "")))
-
-    payload = {
-        "schemaVersion": 1,
-        "betType": "ワイド",
-        "snapshotPolicy": "first prediction-time snapshot is frozen per race",
-        "generatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
-        "snapshots": snapshots,
-    }
-    _write_payload(payload, path)
+    snapshot = original()
+    if snapshot is None:
+        snapshot = first_snapshot_for_race(race_id,path)
+    if snapshot is None:
+        snapshot = fetch_wide_snapshot(race_id,race_date=race_date,venue=venue,
+                                      race_number=race_number,start_time=start_time)
     _archive_snapshot(snapshot)
+    snapshot = original()  # A concurrent repair may have won the first capture.
+    if snapshot is None:
+        raise ValueError('Wide archive was not saved')
+    path.parent.mkdir(parents=True,exist_ok=True)
+    # Fetching does not hold this short cache-write lock. Each writer merges
+    # the current cache, so two different races cannot erase one another.
+    with path.with_suffix('.json.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        payload = _load_payload(path)
+        snapshots = {str(x['raceID']):x for x in payload['snapshots'] if x.get('raceDate') == race_date}
+        snapshots[str(race_id)] = snapshot
+        payload = {'schemaVersion':1,'betType':'ワイド',
+                   'snapshotPolicy':'first prediction-time snapshot is frozen per race',
+                   'generatedAtJST':datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S'),
+                   'snapshots':sorted(snapshots.values(),key=lambda x:(str(x.get('startTime') or ''),str(x['raceID'])))}
+        _write_payload(payload,path)
     return snapshot

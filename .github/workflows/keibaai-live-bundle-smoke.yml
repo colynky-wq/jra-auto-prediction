@@ -5,6 +5,9 @@ on:
     paths:
       - 'production/live_monitor_topk_publish.py'
       - 'production/build_signal_data_v2.py'
+      - 'production/build_signal_data.py'
+      - 'production/test_live_recording_resume.py'
+      - 'production/wide_odds_runtime.py'
       - 'production/live_bundle_publisher.py'
       - 'production/wide_axis*.py'
       - 'production/test_wide_axis_rules.py'
@@ -19,6 +22,8 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/wide_odds_runtime.py'
       - 'production/build_signal_data_v2.py'
+      - 'production/build_signal_data.py'
+      - 'production/test_live_recording_resume.py'
       - 'production/repair_wide_odds.py'
       - 'production/wide_forward_validation.py'
       - 'production/wide_validation_summary.py'
@@ -63,6 +68,8 @@ jobs:
           python -m py_compile production/wide_axis_shadow.py
       - name: Verify Wide-axis selection and independent final result identity
         run: python production/test_wide_axis_rules.py
+      - name: Verify session resume and simultaneous live recording writes
+        run: python production/test_live_recording_resume.py
       - name: Build SignalData v2 from current RaceData
         run: python production/build_signal_data_v2.py
       - name: Validate all-pair Wide practical ranking and immutable archive
