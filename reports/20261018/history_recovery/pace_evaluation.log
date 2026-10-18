@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "methodVersion": "prospective-pace-evaluation-v1",
+  "status": "research_only",
+  "evaluationStartDate": "2026-10-13",
+  "selectionRule": "First recorded attempt per race, including holds; changed entrant set is reported and excluded; never backfill a prediction after post.",
+  "counts": {
+    "racesWithObservedEntry": 70,
+    "recordedFirstAttempts": 70,
+    "missingPrediction": 0,
+    "heldBeforeRace": 40,
+    "awaitingCompletedResults": 0,
+    "entrant_set_changed": 1,
+    "invalidRecords": 0,
+    "evaluatedRaces": 29
+  },
+  "byModel": {
+    "997524e0361ca8efba514a0d1a5a07c4b65342ec0a4ea01d8c9754a780f6d597": {
+      "evaluationRaces": 29,
+      "evaluationDays": 2,
+      "accuracyPct": 41.38,
+      "coursePriorAccuracyPct": 31.03,
+      "brierScore": 0.607309,
+      "coursePriorBrierScore": 0.684548,
+      "actualCounts": {
+        "0": 13,
+        "1": 9,
+        "2": 7
+      },
+      "predictedCounts": {
+        "1": 22,
+        "0": 5,
+        "2": 2
+      },
+      "recallPct": {
+        "0": 30.77,
+        "1": 77.78,
+        "2": 14.29
+      },
+      "precisionPct": {
+        "0": 80.0,
+        "1": 31.82,
+        "2": 50.0
+      },
+      "brierImprovement95CI": [
+        0.032011,
+        0.125697
+      ],
+      "accuracyImprovement95CI": [
+        0.0,
+        0.214286
+      ],
+      "adoptionDecision": "do_not_enable_pace_forecast"
+    }
+  },
+  "invalidExamples": [],
+  "warnings": [],
+  "paceForecastEnabled": false,
+  "formalSignalsChanged": false,
+  "stakeSizingEnabled": false
+}
