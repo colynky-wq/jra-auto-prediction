@@ -13,7 +13,7 @@
       "dead_heat_excluded": 1,
       "invalid": 0,
       "matched": 33,
-      "missingRecords": 0
+      "missingRecords": 1
     },
     "trifecta": {
       "records": 34,
@@ -25,7 +25,7 @@
       "dead_heat_excluded": 1,
       "invalid": 0,
       "matched": 33,
-      "missingRecords": 0
+      "missingRecords": 1
     }
   },
   "races": [
@@ -766,10 +766,24 @@
       "raceID": "202608040612",
       "betType": "trio",
       "status": "dead_heat_excluded"
+    },
+    {
+      "raceDate": "2026-10-17",
+      "raceID": "202605040605",
+      "betType": "trio",
+      "status": "missing_record",
+      "reason": "通常予測の処理に失敗し、この券種の初回記録もありません。entry/odds count mismatch: 8 / 9"
+    },
+    {
+      "raceDate": "2026-10-17",
+      "raceID": "202605040605",
+      "betType": "trifecta",
+      "status": "missing_record",
+      "reason": "通常予測の処理に失敗し、この券種の初回記録もありません。entry/odds count mismatch: 8 / 9"
     }
   ],
   "warnings": [],
-  "status": "collecting",
+  "status": "attention_required",
   "selectedBets": 0,
   "returnIndex": null,
   "autoBetEnabled": false,
