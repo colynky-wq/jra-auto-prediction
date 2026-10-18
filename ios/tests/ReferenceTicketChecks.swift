@@ -91,7 +91,27 @@ struct ReferenceTicketChecks {
         check(plans([input],.wideAxis)[0].totalYen == 0,"updated individual Top3 data cannot reuse stale axis")
         let axisBytes = try Data(contentsOf:URL(fileURLWithPath:"reports/WideAxisShadow.json"))
         let axisReport = try KeibaAIWideAxisShadowData.decode(axisBytes)
-        check(axisReport.counts.recordedRaces == 0 && axisReport.returnIndex == nil,"new report excludes old ticket history")
+        let reportDays = try FileManager.default.contentsOfDirectory(atPath:"reports").filter {
+            $0.range(of:"^20[0-9]{6}$",options:.regularExpression) != nil
+        }
+        let savedAxisCount = reportDays.reduce(0) { total,day in
+            total + ((try? FileManager.default.contentsOfDirectory(atPath:"reports/\(day)/wide_axis_v1")) ?? [])
+                .filter { $0.range(of:"^[0-9]{12}\\.json$",options:.regularExpression) != nil }.count
+        }
+        check(axisReport.counts.recordedRaces == savedAxisCount,"real report counts only frozen new-rule files; not old ticket history")
+        var zeroAxis = try JSONSerialization.jsonObject(with:axisBytes) as! [String:Any]
+        var zeroCounts = zeroAxis["counts"] as! [String:Any]
+        for key in zeroCounts.keys { zeroCounts[key] = 0 }
+        zeroAxis["counts"] = zeroCounts;zeroAxis["returnIndex"] = NSNull()
+        let zeroReport = try KeibaAIWideAxisShadowData.decode(JSONSerialization.data(withJSONObject:zeroAxis))
+        check(zeroReport.counts.recordedRaces == 0 && zeroReport.returnIndex == nil,"isolated zero-record contract remains supported")
+        var excludedAxis = zeroAxis
+        zeroCounts["recordedRaces"] = 1;zeroCounts["held"] = 1
+        zeroCounts["noCandidate"] = 0;zeroCounts["deadHeatExcluded"] = 1;zeroCounts["missingRecords"] = 1
+        excludedAxis["counts"] = zeroCounts
+        let excludedReport = try KeibaAIWideAxisShadowData.decode(JSONSerialization.data(withJSONObject:excludedAxis))
+        check(excludedReport.counts.deadHeatExcluded == 1 && excludedReport.counts.missingRecords == 1 &&
+              excludedReport.counts.noCandidate == 0,"ties and missing forecasts stay separate from no-candidate and returns")
         let bytes = try Data(contentsOf: URL(fileURLWithPath:"reports/TicketPlanShadow.json"))
         let decoded = try KeibaAITicketShadowData.decode(bytes)
         check(decoded.profiles.count == 3 && !decoded.moneyAllocationEnabled,"real summary decodes")
@@ -128,7 +148,7 @@ struct ReferenceTicketChecks {
         check(store.axisData != nil && store.axisErrorMessage == nil,"new-rule recovery is independent of old-report failure")
         check(ShadowProtocol.requests.allSatisfy { $0.httpMethod == "GET" && $0.url!.query!.contains("t=") },
               "transport read-only and cache-busted")
-        print("WIDE_AXIS_NATIVE_OK: Python contract, Top3 identity, bounded refund-safe preview, separate zero-start summary")
+        print("WIDE_AXIS_NATIVE_OK: Python contract, Top3 identity, bounded preview, actual saved-file counts, zero and exclusion contracts")
         print("REFERENCE_TICKET_OK: budgets, daily cross-venue cap, skips, source validity, real summary, failed refresh and recovery")
     }
 }

@@ -4,6 +4,8 @@ on:
     paths:
       - 'production/*all_bet*.py'
       - 'production/*bet_research_data.py'
+      - 'production/wide_axis_shadow.py'
+      - 'production/test_wide_axis_rules.py'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -19,6 +21,8 @@ on:
     paths:
       - 'production/*all_bet*.py'
       - 'production/*bet_research_data.py'
+      - 'production/wide_axis_shadow.py'
+      - 'production/test_wide_axis_rules.py'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -50,6 +54,7 @@ jobs:
         run: |
           python production/test_triple_baseline.py
           python production/test_triple_forward.py
+          python production/test_wide_axis_rules.py
           python production/test_prerace_snapshot.py
           python production/test_jra_route_modes.py
       - name: Read current research state without production writes

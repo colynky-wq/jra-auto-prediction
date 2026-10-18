@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 import json
 from wide_axis_rules import RULE_VERSION, START, JST, FOLDER, fingerprint, number
+from all_bet_recording_coverage import expected_races, missing_reason
 
 
 def actual_result_state(day, record, post):
@@ -45,14 +46,20 @@ def actual_result_state(day, record, post):
         cancelled = cancelled or status in {'取消', '除外'}
     if cancelled or identities != {(h['number'],h['name']) for h in record['entrants']}:
         return 'entrantChanged'
+    top = [h['finishPosition'] for h in horses
+           if type(h.get('finishPosition')) is int and h['finishPosition'] <= 3]
+    if len(top) != len(set(top)):
+        return 'deadHeatExcluded'
     return None
 
 
-def build(root):
+def build(root, clock=lambda:datetime.now(JST)):
     root = Path(root)
-    counts = dict(recordedRaces=0, held=0, awaitingResults=0, matched=0, entrantChanged=0, invalid=0, selectedBets=0)
+    counts = dict(recordedRaces=0, held=0, awaitingResults=0, matched=0, entrantChanged=0,
+                  deadHeatExcluded=0, noCandidate=0, invalid=0, selectedBets=0, missingRecords=0)
     stake = returned = 0
     warnings = []
+    missing = []
     for path in sorted((root/'reports').glob('20??????/'+FOLDER+'/*.json')):
         counts['recordedRaces'] += 1
         try:
@@ -70,12 +77,17 @@ def build(root):
                 raise ValueError('evaluation rule mismatch')
             if e['status'] == 'no_candidate':
                 counts['held'] += 1
+                counts['noCandidate'] += 1
                 continue
             if e['status'] != 'ready' or not 1 <= len(e['pairs']) <= 3 or e['totalYen'] != 100*len(e['pairs']):
                 raise ValueError('invalid saved selection')
             result_state = actual_result_state(path.parent.parent, r, post)
             if result_state:
                 counts[result_state] += 1
+                # Keep the v1 aggregate balanced for already installed clients.
+                # New clients use noCandidate and deadHeatExcluded separately.
+                if result_state == 'deadHeatExcluded':
+                    counts['held'] += 1
                 continue
             validation_path = path.parent.parent/'WideValidation.json'
             if not validation_path.exists():
@@ -114,9 +126,17 @@ def build(root):
         except (OSError, ValueError, TypeError, KeyError, OverflowError):
             counts['invalid'] += 1
             warnings.append('記録・結果の対応を確認できません: '+str(path.relative_to(root)))
+    expected, coverage_warnings = expected_races(root,START,clock())
+    warnings.extend(coverage_warnings)
+    for race in expected:
+        if not (root/'reports'/race['raceDate'].replace('-','')/FOLDER/(race['raceID']+'.json')).exists():
+            counts['missingRecords'] += 1
+            missing.append({'raceDate':race['raceDate'],'raceID':race['raceID'],
+                            'status':'missing_record','reason':missing_reason(root,race,clock())})
     return {'schemaVersion':1, 'ruleVersion':RULE_VERSION, 'evaluationStartJST':START.isoformat(),
-        'generatedAtJST':datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S'),
-        'status':'prospective_data_collecting', 'counts':counts, 'stakeYenAt100PerBet':stake,
+        'generatedAtJST':clock().strftime('%Y-%m-%d %H:%M:%S'),
+        'status':'attention_required' if warnings or counts['invalid'] or missing else 'prospective_data_collecting',
+        'counts':counts, 'missingRaces':missing, 'stakeYenAt100PerBet':stake,
         'returnYenAt100PerBet':returned, 'returnIndex':round(returned/stake,4) if stake else None,
         'autoBetEnabled':False, 'moneyAllocationEnabled':False, 'warnings':warnings,
         'meaning':'新ルールの発走前保存だけを評価。確定結果の出走馬と照合し、取消・除外や変更は別集計。旧プランの成績を合算しない。端末の予算制限後の配分成績ではない。'}

@@ -10,6 +10,7 @@ from all_bet_forward import (START, VERSION, JST, digest, stamp, validate, evalu
                              request_bytes, path_for)
 from live_bundle_publisher import atomic
 from research_triple_baseline import index_unique, load_rows
+from all_bet_recording_coverage import expected_races, missing_reason
 
 STATES = ('records','ready','held','awaiting_results','payouts_pending','entrant_changed',
           'dead_heat_excluded','invalid','matched','missingRecords')
@@ -136,15 +137,16 @@ def build(root,fetch=request_bytes,clock=lambda:datetime.now(JST)):
             # All candidates are retained for comparison, not chosen wagers.
             row['candidates'] = values
         rows.append(row)
-    if (root/'RaceData.json').exists():
-        for race in load_rows(root/'RaceData.json'):
-            if race['raceDate'] < START.date().isoformat():
-                continue
-            for kind in model.TYPES:
-                if not path_for(root,race,kind).exists():
-                    counts[kind]['missingRecords'] += 1
-            if any(not path_for(root,race,k).exists() for k in ('win','place')):
-                counts['support']['missingRecords'] += 1
+    expected, coverage_warnings = expected_races(root, START, clock())
+    warnings.extend(coverage_warnings)
+    for race in expected:
+        missing = [kind for kind in model.TYPES if not path_for(root,race,kind).exists()]
+        if any(kind in missing for kind in ('win','place')):
+            missing.append('support')
+        for kind in missing:
+            counts[kind]['missingRecords'] += 1
+            rows.append({'raceDate':race['raceDate'],'raceID':race['raceID'],'betType':kind,
+                         'status':'missing_record','reason':missing_reason(root,race,clock())})
     from win5_research import build_validation
     win5 = build_validation(root,clock=clock,fetch=fetch)
     existing = {}

@@ -40,6 +40,23 @@ def write_actual_result(day, race):
 
 
 class AxisChecks(unittest.TestCase):
+    def test_top_three_dead_heats_are_excluded_before_bets_and_return(self):
+        for tied_position in (1,2,3):
+            with self.subTest(position=tied_position),tempfile.TemporaryDirectory() as temp:
+                race,s=fixture()
+                p=axis.record_first(temp,race,s,datetime.fromisoformat('2026-10-17T09:51:00+09:00'))
+                before=p.read_bytes();day=p.parent.parent
+                actual=write_actual_result(day,race)
+                actual['horses'][1]['finishPosition']=tied_position
+                (day/'ResultData.json').write_text(json.dumps([actual]))
+                report=shadow.build(temp)
+                self.assertEqual(report['counts']['deadHeatExcluded'],1)
+                self.assertEqual(report['counts']['matched'],0)
+                self.assertEqual(report['counts']['selectedBets'],0)
+                self.assertEqual(report['stakeYenAt100PerBet'],0)
+                self.assertIsNone(report['returnIndex'])
+                self.assertEqual(p.read_bytes(),before)
+
     def test_top3_axis_not_win_longshot(self):
         race,signal=fixture()
         e=axis.evaluate(race,signal)

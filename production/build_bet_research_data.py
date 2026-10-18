@@ -17,6 +17,7 @@ import wide_axis_rules as wide
 import win5_research as win5
 from evaluate_all_bet_forward import build as validation
 from live_bundle_publisher import atomic
+from all_bet_recording_coverage import expected_races, missing_reason
 
 JST=added.JST
 VERSION='bet-research-reference-v1-20261015'
@@ -289,13 +290,14 @@ def build(root,clock=lambda:datetime.now(JST)):
         state='no_target' if session.get('hasTarget') is False and session['status']=='no_official_win5_target' else 'failed'
         rows.append(row_for({'raceDate':day,'raceID':'WIN5-'+day.replace('-','')},'win5',state,
                             reason='JRAの当日対象表を確認しました。' if state=='no_target' else '昼の記録処理が完了した根拠を確認できません。'))
-    # Missing is based on an actual saved forecast, never an empty race list.
-    if (root/'RaceData.json').exists():
-        for race in triple_model.load_rows(root/'RaceData.json'):
-            for kind,_,_,_,start in CATALOG:
-                if kind=='win5' or race['raceDate']<start.date().isoformat():continue
-                if not any(r['raceDate']==race['raceDate'] and r['raceID']==race['raceID'] and r['betType']==kind for r in rows):
-                    rows.append(row_for(race,kind,'missing_record',reason='予測は保存されていますが、この券種の初回記録はまだ確認できません。'))
+    # Scheduled-but-failed forecasts are also omissions; future races still wait.
+    expected, coverage_warnings = expected_races(root,min(c[4] for c in CATALOG),now)
+    warnings.extend(coverage_warnings)
+    for race in expected:
+        for kind,_,_,_,start in CATALOG:
+            if kind=='win5' or added.stamp(race['raceDate']+'T'+race['startTime'])<start:continue
+            if not any(r['raceDate']==race['raceDate'] and r['raceID']==race['raceID'] and r['betType']==kind for r in rows):
+                rows.append(row_for(race,kind,'missing_record',reason=missing_reason(root,race,now)))
     rows.sort(key=lambda r:(r['raceDate'],r['startTime'] or '',r['raceID'],r['betType']))
     if len({r['id'] for r in rows})!=len(rows):raise ValueError('duplicate projected research row')
     all_counts={kind:counts([r for r in rows if r['betType']==kind]) for kind,_,_,_,_ in CATALOG}

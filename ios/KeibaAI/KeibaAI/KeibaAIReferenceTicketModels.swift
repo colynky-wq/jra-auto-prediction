@@ -237,6 +237,9 @@ struct KeibaAIWideAxisShadowData: Decodable {
         let entrantChanged: Int
         let invalid: Int
         let selectedBets: Int
+        let deadHeatExcluded: Int?
+        let noCandidate: Int?
+        let missingRecords: Int?
     }
     let schemaVersion: Int
     let ruleVersion: String
@@ -252,6 +255,8 @@ struct KeibaAIWideAxisShadowData: Decodable {
         guard d.schemaVersion == 1, d.ruleVersion == "wide-axis-v1-20261014",
               !d.autoBetEnabled, !d.moneyAllocationEnabled,
               [c.recordedRaces,c.held,c.awaitingResults,c.matched,c.entrantChanged,c.invalid,c.selectedBets].allSatisfy({ $0 >= 0 && $0 <= Int.max / 8 }),
+              [c.deadHeatExcluded,c.noCandidate,c.missingRecords].compactMap({ $0 }).allSatisfy({ $0 >= 0 && $0 <= Int.max / 8 }),
+              c.held == (c.noCandidate ?? c.held) + (c.deadHeatExcluded ?? 0),
               c.recordedRaces == c.held + c.awaitingResults + c.matched + c.entrantChanged + c.invalid,
               c.selectedBets >= c.matched,
               d.returnIndex.map({ $0.isFinite && $0 >= 0 }) ?? (c.matched == 0)
