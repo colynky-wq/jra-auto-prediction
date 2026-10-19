@@ -1,0 +1,61 @@
+name: KeibaAI Portfolio Research
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'production/portfolio_shadow.py'
+      - 'production/test_portfolio_shadow.py'
+      - 'production/PORTFOLIO_SHADOW_V1.md'
+      - '.github/workflows/keibaai-portfolio-research.yml'
+  schedule:
+    # 17:45 JST. Result sync normally finishes by about 17:15 JST.
+    - cron: '45 8 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-portfolio-research
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify fixed shadow rules
+        run: |
+          python -m py_compile production/portfolio_shadow.py
+          python production/test_portfolio_shadow.py
+
+      - name: Build portfolio research projection
+        run: python production/portfolio_shadow.py
+
+      - name: Publish research projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+          git add PortfolioResearchData.json reports/*/PortfolioResearchData.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo 'No portfolio research changes.'
+            exit 0
+          fi
+
+          git commit -m 'Update KeibaAI portfolio shadow research'
+          git push origin HEAD:main
