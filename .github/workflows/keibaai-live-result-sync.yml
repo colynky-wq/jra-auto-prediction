@@ -67,6 +67,7 @@ jobs:
           python -m py_compile production/evaluate_triple_forward.py
           python -m py_compile production/evaluate_all_bet_forward.py
           python -m py_compile production/build_bet_research_data.py
+          python -m py_compile production/portfolio_shadow.py
 
       - name: Choose continuous session runtime
         id: runtime
@@ -122,7 +123,7 @@ jobs:
               echo '::warning::Could not fetch latest main; retrying next cycle.'
             else
               git reset --hard origin/main
-              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json >/dev/null 2>&1 || true
+              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json >/dev/null 2>&1 || true
 
               cycle_failed=0
               python production/build_result_data_live.py || cycle_failed=1
@@ -136,14 +137,18 @@ jobs:
               python production/evaluate_triple_forward.py || echo '::warning::Triple research evaluation failed for this cycle.'
               python production/evaluate_all_bet_forward.py || echo '::warning::All-bet research evaluation failed for this cycle.'
               python production/build_bet_research_data.py || echo '::warning::Bet research display build failed for this cycle.'
+              if [ -f BetResearchData.json ]; then
+                python production/portfolio_shadow.py || echo '::warning::Portfolio research build failed for this cycle.'
+              fi
 
               if [ "$cycle_failed" -ne 0 ]; then
                 echo '::warning::Core result/validation build failed; retrying next cycle.'
-              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json reports)" ]; then
+              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json reports)" ]; then
                 echo 'No result/performance/validation changes to publish.'
               else
                 git add ResultData.json PerformanceData.json reports
                 if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
+                if [ -f PortfolioResearchData.json ]; then git add PortfolioResearchData.json; fi
                 git commit -m "Update KeibaAI results and forward validation" || true
 
                 if ! git push origin HEAD:main; then
@@ -153,7 +158,7 @@ jobs:
                   echo '::warning::Main moved while publishing; latest results will be rebuilt next cycle.'
                   git fetch --no-tags origin main || true
                   git reset --hard origin/main || true
-                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json >/dev/null 2>&1 || true
+                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json >/dev/null 2>&1 || true
                 fi
               fi
             fi
