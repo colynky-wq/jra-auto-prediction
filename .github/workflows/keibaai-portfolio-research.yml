@@ -6,7 +6,13 @@ on:
     branches:
       - main
     paths:
+      - 'production/portfolio_shadow.py'
+      - 'production/test_portfolio_shadow.py'
+      - 'production/PORTFOLIO_SHADOW_V1.md'
       - '.github/workflows/keibaai-portfolio-research.yml'
+  schedule:
+    # 17:45 JST. Result sync normally finishes by about 17:15 JST.
+    - cron: '45 8 * * *'
 
 permissions:
   contents: write
@@ -16,383 +22,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  patch-ui:
+  build:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout latest main
         uses: actions/checkout@v5
         with:
           ref: main
-          fetch-depth: 2
+          fetch-depth: 0
 
-      - name: Patch KeibaAI ticket-plan UI
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift')
-          text = path.read_text(encoding='utf-8')
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
-          old_sidebar = '''    private var ticketSidebar: some View {
-              ScrollView {
-                  VStack(alignment: .leading, spacing: 12) {
-                      sectionHeader(
-                          title: "馬券プラン",
-                          subtitle: "ワイドの穴軸評価 / 1点100円の仮配分"
-                      )
-          
-                      KeibaAIInfoCard(
-                          icon: "checkmark.shield.fill",
-                          title: "正式公開前の参考表示",
-                          message: "単勝の穴馬評価と分け、軸の3着内確率と相手との同時3着内確率・実オッズで評価します。全買い目の合計に対して下限払戻しを確認し、1点100円の仮配分を表示します。"
-                      )
-          
-                      KeibaAIBudgetCard(store: budgetStore)
-                  }
-                  .padding(12)
-              }
-          }
-          '''
-          new_sidebar = '''    private var ticketSidebar: some View {
-              ScrollView {
-                  VStack(alignment: .leading, spacing: 12) {
-                      sectionHeader(
-                          title: "馬券プラン",
-                          subtitle: "荒れ度×勝負度の複合研究 / 1点100円の仮配分"
-                      )
-          
-                      KeibaAIInfoCard(
-                          icon: "checkmark.shield.fill",
-                          title: "複合プランは前向き検証中",
-                          message: "荒れ度と勝負度を入口に、単勝1点・単勝＋ワイド・ワイド中心・ワイド＋3連複・見送りを固定ルールで比較します。正式なおすすめや購入指示ではありません。"
-                      )
-          
-                      KeibaAIPortfolioResearchPanel(date8: selectedDate8, compact: true)
-                      KeibaAIBudgetCard(store: budgetStore)
-                  }
-                  .padding(12)
-              }
-          }
-          '''
-          if 'KeibaAIPortfolioResearchPanel(date8: selectedDate8, compact: true)' not in text:
-              if old_sidebar not in text:
-                  raise SystemExit('ticketSidebar anchor not found')
-              text = text.replace(old_sidebar, new_sidebar, 1)
-
-          old_detail = '''        } else if mainTab == .ticket {
-              KeibaAITicketPlanView(budgetStore: budgetStore, shadowStore: ticketShadowStore,
-                                    profile: $referenceProfile, date8: selectedDate8,
-                                    items: allScheduleItems, signals: signalStore.racesByID)
-          } else if mainTab == .research {
-          '''
-          new_detail = '''        } else if mainTab == .ticket {
-              VStack(spacing: 0) {
-                  KeibaAIPortfolioResearchPanel(date8: selectedDate8, compact: true)
-                      .padding(.horizontal, 16)
-                      .padding(.top, 10)
-                  KeibaAITicketPlanView(budgetStore: budgetStore, shadowStore: ticketShadowStore,
-                                        profile: $referenceProfile, date8: selectedDate8,
-                                        items: allScheduleItems, signals: signalStore.racesByID)
-              }
-          } else if mainTab == .research {
-          '''
-          if 'VStack(spacing: 0) {\n                KeibaAIPortfolioResearchPanel' not in text:
-              if old_detail not in text:
-                  raise SystemExit('ticket detail anchor not found')
-              text = text.replace(old_detail, new_detail, 1)
-
-          marker = '// MARK: - Composite portfolio research panel'
-          if marker not in text:
-              text = text.rstrip() + r'''
-
-// ============================================================
-// MARK: - Composite portfolio research panel
-// ============================================================
-
-private struct KeibaAIPortfolioResearchEnvelope: Decodable {
-    struct Summary: Decodable {
-        let racesSeen: Int
-        let selectedRaces: Int
-        let settledSelectedRaces: Int
-        let hitAnyRaces: Int
-        let profitableRaces: Int
-        let torigamiRaces: Int
-        let stakeYen: Int
-        let returnYen: Int
-        let returnIndex: Double?
-    }
-
-    struct Leg: Decodable, Identifiable {
-        let betType: String
-        let candidateID: String
-        let label: String
-        let probabilityPct: Double
-        let oddsLow: Double
-        let oddsHigh: Double?
-        let expectedMultiplierLow: Double
-        let unitYen: Int
-        var id: String { betType + ":" + candidateID }
-    }
-
-    struct RacePlan: Decodable, Identifiable {
-        let raceDate: String
-        let raceID: String
-        let venue: String?
-        let raceNumber: Int?
-        let raceName: String?
-        let startTime: String?
-        let chaosLevel: Int?
-        let chaosStars: String?
-        let battleGrade: String?
-        let scope: String
-        let ruleVersion: String
-        let planType: String
-        let planLabel: String
-        let reason: String
-        let legs: [Leg]
-        let totalStakeYen: Int
-        var id: String { raceDate + ":" + raceID }
-    }
-
-    let schemaVersion: Int
-    let version: String
-    let status: String
-    let formalRecommendationsEnabled: Bool
-    let autoBetEnabled: Bool
-    let stakeSizingEnabled: Bool
-    let generatedAtJST: String
-    let prospectiveStartDate: String
-    let developmentBackfill: Summary
-    let prospective: Summary
-    let races: [RacePlan]
-    let meaning: String
-}
-
-@MainActor
-private final class KeibaAIPortfolioResearchStore: ObservableObject {
-    @Published private(set) var data: KeibaAIPortfolioResearchEnvelope?
-    @Published private(set) var sourceMessage = "複合プラン 未読み込み"
-    @Published private(set) var isLoading = false
-
-    func load(force: Bool = false) async {
-        if isLoading { return }
-        if !force, data != nil { return }
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            guard var components = URLComponents(string: "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioResearchData.json") else {
-                throw URLError(.badURL)
-            }
-            components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
-            guard let url = components.url else { throw URLError(.badURL) }
-            var request = URLRequest(url: url)
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-            request.timeoutInterval = 10
-            request.setValue("KeibaAI-iPad/2.1", forHTTPHeaderField: "User-Agent")
-            let (bytes, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                throw URLError(.badServerResponse)
-            }
-            let decoded = try JSONDecoder().decode(KeibaAIPortfolioResearchEnvelope.self, from: bytes)
-            guard decoded.schemaVersion == 1,
-                  decoded.version == "portfolio-shadow-v1-20261019",
-                  decoded.status == "research_display_only",
-                  !decoded.formalRecommendationsEnabled,
-                  !decoded.autoBetEnabled,
-                  !decoded.stakeSizingEnabled else {
-                throw URLError(.cannotParseResponse)
-            }
-            data = decoded
-            sourceMessage = "複合プラン取得済"
-        } catch {
-            sourceMessage = "複合プラン 更新待ち"
-        }
-    }
-}
-
-private struct KeibaAIPortfolioResearchPanel: View {
-    let date8: String
-    let compact: Bool
-    @StateObject private var store = KeibaAIPortfolioResearchStore()
-
-    private var dateISO: String {
-        guard date8.count == 8 else { return date8 }
-        let a = date8.index(date8.startIndex, offsetBy: 4)
-        let b = date8.index(a, offsetBy: 2)
-        return String(date8[..<a]) + "-" + String(date8[a..<b]) + "-" + String(date8[b...])
-    }
-
-    private var races: [KeibaAIPortfolioResearchEnvelope.RacePlan] {
-        (store.data?.races ?? [])
-            .filter { $0.raceDate == dateISO }
-            .sorted {
-                (($0.startTime ?? ""), ($0.venue ?? ""), ($0.raceNumber ?? 0), $0.raceID)
-                < (($1.startTime ?? ""), ($1.venue ?? ""), ($1.raceNumber ?? 0), $1.raceID)
-            }
-    }
-
-    private var selected: [KeibaAIPortfolioResearchEnvelope.RacePlan] {
-        races.filter { $0.planType != "skip" }
-    }
-
-    private var progressValue: Double {
-        guard let n = store.data?.prospective.racesSeen else { return 0 }
-        return min(1, Double(n) / 100.0)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Label("複合馬券・研究プラン", systemImage: "square.stack.3d.up.fill")
-                    .font(.headline)
-                Spacer()
-                Text("研究中")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(.orange)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.orange.opacity(0.10), in: Capsule())
-            }
-
-            if store.isLoading && store.data == nil {
-                ProgressView("研究プランを取得中…")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else if let data = store.data {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("参加候補").font(.caption2).foregroundStyle(.secondary)
-                        Text("\(selected.count) / \(races.count)R").font(.headline.monospacedDigit())
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("見送り").font(.caption2).foregroundStyle(.secondary)
-                        Text("\(max(0, races.count - selected.count))R").font(.headline.monospacedDigit())
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(dateISO >= data.prospectiveStartDate ? "前向き検証" : "開発用表示")
-                            .font(.caption2).foregroundStyle(.secondary)
-                        Text(dateISO >= data.prospectiveStartDate ? "固定ルール" : "10/24から固定評価")
-                            .font(.caption.weight(.semibold))
-                    }
-                }
-
-                if dateISO >= data.prospectiveStartDate {
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack {
-                            Text("短期目標：100R")
-                            Spacer()
-                            Text("\(min(data.prospective.racesSeen, 100))/100R").monospacedDigit()
-                        }
-                        .font(.caption).foregroundStyle(.secondary)
-                        ProgressView(value: progressValue)
-                    }
-                }
-
-                if races.isEmpty {
-                    Text("この日付の複合プランはまだありません。発走前データが保存されると表示されます。")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else if selected.isEmpty {
-                    Text("この日は現在の固定条件では全レース見送りです。無理に馬券を作らない設計です。")
-                        .font(.subheadline.weight(.semibold))
-                } else {
-                    ForEach(selected.prefix(compact ? 3 : 6)) { race in
-                        portfolioRaceCard(race)
-                    }
-                    if selected.count > (compact ? 3 : 6) {
-                        Text("ほか \(selected.count - (compact ? 3 : 6))R に参加候補があります")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-
-                Text("これは固定ルールのshadow研究です。的中や利益を保証する正式おすすめではありません。")
-                    .font(.caption2).foregroundStyle(.secondary)
-            } else {
-                Text(store.sourceMessage).font(.caption).foregroundStyle(.secondary)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
-        .task(id: date8) {
-            while !Task.isCancelled {
-                await store.load(force: true)
-                do { try await Task.sleep(for: .seconds(60)) }
-                catch { return }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func portfolioRaceCard(_ race: KeibaAIPortfolioResearchEnvelope.RacePlan) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(race.venue ?? "") \(race.raceNumber.map { "\($0)R" } ?? "")")
-                    .font(.subheadline.weight(.bold))
-                if let time = race.startTime {
-                    Text(time).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text(race.chaosStars ?? "--").font(.caption).foregroundStyle(.orange)
-                Text("勝負度 \(race.battleGrade ?? "--")")
-                    .font(.caption.weight(.semibold)).foregroundStyle(.blue)
-            }
-
-            HStack {
-                Text("研究プラン：\(race.planLabel)").font(.headline)
-                Spacer()
-                Text("合計 \(race.totalStakeYen)円")
-                    .font(.subheadline.weight(.bold).monospacedDigit())
-            }
-
-            ForEach(race.legs) { leg in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(betLabel(leg.betType))
-                        .font(.caption2.weight(.bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 7).padding(.vertical, 3)
-                        .background(.blue, in: Capsule())
-                    Text(leg.label).font(.caption.weight(.semibold)).lineLimit(2)
-                    Spacer(minLength: 6)
-                    Text("\(leg.unitYen)円").font(.caption.monospacedDigit())
-                }
-            }
-
-            Text(race.reason)
-                .font(.caption2).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(11)
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
-    }
-
-    private func betLabel(_ value: String) -> String {
-        switch value {
-        case "win": return "単勝"
-        case "wide": return "ワイド"
-        case "trio": return "3連複"
-        default: return value
-        }
-    }
-}
-''' + '\n'
-
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Verify portfolio rules before publishing UI patch
+      - name: Verify fixed shadow rules
         run: |
           python -m py_compile production/portfolio_shadow.py
           python production/test_portfolio_shadow.py
-          grep -q 'KeibaAIPortfolioResearchPanel' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
 
-      - name: Restore normal workflow and commit UI patch
+      - name: Build portfolio research projection
+        run: python production/portfolio_shadow.py
+
+      - name: Publish research projection
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git show HEAD^:.github/workflows/keibaai-portfolio-research.yml > .github/workflows/keibaai-portfolio-research.yml
-          rm -f .github/workflows/keibaai-portfolio-ui-patch.yml
-          git add ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift .github/workflows/keibaai-portfolio-research.yml .github/workflows/keibaai-portfolio-ui-patch.yml
-          git commit -m 'Show composite ticket research plans in KeibaAI'
+
+          git add PortfolioResearchData.json reports/*/PortfolioResearchData.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo 'No portfolio research changes.'
+            exit 0
+          fi
+
+          git commit -m 'Update KeibaAI portfolio shadow research'
           git push origin HEAD:main
