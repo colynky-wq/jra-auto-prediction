@@ -35,6 +35,8 @@ def manifest(calendar_full=False):
         'batch_manifest': {
             'oos_scope_verified': True,
             'forward_ledgers_touched': False,
+            'losing_streak_unit': 'race',
+            'trigami_definition': 'race_has_hit_and_return_yen<race_stake_yen',
             'processed_races': 20,
             'counts': {
                 'scored_samples': 80,
@@ -55,6 +57,8 @@ class ResearchRunGateTests(unittest.TestCase):
         self.assertEqual(report['study_scope_label'], 'contiguous_partial_year_prefix')
         self.assertEqual(report['study_last_date'], '20250920')
         self.assertEqual(set(report['settled_bets_present']), set(core.ALL_BETS))
+        self.assertEqual(report['losing_streak_unit'], 'race')
+        self.assertIn('race_has_hit', report['trigami_definition'])
 
     def test_full_calendar_manifest_reports_complete(self):
         report = gate.validate_manifest(manifest(calendar_full=True), require_all_bets=True)
@@ -113,6 +117,18 @@ class ResearchRunGateTests(unittest.TestCase):
         m = manifest()
         m['batch_manifest']['counts']['settled_samples'] = 0
         with self.assertRaisesRegex(gate.ResearchRunValidationError, 'settled_samples'):
+            gate.validate_manifest(m)
+
+    def test_old_ticket_level_losing_streak_semantics_fail_closed(self):
+        m = manifest()
+        m['batch_manifest']['losing_streak_unit'] = 'ticket'
+        with self.assertRaisesRegex(gate.ResearchRunValidationError, 'losing streak'):
+            gate.validate_manifest(m)
+
+    def test_missing_trigami_definition_fails_closed(self):
+        m = manifest()
+        m['batch_manifest'].pop('trigami_definition')
+        with self.assertRaisesRegex(gate.ResearchRunValidationError, 'trigami'):
             gate.validate_manifest(m)
 
 
