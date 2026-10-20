@@ -81,6 +81,43 @@ class HistoricalOddsNormalizationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'duplicate'):
             n.normalize_odds_rows([duplicate, dict(duplicate)])
 
+    def test_jra_frame_mapping_across_field_sizes(self):
+        expected = {
+            8:  {1: 1, 8: 8},
+            9:  {1: 1, 7: 7, 8: 8, 9: 8},
+            13: {1: 1, 2: 2, 3: 3, 4: 4, 5: 4, 6: 5, 7: 5,
+                 8: 6, 9: 6, 10: 7, 11: 7, 12: 8, 13: 8},
+            16: {1: 1, 2: 1, 15: 8, 16: 8},
+            17: {1: 1, 2: 1, 13: 7, 14: 7, 15: 8, 16: 8, 17: 8},
+            18: {1: 1, 2: 1, 11: 6, 12: 6, 13: 7, 15: 7,
+                 16: 8, 18: 8},
+        }
+        for n_horses, checks in expected.items():
+            mapping = n.jra_frame_map_from_horse_numbers(range(1, n_horses + 1))
+            self.assertEqual(len(mapping), n_horses)
+            self.assertTrue(all(1 <= frame <= 8 for frame in mapping.values()))
+            for horse, frame in checks.items():
+                self.assertEqual(mapping[horse], frame, msg=f'N={n_horses} horse={horse}')
+
+    def test_frame_mapping_fails_closed_for_non_contiguous_horse_numbers(self):
+        self.assertEqual(n.jra_frame_map_from_horse_numbers([1, 2, 4, 5]), {})
+        self.assertEqual(n.jra_frame_map_from_horse_numbers([2, 3, 4]), {})
+        self.assertEqual(n.jra_frame_map_from_horse_numbers([]), {})
+
+    def test_real_collector_style_horse_rows_receive_synthetic_frames(self):
+        rows = [
+            {'レースID': '202506040609', '馬番': horse, '馬名': f'H{horse}'}
+            for horse in range(1, 14)
+        ]
+        enriched = n.enrich_horse_rows_with_frames(rows)
+        self.assertEqual([row['枠'] for row in enriched],
+                         [1, 2, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8])
+        self.assertNotIn('枠', rows[0])  # input is not mutated
+
+    def test_explicit_frames_are_preserved(self):
+        rows = [{'馬番': 1, '枠番': 4}, {'馬番': 2, '枠番': 7}]
+        self.assertIs(n.enrich_horse_rows_with_frames(rows), rows)
+
 
 if __name__ == '__main__':
     unittest.main()
