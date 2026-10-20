@@ -33,6 +33,20 @@ def create_required_inputs(root: Path):
     return paths
 
 
+def frame_stage():
+    return {
+        'method': 'JRA_original_card_frame_allocation',
+        'source_prediction_rows': 2,
+        'source_prediction_races': 1,
+        'archive_prediction_rows': 2,
+        'archive_prediction_races': 1,
+        'horse_metadata_races': 1,
+        'excluded_prediction_races_without_archive_files': 0,
+        'race_audit': {},
+        'forward_ledgers_touched': False,
+    }
+
+
 class Drive2025RunnerTests(unittest.TestCase):
     def test_default_layout_matches_current_drive_structure(self):
         root = Path('/content/gdrive_live/MyDrive/code_output')
@@ -42,6 +56,10 @@ class Drive2025RunnerTests(unittest.TestCase):
         self.assertEqual(p['odds_dir'], root / 'jra_data' / 'historical_odds_2025' / 'races')
         self.assertEqual(p['payout_dir'], root / 'jra_data' / 'historical_odds_2025' / 'payout_raw')
         self.assertEqual(p['output_dir'], root / 'jra_data' / 'research_all_bet_oos_2025')
+        self.assertEqual(
+            p['portfolio_grid'],
+            root / 'jra_data' / 'research_all_bet_oos_2025' / 'retrospective_2025' / 'retrospective_oos_portfolio_grid.csv',
+        )
 
     def test_validate_paths_fails_closed_on_missing_inputs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -49,7 +67,7 @@ class Drive2025RunnerTests(unittest.TestCase):
             with self.assertRaisesRegex(FileNotFoundError, 'required historical research inputs'):
                 drive_run.validate_paths(paths)
 
-    def test_smoke_run_calls_strict_generation_then_bounded_batch(self):
+    def test_smoke_run_calls_strict_generation_frames_batch_and_portfolio(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             create_required_inputs(root)
@@ -69,18 +87,26 @@ class Drive2025RunnerTests(unittest.TestCase):
                  mock.patch.object(drive_run.portable, 'load_portable_history', return_value=pd.DataFrame({'x': [1]})), \
                  mock.patch.object(drive_run.portable, 'generate_from_history', return_value=(predictions, gen_audit)) as gen, \
                  mock.patch.object(drive_run.provenance, 'validate_rows', return_value={'row_count': 2, 'race_count': 1}), \
-                 mock.patch.object(drive_run.batch, 'run', return_value=fake_batch) as batch_run:
+                 mock.patch.object(drive_run, 'enrich_archive_prediction_frames', return_value=frame_stage()) as frames, \
+                 mock.patch.object(drive_run.batch, 'run', return_value=fake_batch) as batch_run, \
+                 mock.patch.object(drive_run, 'run_portfolio_grid', return_value=[]) as portfolio:
                 result = drive_run.run(root, smoke_races=7)
             gen.assert_called_once()
+            frames.assert_called_once()
+            portfolio.assert_called_once()
             self.assertTrue(result['paths']['predictions'].is_file())
             self.assertTrue(result['paths']['prediction_audit'].is_file())
             self.assertTrue(result['paths']['run_manifest'].is_file())
             self.assertEqual(batch_run.call_args.kwargs['max_races'], 7)
+            self.assertEqual(batch_run.call_args.args[0], result['paths']['predictions_with_frames'])
             self.assertFalse(result['manifest']['fixed_2025_model_used'])
             self.assertFalse(result['manifest']['forward_ledgers_touched'])
             self.assertEqual(result['manifest']['mode'], 'smoke')
             self.assertEqual(result['manifest']['study_scope']['last_contiguous_date'], '20250920')
             self.assertFalse(result['manifest']['full_calendar_year'])
+            self.assertEqual(result['manifest']['frame_stage']['method'], 'JRA_original_card_frame_allocation')
+            self.assertEqual(result['manifest']['portfolio_grid']['trigami_definition'],
+                             'race has >=1 hit and total race return < total selected-ticket stake')
 
     def test_full_run_means_full_available_archive_not_full_calendar_year(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -98,7 +124,9 @@ class Drive2025RunnerTests(unittest.TestCase):
             }
             with mock.patch.object(drive_run, 'audit_archive', return_value=archive_audit()), \
                  mock.patch.object(drive_run.provenance, 'validate_rows', return_value={'row_count': 1, 'race_count': 1}) as prov, \
-                 mock.patch.object(drive_run.batch, 'run', return_value=fake_batch) as batch_run:
+                 mock.patch.object(drive_run, 'enrich_archive_prediction_frames', return_value=frame_stage()), \
+                 mock.patch.object(drive_run.batch, 'run', return_value=fake_batch) as batch_run, \
+                 mock.patch.object(drive_run, 'run_portfolio_grid', return_value=[]):
                 result = drive_run.run(root, full=True, reuse_predictions=True)
             prov.assert_called_once()
             self.assertIsNone(batch_run.call_args.kwargs['max_races'])
