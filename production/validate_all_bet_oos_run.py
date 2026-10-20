@@ -3,9 +3,9 @@
 This validator does not judge profitability. It only answers whether a run is
 technically eligible to be interpreted: strict OOS provenance was verified,
 forward ledgers were untouched, historical archive scope is explicit and
-contiguous, real historical quotes were scored and settled, and (for a full
-available-archive run) every one of the eight standard JRA pools has settled
-coverage.
+contiguous, real historical quotes were scored and settled, race-level losing
+streak/trigami semantics are active, and (for a full available-archive run)
+every one of the eight standard JRA pools has settled coverage.
 
 A pass does NOT mean the current archive covers the full 2025 calendar year.
 The report explicitly carries that flag and the actual first/last covered dates.
@@ -103,6 +103,11 @@ def validate_manifest(manifest: dict, *, require_all_bets: bool = False) -> dict
         raise ResearchRunValidationError('batch OOS scope was not verified')
     if batch.get('forward_ledgers_touched') is not False:
         raise ResearchRunValidationError('batch touched forward ledgers or status is unknown')
+    if batch.get('losing_streak_unit') != 'race':
+        raise ResearchRunValidationError('losing streak must be measured in chronological races')
+    trigami_definition = str(batch.get('trigami_definition') or '').strip()
+    if 'race_has_hit' not in trigami_definition or 'race_stake' not in trigami_definition:
+        raise ResearchRunValidationError('race-level trigami definition is missing or incompatible')
 
     processed = _positive_int(batch.get('processed_races'), 'processed_races')
     counts = batch.get('counts') or {}
@@ -148,6 +153,8 @@ def validate_manifest(manifest: dict, *, require_all_bets: bool = False) -> dict
         'processed_races': processed,
         'scored_samples': scored,
         'settled_samples': settled,
+        'losing_streak_unit': 'race',
+        'trigami_definition': trigami_definition,
         'scored_bets_present': [bet for bet in core.ALL_BETS if bet not in missing_scored],
         'settled_bets_present': [bet for bet in core.ALL_BETS if bet not in missing_settled],
         'missing_scored_bets': missing_scored,
