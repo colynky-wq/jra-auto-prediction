@@ -120,7 +120,8 @@ def validate_manifest(manifest: dict, *, require_all_bets: bool = False) -> dict
         raise ResearchRunValidationError('full available-archive run has no settled samples for: ' + ','.join(missing_settled))
 
     frame_counts = {key: int(value) for key, value in counts.items() if str(key).startswith('frame_mapping_')}
-    has_frame_source = any(value > 0 for value in frame_counts.values())
+    usable_frame_keys = {'frame_mapping_prediction_frames', 'frame_mapping_horse_file_frames'}
+    has_frame_source = any(frame_counts.get(key, 0) > 0 for key in usable_frame_keys)
     if require_all_bets and not has_frame_source:
         raise ResearchRunValidationError('full available-archive run never established a usable horse->frame mapping for 枠連')
 
