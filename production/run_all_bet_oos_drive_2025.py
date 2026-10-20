@@ -7,10 +7,11 @@ Expected Google Drive mount (default):
     jra_data/historical_odds_2025/races/*_horses.parquet
     jra_data/historical_odds_2025/payout_raw/*.html.gz
 
-The runner performs two isolated research stages:
-1. rebuild 2023/2024/2025 strict walk-forward OOS horse probabilities from the
-   portable raw history (never the fixed-2025 model or its 212 rounds);
-2. stream the saved 2025 odds + payouts through all eight standard JRA pools.
+The current archive contains 2025 historical odds, so the fast default rebuilds
+only the 2025 strict walk-forward OOS probabilities.  That model is selected on
+2024 and refit only through 2024-12-31; the fixed-2025 model and its 212 rounds
+are never reused.  The general OOS generator still supports 2023/2024/2025 via
+``--years`` when matching historical quote archives are added later.
 
 Default mode is a 20-race smoke test. Pass ``--full`` for all discovered 2025
 historical odds files. Forward ledgers are never read or written.
@@ -26,9 +27,9 @@ import generate_all_bet_oos_from_portable_history as portable
 import research_all_bet_retrospective as core
 import run_all_bet_oos_historical_batch as batch
 
-METHOD = 'drive-2025-strict-oos-all-bet-v1-20261021'
+METHOD = 'drive-2025-strict-oos-all-bet-v2-20261021'
 DEFAULT_DRIVE_ROOT = Path('/content/gdrive_live/MyDrive/code_output')
-DEFAULT_YEARS = (2023, 2024, 2025)
+DEFAULT_YEARS = (2025,)
 DEFAULT_SMOKE_RACES = 20
 
 
@@ -41,7 +42,7 @@ def resolve_paths(drive_root: Path, output_dir: Path | None = None) -> dict[str,
         'odds_dir': root / 'jra_data' / 'historical_odds_2025' / 'races',
         'payout_dir': root / 'jra_data' / 'historical_odds_2025' / 'payout_raw',
         'output_dir': output,
-        'predictions': output / 'strict_oos_predictions_2023_2025.csv',
+        'predictions': output / 'strict_oos_predictions_2025.csv',
         'prediction_audit': output / 'strict_oos_prediction_audit.json',
         'batch_output': output / 'retrospective_2025',
         'run_manifest': output / 'drive_2025_run_manifest.json',
@@ -79,7 +80,6 @@ def generate_predictions(paths: dict[str, Path], years=DEFAULT_YEARS,
         json.dumps(audit, ensure_ascii=False, indent=2),
         encoding='utf-8',
     )
-    # Defense in depth on the serialized schema actually consumed by stage 2.
     provenance.validate_rows(core.read_csv(paths['predictions']))
     return predictions, audit
 
@@ -101,6 +101,10 @@ def run(drive_root: Path = DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
     validate_paths(paths)
     paths['output_dir'].mkdir(parents=True, exist_ok=True)
 
+    years = tuple(int(y) for y in years)
+    if not years:
+        raise ValueError('at least one prediction year is required')
+
     if reuse_predictions:
         _, prediction_audit = validate_reusable_predictions(paths['predictions'])
         prediction_stage = {
@@ -119,7 +123,7 @@ def run(drive_root: Path = DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
             'strict_oos_verified': True,
             'prediction_rows': int(len(predictions)),
             'prediction_races': int(predictions['レースID'].nunique()),
-            'prediction_years': [int(y) for y in years],
+            'prediction_years': list(years),
             'fixed_2025_model_used': False,
             'fixed_2025_rounds_212_reused': False,
             'feature_build': audit.get('feature_build'),
@@ -165,7 +169,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--drive-root', type=Path, default=DEFAULT_DRIVE_ROOT)
     parser.add_argument('--output-dir', type=Path, default=None)
-    parser.add_argument('--years', default='2023,2024,2025')
+    parser.add_argument('--years', default='2025',
+                        help='Comma-separated OOS years; current odds archive only needs 2025')
     parser.add_argument('--smoke-races', type=int, default=DEFAULT_SMOKE_RACES)
     parser.add_argument('--full', action='store_true', help='Process every discovered 2025 historical odds file')
     parser.add_argument('--reuse-predictions', action='store_true',
