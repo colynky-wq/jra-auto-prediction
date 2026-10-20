@@ -1,0 +1,35 @@
+import base64
+import gzip
+import unittest
+
+import normalize_historical_payouts as payouts
+import research_all_bet_retrospective as core
+
+# Exact bytes of the saved Drive file:
+# historical_odds_2025/payout_raw/202506040609.html.gz
+# This is public race-result/payout markup captured by the project's collector.
+REAL_202506040609_GZ_B64 = """
+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
+""".strip()
+
+
+class RealSavedPayoutFixtureTests(unittest.TestCase):
+    def test_real_drive_gzip_parses_strictly_across_all_standard_pools(self):
+        raw = base64.b64decode(REAL_202506040609_GZ_B64)
+        html = gzip.decompress(raw).decode('utf-8', errors='replace')
+        rows, audit = payouts.parse_payout_html(
+            html,
+            '202506040609',
+            '202506040609.html.gz',
+            strict=True,
+        )
+        self.assertGreater(len(rows), 0)
+        self.assertEqual(audit['warning_count'], 0)
+        self.assertEqual(audit['covered_bet_count'], 8)
+        self.assertEqual(set(audit['covered_bets'].split(',')), set(core.ALL_BETS))
+        self.assertEqual({row['券種'] for row in rows}, set(core.ALL_BETS))
+        self.assertTrue(all(float(row['払戻円']) > 0 for row in rows))
+
+
+if __name__ == '__main__':
+    unittest.main()
