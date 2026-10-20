@@ -3,18 +3,24 @@
 Expected Google Drive mount (default):
   /content/gdrive_live/MyDrive/code_output/
     github_actions_stage/production/production_history.parquet
+    jra_data/historical_odds_2025/race_manifest_2025.csv
     jra_data/historical_odds_2025/races/*_odds.parquet
     jra_data/historical_odds_2025/races/*_horses.parquet
     jra_data/historical_odds_2025/payout_raw/*.html.gz
 
-The current archive contains 2025 historical odds, so the fast default rebuilds
-only the 2025 strict walk-forward OOS probabilities.  That model is selected on
-2024 and refit only through 2024-12-31; the fixed-2025 model and its 212 rounds
-are never reused.  The general OOS generator still supports 2023/2024/2025 via
-``--years`` when matching historical quote archives are added later.
+The current archive is not assumed to cover the entire calendar year. Before
+model generation, the runner audits the authoritative race manifest against the
+actual odds/horse/payout files and refuses a non-contiguous archive. The run
+manifest records the exact first/last covered date and whether the archive is
+full-year or only a chronological partial-year prefix.
 
-Default mode is a 20-race smoke test. Pass ``--full`` for all discovered 2025
-historical odds files. Forward ledgers are never read or written.
+The fast default rebuilds only the 2025 strict walk-forward OOS probabilities.
+That model is selected on 2024 and refit only through 2024-12-31; the fixed-2025
+model and its 212 rounds are never reused.
+
+Default mode is a 20-race smoke test. ``--full`` means every race currently
+available in the audited archive, not necessarily the full 2025 calendar year.
+Forward ledgers are never read or written.
 """
 from __future__ import annotations
 
@@ -23,11 +29,12 @@ import json
 from pathlib import Path
 
 import all_bet_oos_provenance as provenance
+import audit_historical_archive_coverage as archive_coverage
 import generate_all_bet_oos_from_portable_history as portable
 import research_all_bet_retrospective as core
 import run_all_bet_oos_historical_batch as batch
 
-METHOD = 'drive-2025-strict-oos-all-bet-v2-20261021'
+METHOD = 'drive-2025-strict-oos-all-bet-v3-20261021'
 DEFAULT_DRIVE_ROOT = Path('/content/gdrive_live/MyDrive/code_output')
 DEFAULT_YEARS = (2025,)
 DEFAULT_SMOKE_RACES = 20
@@ -35,13 +42,16 @@ DEFAULT_SMOKE_RACES = 20
 
 def resolve_paths(drive_root: Path, output_dir: Path | None = None) -> dict[str, Path]:
     root = Path(drive_root)
+    historical_root = root / 'jra_data' / 'historical_odds_2025'
     output = Path(output_dir) if output_dir is not None else root / 'jra_data' / 'research_all_bet_oos_2025'
     return {
         'drive_root': root,
         'history': root / 'github_actions_stage' / 'production' / 'production_history.parquet',
-        'odds_dir': root / 'jra_data' / 'historical_odds_2025' / 'races',
-        'payout_dir': root / 'jra_data' / 'historical_odds_2025' / 'payout_raw',
+        'race_manifest': historical_root / 'race_manifest_2025.csv',
+        'odds_dir': historical_root / 'races',
+        'payout_dir': historical_root / 'payout_raw',
         'output_dir': output,
+        'archive_audit': output / 'historical_archive_coverage.json',
         'predictions': output / 'strict_oos_predictions_2025.csv',
         'prediction_audit': output / 'strict_oos_prediction_audit.json',
         'batch_output': output / 'retrospective_2025',
@@ -51,14 +61,27 @@ def resolve_paths(drive_root: Path, output_dir: Path | None = None) -> dict[str,
 
 def validate_paths(paths: dict[str, Path]) -> None:
     missing = []
-    if not paths['history'].is_file():
-        missing.append(str(paths['history']))
-    if not paths['odds_dir'].is_dir():
-        missing.append(str(paths['odds_dir']))
-    if not paths['payout_dir'].is_dir():
-        missing.append(str(paths['payout_dir']))
+    for key in ('history', 'race_manifest'):
+        if not paths[key].is_file():
+            missing.append(str(paths[key]))
+    for key in ('odds_dir', 'payout_dir'):
+        if not paths[key].is_dir():
+            missing.append(str(paths[key]))
     if missing:
         raise FileNotFoundError('required historical research inputs are missing:\n' + '\n'.join(missing))
+
+
+def audit_archive(paths: dict[str, Path]) -> dict:
+    report = archive_coverage.audit(paths['race_manifest'], paths['odds_dir'], paths['payout_dir'])
+    paths['archive_audit'].parent.mkdir(parents=True, exist_ok=True)
+    paths['archive_audit'].write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    if report['scope_label'] == 'non_contiguous_archive':
+        raise RuntimeError(
+            'historical archive has internal holes; do not run ROI research until coverage is repaired'
+        )
+    if int(report['contiguous_prefix_races']) <= 0:
+        raise RuntimeError('historical archive has no complete contiguous race coverage')
+    return report
 
 
 def write_predictions(predictions, path: Path) -> None:
@@ -76,10 +99,7 @@ def generate_predictions(paths: dict[str, Path], years=DEFAULT_YEARS,
         early_stopping_rounds=int(early_stopping_rounds),
     )
     write_predictions(predictions, paths['predictions'])
-    paths['prediction_audit'].write_text(
-        json.dumps(audit, ensure_ascii=False, indent=2),
-        encoding='utf-8',
-    )
+    paths['prediction_audit'].write_text(json.dumps(audit, ensure_ascii=False, indent=2), encoding='utf-8')
     provenance.validate_rows(core.read_csv(paths['predictions']))
     return predictions, audit
 
@@ -100,6 +120,7 @@ def run(drive_root: Path = DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
     paths = resolve_paths(drive_root, output_dir)
     validate_paths(paths)
     paths['output_dir'].mkdir(parents=True, exist_ok=True)
+    archive_audit = audit_archive(paths)
 
     years = tuple(int(y) for y in years)
     if not years:
@@ -135,23 +156,31 @@ def run(drive_root: Path = DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
         raise ValueError('smoke_races must be positive unless --full is used')
 
     batch_result = batch.run(
-        paths['predictions'],
-        paths['odds_dir'],
-        paths['payout_dir'],
-        paths['batch_output'],
-        thresholds=thresholds,
-        stake_yen=stake_yen,
-        max_races=max_races,
+        paths['predictions'], paths['odds_dir'], paths['payout_dir'], paths['batch_output'],
+        thresholds=thresholds, stake_yen=stake_yen, max_races=max_races,
     )
 
     manifest = {
         'method': METHOD,
-        'mode': 'full' if full else 'smoke',
+        'mode': 'full_available_archive' if full else 'smoke',
+        'full_calendar_year': bool(archive_audit['archive_covers_full_manifest']) if full else False,
         'smoke_races': None if full else max_races,
+        'study_scope': {
+            'scope_label': archive_audit['scope_label'],
+            'manifest_races': archive_audit['manifest_races'],
+            'contiguous_prefix_races': archive_audit['contiguous_prefix_races'],
+            'first_covered_date': archive_audit['first_covered_date'],
+            'last_contiguous_date': archive_audit['last_contiguous_date'],
+            'first_covered_race_id': archive_audit['first_covered_race_id'],
+            'last_contiguous_race_id': archive_audit['last_contiguous_race_id'],
+            'first_missing_race_id': archive_audit['first_missing_race_id'],
+            'archive_covers_full_manifest': archive_audit['archive_covers_full_manifest'],
+        },
+        'archive_coverage': archive_audit,
         'source_paths': {k: str(v) for k, v in paths.items()
-                         if k in {'drive_root', 'history', 'odds_dir', 'payout_dir'}},
+                         if k in {'drive_root', 'history', 'race_manifest', 'odds_dir', 'payout_dir'}},
         'output_paths': {k: str(v) for k, v in paths.items()
-                         if k in {'output_dir', 'predictions', 'prediction_audit', 'batch_output'}},
+                         if k in {'output_dir', 'archive_audit', 'predictions', 'prediction_audit', 'batch_output'}},
         'prediction_stage': prediction_stage,
         'batch_manifest': batch_result['manifest'],
         'strict_oos_verified': True,
@@ -159,9 +188,7 @@ def run(drive_root: Path = DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
         'fixed_2025_rounds_212_reused': False,
         'forward_ledgers_touched': False,
     }
-    paths['run_manifest'].write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
-    )
+    paths['run_manifest'].write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
     return {'paths': paths, 'manifest': manifest, 'summary': batch_result['summary']}
 
 
@@ -169,10 +196,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--drive-root', type=Path, default=DEFAULT_DRIVE_ROOT)
     parser.add_argument('--output-dir', type=Path, default=None)
-    parser.add_argument('--years', default='2025',
-                        help='Comma-separated OOS years; current odds archive only needs 2025')
+    parser.add_argument('--years', default='2025', help='Comma-separated OOS years; current quote archive needs 2025')
     parser.add_argument('--smoke-races', type=int, default=DEFAULT_SMOKE_RACES)
-    parser.add_argument('--full', action='store_true', help='Process every discovered 2025 historical odds file')
+    parser.add_argument('--full', action='store_true',
+                        help='Process every race currently present in the audited archive (not necessarily full calendar 2025)')
     parser.add_argument('--reuse-predictions', action='store_true',
                         help='Reuse an existing prediction CSV only after strict provenance validation')
     parser.add_argument('--max-rounds', type=int, default=300)
@@ -184,22 +211,20 @@ def main():
     years = tuple(int(x) for x in args.years.split(',') if x.strip())
     thresholds = tuple(float(x) for x in args.thresholds.split(',') if x.strip())
     result = run(
-        drive_root=args.drive_root,
-        output_dir=args.output_dir,
-        years=years,
-        smoke_races=args.smoke_races,
-        full=args.full,
-        reuse_predictions=args.reuse_predictions,
-        max_rounds=args.max_rounds,
-        early_stopping_rounds=args.early_stopping_rounds,
-        thresholds=thresholds,
-        stake_yen=args.stake_yen,
+        drive_root=args.drive_root, output_dir=args.output_dir, years=years,
+        smoke_races=args.smoke_races, full=args.full, reuse_predictions=args.reuse_predictions,
+        max_rounds=args.max_rounds, early_stopping_rounds=args.early_stopping_rounds,
+        thresholds=thresholds, stake_yen=args.stake_yen,
     )
     m = result['manifest']['batch_manifest']
+    scope = result['manifest']['study_scope']
     print(
         f'{METHOD} mode={result["manifest"]["mode"]} '
-        f'processed_races={m["processed_races"]} '
-        f'scored_samples={m["counts"].get("scored_samples", 0)}'
+        f'processed_races={m["processed_races"]} scored_samples={m["counts"].get("scored_samples", 0)}'
+    )
+    print(
+        f'scope={scope["scope_label"]} {scope["first_covered_date"]}..{scope["last_contiguous_date"]} '
+        f'covered_races={scope["contiguous_prefix_races"]}/{scope["manifest_races"]}'
     )
     print(f'output={result["paths"]["output_dir"]}')
     print('STRICT_OOS=TRUE; fixed_2025_model=FALSE; forward_ledgers_untouched=TRUE')
