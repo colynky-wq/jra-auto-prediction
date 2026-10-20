@@ -1,9 +1,10 @@
-"""Normalize historical JRA odds CSVs for retrospective all-bet research.
+"""Normalize historical JRA odds tables for retrospective all-bet research.
 
-Historical collectors store pools with different column shapes. In particular,
-place and wide quotes are ranges. This adapter emits the narrow schema consumed
-by research_all_bet_retrospective.py and deliberately uses the *lower* end of
-an odds range for EV selection. The upper end is retained for audit only.
+The 2025 collector stores one ``*_odds.parquet`` per race. Older/test inputs may
+be CSV. Pool rows use a shared schema including ``券種``, generic ``番号1..3``
+and exact/range final odds. Place and wide quotes are ranges; the lower bound is
+used deliberately for conservative EV selection while the upper bound is kept
+for audit.
 
 No forward files are read or written by this module.
 """
@@ -36,34 +37,36 @@ def _parts(row: dict, bet: str):
     direct = _first(row, DIRECT_COMBO)
     if direct is not None:
         return direct
+    # The production parquet collector intentionally uses generic 番号1..3 for
+    # every pool. For 枠連 those numbers are frames; otherwise they are horses.
     if bet in {'単勝', '複勝'}:
-        return (_first(row, ('馬番', 'horse_no', 'number'), True),)
+        return (_first(row, ('馬番', '番号1', 'horse_no', 'number'), True),)
     if bet == '枠連':
         return (
-            _first(row, ('枠1', '枠番1', '1枠', 'frame1'), True),
-            _first(row, ('枠2', '枠番2', '2枠', 'frame2'), True),
+            _first(row, ('枠1', '枠番1', '1枠', 'frame1', '番号1'), True),
+            _first(row, ('枠2', '枠番2', '2枠', 'frame2', '番号2'), True),
         )
     if bet == '馬単':
         return (
-            _first(row, ('1着馬番', '馬番1', 'horse1'), True),
-            _first(row, ('2着馬番', '馬番2', 'horse2'), True),
+            _first(row, ('1着馬番', '馬番1', 'horse1', '番号1'), True),
+            _first(row, ('2着馬番', '馬番2', 'horse2', '番号2'), True),
         )
     if bet in {'馬連', 'ワイド'}:
         return (
-            _first(row, ('馬番1', '1着馬番', 'horse1'), True),
-            _first(row, ('馬番2', '2着馬番', 'horse2'), True),
+            _first(row, ('馬番1', '1着馬番', 'horse1', '番号1'), True),
+            _first(row, ('馬番2', '2着馬番', 'horse2', '番号2'), True),
         )
     if bet == '3連単':
         return (
-            _first(row, ('1着馬番', '馬番1', 'horse1'), True),
-            _first(row, ('2着馬番', '馬番2', 'horse2'), True),
-            _first(row, ('3着馬番', '馬番3', 'horse3'), True),
+            _first(row, ('1着馬番', '馬番1', 'horse1', '番号1'), True),
+            _first(row, ('2着馬番', '馬番2', 'horse2', '番号2'), True),
+            _first(row, ('3着馬番', '馬番3', 'horse3', '番号3'), True),
         )
     if bet == '3連複':
         return (
-            _first(row, ('馬番1', '1着馬番', 'horse1'), True),
-            _first(row, ('馬番2', '2着馬番', 'horse2'), True),
-            _first(row, ('馬番3', '3着馬番', 'horse3'), True),
+            _first(row, ('馬番1', '1着馬番', 'horse1', '番号1'), True),
+            _first(row, ('馬番2', '2着馬番', 'horse2', '番号2'), True),
+            _first(row, ('馬番3', '3着馬番', 'horse3', '番号3'), True),
         )
     raise ValueError(f'unsupported historical bet: {bet}')
 
@@ -108,9 +111,19 @@ def normalize_odds_rows(rows: Iterable[dict], source_name: str = '') -> list[dic
     return out
 
 
-def read_csv(path: Path):
-    with Path(path).open('r', encoding='utf-8-sig', newline='') as handle:
-        return list(csv.DictReader(handle))
+def read_table(path: Path):
+    path = Path(path)
+    name = path.name.lower()
+    if name.endswith('.parquet') or name.endswith('.pq'):
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise RuntimeError('pandas+pyarrow are required to read historical parquet odds') from exc
+        return pd.read_parquet(path).to_dict(orient='records')
+    if name.endswith('.csv') or name.endswith('.txt'):
+        with path.open('r', encoding='utf-8-sig', newline='') as handle:
+            return list(csv.DictReader(handle))
+    raise ValueError(f'unsupported historical odds file: {path}')
 
 
 def write_csv(path: Path, rows: list[dict]):
@@ -127,7 +140,8 @@ def normalize_files(paths: Iterable[Path]):
     result = []
     seen = set()
     for path in paths:
-        for row in normalize_odds_rows(read_csv(path), Path(path).name):
+        path = Path(path)
+        for row in normalize_odds_rows(read_table(path), path.name):
             key = (row['レースID'], row['券種'], row['組合せ'])
             if key in seen:
                 raise ValueError(f'duplicate across historical files: {key}')
@@ -136,16 +150,37 @@ def normalize_files(paths: Iterable[Path]):
     return result
 
 
+def discover_odds_files(input_dir: Path) -> list[Path]:
+    input_dir = Path(input_dir)
+    parquet = sorted(input_dir.rglob('*_odds.parquet'))
+    csvs = sorted(input_dir.rglob('*_odds.csv'))
+    return parquet + csvs
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--input', type=Path, action='append', required=True,
-                        help='Historical structured odds CSV; repeat for multiple pools/files')
+    parser.add_argument('--input', type=Path, action='append', default=[],
+                        help='Historical structured odds CSV/Parquet; repeat for multiple files')
+    parser.add_argument('--input-dir', type=Path, default=None,
+                        help='Collector root/races directory; discovers *_odds.parquet and *_odds.csv recursively')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    rows = normalize_files(args.input)
+
+    paths = list(args.input)
+    if args.input_dir is not None:
+        paths.extend(discover_odds_files(args.input_dir))
+    # Stable de-duplication of explicitly supplied + discovered files.
+    paths = list(dict.fromkeys(Path(p) for p in paths))
+    if not paths:
+        raise SystemExit('no historical odds files supplied/discovered')
+
+    rows = normalize_files(paths)
     write_csv(args.output, rows)
     conservative = sum(r['オッズ採用基準'] == 'lower_bound_conservative' for r in rows)
-    print(f'normalized={len(rows)} conservative_range_quotes={conservative}')
+    races = len({r['レースID'] for r in rows})
+    pools = sorted({r['券種'] for r in rows}, key=core.ALL_BETS.index)
+    print(f'normalized={len(rows)} races={races} files={len(paths)} conservative_range_quotes={conservative}')
+    print(f'covered_bets={",".join(pools)}')
     print('retrospective research input only; forward ledgers untouched')
 
 
