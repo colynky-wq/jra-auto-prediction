@@ -77,6 +77,28 @@ struct KeibaAIBetResearchData: Codable {
     let meaning: String
 
     static let types: Set<String> = ["win","place","frame_quinella","quinella","wide","exacta","trio","trifecta","support","win5"]
+
+    // 2025年の利用可能な連続期間（2025-01-05〜2025-09-20）で実施した
+    // strict OOS / 2,442R / 7,897,709 settled samples の参考表示。
+    // ここでのオッズは保存済み最終オッズであり、発走約10分前の実行可能オッズとは同一ではない。
+    // そのため formalRecommendationsEnabled / autoBetEnabled / stakeSizingEnabled は有効化しない。
+    private static let historicalEvidence: [String: String] = [
+        "win": "過去OOS参考（EV≥1.00・各R最大1点）：172点 / ROI 212.1% / 日単位bootstrap 95%区間 90.7〜353.9%。単勝は注目候補ですが、区間下限が100%未満のため正式採用は保留です。",
+        "place": "過去OOS参考（EV≥1.00・各R最大1点）：440点 / ROI 86.7% / 95%区間 78.9〜95.1%。現時点では正式採用しません。",
+        "frame_quinella": "過去OOS参考（EV≥1.00・各R最大1点）：2,196点 / ROI 95.7% / 95%区間 79.4〜112.8%。現時点では正式採用しません。",
+        "quinella": "過去OOS参考（EV≥1.00・各R最大1点）：2,375点 / ROI 89.4% / 95%区間 60.1〜121.8%。現時点では正式採用しません。",
+        "wide": "過去OOS参考（EV≥1.00・各R最大1点）：2,311点 / ROI 88.8% / 95%区間 77.4〜100.5%。前向き10分前オッズで再検証します。",
+        "exacta": "過去OOS参考（EV≥1.00・各R最大1点）：2,427点 / ROI 67.2% / 95%区間 38.3〜100.9%。現時点では正式採用しません。",
+        "trio": "過去OOS参考（EV≥1.00・各R最大1点）：2,436点 / ROI 65.1% / 95%区間 50.0〜81.3%。現時点では正式採用しません。",
+        "trifecta": "過去OOS参考（EV≥1.00・各R最大1点）：2,442点 / ROI 47.9% / 95%区間 7.1〜113.7%。現時点では正式採用しません。"
+    ]
+
+    private static let historicalNotices: [String] = [
+        "過去OOS品質ゲート：PASS（2025-01-05〜2025-09-20の連続部分年、2,442R、7,897,709件を決済照合）。",
+        "EV閾値×Top-Kの280条件を日単位bootstrap 2,000回で確認しましたが、95%ROI区間の下限が100%を超えた条件は0件です。正式推奨・自動購入・金額配分はOFFのままです。",
+        "過去検証は保存済み最終オッズです。発走約10分前の実行可能オッズで同じ優位性が再現するか、forward検証後に正式採用を判断します。"
+    ]
+
     func validate() throws {
         let keys: Set<String> = ["records","saved","matched","held","awaitingResults","payoutsPending","excluded","missingRecords","invalid","noCandidate"]
         let states: Set<String> = ["ready","awaiting_results","matched","held","payouts_pending","entrant_changed","dead_heat_excluded","invalid","missing_record","no_candidate","failed","no_target"]
@@ -117,6 +139,44 @@ struct KeibaAIBetResearchData: Codable {
             }
         }
     }
+
+    func enrichedForHistoricalOOS() -> KeibaAIBetResearchData {
+        let enrichedCatalog = catalog.map { item -> KeibaAIBetResearchType in
+            guard let evidence = Self.historicalEvidence[item.id] else { return item }
+            let note = item.methodNote.isEmpty ? evidence : item.methodNote + "\n" + evidence
+            return KeibaAIBetResearchType(
+                id: item.id,
+                label: item.label,
+                description: item.description,
+                methodNote: note,
+                recordingStartDate: item.recordingStartDate,
+                countUnit: item.countUnit,
+                cumulative: item.cumulative
+            )
+        }
+        var enrichedWarnings = warnings
+        for notice in Self.historicalNotices where !enrichedWarnings.contains(notice) {
+            enrichedWarnings.append(notice)
+        }
+        return KeibaAIBetResearchData(
+            schemaVersion: schemaVersion,
+            version: version,
+            status: status,
+            referenceDisplayEnabled: referenceDisplayEnabled,
+            formalRecommendationsEnabled: formalRecommendationsEnabled,
+            autoBetEnabled: autoBetEnabled,
+            stakeSizingEnabled: stakeSizingEnabled,
+            generatedAtJST: generatedAtJST,
+            raceDate: raceDate,
+            collectionStatus: collectionStatus,
+            availableDates: availableDates,
+            catalog: enrichedCatalog,
+            races: races,
+            warnings: enrichedWarnings,
+            meaning: meaning
+        )
+    }
+
     static func validDay(_ value: String) -> Bool {
         guard value.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else { return false }
         let formatter = DateFormatter(); formatter.locale = Locale(identifier:"en_US_POSIX")
@@ -169,7 +229,8 @@ final class KeibaAIBetResearchStore: ObservableObject {
         let (bytes,response) = try await session.data(for:request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw URLError(.badServerResponse) }
         let result = try JSONDecoder().decode(KeibaAIBetResearchData.self,from:bytes)
-        try result.validate(); return result
+        try result.validate()
+        return result.enrichedForHistoricalOOS()
     }
 }
 #endif
