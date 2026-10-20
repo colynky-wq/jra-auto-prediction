@@ -37,7 +37,7 @@ permissions:
 jobs:
   research-check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 6
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -68,6 +68,15 @@ jobs:
           Path(os.environ['RUNNER_TEMP'],'all-bet-audit.json').write_text(json.dumps(value,ensure_ascii=False))
           print('ALL_BET_CURRENT_STATE',json.dumps(value['counts']),'WIN5',value['win5']['counts'])
           PY
+      - name: Download CPython 3.13 pyarrow wheel for offline local validation
+        run: |
+          mkdir -p "$RUNNER_TEMP/pyarrow-wheel"
+          python -m pip download --only-binary=:all: --no-deps pyarrow -d "$RUNNER_TEMP/pyarrow-wheel"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pyarrow-cp313-linux-wheel
+          path: ${{ runner.temp }}/pyarrow-wheel/*.whl
+          retention-days: 1
   source-compatibility:
     runs-on: ubuntu-24.04
     timeout-minutes: 4
