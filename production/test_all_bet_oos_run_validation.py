@@ -32,19 +32,33 @@ def manifest(calendar_full=False):
             'last_contiguous_date': archive['last_contiguous_date'],
             'first_missing_race_id': archive['first_missing_race_id'],
         },
+        'frame_stage': {
+            'method': 'JRA_original_card_frame_allocation',
+            'archive_prediction_rows': 1000,
+            'archive_prediction_races': 80 if not calendar_full else 100,
+            'forward_ledgers_touched': False,
+        },
+        'portfolio_grid': {
+            'method': 'retrospective-topk-portfolio-grid-v2-20261021',
+            'row_count': 100,
+            'top_k_values': [1, 3, 5, 10, 20],
+            'trigami_definition': 'race has >=1 hit and total race return < total selected-ticket stake',
+        },
         'batch_manifest': {
             'oos_scope_verified': True,
             'forward_ledgers_touched': False,
-            'losing_streak_unit': 'race',
-            'trigami_definition': 'race_has_hit_and_return_yen<race_stake_yen',
             'processed_races': 20,
             'counts': {
                 'scored_samples': 80,
                 'settled_samples': 64,
-                'frame_mapping_horse_file_frames': 20,
+                'frame_mapping_prediction_frames': 20,
             },
             'scored_samples_by_bet': scored,
             'settled_samples_by_bet': settled,
+            'summary_semantics': {
+                'losing_streak_unit': 'race',
+                'trigami_definition': 'race has >=1 hit and total race return < total selected-ticket stake',
+            },
         },
     }
 
@@ -57,8 +71,6 @@ class ResearchRunGateTests(unittest.TestCase):
         self.assertEqual(report['study_scope_label'], 'contiguous_partial_year_prefix')
         self.assertEqual(report['study_last_date'], '20250920')
         self.assertEqual(set(report['settled_bets_present']), set(core.ALL_BETS))
-        self.assertEqual(report['losing_streak_unit'], 'race')
-        self.assertIn('race_has_hit', report['trigami_definition'])
 
     def test_full_calendar_manifest_reports_complete(self):
         report = gate.validate_manifest(manifest(calendar_full=True), require_all_bets=True)
@@ -81,7 +93,7 @@ class ResearchRunGateTests(unittest.TestCase):
 
     def test_full_run_fails_without_frame_source(self):
         m = manifest()
-        m['batch_manifest']['counts'].pop('frame_mapping_horse_file_frames')
+        m['batch_manifest']['counts'].pop('frame_mapping_prediction_frames')
         m['batch_manifest']['counts']['frame_mapping_frame_unavailable'] = 20
         with self.assertRaisesRegex(gate.ResearchRunValidationError, 'frame'):
             gate.validate_manifest(m, require_all_bets=True)
@@ -119,15 +131,15 @@ class ResearchRunGateTests(unittest.TestCase):
         with self.assertRaisesRegex(gate.ResearchRunValidationError, 'settled_samples'):
             gate.validate_manifest(m)
 
-    def test_old_ticket_level_losing_streak_semantics_fail_closed(self):
+    def test_old_ticket_order_streak_semantics_fail(self):
         m = manifest()
-        m['batch_manifest']['losing_streak_unit'] = 'ticket'
+        m['batch_manifest']['summary_semantics']['losing_streak_unit'] = 'ticket'
         with self.assertRaisesRegex(gate.ResearchRunValidationError, 'losing streak'):
             gate.validate_manifest(m)
 
-    def test_missing_trigami_definition_fails_closed(self):
+    def test_missing_trigami_definition_fails(self):
         m = manifest()
-        m['batch_manifest'].pop('trigami_definition')
+        m['batch_manifest']['summary_semantics']['trigami_definition'] = ''
         with self.assertRaisesRegex(gate.ResearchRunValidationError, 'trigami'):
             gate.validate_manifest(m)
 
