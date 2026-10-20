@@ -1,6 +1,6 @@
-import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 import pandas as pd
@@ -82,12 +82,16 @@ class PortableOOSFeatureTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'horse appears multiple times'):
             portable.validate_and_prepare_raw(frame, (2023, 2024, 2025))
 
-    def test_drive_materialized_parquet_bin_name_is_supported(self):
+    def test_drive_materialized_parquet_bin_name_is_supported_without_optional_engine(self):
         frame = synthetic_history()
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'production_history.parquet.bin'
-            frame.to_parquet(path, index=False)
+        path = Path('/tmp/production_history.parquet.bin')
+        # This test is about filename dispatch, not pandas/pyarrow integration.
+        # Mock read_parquet so the repository CI does not require an optional
+        # parquet engine merely to prove that Drive's .parquet.bin name routes
+        # through the parquet reader.
+        with mock.patch.object(portable.pd, 'read_parquet', return_value=frame.copy()) as read_parquet:
             loaded = portable.load_portable_history(path)
+        read_parquet.assert_called_once_with(path)
         self.assertEqual(len(loaded), len(frame))
         self.assertEqual(set(portable.REQUIRED_RAW_COLUMNS) - set(loaded.columns), set())
 
