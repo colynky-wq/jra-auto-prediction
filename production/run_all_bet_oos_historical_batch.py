@@ -14,6 +14,11 @@ Horse metadata is used to add the horse->frame map required for 枠連 when the
 OOS prediction file itself has no 枠 column. If no complete frame map exists,
 only 枠連 is naturally unscorable; the other seven pools remain usable.
 
+The streaming summary is race-aware. A threshold means every settled quoted
+combination in that pool with model EV >= threshold is staked equally. Besides
+ticket ROI, the summary therefore reports race-level hit/profit rates, trigami
+(hit but race return below total race stake), and consecutive losing races.
+
 Research-only outputs; forward ledgers are never read or written.
 """
 from __future__ import annotations
@@ -22,7 +27,6 @@ import argparse
 import csv
 from collections import defaultdict
 import json
-import math
 from pathlib import Path
 import re
 
@@ -31,7 +35,7 @@ import normalize_historical_all_bet as odds_norm
 import normalize_historical_payouts as payout_norm
 import research_all_bet_retrospective as core
 
-METHOD = 'retrospective-all-bet-stream-strict-oos-v2-20261021'
+METHOD = 'retrospective-all-bet-stream-strict-oos-v3-20261021'
 HORSE_NO_ALIASES = ('馬番', 'horse_no', 'horseNumber', 'number', '番号')
 FRAME_ALIASES = ('枠', '枠番', 'frame', 'frame_no', 'frameNumber')
 
@@ -130,6 +134,18 @@ def enrich_prediction_frames(pred_rows: list[dict], horse_rows: list[dict] | Non
     return copied, 'horse_file_frames'
 
 
+def _max_losing_race_streak(portfolios: dict[str, dict], stake_yen: int) -> int:
+    longest = current = 0
+    for race in portfolios.values():
+        stake = stake_yen * race['settled_bets']
+        if stake > 0 and race['return_yen'] < stake:
+            current += 1
+            longest = max(longest, current)
+        elif stake > 0:
+            current = 0
+    return longest
+
+
 class StreamingSummary:
     def __init__(self, thresholds=core.DEFAULT_THRESHOLDS, stake_yen=100):
         self.thresholds = tuple(float(x) for x in thresholds)
@@ -140,14 +156,21 @@ class StreamingSummary:
         for threshold in self.thresholds:
             for bet in core.ALL_BETS:
                 self.state[(threshold, bet)] = {
-                    'candidate': 0, 'settled': 0, 'hits': 0,
-                    'return_yen': 0.0, 'sum_ev': 0.0, 'sum_odds': 0.0,
-                    'current_losing': 0, 'max_losing': 0, 'races': set(),
+                    'candidate': 0,
+                    'settled': 0,
+                    'hits': 0,
+                    'return_yen': 0.0,
+                    'sum_ev': 0.0,
+                    'sum_odds': 0.0,
+                    # insertion order is chronological because run() processes
+                    # races by provenance race_date then race_id.
+                    'race_portfolios': {},
                 }
 
     def add(self, sample: dict):
         bet = sample['bet_type']
         ev = float(sample['model_ev'])
+        rid = str(sample['race_id'])
         for threshold in self.thresholds:
             if ev < threshold:
                 continue
@@ -157,15 +180,19 @@ class StreamingSummary:
             s['sum_odds'] += float(sample['odds'])
             if not sample['settled']:
                 continue
+
             s['settled'] += 1
-            s['races'].add(sample['race_id'])
+            race = s['race_portfolios'].setdefault(
+                rid,
+                {'settled_bets': 0, 'hits': 0, 'return_yen': 0.0},
+            )
+            race['settled_bets'] += 1
             if sample['hit']:
                 s['hits'] += 1
-                s['return_yen'] += (sample['payout_yen_per_100'] or 0) * self.stake_yen / 100
-                s['current_losing'] = 0
-            else:
-                s['current_losing'] += 1
-                s['max_losing'] = max(s['max_losing'], s['current_losing'])
+                race['hits'] += 1
+                returned = (sample['payout_yen_per_100'] or 0) * self.stake_yen / 100
+                s['return_yen'] += returned
+                race['return_yen'] += returned
 
     def rows(self, verified_prediction_rows: int, verified_prediction_races: int):
         out = []
@@ -174,6 +201,25 @@ class StreamingSummary:
                 s = self.state[(threshold, bet)]
                 stake = self.stake_yen * s['settled']
                 returned = s['return_yen']
+                portfolios = s['race_portfolios']
+                settled_races = len(portfolios)
+                hit_races = 0
+                profitable_races = 0
+                non_loss_races = 0
+                trigami_races = 0
+                for race in portfolios.values():
+                    race_stake = self.stake_yen * race['settled_bets']
+                    race_return = race['return_yen']
+                    if race['hits'] > 0:
+                        hit_races += 1
+                        if race_return < race_stake:
+                            trigami_races += 1
+                    if race_return > race_stake:
+                        profitable_races += 1
+                    if race_return >= race_stake:
+                        non_loss_races += 1
+
+                max_losing_races = _max_losing_race_streak(portfolios, self.stake_yen)
                 out.append({
                     'method': METHOD,
                     'bet_type': bet,
@@ -187,10 +233,22 @@ class StreamingSummary:
                     'return_yen': returned,
                     'profit_yen': returned - stake if s['settled'] else 0.0,
                     'roi_pct': returned / stake * 100 if stake else None,
-                    'max_losing_streak': s['max_losing'],
+                    # Retained column name for app/backward compatibility, but
+                    # its unit is now explicitly race, not arbitrary ticket order.
+                    'max_losing_streak': max_losing_races,
+                    'max_losing_streak_unit': 'race',
                     'mean_model_ev': s['sum_ev'] / s['candidate'] if s['candidate'] else None,
                     'mean_odds': s['sum_odds'] / s['candidate'] if s['candidate'] else None,
-                    'evaluated_races': len(s['races']),
+                    'evaluated_races': settled_races,
+                    'hit_races': hit_races,
+                    'hit_race_rate': hit_races / settled_races if settled_races else None,
+                    'profitable_races': profitable_races,
+                    'profitable_race_rate': profitable_races / settled_races if settled_races else None,
+                    'non_loss_races': non_loss_races,
+                    'non_loss_race_rate': non_loss_races / settled_races if settled_races else None,
+                    'trigami_races': trigami_races,
+                    'trigami_rate_among_hit_races': trigami_races / hit_races if hit_races else None,
+                    'mean_tickets_per_settled_race': s['settled'] / settled_races if settled_races else None,
                     'oos_scope_verified': True,
                     'verified_prediction_rows': verified_prediction_rows,
                     'verified_prediction_races': verified_prediction_races,
@@ -209,6 +267,16 @@ def _write_rows(path: Path, rows: list[dict]):
         writer.writerows(rows)
 
 
+def _race_date_sort_key(path: Path, provenance_audit: dict):
+    rid = race_id_from_odds_path(path)
+    meta = provenance_audit.get('races', {}).get(rid, {})
+    # Unscorable/no-prediction races (for example some excluded race types) are
+    # placed after date-proven OOS races rather than falsely pretending race_id
+    # lexical order is calendar order.
+    race_date = str(meta.get('race_date') or '9999-12-31')
+    return race_date, rid, path.name
+
+
 def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Path,
         thresholds=core.DEFAULT_THRESHOLDS, stake_yen=100, max_races=None):
     predictions = core.read_csv(predictions_path)
@@ -216,7 +284,7 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
     predictions_by_race = group_predictions(predictions)
 
     odds_files = odds_norm.discover_odds_files(odds_dir)
-    odds_files = sorted(odds_files, key=lambda p: (race_id_from_odds_path(p), p.name))
+    odds_files = sorted(odds_files, key=lambda p: _race_date_sort_key(p, prov))
     if max_races is not None:
         odds_files = odds_files[:int(max_races)]
     if not odds_files:
@@ -321,6 +389,9 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
         'method': METHOD,
         'oos_scope_verified': True,
         'prediction_audit': prov,
+        'odds_file_order': 'prediction_race_date_then_race_id',
+        'losing_streak_unit': 'race',
+        'trigami_definition': 'race_has_hit_and_return_yen<race_stake_yen',
         'odds_files_considered': len(odds_files),
         'processed_races': len(processed_races),
         'counts': dict(counts),
@@ -349,14 +420,14 @@ def main():
     parser.add_argument('--stake-yen', type=int, default=100)
     parser.add_argument('--thresholds', default=','.join(str(x) for x in core.DEFAULT_THRESHOLDS))
     parser.add_argument('--max-races', type=int, default=None,
-                        help='Optional chronological smoke-test cap before a full batch')
+                        help='Optional provenance-date-ordered smoke-test cap before a full batch')
     args = parser.parse_args()
     thresholds = tuple(float(x) for x in args.thresholds.split(',') if x.strip())
     result = run(args.predictions, args.odds_dir, args.payout_dir, args.output_dir,
                  thresholds, args.stake_yen, args.max_races)
     m = result['manifest']
     print(f'{METHOD} processed_races={m["processed_races"]} scored_samples={m["counts"].get("scored_samples", 0)}')
-    print('STRICT_OOS=TRUE; streaming=TRUE; forward_ledgers_untouched=TRUE')
+    print('STRICT_OOS=TRUE; streaming=TRUE; race_portfolio_metrics=TRUE; forward_ledgers_untouched=TRUE')
 
 
 if __name__ == '__main__':
