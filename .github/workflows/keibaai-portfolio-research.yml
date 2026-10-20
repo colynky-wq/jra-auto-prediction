@@ -57,7 +57,15 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
-          git add PortfolioResearchData.json PortfolioReview100.json reports/*/PortfolioResearchData.json reports/*/PortfolioReview100.json 2>/dev/null || true
+          # PortfolioResearchData is already tracked. Review snapshots are generated
+          # artifacts and may match ignore rules, so force-add only those review files.
+          git add PortfolioResearchData.json reports/*/PortfolioResearchData.json 2>/dev/null || true
+          git add -f PortfolioReview100.json 2>/dev/null || true
+          for path in reports/*/PortfolioReview100.json; do
+            [ -e "$path" ] || continue
+            git add -f "$path"
+          done
+
           if git diff --cached --quiet; then
             echo 'No portfolio research changes.'
             exit 0
