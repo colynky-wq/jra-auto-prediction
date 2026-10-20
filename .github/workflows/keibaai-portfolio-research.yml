@@ -8,6 +8,8 @@ on:
     paths:
       - 'production/portfolio_shadow.py'
       - 'production/test_portfolio_shadow.py'
+      - 'production/portfolio_review_100.py'
+      - 'production/test_portfolio_review_100.py'
       - 'production/PORTFOLIO_SHADOW_V1.md'
       - '.github/workflows/keibaai-portfolio-research.yml'
   schedule:
@@ -36,13 +38,17 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Verify fixed shadow rules
+      - name: Verify fixed shadow rules and review contract
         run: |
-          python -m py_compile production/portfolio_shadow.py
+          python -m py_compile production/portfolio_shadow.py production/portfolio_review_100.py
           python production/test_portfolio_shadow.py
+          python production/test_portfolio_review_100.py
 
       - name: Build portfolio research projection
         run: python production/portfolio_shadow.py
+
+      - name: Build 100-race review projection
+        run: python production/portfolio_review_100.py
 
       - name: Publish research projection
         shell: bash
@@ -51,11 +57,11 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
-          git add PortfolioResearchData.json reports/*/PortfolioResearchData.json 2>/dev/null || true
+          git add PortfolioResearchData.json PortfolioReview100.json reports/*/PortfolioResearchData.json reports/*/PortfolioReview100.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo 'No portfolio research changes.'
             exit 0
           fi
 
-          git commit -m 'Update KeibaAI portfolio shadow research'
+          git commit -m 'Update KeibaAI portfolio shadow research and 100-race review'
           git push origin HEAD:main
