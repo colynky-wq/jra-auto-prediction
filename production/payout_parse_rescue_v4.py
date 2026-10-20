@@ -1,16 +1,17 @@
 """Final fail-closed rescue for compact JRA payout cells.
 
-v3 already guards invalid transient compact parses (for example ワイド 11-11)
-and v2 reconstructs ambiguous ワイド rows from independent top-three evidence.
-This layer adds one missing source of *ordered* evidence for 複勝: a uniquely
-parsed 馬単 / 3連単 payout on the same page.
+v3 already guards invalid transient compact parses (for example ワイド 11-11).
+This layer adds ordered evidence from already-parsed official payout pools.
 
-That matters for strings such as ``7111``.  Both ``7,11,1`` and ``7,1,11`` are
-valid splits and have the same unordered horse set, so 3連複 or ワイド cannot
-distinguish them.  A unique 3連単 ``7-11-1`` can, because it gives the official
-finish order directly.  Rescue remains fail-closed: when ordered evidence is
-not unique or does not match exactly one candidate, the original error is
-preserved unless the older independent-evidence fallbacks can resolve it.
+Two real archive ambiguities require order, not just an unordered top-three set:
+
+* 複勝 ``7111`` can be ``7,11,1`` or ``7,1,11``.
+* ワイド ``7-111-71-11`` can be segmented in more than one pair order.
+
+A unique 3連単 (or, when sufficient, 馬単 + 3連複) fixes the official top-three
+order.  JRA's ordinary three-payout ワイド row is then interpreted in finish
+pair order: 1st-2nd, 1st-3rd, 2nd-3rd.  Rescue remains fail-closed whenever
+ordered evidence is missing, non-unique, or inconsistent with the compact cell.
 """
 from __future__ import annotations
 
@@ -22,7 +23,7 @@ import research_all_bet_retrospective as core
 
 
 def _ordered_pool_hints(loose_rows: list[dict], expected_count: int) -> set[tuple[int, ...]]:
-    """Return finish-order hints proven by a unique ordered payout pool."""
+    """Return finish-order hints proven by unique ordered payout pools."""
     groups = place_rescue._parsed_pool_groups(loose_rows)
     hints: set[tuple[int, ...]] = set()
 
@@ -43,8 +44,6 @@ def _ordered_pool_hints(loose_rows: list[dict], expected_count: int) -> set[tupl
         if len(trifecta) == 1 and len(trifecta[0]) == 3:
             hints.add(tuple(trifecta[0]))
 
-        # If 3連単 is unavailable but a unique 馬単 fixes 1st/2nd and a unique
-        # 3連複 fixes the top-three set, the third horse is also determined.
         exacta = groups.get('馬単', [])
         trio = groups.get('3連複', [])
         if len(exacta) == 1 and len(exacta[0]) == 2 and len(trio) == 1 and len(trio[0]) == 3:
@@ -54,6 +53,88 @@ def _ordered_pool_hints(loose_rows: list[dict], expected_count: int) -> set[tupl
                 hints.add(first_two + (remaining[0],))
 
     return hints
+
+
+def _ordered_top3_hints(html: str, evidence_rows: list[dict]) -> set[tuple[int, int, int]]:
+    hints = {
+        tuple(values) for values in _ordered_pool_hints(evidence_rows, 3)
+        if len(values) == 3
+    }
+    hints |= {
+        tuple(values) for values in place_rescue._result_table_ordered_hints(html, 3)
+        if len(values) == 3
+    }
+    return hints
+
+
+def _expected_wide_sequence(top3: tuple[int, int, int]) -> tuple[tuple[int, int], ...]:
+    a, b, c = top3
+    return (
+        tuple(sorted((a, b))),
+        tuple(sorted((a, c))),
+        tuple(sorted((b, c))),
+    )
+
+
+def _recover_wide_rows(html: str, race_id: str, source_name: str, loose_rows: list[dict]):
+    recovered: list[dict] = []
+    recovered_segments = 0
+    evidence_count = 0
+    ordered_hints = _ordered_top3_hints(html, loose_rows)
+
+    for _row_no, bet, cells in place_rescue._segments(html):
+        if bet != 'ワイド':
+            continue
+        payouts = base._yen_values(cells)
+        if not payouts:
+            continue
+
+        combo_text = base._combo_cells(cells)
+        direct = base._combos(combo_text, bet, expected_count=len(payouts))
+        if len(direct) == len(payouts):
+            continue
+
+        if len(payouts) != 3:
+            continue
+
+        candidates = v2._wide_pair_solutions(combo_text, len(payouts))
+        ordered_matches = []
+        for candidate in candidates:
+            for top3 in ordered_hints:
+                if tuple(candidate) == _expected_wide_sequence(top3):
+                    ordered_matches.append(candidate)
+                    break
+
+        # If ordered evidence does not uniquely resolve the row, retain the v2
+        # unordered rescue as a safe fallback for cases already handled there.
+        chosen = None
+        if len(ordered_matches) == 1:
+            chosen = ordered_matches[0]
+            evidence_count += 1
+        else:
+            fallback_rows, fallback_segments, fallback_evidence = v2._recover_wide_rows(
+                html, race_id, source_name, loose_rows
+            )
+            if fallback_segments == 1 and fallback_rows:
+                recovered.extend(fallback_rows)
+                recovered_segments += 1
+                evidence_count += fallback_evidence
+                continue
+
+        if chosen is None:
+            continue
+
+        recovered_segments += 1
+        for pair, amount in zip(chosen, payouts):
+            recovered.append({
+                'レースID': race_id,
+                '券種': 'ワイド',
+                '組合せ': core.canonical_combo('ワイド', pair),
+                '払戻円': amount,
+                'source_file': source_name,
+            })
+
+    return recovered, recovered_segments, evidence_count
 
 
 def _recover_place_rows(html: str, race_id: str, source_name: str, evidence_rows: list[dict]):
@@ -79,15 +160,12 @@ def _recover_place_rows(html: str, race_id: str, source_name: str, evidence_rows
 
         matched: list[tuple[int, ...]] = []
 
-        # 1) Strongest fallback for the remaining archive edge cases: ordered
-        # payout pools already parsed successfully from the same official page.
         ordered_pool_hints = _ordered_pool_hints(evidence_rows, len(payouts))
         ordered_pool_matches = [c for c in candidates if tuple(c) in ordered_pool_hints]
         if len(ordered_pool_matches) == 1:
             matched = ordered_pool_matches
             evidence_count += 1
 
-        # 2) Official result table in finish order.
         if not matched:
             ordered_table_hints = place_rescue._result_table_ordered_hints(html, len(payouts))
             table_matches = [c for c in candidates if tuple(c) in ordered_table_hints]
@@ -95,7 +173,6 @@ def _recover_place_rows(html: str, race_id: str, source_name: str, evidence_rows
                 matched = table_matches
                 evidence_count += 1
 
-        # 3) Existing normalized-pool constraints (win/exacta/quinella/etc.).
         if not matched:
             parsed_matches = []
             parsed_counts = []
@@ -108,7 +185,6 @@ def _recover_place_rows(html: str, race_id: str, source_name: str, evidence_rows
                 matched = parsed_matches
                 evidence_count += max(parsed_counts or [0])
 
-        # 4) Last safe fallback: unordered complete winner-set evidence.
         if not matched:
             hints = place_rescue._hint_sets(html, len(payouts))
             unordered_matches = [c for c in candidates if frozenset(c) in hints]
@@ -168,7 +244,7 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
         wide_rows: list[dict] = []
         wide_segments = wide_evidence = 0
         if wide_warnings:
-            wide_rows, wide_segments, wide_evidence = v2._recover_wide_rows(
+            wide_rows, wide_segments, wide_evidence = _recover_wide_rows(
                 html, str(race_id), source_name, list(loose_rows)
             )
             if wide_segments != len(wide_warnings) or not wide_rows:
@@ -197,6 +273,6 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
             'rescued_place_segments': place_segments,
             'rescued_wide_segments': wide_segments,
             'ordered_pool_evidence_count': place_evidence,
-            'wide_top3_evidence_count': wide_evidence,
+            'wide_ordered_evidence_count': wide_evidence,
         })
         return merged, audit
