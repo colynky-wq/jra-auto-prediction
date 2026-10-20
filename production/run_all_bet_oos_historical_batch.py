@@ -2,12 +2,17 @@
 
 This is the scalable execution path for the 2025 collector layout:
   races/<race_id>_odds.parquet
+  races/<race_id>_horses.parquet
   payout_raw/<race_id>.html.gz
 
 It deliberately does not concatenate all 3連単 quotes into one giant in-memory
 DataFrame/CSV. Each race is normalized, settled and aggregated immediately.
 Prediction provenance is validated globally before the first historical quote is
 scored. Missing payout files/pools remain unresolved and are never losses.
+
+Horse metadata is used to add the horse->frame map required for 枠連 when the
+OOS prediction file itself has no 枠 column. If no complete frame map exists,
+only 枠連 is naturally unscorable; the other seven pools remain usable.
 
 Research-only outputs; forward ledgers are never read or written.
 """
@@ -26,7 +31,9 @@ import normalize_historical_all_bet as odds_norm
 import normalize_historical_payouts as payout_norm
 import research_all_bet_retrospective as core
 
-METHOD = 'retrospective-all-bet-stream-strict-oos-v1-20261021'
+METHOD = 'retrospective-all-bet-stream-strict-oos-v2-20261021'
+HORSE_NO_ALIASES = ('馬番', 'horse_no', 'horseNumber', 'number', '番号')
+FRAME_ALIASES = ('枠', '枠番', 'frame', 'frame_no', 'frameNumber')
 
 
 def race_id_from_odds_path(path: Path) -> str:
@@ -51,6 +58,76 @@ def payout_file_for(payout_dir: Path, race_id: str):
         if path.exists():
             return path
     return None
+
+
+def horse_file_for(odds_path: Path, race_id: str):
+    """Return the collector horse metadata file next to a race odds file."""
+    root = Path(odds_path).parent
+    for name in (f'{race_id}_horses.parquet', f'{race_id}_horses.csv'):
+        path = root / name
+        if path.exists():
+            return path
+    return None
+
+
+def _first_present(row: dict, aliases):
+    for name in aliases:
+        if name in row:
+            value = row.get(name)
+            if value is not None and str(value).strip() not in {'', 'nan', 'None', '<NA>'}:
+                return value
+    return None
+
+
+def frame_map_from_horse_rows(rows: list[dict]) -> dict[int, int]:
+    """Build an authoritative horse-number -> frame-number map from collector rows."""
+    mapping: dict[int, int] = {}
+    for row in rows:
+        horse_raw = _first_present(row, HORSE_NO_ALIASES)
+        frame_raw = _first_present(row, FRAME_ALIASES)
+        if horse_raw is None or frame_raw is None:
+            continue
+        horse = core._integer(horse_raw, high=18)
+        frame = core._integer(frame_raw, high=8)
+        old = mapping.get(horse)
+        if old is not None and old != frame:
+            raise ValueError(f'conflicting frame mapping for horse {horse}: {old} vs {frame}')
+        mapping[horse] = frame
+    return mapping
+
+
+def _prediction_frames_complete(pred_rows: list[dict]) -> bool:
+    if not pred_rows:
+        return False
+    for row in pred_rows:
+        frame = _first_present(row, FRAME_ALIASES)
+        if frame is None:
+            return False
+        try:
+            core._integer(frame, high=8)
+        except ValueError:
+            return False
+    return True
+
+
+def enrich_prediction_frames(pred_rows: list[dict], horse_rows: list[dict] | None):
+    """Return (copied_prediction_rows, status) with complete 枠 when available."""
+    copied = [dict(row) for row in pred_rows]
+    if _prediction_frames_complete(copied):
+        return copied, 'prediction_frames'
+    if not horse_rows:
+        return copied, 'frame_unavailable'
+
+    mapping = frame_map_from_horse_rows(horse_rows)
+    if not mapping:
+        return copied, 'frame_unavailable'
+
+    for row in copied:
+        horse = core._integer(core._field(row, core.PRED_ALIASES['horse_no']), high=18)
+        if horse not in mapping:
+            return [dict(r) for r in pred_rows], 'frame_incomplete'
+        row['枠'] = mapping[horse]
+    return copied, 'horse_file_frames'
 
 
 class StreamingSummary:
@@ -156,9 +233,9 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
     audit_handle = audit_path.open('w', encoding='utf-8-sig', newline='')
     sample_writer = None
     audit_fields = [
-        'race_id', 'status', 'odds_file', 'payout_file', 'prediction_rows',
-        'normalized_odds_rows', 'payout_rows', 'covered_bets', 'scored_samples',
-        'settled_samples', 'parse_warnings',
+        'race_id', 'status', 'odds_file', 'horse_file', 'frame_mapping', 'payout_file',
+        'prediction_rows', 'normalized_odds_rows', 'payout_rows', 'covered_bets',
+        'scored_samples', 'settled_samples', 'parse_warnings',
     ]
     audit_writer = csv.DictWriter(audit_handle, fieldnames=audit_fields)
     audit_writer.writeheader()
@@ -167,6 +244,8 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
     counts = defaultdict(int)
     processed_races = set()
     payout_coverage = defaultdict(int)
+    scored_by_bet = defaultdict(int)
+    settled_by_bet = defaultdict(int)
 
     try:
         for odds_path in odds_files:
@@ -176,9 +255,9 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
                 counts['skipped_no_prediction'] += 1
                 audit_writer.writerow({
                     'race_id': rid, 'status': 'skip_no_oos_prediction', 'odds_file': odds_path.name,
-                    'payout_file': '', 'prediction_rows': 0, 'normalized_odds_rows': 0,
-                    'payout_rows': 0, 'covered_bets': '', 'scored_samples': 0,
-                    'settled_samples': 0, 'parse_warnings': 0,
+                    'horse_file': '', 'frame_mapping': '', 'payout_file': '', 'prediction_rows': 0,
+                    'normalized_odds_rows': 0, 'payout_rows': 0, 'covered_bets': '',
+                    'scored_samples': 0, 'settled_samples': 0, 'parse_warnings': 0,
                 })
                 continue
 
@@ -187,11 +266,17 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
                 counts['skipped_missing_payout_file'] += 1
                 audit_writer.writerow({
                     'race_id': rid, 'status': 'skip_missing_payout_file', 'odds_file': odds_path.name,
-                    'payout_file': '', 'prediction_rows': len(pred_rows), 'normalized_odds_rows': 0,
+                    'horse_file': '', 'frame_mapping': '', 'payout_file': '',
+                    'prediction_rows': len(pred_rows), 'normalized_odds_rows': 0,
                     'payout_rows': 0, 'covered_bets': '', 'scored_samples': 0,
                     'settled_samples': 0, 'parse_warnings': 0,
                 })
                 continue
+
+            horse_path = horse_file_for(odds_path, rid)
+            horse_rows = odds_norm.read_table(horse_path) if horse_path is not None else None
+            pred_rows, frame_status = enrich_prediction_frames(pred_rows, horse_rows)
+            counts[f'frame_mapping_{frame_status}'] += 1
 
             normalized_odds = odds_norm.normalize_odds_rows(odds_norm.read_table(odds_path), odds_path.name)
             payout_rows, payout_audit = payout_norm.parse_payout_html(
@@ -209,6 +294,9 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
                     sample_writer.writeheader()
                 sample_writer.writerow(sample)
                 agg.add(sample)
+                scored_by_bet[sample['bet_type']] += 1
+                if sample['settled']:
+                    settled_by_bet[sample['bet_type']] += 1
 
             settled = sum(bool(s['settled']) for s in samples)
             processed_races.add(rid)
@@ -217,6 +305,7 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
             counts['settled_samples'] += settled
             audit_writer.writerow({
                 'race_id': rid, 'status': 'processed', 'odds_file': odds_path.name,
+                'horse_file': horse_path.name if horse_path else '', 'frame_mapping': frame_status,
                 'payout_file': payout_path.name, 'prediction_rows': len(pred_rows),
                 'normalized_odds_rows': len(normalized_odds), 'payout_rows': len(payout_rows),
                 'covered_bets': payout_audit['covered_bets'], 'scored_samples': len(samples),
@@ -236,6 +325,8 @@ def run(predictions_path: Path, odds_dir: Path, payout_dir: Path, output_dir: Pa
         'processed_races': len(processed_races),
         'counts': dict(counts),
         'payout_coverage_races_by_bet': dict(payout_coverage),
+        'scored_samples_by_bet': {bet: scored_by_bet.get(bet, 0) for bet in core.ALL_BETS},
+        'settled_samples_by_bet': {bet: settled_by_bet.get(bet, 0) for bet in core.ALL_BETS},
         'thresholds': list(map(float, thresholds)),
         'stake_yen': int(stake_yen),
         'forward_ledgers_touched': False,
