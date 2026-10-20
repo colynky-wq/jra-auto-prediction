@@ -18,9 +18,9 @@ from pathlib import Path
 import research_all_bet_uncertainty as uncertainty
 import run_all_bet_oos_drive_2025 as drive_run
 import validate_all_bet_oos_run as quality_gate
-import payout_parse_rescue_v2 as payout_rescue
+import payout_parse_rescue_v4 as payout_rescue
 
-METHOD = 'drive-2025-strict-oos-all-bet-final-v3-20261021'
+METHOD = 'drive-2025-strict-oos-all-bet-final-v4-20261021'
 
 
 def run(drive_root: Path = drive_run.DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
@@ -28,8 +28,8 @@ def run(drive_root: Path = drive_run.DEFAULT_DRIVE_ROOT, output_dir: Path | None
         bootstrap_seed: int = uncertainty.DEFAULT_SEED, stake_yen: int = 100):
     # The historical batch intentionally uses a strict parser. Keep that
     # fail-closed contract, but allow the rescue wrapper to resolve compact
-    # 複勝/ワイド rows only when other normalized pools on the same saved result
-    # page uniquely corroborate the split.
+    # 複勝/ワイド rows only when independent ordered/unordered evidence on the
+    # same saved result page uniquely corroborates the split.
     drive_run.batch.payout_norm.parse_payout_html = payout_rescue.parse_payout_html
 
     base = drive_run.run(
