@@ -1,4 +1,7 @@
+import csv
+import tempfile
 import unittest
+from pathlib import Path
 
 import research_all_bet_portfolio_grid as grid
 
@@ -14,10 +17,8 @@ def sample(race, combo, ev, *, hit=False, payout=0, bet='ワイド', settled=Tru
 class PortfolioGridTests(unittest.TestCase):
     def test_top_k_keeps_highest_ev_within_each_race(self):
         rows = [
-            sample('R1', '1-2', 1.1),
-            sample('R1', '1-3', 1.4),
-            sample('R1', '1-4', 1.2),
-            sample('R2', '2-3', 1.3),
+            sample('R1', '1-2', 1.1), sample('R1', '1-3', 1.4),
+            sample('R1', '1-4', 1.2), sample('R2', '2-3', 1.3),
             sample('R2', '2-4', 0.9),
         ]
         selected = grid.select_top_k(rows, bet='ワイド', threshold=1.0, top_k=2)
@@ -36,8 +37,7 @@ class PortfolioGridTests(unittest.TestCase):
     def test_trigami_is_race_level_total_return_vs_total_stake(self):
         rows = [
             sample('R1', '1-2', 1.4, hit=True, payout=180),
-            sample('R1', '1-3', 1.3, hit=False, payout=0),
-            sample('R1', '1-4', 1.2, hit=False, payout=0),
+            sample('R1', '1-3', 1.3), sample('R1', '1-4', 1.2),
         ]
         result = grid.evaluate(rows, thresholds=(1.0,), top_ks=(3,), stake_yen=100)
         wide = next(r for r in result if r['bet_type'] == 'ワイド')
@@ -50,8 +50,7 @@ class PortfolioGridTests(unittest.TestCase):
     def test_top_one_can_remove_trigami_created_by_extra_tickets(self):
         rows = [
             sample('R1', '1-2', 1.4, hit=True, payout=180),
-            sample('R1', '1-3', 1.3),
-            sample('R1', '1-4', 1.2),
+            sample('R1', '1-3', 1.3), sample('R1', '1-4', 1.2),
         ]
         result = grid.evaluate(rows, thresholds=(1.0,), top_ks=(1, 3), stake_yen=100)
         top1 = next(r for r in result if r['bet_type'] == 'ワイド' and r['top_k_per_race'] == 1)
@@ -70,6 +69,39 @@ class PortfolioGridTests(unittest.TestCase):
         result = grid.evaluate(rows, thresholds=(1.0,), top_ks=(2,), stake_yen=100)
         wide = next(r for r in result if r['bet_type'] == 'ワイド')
         self.assertEqual(wide['max_losing_race_streak'], 2)
+
+    def test_streaming_file_matches_in_memory_reference(self):
+        rows = [
+            sample('R1', '1-2', 1.4, hit=True, payout=180),
+            sample('R1', '1-3', 1.3),
+            sample('R2', '2-3', 1.2),
+            sample('R2', '2-4', 1.1, hit=True, payout=400),
+        ]
+        reference = grid.evaluate(rows, thresholds=(1.0,), top_ks=(1, 2), stake_yen=100)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'samples.csv'
+            with path.open('w', encoding='utf-8-sig', newline='') as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                writer.writeheader(); writer.writerows(rows)
+            streamed = grid.evaluate_file_streaming(path, thresholds=(1.0,), top_ks=(1, 2), stake_yen=100)
+        keys = ('bet_type', 'ev_threshold', 'top_k_per_race')
+        ref = {tuple(r[k] for k in keys): r for r in reference}
+        got = {tuple(r[k] for k in keys): r for r in streamed}
+        self.assertEqual(set(ref), set(got))
+        for key in ref:
+            for field in ('selected_bets', 'evaluated_races', 'hits', 'hit_races',
+                          'stake_yen', 'return_yen', 'roi_pct', 'trigami_races',
+                          'max_losing_race_streak'):
+                self.assertEqual(ref[key][field], got[key][field], msg=(key, field))
+
+    def test_streaming_rejects_race_that_reappears_later(self):
+        rows = [sample('R1', '1-2', 1.4), sample('R2', '2-3', 1.3), sample('R1', '1-3', 1.2)]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'samples.csv'
+            with path.open('w', encoding='utf-8-sig', newline='') as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
+            with self.assertRaisesRegex(ValueError, 'grouped by race'):
+                grid.evaluate_file_streaming(path, thresholds=(1.0,), top_ks=(1,))
 
 
 if __name__ == '__main__':
