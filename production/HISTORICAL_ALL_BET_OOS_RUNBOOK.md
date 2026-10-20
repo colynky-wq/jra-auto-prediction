@@ -61,7 +61,7 @@ python validate_all_bet_oos_run.py \
   --output-json /content/gdrive_live/MyDrive/code_output/jra_data/research_all_bet_oos_2025/full_quality_gate.json
 ```
 
-`QUALITY_GATE=PASS` is required before interpreting ROI. It checks strict OOS provenance, real scored/settled samples, all eight pools on a full available-archive run, usable frame information for 枠連, race-unit losing streak semantics, explicit trigami semantics, and zero forward-ledger contact.
+`QUALITY_GATE=PASS` is required before interpreting ROI. It checks strict OOS provenance, real scored/settled samples, all eight pools on a full available-archive run, usable frame information for 枠連, race-unit losing streak semantics, explicit trigami semantics, a generated non-empty Top-K portfolio grid, positive Top-K values, and zero forward-ledger contact.
 
 ## Outputs
 
@@ -91,5 +91,6 @@ research_all_bet_oos_2025/
 - payout HTML can contain two pool blocks in one table row and concatenated combination strings; the strict parser is regression-tested against an exact saved Drive gzip;
 - losing streak is counted by race, not by the number of individual losing tickets inside one race;
 - trigami means: at least one selected ticket hits but total race return is below total selected-ticket stake;
+- a historical run without the Top-K portfolio grid is not eligible for final ROI interpretation;
 - do not claim a profitable strategy from a tiny smoke sample; use the full available archive plus uncertainty / condition analysis before changing app recommendations;
 - WIN5 remains a separate five-race research path.
