@@ -121,10 +121,54 @@ private struct KeibaAIPortfolioQuickEnvelope: Decodable {
     let meaning: String
 }
 
+private struct KeibaAIEarlyReviewEnvelope: Decodable {
+    struct Summary: Decodable {
+        let races: Int
+        let selectedRaces: Int
+        let skippedRaces: Int
+        let participationRatePct: Double?
+        let settledSelectedRaces: Int
+        let resultsPendingSelectedRaces: Int
+        let hitAnyRaces: Int
+        let hitRatePct: Double?
+        let profitableRaces: Int
+        let profitableRatePct: Double?
+        let torigamiRaces: Int
+        let torigamiRatePct: Double?
+        let stakeYen: Int
+        let returnYen: Int
+        let profitYen: Int
+        let returnIndex: Double?
+    }
+
+    struct Summaries: Decodable {
+        let development: Summary
+        let prospectiveContribution: Summary
+        let combinedReference: Summary
+    }
+
+    let schemaVersion: Int
+    let version: String
+    let sourceVersion: String
+    let status: String
+    let reviewStatus: String
+    let generatedAtJST: String
+    let prospectiveStartDate: String
+    let referenceTargetRaces: Int
+    let developmentRacesUsed: Int
+    let prospectiveRacesUsed: Int
+    let combinedReferenceRaces: Int
+    let remainingToReference100: Int
+    let progressPct: Double
+    let summaries: Summaries
+}
+
 @MainActor
 private final class KeibaAIPortfolioQuickStore: ObservableObject {
     @Published private(set) var data: KeibaAIPortfolioQuickEnvelope?
+    @Published private(set) var earlyReview: KeibaAIEarlyReviewEnvelope?
     @Published private(set) var sourceMessage = "研究プラン 未読み込み"
+    @Published private(set) var earlyReviewMessage = "初期評価 未読み込み"
     @Published private(set) var isLoading = false
 
     private static let dateFormatter: DateFormatter = {
@@ -168,28 +212,14 @@ private final class KeibaAIPortfolioQuickStore: ObservableObject {
 
     func load(force: Bool = false) async {
         if isLoading { return }
-        if !force, data != nil { return }
+        if !force, data != nil, earlyReview != nil { return }
         isLoading = true
         defer { isLoading = false }
 
         do {
-            guard var components = URLComponents(
-                string: "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioResearchData.json"
-            ) else { throw URLError(.badURL) }
-            components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
-            guard let url = components.url else { throw URLError(.badURL) }
-
-            var request = URLRequest(url: url)
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-            request.timeoutInterval = 10
-            request.setValue("KeibaAI-iOS/2.1", forHTTPHeaderField: "User-Agent")
-
-            let (bytes, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                throw URLError(.badServerResponse)
-            }
-
-            let decoded = try JSONDecoder().decode(KeibaAIPortfolioQuickEnvelope.self, from: bytes)
+            let decoded: KeibaAIPortfolioQuickEnvelope = try await fetchJSON(
+                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioResearchData.json"
+            )
             guard decoded.schemaVersion == 1,
                   decoded.version == "portfolio-shadow-v1-20261019",
                   decoded.status == "research_display_only",
@@ -198,12 +228,45 @@ private final class KeibaAIPortfolioQuickStore: ObservableObject {
                   !decoded.stakeSizingEnabled else {
                 throw URLError(.cannotParseResponse)
             }
-
             data = decoded
             sourceMessage = "研究プラン取得済"
         } catch {
             sourceMessage = "研究プラン 更新待ち"
         }
+
+        do {
+            let decoded: KeibaAIEarlyReviewEnvelope = try await fetchJSON(
+                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioEarlyReview100.json"
+            )
+            guard decoded.schemaVersion == 1,
+                  decoded.version == "portfolio-early-reference-100-v1-20261020",
+                  decoded.sourceVersion == "portfolio-shadow-v1-20261019",
+                  decoded.status == "development_mixed_reference_only",
+                  decoded.referenceTargetRaces == 100 else {
+                throw URLError(.cannotParseResponse)
+            }
+            earlyReview = decoded
+            earlyReviewMessage = "初期評価取得済"
+        } catch {
+            earlyReviewMessage = "初期評価 更新待ち"
+        }
+    }
+
+    private func fetchJSON<T: Decodable>(_ urlString: String) async throws -> T {
+        guard var components = URLComponents(string: urlString) else { throw URLError(.badURL) }
+        components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
+        guard let url = components.url else { throw URLError(.badURL) }
+
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 10
+        request.setValue("KeibaAI-iOS/2.2", forHTTPHeaderField: "User-Agent")
+
+        let (bytes, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode(T.self, from: bytes)
     }
 }
 
@@ -226,6 +289,7 @@ private struct KeibaAIPortfolioQuickView: View {
 
                 if let data = store.data, let date = store.displayDate {
                     summary(data: data, date: date)
+                    evaluationProgress(data: data)
 
                     if selected.isEmpty {
                         VStack(alignment: .leading, spacing: 7) {
@@ -250,7 +314,7 @@ private struct KeibaAIPortfolioQuickView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("この画面はshadow研究です。正式な購入指示ではなく、10/24以降の前向き検証で性能を確認します。")
+                    Text("この画面はshadow研究です。初期評価は既存データを含む参考値、正式forward評価は10/24以降だけで別集計します。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.top, 4)
@@ -292,40 +356,132 @@ private struct KeibaAIPortfolioQuickView: View {
 
     @ViewBuilder
     private func summary(data: KeibaAIPortfolioQuickEnvelope, date: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("表示日")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text(date)
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("参加候補")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                    Text("\(selected.count) / \(rows.count)R")
-                        .font(.headline.monospacedDigit())
-                }
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("表示日")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(date)
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("参加候補")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("\(selected.count) / \(rows.count)R")
+                    .font(.headline.monospacedDigit())
+            }
+        }
+        .padding(14)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private func evaluationProgress(data: KeibaAIPortfolioQuickEnvelope) -> some View {
+        VStack(spacing: 12) {
+            if let early = store.earlyReview {
+                evaluationCard(
+                    title: "初期評価（参考）",
+                    subtitle: "既存69R＋今後のレース。性能証明には使いません",
+                    current: min(early.combinedReferenceRaces, early.referenceTargetRaces),
+                    target: early.referenceTargetRaces,
+                    metrics: [
+                        ("参加率", formatPercent(early.summaries.combinedReference.participationRatePct)),
+                        ("的中率", formatPercent(early.summaries.combinedReference.hitRatePct)),
+                        ("利益R率", formatPercent(early.summaries.combinedReference.profitableRatePct)),
+                        ("トリガミ", formatPercent(early.summaries.combinedReference.torigamiRatePct)),
+                        ("回収指数", formatReturnIndex(early.summaries.combinedReference.returnIndex)),
+                        ("残り", "\(early.remainingToReference100)R")
+                    ],
+                    badge: "参考"
+                )
+            } else {
+                statusCard(title: "初期評価（参考）", message: store.earlyReviewMessage)
             }
 
-            if date >= data.prospectiveStartDate {
-                HStack {
-                    Text("短期目標 100R")
-                    Spacer()
-                    Text("\(min(data.prospective.racesSeen, 100))/100R")
-                        .monospacedDigit()
-                }
+            evaluationCard(
+                title: "正式forward評価",
+                subtitle: "10/24以降だけ。固定ルールの本番検証",
+                current: min(data.prospective.racesSeen, 100),
+                target: 100,
+                metrics: [
+                    ("参加候補", "\(data.prospective.selectedRaces)R"),
+                    ("結果照合", "\(data.prospective.settledSelectedRaces)R"),
+                    ("的中R", "\(data.prospective.hitAnyRaces)R"),
+                    ("利益R", "\(data.prospective.profitableRaces)R"),
+                    ("トリガミ", "\(data.prospective.torigamiRaces)R"),
+                    ("回収指数", formatReturnIndex(data.prospective.returnIndex))
+                ],
+                badge: data.prospective.racesSeen == 0 ? "10/24開始" : "forward"
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func evaluationCard(
+        title: String,
+        subtitle: String,
+        current: Int,
+        target: Int,
+        metrics: [(String, String)],
+        badge: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                Text(badge)
+                    .font(.caption2.weight(.bold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.12), in: Capsule())
+            }
+
+            Text(subtitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                ProgressView(value: min(1, Double(data.prospective.racesSeen) / 100.0))
-            } else {
-                Text("10/24から固定ルールの前向き検証を開始します。現在の過去分は開発・表示確認用です。")
-                    .font(.caption)
+
+            HStack {
+                Text("\(current) / \(target)R")
+                    .font(.title3.weight(.bold).monospacedDigit())
+                Spacer()
+                Text("\(Int((Double(current) / Double(max(target, 1)) * 100).rounded()))%")
+                    .font(.caption.weight(.semibold).monospacedDigit())
                     .foregroundStyle(.secondary)
             }
+            ProgressView(value: min(1, Double(current) / Double(max(target, 1))))
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                ForEach(Array(metrics.enumerated()), id: \.offset) { _, metric in
+                    VStack(spacing: 2) {
+                        Text(metric.0)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        Text(metric.1)
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 9))
+                }
+            }
+        }
+        .padding(14)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private func statusCard(title: String, message: String) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.headline)
+                Text(message).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if store.isLoading { ProgressView() }
         }
         .padding(14)
         .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
@@ -387,6 +543,16 @@ private struct KeibaAIPortfolioQuickView: View {
         }
         .padding(16)
         .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func formatPercent(_ value: Double?) -> String {
+        guard let value else { return "--" }
+        return String(format: "%.1f%%", value)
+    }
+
+    private func formatReturnIndex(_ value: Double?) -> String {
+        guard let value else { return "--" }
+        return String(format: "%.1f%%", value * 100)
     }
 
     private func betLabel(_ value: String) -> String {
