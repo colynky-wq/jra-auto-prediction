@@ -18,13 +18,20 @@ from pathlib import Path
 import research_all_bet_uncertainty as uncertainty
 import run_all_bet_oos_drive_2025 as drive_run
 import validate_all_bet_oos_run as quality_gate
+import payout_parse_rescue as payout_rescue
 
-METHOD = 'drive-2025-strict-oos-all-bet-final-v1-20261021'
+METHOD = 'drive-2025-strict-oos-all-bet-final-v2-20261021'
 
 
 def run(drive_root: Path = drive_run.DEFAULT_DRIVE_ROOT, output_dir: Path | None = None,
         reuse_predictions: bool = False, bootstrap_reps: int = uncertainty.DEFAULT_REPS,
         bootstrap_seed: int = uncertainty.DEFAULT_SEED, stake_yen: int = 100):
+    # The historical batch intentionally uses a strict parser.  Keep that
+    # fail-closed contract, but allow the rescue wrapper to resolve only those
+    # concatenated 複勝 rows whose split is uniquely corroborated by other payout
+    # pools on the same saved result page.
+    drive_run.batch.payout_norm.parse_payout_html = payout_rescue.parse_payout_html
+
     base = drive_run.run(
         drive_root=drive_root,
         output_dir=output_dir,
