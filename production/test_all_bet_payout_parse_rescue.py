@@ -29,6 +29,32 @@ class PayoutParseRescueTests(unittest.TestCase):
         place = [(r['組合せ'], r['払戻円']) for r in rows if r['券種'] == '複勝']
         self.assertEqual(place, [('6', 320.0), ('1', 180.0), ('15', 270.0)])
 
+    def test_6115_is_resolved_from_successfully_parsed_win_quinella_exacta(self):
+        html = '''<table>
+        <tr><th>単勝</th><td>6</td><td>720円</td><td>3番人気</td></tr>
+        <tr><th>複勝</th><td>6115</td><td>320円180円270円</td><td>7番人気2番人気4番人気</td></tr>
+        <tr><th>馬連</th><td>6-11</td><td>2,430円</td><td>9番人気</td></tr>
+        <tr><th>馬単</th><td>6-11</td><td>4,180円</td><td>16番人気</td></tr>
+        </table>'''
+        rows, audit = rescue.parse_payout_html(
+            html, '202506010105', '202506010105.html.gz', strict=True
+        )
+        place = [(r['組合せ'], r['払戻円']) for r in rows if r['券種'] == '複勝']
+        self.assertEqual(place, [('6', 320.0), ('11', 180.0), ('5', 270.0)])
+        self.assertGreaterEqual(audit.get('parsed_pool_evidence_count', 0), 2)
+        self.assertEqual(audit['warning_count'], 0)
+
+    def test_6115_can_choose_6_1_15_from_exacta_prefix(self):
+        html = '''<table>
+        <tr><th>複勝</th><td>6115</td><td>320円180円270円</td></tr>
+        <tr><th>馬単</th><td>6-1</td><td>4,180円</td></tr>
+        </table>'''
+        rows, _ = rescue.parse_payout_html(
+            html, '202506010105', '202506010105.html.gz', strict=True
+        )
+        place = [(r['組合せ'], r['払戻円']) for r in rows if r['券種'] == '複勝']
+        self.assertEqual(place, [('6', 320.0), ('1', 180.0), ('15', 270.0)])
+
     def test_6115_is_resolved_by_result_table_when_other_pools_are_unhelpful(self):
         html = '''
         <table>
