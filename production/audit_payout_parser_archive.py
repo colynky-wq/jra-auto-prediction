@@ -11,7 +11,7 @@ import csv
 from pathlib import Path
 import re
 
-import payout_parse_rescue_v2 as parser
+import payout_parse_rescue_v3 as parser
 
 DEFAULT_PAYOUT_DIR = Path(
     '/content/gdrive_live/MyDrive/code_output/jra_data/historical_odds_2025/payout_raw'
