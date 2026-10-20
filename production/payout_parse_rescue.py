@@ -13,6 +13,10 @@ from the same saved result page:
 * the official result table headed by ``着順`` and ``馬番`` when that table is
   recoverable from the saved HTML.
 
+The official result-table order is preserved, so compact strings such as
+``7111`` can distinguish ``7,11,1`` from ``7,1,11`` instead of collapsing both
+to the same unordered three-horse set.
+
 A rescue is accepted only when exactly one candidate split is supported by the
 available evidence. Otherwise the original exception is re-raised.
 """
@@ -93,13 +97,21 @@ def _one_small_int(cell: str, *, low: int, high: int):
     return unique[0] if len(unique) == 1 else None
 
 
-def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
-    """Read place-winning horse numbers from a conventional result table."""
+def _result_table_ordered_hints(html: str, expected_count: int) -> set[tuple[int, ...]]:
+    """Read place-winning horse numbers from the result table in finish order.
+
+    Ordinary 複勝 payout rows are listed in result order. Keeping that order is
+    important for compact strings where two valid splits contain the same horse
+    set but differ only by position, e.g. ``7111``.
+
+    Dead-heat layouts that do not yield exactly ``expected_count`` distinct
+    winners remain unresolved and therefore fail closed.
+    """
     if expected_count <= 0:
         return set()
 
     rows = base.html_table_rows(html)
-    hints: set[frozenset[int]] = set()
+    hints: set[tuple[int, ...]] = set()
     rank_limit = 1 if expected_count == 1 else 2 if expected_count == 2 else 3
 
     for header_index, header in enumerate(rows):
@@ -133,9 +145,14 @@ def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int
                 winners.append(horse)
 
         if len(winners) == expected_count:
-            hints.add(frozenset(winners))
+            hints.add(tuple(winners))
 
     return hints
+
+
+def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
+    """Read place-winning horse sets from a conventional result table."""
+    return {frozenset(values) for values in _result_table_ordered_hints(html, expected_count)}
 
 
 def _other_pool_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
@@ -191,14 +208,7 @@ def _parsed_pool_groups(loose_rows: list[dict]) -> dict[str, list[tuple[int, ...
 
 
 def _candidate_matches_parsed_evidence(candidate: tuple[int, ...], loose_rows: list[dict]) -> tuple[bool, int]:
-    """Check candidate against strong partial/complete evidence from parsed pools.
-
-    For an ordinary three-place race, a single 馬単 winner fixes the first two
-    horses in order, while a single 馬連 winner fixes the same pair unordered.
-    These constraints are sufficient to distinguish e.g. 6,11,5 from 6,1,15.
-    We only apply a pool when its normalized winning combination is unique, so
-    dead-heat multi-winner layouts remain fail-closed instead of being guessed.
-    """
+    """Check candidate against strong partial/complete evidence from parsed pools."""
     groups = _parsed_pool_groups(loose_rows)
     checks: list[bool] = []
 
@@ -257,24 +267,34 @@ def _recover_place_rows(html: str, race_id: str, source_name: str, loose_rows: l
         if not candidates:
             continue
 
-        # First prefer combinations the base parser already accepted. This is
-        # stronger than reparsing the raw HTML again because loose_rows are the
-        # exact normalized rows that survived parsing for this same file.
-        parsed_matches = []
-        evidence_counts = []
-        for candidate in candidates:
-            ok, count = _candidate_matches_parsed_evidence(candidate, loose_rows)
-            if ok and count > 0:
-                parsed_matches.append(candidate)
-                evidence_counts.append(count)
+        # The result table is the strongest source for payout ordering because
+        # it gives the official 1st/2nd/3rd horse sequence directly. This also
+        # resolves cases where unordered evidence cannot distinguish candidates
+        # containing the same horse set.
+        ordered_hints = _result_table_ordered_hints(html, len(payouts))
+        ordered_matches = [candidate for candidate in candidates if tuple(candidate) in ordered_hints]
 
         matched: list[tuple[int, ...]] = []
-        if len(parsed_matches) == 1:
-            matched = parsed_matches
-            parsed_evidence_used += max(evidence_counts or [0])
+        if len(ordered_matches) == 1:
+            matched = ordered_matches
+            parsed_evidence_used += 1
         else:
-            hints = _hint_sets(html, len(payouts))
-            matched = [candidate for candidate in candidates if frozenset(candidate) in hints]
+            # Fall back to already-normalized payout pools when the result table
+            # is unavailable or does not uniquely identify the split.
+            parsed_matches = []
+            evidence_counts = []
+            for candidate in candidates:
+                ok, count = _candidate_matches_parsed_evidence(candidate, loose_rows)
+                if ok and count > 0:
+                    parsed_matches.append(candidate)
+                    evidence_counts.append(count)
+
+            if len(parsed_matches) == 1:
+                matched = parsed_matches
+                parsed_evidence_used += max(evidence_counts or [0])
+            else:
+                hints = _hint_sets(html, len(payouts))
+                matched = [candidate for candidate in candidates if frozenset(candidate) in hints]
 
         if len(matched) != 1:
             continue
@@ -335,5 +355,6 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
             'rescued_place_segments': segment_count,
             'parsed_pool_evidence_count': evidence_count,
             'result_table_hint_count': len(_result_table_hint_sets(html, len(recovered))),
+            'result_table_ordered_hint_count': len(_result_table_ordered_hints(html, len(recovered))),
         })
         return merged, audit
