@@ -5,14 +5,16 @@ separator. A token such as ``6115`` can represent either ``6,11,5`` or
 ``6,1,15``. The base parser deliberately refuses to guess in that situation.
 
 This wrapper keeps that fail-closed behavior. When the only parse warnings are
-ambiguous 複勝 rows, it corroborates candidate splits with two independent
-sources on the same saved result page:
+ambiguous 複勝 rows, it corroborates candidate splits with independent evidence
+from the same saved result page:
 
-* winning combinations from other pools (3連単/3連複/ワイド/馬単/馬連), and
-* the official result table headed by ``着順`` and ``馬番``.
+* rows that the base parser already normalized successfully (単勝/馬連/馬単/
+  ワイド/3連複/3連単), and
+* the official result table headed by ``着順`` and ``馬番`` when that table is
+  recoverable from the saved HTML.
 
-A rescue is accepted only when exactly one candidate split matches a
-corroborating winner set. Otherwise the original exception is re-raised.
+A rescue is accepted only when exactly one candidate split is supported by the
+available evidence. Otherwise the original exception is re-raised.
 """
 from __future__ import annotations
 
@@ -82,7 +84,6 @@ def _header_key(cell: str) -> str:
 
 
 def _one_small_int(cell: str, *, low: int, high: int):
-    """Return one unambiguous integer embedded in a table cell, else None."""
     values = []
     for raw in re.findall(r'(?<!\d)(\d{1,2})(?!\d)', base._clean(cell)):
         value = int(raw)
@@ -93,14 +94,7 @@ def _one_small_int(cell: str, *, low: int, high: int):
 
 
 def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
-    """Read place-winning horse numbers from the official result table.
-
-    JRA result pages contain a table whose header includes ``着順`` and ``馬番``.
-    For ordinary fields 複勝 pays through 3rd place; for small fields it can pay
-    through 2nd. Dead heats can therefore produce more than three payout rows,
-    but all place-winning rows still have an official finish rank within the
-    applicable place cutoff.
-    """
+    """Read place-winning horse numbers from a conventional result table."""
     if expected_count <= 0:
         return set()
 
@@ -110,15 +104,19 @@ def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int
 
     for header_index, header in enumerate(rows):
         keys = [_header_key(cell) for cell in header]
-        if '着順' not in keys or '馬番' not in keys:
+        rank_candidates = [i for i, key in enumerate(keys) if key == '着順' or key.startswith('着順')]
+        horse_candidates = [i for i, key in enumerate(keys) if key == '馬番' or key.startswith('馬番')]
+        if not rank_candidates or not horse_candidates:
             continue
-        rank_col = keys.index('着順')
-        horse_col = keys.index('馬番')
+        rank_col = rank_candidates[0]
+        horse_col = horse_candidates[0]
         winners: list[int] = []
 
         for cells in rows[header_index + 1:]:
             next_keys = [_header_key(cell) for cell in cells]
-            if '着順' in next_keys and '馬番' in next_keys:
+            if any(key == '着順' or key.startswith('着順') for key in next_keys) and any(
+                key == '馬番' or key.startswith('馬番') for key in next_keys
+            ):
                 break
             if rank_col >= len(cells) or horse_col >= len(cells):
                 continue
@@ -128,8 +126,6 @@ def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int
             if rank is None or horse is None:
                 continue
             if rank > rank_limit:
-                # Result rows are ordered by finish. Once a later placing is
-                # reached, no further row can belong to the place payout set.
                 if winners:
                     break
                 continue
@@ -143,7 +139,7 @@ def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int
 
 
 def _other_pool_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
-    """Derive corroborating winner sets from independently parsed other pools."""
+    """Derive complete winner sets from independently parsed other pools."""
     by_bet: dict[str, list[set[int]]] = defaultdict(list)
 
     for _row_no, bet, cells in _segments(html):
@@ -161,12 +157,7 @@ def _other_pool_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]
                 by_bet[bet].append(numbers)
 
     hints: set[frozenset[int]] = set()
-    semantic_sizes = {
-        '馬連': 2,
-        '馬単': 2,
-        '3連複': 3,
-        '3連単': 3,
-    }
+    semantic_sizes = {'馬連': 2, '馬単': 2, '3連複': 3, '3連単': 3}
     for bet, groups in by_bet.items():
         native_size = semantic_sizes.get(bet)
         if native_size == expected_count:
@@ -186,13 +177,70 @@ def _other_pool_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]
     return hints
 
 
+def _parsed_pool_groups(loose_rows: list[dict]) -> dict[str, list[tuple[int, ...]]]:
+    """Return normalized winning combinations already accepted by the base parser."""
+    grouped: dict[str, list[tuple[int, ...]]] = defaultdict(list)
+    for row in loose_rows:
+        bet = str(row.get('券種') or '')
+        if bet == '複勝':
+            continue
+        numbers = _combo_numbers(str(row.get('組合せ') or ''))
+        if numbers:
+            grouped[bet].append(numbers)
+    return dict(grouped)
+
+
+def _candidate_matches_parsed_evidence(candidate: tuple[int, ...], loose_rows: list[dict]) -> tuple[bool, int]:
+    """Check candidate against strong partial/complete evidence from parsed pools.
+
+    For an ordinary three-place race, a single 馬単 winner fixes the first two
+    horses in order, while a single 馬連 winner fixes the same pair unordered.
+    These constraints are sufficient to distinguish e.g. 6,11,5 from 6,1,15.
+    We only apply a pool when its normalized winning combination is unique, so
+    dead-heat multi-winner layouts remain fail-closed instead of being guessed.
+    """
+    groups = _parsed_pool_groups(loose_rows)
+    checks: list[bool] = []
+
+    win = groups.get('単勝', [])
+    if len(win) == 1 and len(win[0]) == 1 and candidate:
+        checks.append(candidate[0] == win[0][0])
+
+    if len(candidate) >= 2:
+        exacta = groups.get('馬単', [])
+        if len(exacta) == 1 and len(exacta[0]) == 2:
+            checks.append(tuple(candidate[:2]) == tuple(exacta[0]))
+
+        quinella = groups.get('馬連', [])
+        if len(quinella) == 1 and len(quinella[0]) == 2:
+            checks.append(frozenset(candidate[:2]) == frozenset(quinella[0]))
+
+    if len(candidate) >= 3:
+        trifecta = groups.get('3連単', [])
+        if len(trifecta) == 1 and len(trifecta[0]) == 3:
+            checks.append(tuple(candidate[:3]) == tuple(trifecta[0]))
+
+        trio = groups.get('3連複', [])
+        if len(trio) == 1 and len(trio[0]) == 3:
+            checks.append(frozenset(candidate[:3]) == frozenset(trio[0]))
+
+        wide = groups.get('ワイド', [])
+        if wide and all(len(group) == 2 for group in wide):
+            wide_union = set().union(*(set(group) for group in wide))
+            if len(wide_union) == 3:
+                checks.append(frozenset(candidate[:3]) == frozenset(wide_union))
+
+    return (all(checks), len(checks)) if checks else (False, 0)
+
+
 def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
     return _other_pool_hint_sets(html, expected_count) | _result_table_hint_sets(html, expected_count)
 
 
-def _recover_place_rows(html: str, race_id: str, source_name: str):
+def _recover_place_rows(html: str, race_id: str, source_name: str, loose_rows: list[dict]):
     recovered: list[dict] = []
     recovered_segments = 0
+    parsed_evidence_used = 0
 
     for _row_no, bet, cells in _segments(html):
         if bet != '複勝':
@@ -206,8 +254,28 @@ def _recover_place_rows(html: str, race_id: str, source_name: str):
             continue
 
         candidates = _singleton_solutions(combo_text, len(payouts))
-        hints = _hint_sets(html, len(payouts))
-        matched = [candidate for candidate in candidates if frozenset(candidate) in hints]
+        if not candidates:
+            continue
+
+        # First prefer combinations the base parser already accepted. This is
+        # stronger than reparsing the raw HTML again because loose_rows are the
+        # exact normalized rows that survived parsing for this same file.
+        parsed_matches = []
+        evidence_counts = []
+        for candidate in candidates:
+            ok, count = _candidate_matches_parsed_evidence(candidate, loose_rows)
+            if ok and count > 0:
+                parsed_matches.append(candidate)
+                evidence_counts.append(count)
+
+        matched: list[tuple[int, ...]] = []
+        if len(parsed_matches) == 1:
+            matched = parsed_matches
+            parsed_evidence_used += max(evidence_counts or [0])
+        else:
+            hints = _hint_sets(html, len(payouts))
+            matched = [candidate for candidate in candidates if frozenset(candidate) in hints]
+
         if len(matched) != 1:
             continue
 
@@ -221,7 +289,7 @@ def _recover_place_rows(html: str, race_id: str, source_name: str):
                 'source_file': source_name,
             })
 
-    return recovered, recovered_segments
+    return recovered, recovered_segments, parsed_evidence_used
 
 
 def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict: bool = True):
@@ -237,7 +305,9 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
         if not warnings or any(' 複勝 could not pair ' not in warning for warning in warnings):
             raise original_error
 
-        recovered, segment_count = _recover_place_rows(html, str(race_id), source_name)
+        recovered, segment_count, evidence_count = _recover_place_rows(
+            html, str(race_id), source_name, list(loose_rows)
+        )
         if segment_count != len(warnings) or not recovered:
             raise original_error
 
@@ -263,6 +333,7 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
             'warning_count': 0,
             'warnings': '',
             'rescued_place_segments': segment_count,
+            'parsed_pool_evidence_count': evidence_count,
             'result_table_hint_count': len(_result_table_hint_sets(html, len(recovered))),
         })
         return merged, audit
