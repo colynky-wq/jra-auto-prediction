@@ -1,15 +1,15 @@
-"""Build the preregistered 100-race review for the portfolio shadow study.
+"""Build the preregistered first-100-race review for portfolio shadow v1.
 
 Evaluation only: this module never changes portfolio selection rules, predictions,
-thresholds, or stake sizing.  It reads PortfolioResearchData.json and summarizes
-prospective races beginning 2026-10-24.
+thresholds, or stake sizing.  The review cohort is chronologically locked to the
+first 100 prospective races beginning 2026-10-24.  Later races never rewrite the
+100-race snapshot.
 """
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 import json
-import math
 import os
 from pathlib import Path
 from typing import Any
@@ -33,17 +33,11 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def pct(n: int, d: int) -> float | None:
-    return round(n / d * 100.0, 3) if d else None
+    return round(n / d * 100.0, 2) if d else None
 
 
-def finite_number(value: Any) -> float | None:
-    if isinstance(value, bool):
-        return None
-    try:
-        result = float(value)
-    except (TypeError, ValueError):
-        return None
-    return result if math.isfinite(result) else None
+def ratio(n: int, d: int) -> float | None:
+    return round(n / d, 6) if d else None
 
 
 def validate_source(data: dict[str, Any]) -> None:
@@ -63,26 +57,73 @@ def validate_source(data: dict[str, Any]) -> None:
         raise ValueError("stake sizing must remain disabled")
 
 
-def plan_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    settled = [r for r in rows if r.get("settled") is True]
-    stake = sum(int(r.get("totalStakeYen", 0)) for r in settled)
-    returned = sum(int(r.get("returnYen", 0)) for r in settled)
+def race_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (str(row.get("raceDate", "")), str(row.get("startTime") or ""), str(row.get("raceID", "")))
+
+
+def is_selected(row: dict[str, Any]) -> bool:
+    return row.get("planType") != "skip"
+
+
+def summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    selected = [r for r in rows if is_selected(r)]
+    skipped = [r for r in rows if not is_selected(r)]
+    settled = [r for r in selected if r.get("settled") is True]
+    pending = [r for r in selected if r.get("settled") is not True]
+
+    stake = 0
+    returned = 0
+    for row in settled:
+        s = row.get("totalStakeYen")
+        y = row.get("returnYen")
+        if type(s) is not int or s <= 0:
+            raise ValueError(f"invalid settled stake: {row.get('raceID')}")
+        if type(y) is not int or y < 0:
+            raise ValueError(f"invalid settled return: {row.get('raceID')}")
+        stake += s
+        returned += y
+
     hit = sum(r.get("hitAny") is True for r in settled)
     profitable = sum(r.get("profitable") is True for r in settled)
     torigami = sum(r.get("torigami") is True for r in settled)
+
     return {
-        "selectedRaces": len(rows),
+        "races": len(rows),
+        "selectedRaces": len(selected),
+        "skippedRaces": len(skipped),
+        "participationRatePct": pct(len(selected), len(rows)),
+        "skipRatePct": pct(len(skipped), len(rows)),
         "settledSelectedRaces": len(settled),
+        "resultsPendingSelectedRaces": len(pending),
         "hitAnyRaces": hit,
+        "hitRatePctOfSettledSelected": pct(hit, len(settled)),
         "profitableRaces": profitable,
+        "profitableRatePctOfSettledSelected": pct(profitable, len(settled)),
         "torigamiRaces": torigami,
-        "hitRatePct": pct(hit, len(settled)),
-        "profitableRatePct": pct(profitable, len(settled)),
-        "torigamiRatePct": pct(torigami, len(settled)),
+        "torigamiRatePctOfSettledSelected": pct(torigami, len(settled)),
+        "torigamiRatePctOfHitRaces": pct(torigami, hit),
         "stakeYen": stake,
         "returnYen": returned,
-        "returnIndex": round(returned / stake, 6) if stake else None,
+        "profitYen": returned - stake,
+        "returnIndex": ratio(returned, stake),
     }
+
+
+def breakdown(rows: list[dict[str, Any]], field: str, order: list[Any]) -> list[dict[str, Any]]:
+    groups: dict[Any, list[dict[str, Any]]] = {}
+    for row in rows:
+        groups.setdefault(row.get(field), []).append(row)
+    rank = {value: index for index, value in enumerate(order)}
+    keys = sorted(groups, key=lambda value: (rank.get(value, len(rank)), str(value)))
+    out = []
+    for key in keys:
+        item = summary(groups[key])
+        item[field] = key
+        if field == "planType":
+            labels = sorted({str(r.get("planLabel") or "") for r in groups[key]})
+            item["planLabel"] = labels[0] if len(labels) == 1 else " / ".join(labels)
+        out.append(item)
+    return out
 
 
 def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
@@ -99,7 +140,7 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
             continue
         day = row.get("raceDate")
         rid = row.get("raceID")
-        if not isinstance(day, str) or not isinstance(rid, str) or day < PROSPECTIVE_START:
+        if not isinstance(day, str) or not isinstance(rid, str) or not rid or day < PROSPECTIVE_START:
             raise ValueError("invalid prospective race identity/date")
         key = (day, rid)
         if key in ids:
@@ -109,92 +150,66 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
             raise ValueError("mixed portfolio rule versions")
         prospective.append(row)
 
-    prospective.sort(key=lambda r: (r.get("raceDate", ""), r.get("startTime") or "", r.get("raceID", "")))
-    seen = len(prospective)
-    selected = [r for r in prospective if r.get("planType") != "skip"]
-    skipped = [r for r in prospective if r.get("planType") == "skip"]
-    settled = [r for r in selected if r.get("settled") is True]
+    prospective.sort(key=race_key)
+    observed = len(prospective)
+    cohort = prospective[:TARGET_RACES]
+    overall = summary(cohort)
 
-    hit = sum(r.get("hitAny") is True for r in settled)
-    profitable = sum(r.get("profitable") is True for r in settled)
-    torigami = sum(r.get("torigami") is True for r in settled)
-    stake = sum(int(r.get("totalStakeYen", 0)) for r in settled)
-    returned = sum(int(r.get("returnYen", 0)) for r in settled)
-
-    plan_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for row in selected:
-        plan_groups[str(row.get("planType", "unknown"))].append(row)
-
-    plan_labels: dict[str, str] = {}
-    for rows in plan_groups.values():
-        for row in rows:
-            plan_labels.setdefault(str(row.get("planType")), str(row.get("planLabel") or row.get("planType")))
-
-    by_plan = []
-    for plan_type in sorted(plan_groups):
-        rows = plan_groups[plan_type]
-        by_plan.append({
-            "planType": plan_type,
-            "planLabel": plan_labels.get(plan_type, plan_type),
-            **plan_summary(rows),
-        })
-
-    skip_reasons = Counter(str(r.get("reason") or "理由不明") for r in skipped)
-    race_days = sorted({str(r.get("raceDate")) for r in prospective})
-
-    if seen == 0:
-        status = "waiting_for_prospective_start"
-    elif seen < TARGET_RACES:
-        status = "collecting"
-    elif len(settled) < len(selected):
-        status = "target_reached_results_pending"
+    if observed == 0:
+        review_status = "waiting_for_prospective_start"
+    elif observed < TARGET_RACES:
+        review_status = "collecting"
+    elif overall["resultsPendingSelectedRaces"] > 0:
+        review_status = "target_reached_results_pending"
     else:
-        status = "ready_for_short_term_review"
+        review_status = "ready_for_short_term_review"
+
+    skipped = [r for r in cohort if not is_selected(r)]
+    skip_reasons = Counter(str(r.get("reason") or "理由不明") for r in skipped)
+    race_days = sorted({str(r.get("raceDate")) for r in cohort})
 
     return {
         "schemaVersion": 1,
         "version": REVIEW_VERSION,
         "sourceVersion": SOURCE_VERSION,
         "status": "research_evaluation_only",
-        "reviewStatus": status,
+        "reviewStatus": review_status,
         "generatedAtJST": now.astimezone(JST).isoformat(timespec="seconds"),
         "prospectiveStartDate": PROSPECTIVE_START,
         "targetRaces": TARGET_RACES,
-        "racesSeen": seen,
-        "remainingTo100": max(0, TARGET_RACES - seen),
-        "progressPct": round(min(1.0, seen / TARGET_RACES) * 100.0, 1),
-        "raceDays": len(race_days),
-        "firstRaceDate": race_days[0] if race_days else None,
-        "lastRaceDate": race_days[-1] if race_days else None,
-        "participation": {
-            "selectedRaces": len(selected),
-            "skippedRaces": len(skipped),
-            "participationRatePct": pct(len(selected), seen),
-            "skipRatePct": pct(len(skipped), seen),
-        },
-        "outcomes": {
-            "settledSelectedRaces": len(settled),
-            "resultsPendingSelectedRaces": len(selected) - len(settled),
-            "hitAnyRaces": hit,
-            "profitableRaces": profitable,
-            "torigamiRaces": torigami,
-            "hitRatePct": pct(hit, len(settled)),
-            "profitableRatePct": pct(profitable, len(settled)),
-            "torigamiRatePctOfSettledSelected": pct(torigami, len(settled)),
-            "torigamiRatePctOfHitRaces": pct(torigami, hit),
-            "stakeYen": stake,
-            "returnYen": returned,
-            "returnIndex": round(returned / stake, 6) if stake else None,
-        },
-        "planMix": by_plan,
+        "racesObserved": observed,
+        "reviewWindowRaces": len(cohort),
+        "remainingTo100": max(0, TARGET_RACES - observed),
+        "progressPct": round(min(1.0, observed / TARGET_RACES) * 100.0, 1),
+        "raceDaysInReviewWindow": len(race_days),
+        "reviewWindowStartDate": race_days[0] if race_days else None,
+        "reviewWindowEndDate": race_days[-1] if len(cohort) == TARGET_RACES else None,
+        "first100CohortLockedByRule": True,
+        "overall": overall,
+        "planMix": breakdown(
+            cohort,
+            "planType",
+            ["win_single", "win_plus_wide", "wide_focus", "wide_plus_trio", "skip"],
+        ),
+        "chaosBreakdown": breakdown(cohort, "chaosLevel", [1, 2, 3, 4, 5]),
+        "battleBreakdown": breakdown(cohort, "battleGrade", ["S", "A", "B", "C", "見送り"]),
         "skipReasons": [
             {"reason": reason, "races": count, "shareOfSkippedPct": pct(count, len(skipped))}
             for reason, count in sorted(skip_reasons.items(), key=lambda x: (-x[1], x[0]))
         ],
+        "qualityChecks": {
+            "sourceRuleVersionMatches": True,
+            "prospectiveStartMatches": True,
+            "duplicateRaceCount": 0,
+            "selectedPendingSettlement": overall["resultsPendingSelectedRaces"],
+            "cohortExcludesDevelopmentBackfill": True,
+            "laterRacesExcludedAfterFirst100": max(0, observed - TARGET_RACES),
+        },
         "interpretationPolicy": {
-            "shortTermPurpose": "100Rは合否判定ではなく、動作異常・極端な失敗・参加率・見送り率・トリガミ率・プラン構成を点検する。",
+            "shortTermPurpose": "100Rは合否判定ではなく、動作異常・極端な失敗・参加率・見送り率・的中・利益・トリガミ・プラン構成を点検する。",
             "noThresholdTuning": "100Rの結果を見てportfolio-shadow-v1の閾値を変更しない。改善案はv2 shadowとして分離する。",
             "roiWarning": "回収指数は標本が小さい間は振れが大きいため、単独で採否を決めない。",
+            "nextMilestone": "300Rで候補ロジックの絞り込み材料とし、小さい予測優位の本格評価は1000R前後以上を想定する。",
         },
     }
 
@@ -204,15 +219,15 @@ def main() -> None:
     source = read_json(root / "PortfolioResearchData.json")
     review = build(source)
     write_json(root / "PortfolioReview100.json", review)
-    newest = review.get("lastRaceDate")
+    newest = review.get("reviewWindowEndDate") or review.get("reviewWindowStartDate")
     if isinstance(newest, str):
         write_json(root / "reports" / newest.replace("-", "") / "PortfolioReview100.json", review)
     print(json.dumps({
         "reviewStatus": review["reviewStatus"],
-        "racesSeen": review["racesSeen"],
+        "racesObserved": review["racesObserved"],
+        "reviewWindowRaces": review["reviewWindowRaces"],
         "remainingTo100": review["remainingTo100"],
-        "participation": review["participation"],
-        "outcomes": review["outcomes"],
+        "overall": review["overall"],
     }, ensure_ascii=False))
 
 
