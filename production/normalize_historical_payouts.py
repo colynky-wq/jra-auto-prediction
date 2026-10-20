@@ -1,10 +1,11 @@
 """Normalize saved JRA payout HTML(.gz) into retrospective research rows.
 
 The historical archive stores one gzip-compressed result/payout HTML document per
-race.  This module deliberately avoids CSS-class selectors: it extracts table
-rows, recognises the standard JRA pool labels, and pairs winning combinations
-with yen payouts.  That makes the research pipeline less fragile when markup
-classes change while visible payout text remains stable.
+race. This module deliberately avoids CSS-class selectors. Real JRA payout rows
+can contain two pool blocks side-by-side in one <tr>, and multiple winning
+combinations can be concatenated inside one cell. The parser therefore splits a
+row at each visible pool label and uses the known payout count to recover exactly
+the same number of combinations.
 
 Output schema is the narrow format consumed by research_all_bet_retrospective:
     レースID, 券種, 組合せ, 払戻円, source_file
@@ -21,6 +22,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 import re
 from typing import Iterable
+import unicodedata
 
 import research_all_bet_retrospective as core
 
@@ -35,7 +37,8 @@ ORDERED_BETS = {'馬単', '3連単'}
 
 
 def _clean(text: str) -> str:
-    return re.sub(r'\s+', ' ', str(text).replace('\u3000', ' ')).strip()
+    normalized = unicodedata.normalize('NFKC', str(text).replace('\u3000', ' '))
+    return re.sub(r'\s+', ' ', normalized).strip()
 
 
 class _TableRows(HTMLParser):
@@ -89,7 +92,7 @@ def html_table_rows(html: str) -> list[list[str]]:
 
 
 def _bet_in_cell(cell: str):
-    compact = re.sub(r'\s+', '', cell)
+    compact = re.sub(r'\s+', '', _clean(cell))
     for label, canonical in BET_LABELS.items():
         if compact == label or compact.startswith(label):
             return canonical
@@ -99,7 +102,7 @@ def _bet_in_cell(cell: str):
 def _yen_values(cells: Iterable[str]) -> list[float]:
     values: list[float] = []
     for cell in cells:
-        for raw in re.findall(r'([0-9][0-9,]*)\s*円', cell):
+        for raw in re.findall(r'([0-9][0-9,]*)\s*円', _clean(cell)):
             value = core._number(raw, positive=True)
             if value is not None:
                 values.append(value)
@@ -109,13 +112,16 @@ def _yen_values(cells: Iterable[str]) -> list[float]:
 def _combo_cells(cells: Iterable[str]) -> str:
     # Exclude payout/popularity cells so their numbers are never mistaken for
     # horse/frame numbers.
-    usable = [c for c in cells if '円' not in c and '人気' not in c and '票' not in c]
+    usable = [
+        _clean(c) for c in cells
+        if '円' not in _clean(c) and '人気' not in _clean(c) and '票' not in _clean(c)
+    ]
     return ' | '.join(usable)
 
 
 def _ints(text: str) -> list[int]:
     out = []
-    for raw in re.findall(r'(?<!\d)(\d{1,2})(?!\d)', text):
+    for raw in re.findall(r'(?<!\d)(\d{1,2})(?!\d)', _clean(text)):
         value = int(raw)
         if 1 <= value <= 18:
             out.append(value)
@@ -123,43 +129,130 @@ def _ints(text: str) -> list[int]:
 
 
 def _separated_groups(text: str, size: int) -> list[tuple[int, ...]]:
-    # JRA renders unordered pools with dashes and ordered pools with arrows.
-    # Accept common full-width variants as historical snapshots can differ.
-    sep = r'\s*(?:-|－|―|ー|→|⇒|>)\s*'
+    # Simple readable layout such as 6-2 or 2-4-6.
+    sep = r'\s*(?:-|―|ー|→|⇒|>)\s*'
     number = r'(\d{1,2})'
     if size == 2:
         pattern = number + sep + number
     else:
         pattern = number + sep + number + sep + number
     groups = []
-    for match in re.finditer(pattern, text):
+    for match in re.finditer(pattern, _clean(text)):
         nums = tuple(int(x) for x in match.groups())
         if all(1 <= n <= 18 for n in nums):
             groups.append(nums)
     return groups
 
 
+def _compact_exact_groups(text: str, size: int, expected_count: int) -> list[tuple[int, ...]]:
+    """Recover concatenated JRA combinations using exact payout cardinality.
+
+    Examples from the saved archive:
+      複勝: 624              -> (6), (2), (4)
+      ワイド: 2-64-62-4     -> (2,6), (4,6), (2,4)
+
+    Numbers are 1..18. Between numbers inside one combination a visible pool
+    separator is required for pair/triple pools; between adjacent winning
+    combinations JRA may render no delimiter at all. We accept a parse only
+    when the complete cell has exactly expected_count groups and the resulting
+    canonical group sequence is unique.
+    """
+    if expected_count <= 0:
+        return []
+    compact = re.sub(r'[\s|,、/]+', '', _clean(text))
+    separators = {'-', '―', 'ー', '→', '⇒', '>'}
+    solutions: list[tuple[tuple[int, ...], ...]] = []
+
+    def number_options(pos: int):
+        for width in (1, 2):
+            token = compact[pos:pos + width]
+            if len(token) != width or not token.isdigit() or token.startswith('0'):
+                continue
+            value = int(token)
+            if 1 <= value <= 18:
+                yield value, pos + width
+
+    def one_group(pos: int, remaining_numbers: int, values: tuple[int, ...] = ()):
+        for value, after_number in number_options(pos):
+            new_values = values + (value,)
+            if remaining_numbers == 1:
+                yield new_values, after_number
+                continue
+            if after_number < len(compact) and compact[after_number] in separators:
+                yield from one_group(after_number + 1, remaining_numbers - 1, new_values)
+
+    def many(pos: int, groups_left: int, groups: tuple[tuple[int, ...], ...] = ()):
+        if groups_left == 0:
+            if pos == len(compact):
+                solutions.append(groups)
+            return
+        for group, after in one_group(pos, size):
+            many(after, groups_left - 1, groups + (group,))
+
+    many(0, expected_count)
+
+    unique: list[tuple[tuple[int, ...], ...]] = []
+    for solution in solutions:
+        if solution not in unique:
+            unique.append(solution)
+    if len(unique) == 1:
+        return list(unique[0])
+    return []
+
+
 def _combos(text: str, bet: str, expected_count: int | None = None) -> list[str]:
     text = _clean(text)
-    if bet in {'単勝', '複勝'}:
+    size = 1 if bet in {'単勝', '複勝'} else 3 if bet in TRIPLE_BETS else 2
+
+    # Exact cardinality is the safest route for real payout cells because JRA
+    # can concatenate multiple winners without whitespace between combinations.
+    if expected_count:
+        exact = _compact_exact_groups(text, size, expected_count)
+        if exact:
+            return [core.canonical_combo(bet, group) for group in exact]
+
+    if size == 1:
         nums = _ints(text)
         return [core.canonical_combo(bet, (n,)) for n in nums]
 
-    size = 3 if bet in TRIPLE_BETS else 2
     groups = _separated_groups(text, size)
-
-    # Some archived layouts put numbers into separate spans with whitespace but
-    # no visible dash. Only use this fallback when the expected payout count
-    # makes the grouping unambiguous.
-    if not groups and expected_count:
-        nums = _ints(text)
-        if len(nums) == expected_count * size:
-            groups = [tuple(nums[i:i + size]) for i in range(0, len(nums), size)]
-
     result = []
     for group in groups:
         result.append(core.canonical_combo(bet, group))
     return result
+
+
+def _append_pool_segment(out, seen, warnings, *, cells, bet, row_no, race_id, source_name, strict):
+    payouts = _yen_values(cells)
+    if not payouts:
+        return
+    combo_text = _combo_cells(cells)
+    combos = _combos(combo_text, bet, expected_count=len(payouts))
+    if len(combos) != len(payouts):
+        message = (
+            f'{source_name or race_id}: row {row_no} {bet} could not pair '
+            f'combinations={combos!r} with payouts={payouts!r}; cells={cells!r}'
+        )
+        warnings.append(message)
+        if strict:
+            raise ValueError(message)
+        return
+
+    for combo, amount in zip(combos, payouts):
+        key = (race_id, bet, combo)
+        old = seen.get(key)
+        if old is not None:
+            if old != amount:
+                raise ValueError(f'conflicting payout for {key}: {old} vs {amount}')
+            continue
+        seen[key] = amount
+        out.append({
+            'レースID': race_id,
+            '券種': bet,
+            '組合せ': combo,
+            '払戻円': amount,
+            'source_file': source_name,
+        })
 
 
 def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict: bool = True):
@@ -174,55 +267,32 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
     seen: dict[tuple[str, str, str], float] = {}
 
     for row_no, cells in enumerate(html_table_rows(html), 1):
-        bet = None
-        label_index = None
+        labels = []
         for i, cell in enumerate(cells):
             found = _bet_in_cell(cell)
             if found:
-                bet = found
-                label_index = i
-                current_bet = found
-                break
+                labels.append((i, found))
 
-        payouts = _yen_values(cells)
-        if not payouts:
-            # Keep current_bet across a rowspan label, but rows without yen are
-            # not payout observations.
+        if labels:
+            # A real JRA <tr> can contain two independent pool blocks, e.g.
+            # [単勝, 6, 2,890円, ..., 馬単, 6-2, 19,220円, ...].
+            for j, (label_index, bet) in enumerate(labels):
+                end = labels[j + 1][0] if j + 1 < len(labels) else len(cells)
+                segment = cells[label_index + 1:end]
+                _append_pool_segment(
+                    out, seen, warnings, cells=segment, bet=bet, row_no=row_no,
+                    race_id=race_id, source_name=source_name, strict=strict,
+                )
+            current_bet = labels[-1][1]
             continue
-        if bet is None:
-            bet = current_bet
-        if bet is None:
-            continue
 
-        candidate_cells = cells[label_index + 1:] if label_index is not None else cells
-        combo_text = _combo_cells(candidate_cells)
-        combos = _combos(combo_text, bet, expected_count=len(payouts))
-
-        if len(combos) != len(payouts):
-            message = (
-                f'{source_name or race_id}: row {row_no} {bet} could not pair '
-                f'combinations={combos!r} with payouts={payouts!r}; cells={cells!r}'
+        # Preserve legacy rowspan support for a single pool label followed by a
+        # payout-only continuation row. Rows without yen are irrelevant.
+        if current_bet is not None and _yen_values(cells):
+            _append_pool_segment(
+                out, seen, warnings, cells=cells, bet=current_bet, row_no=row_no,
+                race_id=race_id, source_name=source_name, strict=strict,
             )
-            warnings.append(message)
-            if strict:
-                raise ValueError(message)
-            continue
-
-        for combo, amount in zip(combos, payouts):
-            key = (race_id, bet, combo)
-            old = seen.get(key)
-            if old is not None:
-                if old != amount:
-                    raise ValueError(f'conflicting payout for {key}: {old} vs {amount}')
-                continue
-            seen[key] = amount
-            out.append({
-                'レースID': race_id,
-                '券種': bet,
-                '組合せ': combo,
-                '払戻円': amount,
-                'source_file': source_name,
-            })
 
     coverage = sorted({row['券種'] for row in out}, key=core.ALL_BETS.index)
     audit = {
