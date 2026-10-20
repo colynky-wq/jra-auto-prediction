@@ -149,13 +149,17 @@ def _compact_exact_groups(text: str, size: int, expected_count: int) -> list[tup
 
     Examples from the saved archive:
       複勝: 624              -> (6), (2), (4)
+      複勝: 11313            -> (11), (3), (13)
       ワイド: 2-64-62-4     -> (2,6), (4,6), (2,4)
 
     Numbers are 1..18. Between numbers inside one combination a visible pool
     separator is required for pair/triple pools; between adjacent winning
     combinations JRA may render no delimiter at all. We accept a parse only
     when the complete cell has exactly expected_count groups and the resulting
-    canonical group sequence is unique.
+    canonical group sequence is unique. For size-1 pools, repeated winning
+    numbers are impossible, so duplicate singleton solutions are discarded;
+    this safely resolves cases such as 11313 where (1,13,13) is invalid but
+    (11,3,13) is valid.
     """
     if expected_count <= 0:
         return []
@@ -193,6 +197,12 @@ def _compact_exact_groups(text: str, size: int, expected_count: int) -> list[tup
 
     unique: list[tuple[tuple[int, ...], ...]] = []
     for solution in solutions:
+        # 単勝/複勝の同一払戻行で同じ馬番が複数回当選することはない。
+        # JRAが区切りなしで馬番を連結した場合の誤った分割候補を除外する。
+        if size == 1:
+            singleton_values = [group[0] for group in solution]
+            if len(singleton_values) != len(set(singleton_values)):
+                continue
         if solution not in unique:
             unique.append(solution)
     if len(unique) == 1:
