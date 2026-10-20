@@ -1,20 +1,23 @@
 """Fail-closed rescue for ambiguous concatenated JRA place payout numbers.
 
 Some saved JRA result pages concatenate multiple 複勝 horse numbers without a
-separator.  A token such as ``6115`` can represent either ``6,11,5`` or
-``6,1,15``.  The base parser deliberately refuses to guess in that situation.
+separator. A token such as ``6115`` can represent either ``6,11,5`` or
+``6,1,15``. The base parser deliberately refuses to guess in that situation.
 
-This wrapper keeps that fail-closed behavior, but when the only parse warnings
-are ambiguous 複勝 rows it uses independently quoted winning combinations from
-other pools on the same result page (3連単/3連複/ワイド/馬単/馬連) to identify the
-unique horse-number set.  If those pools do not identify exactly one split, the
-original exception is re-raised.
+This wrapper keeps that fail-closed behavior. When the only parse warnings are
+ambiguous 複勝 rows, it corroborates candidate splits with two independent
+sources on the same saved result page:
+
+* winning combinations from other pools (3連単/3連複/ワイド/馬単/馬連), and
+* the official result table headed by ``着順`` and ``馬番``.
+
+A rescue is accepted only when exactly one candidate split matches a
+corroborating winner set. Otherwise the original exception is re-raised.
 """
 from __future__ import annotations
 
 from collections import defaultdict
 import re
-from typing import Iterable
 
 import normalize_historical_payouts as base
 import research_all_bet_retrospective as core
@@ -74,7 +77,72 @@ def _singleton_solutions(text: str, expected_count: int) -> list[tuple[int, ...]
     return solutions
 
 
-def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
+def _header_key(cell: str) -> str:
+    return re.sub(r'\s+', '', base._clean(cell))
+
+
+def _one_small_int(cell: str, *, low: int, high: int):
+    """Return one unambiguous integer embedded in a table cell, else None."""
+    values = []
+    for raw in re.findall(r'(?<!\d)(\d{1,2})(?!\d)', base._clean(cell)):
+        value = int(raw)
+        if low <= value <= high:
+            values.append(value)
+    unique = list(dict.fromkeys(values))
+    return unique[0] if len(unique) == 1 else None
+
+
+def _result_table_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
+    """Read place-winning horse numbers from the official result table.
+
+    JRA result pages contain a table whose header includes ``着順`` and ``馬番``.
+    For ordinary fields 複勝 pays through 3rd place; for small fields it can pay
+    through 2nd. Dead heats can therefore produce more than three payout rows,
+    but all place-winning rows still have an official finish rank within the
+    applicable place cutoff.
+    """
+    if expected_count <= 0:
+        return set()
+
+    rows = base.html_table_rows(html)
+    hints: set[frozenset[int]] = set()
+    rank_limit = 1 if expected_count == 1 else 2 if expected_count == 2 else 3
+
+    for header_index, header in enumerate(rows):
+        keys = [_header_key(cell) for cell in header]
+        if '着順' not in keys or '馬番' not in keys:
+            continue
+        rank_col = keys.index('着順')
+        horse_col = keys.index('馬番')
+        winners: list[int] = []
+
+        for cells in rows[header_index + 1:]:
+            next_keys = [_header_key(cell) for cell in cells]
+            if '着順' in next_keys and '馬番' in next_keys:
+                break
+            if rank_col >= len(cells) or horse_col >= len(cells):
+                continue
+
+            rank = _one_small_int(cells[rank_col], low=1, high=99)
+            horse = _one_small_int(cells[horse_col], low=1, high=18)
+            if rank is None or horse is None:
+                continue
+            if rank > rank_limit:
+                # Result rows are ordered by finish. Once a later placing is
+                # reached, no further row can belong to the place payout set.
+                if winners:
+                    break
+                continue
+            if horse not in winners:
+                winners.append(horse)
+
+        if len(winners) == expected_count:
+            hints.add(frozenset(winners))
+
+    return hints
+
+
+def _other_pool_hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
     """Derive corroborating winner sets from independently parsed other pools."""
     by_bet: dict[str, list[set[int]]] = defaultdict(list)
 
@@ -93,10 +161,6 @@ def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
                 by_bet[bet].append(numbers)
 
     hints: set[frozenset[int]] = set()
-
-    # A single 馬連/馬単 winner identifies the top two.  A single 3連複/3連単
-    # winner identifies the top three.  Under dead heats, the union of multiple
-    # winning combinations can identify the complete place-winning set.
     semantic_sizes = {
         '馬連': 2,
         '馬単': 2,
@@ -113,8 +177,6 @@ def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
         if len(union) == expected_count:
             hints.add(frozenset(union))
 
-    # ワイド payouts collectively cover the place-winning horses in ordinary
-    # races and also provide a useful union under dead heats.
     wide_groups = by_bet.get('ワイド', [])
     if wide_groups:
         union = set().union(*wide_groups)
@@ -122,6 +184,10 @@ def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
             hints.add(frozenset(union))
 
     return hints
+
+
+def _hint_sets(html: str, expected_count: int) -> set[frozenset[int]]:
+    return _other_pool_hint_sets(html, expected_count) | _result_table_hint_sets(html, expected_count)
 
 
 def _recover_place_rows(html: str, race_id: str, source_name: str):
@@ -197,5 +263,6 @@ def parse_payout_html(html: str, race_id: str, source_name: str = '', *, strict:
             'warning_count': 0,
             'warnings': '',
             'rescued_place_segments': segment_count,
+            'result_table_hint_count': len(_result_table_hint_sets(html, len(recovered))),
         })
         return merged, audit
