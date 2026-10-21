@@ -4,12 +4,18 @@ on:
     paths:
       - 'ios/**'
       - 'production/*bet_research_data.py'
+      - 'production/publish_early_racedata.py'
+      - 'production/early_prediction_runtime.py'
+      - '.github/workflows/keibaai-early-prediction.yml'
       - '.github/workflows/keibaai-ios-verify.yml'
   push:
     branches: [main]
     paths:
       - 'ios/**'
       - 'production/*bet_research_data.py'
+      - 'production/publish_early_racedata.py'
+      - 'production/early_prediction_runtime.py'
+      - '.github/workflows/keibaai-early-prediction.yml'
       - '.github/workflows/keibaai-ios-verify.yml'
 permissions:
   contents: read
@@ -19,6 +25,40 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      - name: Verify early prediction to RaceData contract
+        run: |
+          python3 -m py_compile production/publish_early_racedata.py production/early_prediction_runtime.py
+          python3 - <<'PY'
+          import json, pathlib, subprocess, tempfile
+          sample = {
+            'schemaVersion': 1,
+            'status': 'research_early_snapshot',
+            'formalRecommendation': False,
+            'raceDate': '2026-10-24',
+            'snapshots': {'previous_evening': {'stage':'previous_evening','races':[{
+              'raceID':'202605040701','raceDate':'2026-10-24','venue':'東京','raceNumber':1,
+              'startTime':'10:05','raceName':'2歳未勝利','horses':[{
+                'number':1,'name':'テストホース','odds':3.2,'marketProbability':25.0,
+                'aiProbability':30.0,'aiTop2Probability':50.0,'aiTop3Probability':65.0,
+                'aiMarketRatio':1.2
+              }]
+            }]}}
+          }
+          with tempfile.TemporaryDirectory() as td:
+            td=pathlib.Path(td)
+            src=td/'EarlyPredictionData.json'; out=td/'RaceData.json'
+            src.write_text(json.dumps(sample,ensure_ascii=False),encoding='utf-8')
+            subprocess.check_call(['python3','production/publish_early_racedata.py','--input',str(src),'--output',str(out),'--stage','previous_evening'])
+            races=json.loads(out.read_text(encoding='utf-8'))
+            assert len(races)==1
+            race=races[0]; horse=race['horses'][0]
+            required_race={'raceID','raceDate','venue','raceNumber','startTime','raceName','course','horses'}
+            required_horse={'number','name','odds','marketProbability','aiProbability','aiMarketRatio','expectedIndex'}
+            assert required_race <= race.keys(), race
+            assert required_horse <= horse.keys(), horse
+            assert race['raceDate']=='2026-10-24'
+            assert horse['expectedIndex']==96.0
+          PY
       - name: Verify Xcode and compile the actual model and identity code
         run: |
           xcodebuild -version

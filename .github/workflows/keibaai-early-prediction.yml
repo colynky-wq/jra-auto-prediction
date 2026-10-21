@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'production/early_prediction_runtime.py'
+      - 'production/publish_early_racedata.py'
       - '.github/workflows/keibaai-early-prediction.yml'
   schedule:
     # 20:00 JST: snapshot for the next day
@@ -74,9 +75,11 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
-      - name: Compile early prediction runtime
+      - name: Compile early prediction runtime and publisher
         if: steps.day.outputs.has_races == 'true'
-        run: python -m py_compile production/early_prediction_runtime.py
+        run: |
+          python -m py_compile production/early_prediction_runtime.py
+          python -m py_compile production/publish_early_racedata.py
 
       - name: Build early prediction snapshot
         if: steps.day.outputs.has_races == 'true'
@@ -84,6 +87,12 @@ jobs:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/early_prediction_runtime.py
+
+      - name: Publish early snapshot through canonical RaceData feed
+        if: steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
+        run: python production/publish_early_racedata.py
 
       - name: Publish snapshot if produced
         if: steps.day.outputs.has_races == 'true'
@@ -93,16 +102,21 @@ jobs:
             echo 'EarlyPredictionData.json was not produced.'
             exit 1
           fi
+          if [ ! -f RaceData.json ]; then
+            echo 'RaceData.json was not produced.'
+            exit 1
+          fi
           date8='${{ steps.target.outputs.date8 }}'
           mkdir -p "reports/${date8}"
           cp EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"
-          if git diff --quiet -- EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"; then
-            echo 'No EarlyPredictionData change.'
+          cp RaceData.json "reports/${date8}/RaceData.early.json"
+          if git diff --quiet -- EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"; then
+            echo 'No early prediction change.'
             exit 0
           fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"
+          git add EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"
           git commit -m "Update early prediction ${{ steps.target.outputs.date8 }} ${{ steps.target.outputs.stage }}"
           git pull --rebase origin main
           git push origin HEAD:main
