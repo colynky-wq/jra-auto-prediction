@@ -9,6 +9,10 @@ on:
       - 'production/validate_early_prediction.py'
       - 'production/all_bet_recommendation_shadow.py'
       - 'production/test_all_bet_recommendation_shadow.py'
+      - 'production/cross_bet_recommendation.py'
+      - 'production/test_cross_bet_recommendation.py'
+      - 'production/early_all_bet_recommendation.py'
+      - 'production/test_early_all_bet_recommendation.py'
       - 'production/live_monitor_topk.py'
       - 'production/live_monitor_dry_run.py'
       - 'production/jra_entry_source.py'
@@ -106,8 +110,12 @@ jobs:
           python -m py_compile production/early_prediction_runtime.py
           python -m py_compile production/validate_early_prediction.py
           python -m py_compile production/publish_early_racedata.py
+          python -m py_compile production/cross_bet_recommendation.py
           python -m py_compile production/all_bet_recommendation_shadow.py
+          python -m py_compile production/early_all_bet_recommendation.py
           python production/test_all_bet_recommendation_shadow.py
+          python production/test_cross_bet_recommendation.py
+          python production/test_early_all_bet_recommendation.py
 
       - name: Build early prediction snapshot
         if: steps.day.outputs.has_races == 'true'
@@ -129,9 +137,12 @@ jobs:
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/publish_early_racedata.py
 
-      - name: Build honest all-bet early status
+      - name: Build honest all-bet early status or morning real-odds snapshot
         if: steps.day.outputs.has_races == 'true'
-        run: python production/all_bet_recommendation_shadow.py
+        env:
+          KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
+          KEIBAAI_EARLY_ALL_BET_WORKERS: '4'
+        run: python production/early_all_bet_recommendation.py
 
       - name: Publish validated snapshot atomically
         if: steps.day.outputs.has_races == 'true'
@@ -158,6 +169,7 @@ jobs:
           cp EarlyPredictionData.json "$publish_dir/reports/${date8}/EarlyPredictionData.json"
           cp RaceData.json "$publish_dir/reports/${date8}/RaceData.early.json"
           cp AllBetRecommendationData.json "$publish_dir/reports/${date8}/AllBetRecommendationData.json"
+          cp AllBetRecommendationData.json "$publish_dir/reports/${date8}/AllBetRecommendationData.${stage}.json"
 
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
@@ -173,13 +185,14 @@ jobs:
             cp "$publish_dir/reports/${date8}/EarlyPredictionData.json" "reports/${date8}/EarlyPredictionData.json"
             cp "$publish_dir/reports/${date8}/RaceData.early.json" "reports/${date8}/RaceData.early.json"
             cp "$publish_dir/reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.json"
+            cp "$publish_dir/reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"
 
-            if git diff --quiet -- EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json"; then
+            if git diff --quiet -- EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"; then
               echo 'No early prediction change after syncing latest main.'
               exit 0
             fi
 
-            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json"
+            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"
             git commit -m "Update early prediction ${date8} ${stage}"
 
             if git push origin HEAD:main; then
