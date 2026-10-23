@@ -6,6 +6,7 @@ on:
     paths:
       - 'production/early_prediction_runtime.py'
       - 'production/publish_early_racedata.py'
+      - 'production/validate_early_prediction.py'
       - 'production/live_monitor_topk.py'
       - 'production/live_monitor_dry_run.py'
       - 'production/jra_entry_source.py'
@@ -103,6 +104,7 @@ jobs:
         if: steps.day.outputs.has_races == 'true'
         run: |
           python -m py_compile production/early_prediction_runtime.py
+          python -m py_compile production/validate_early_prediction.py
           python -m py_compile production/publish_early_racedata.py
 
       - name: Build early prediction snapshot
@@ -111,6 +113,13 @@ jobs:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/early_prediction_runtime.py
+
+      - name: Validate complete early snapshot before publishing
+        if: steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
+          KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
+        run: python production/validate_early_prediction.py
 
       - name: Publish early snapshot through canonical RaceData feed
         if: steps.day.outputs.has_races == 'true'
