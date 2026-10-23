@@ -1,0 +1,44 @@
+name: KeibaAI JRA Name Regression
+
+on:
+  pull_request:
+    paths:
+      - 'production/jra_entry_source.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/test_jra_entry_name_handling.py'
+      - '.github/workflows/keibaai-jra-name-regression.yml'
+  push:
+    branches: [main, test/jra-name-regression-20261023]
+    paths:
+      - 'production/jra_entry_source.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/test_jra_entry_name_handling.py'
+      - '.github/workflows/keibaai-jra-name-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Compile name-handling runtime
+        run: |
+          python -m py_compile production/jra_entry_source.py
+          python -m py_compile production/live_monitor_topk.py
+          python -m py_compile production/test_jra_entry_name_handling.py
+      - name: Verify local/NAR name handling
+        env:
+          PYTHONPATH: production
+        run: python production/test_jra_entry_name_handling.py
