@@ -43,9 +43,20 @@ jobs:
         shell: bash
         run: |
           schedule='${{ github.event.schedule }}'
+          event_name='${{ github.event_name }}'
+          jst_hour=$(TZ=Asia/Tokyo date '+%H')
+          evening=false
+          if [ "$schedule" = '15 10 * * *' ] || [ "$schedule" = '35 10 * * *' ] || [ "$schedule" = '55 10 * * *' ]; then
+            evening=true
+          elif [ "$event_name" = 'push' ] && [ "$jst_hour" -ge 12 ]; then
+            # A production/workflow fix pushed in the afternoon or evening
+            # should immediately regenerate the next day's early snapshot.
+            evening=true
+          fi
+
           if [ -n '${{ github.event.inputs.target_date }}' ]; then
             date8='${{ github.event.inputs.target_date }}'
-          elif [ "$schedule" = '15 10 * * *' ] || [ "$schedule" = '35 10 * * *' ] || [ "$schedule" = '55 10 * * *' ]; then
+          elif [ "$evening" = true ]; then
             date8=$(TZ=Asia/Tokyo date -d '+1 day' '+%Y%m%d')
           else
             date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
@@ -53,7 +64,7 @@ jobs:
 
           if [ -n '${{ github.event.inputs.stage }}' ]; then
             stage='${{ github.event.inputs.stage }}'
-          elif [ "$schedule" = '15 10 * * *' ] || [ "$schedule" = '35 10 * * *' ] || [ "$schedule" = '55 10 * * *' ]; then
+          elif [ "$evening" = true ]; then
             stage='previous_evening'
           else
             stage='morning'
@@ -61,7 +72,7 @@ jobs:
 
           echo "date8=$date8" >> "$GITHUB_OUTPUT"
           echo "stage=$stage" >> "$GITHUB_OUTPUT"
-          echo "Early snapshot target=$date8 stage=$stage schedule=$schedule"
+          echo "Early snapshot target=$date8 stage=$stage schedule=$schedule event=$event_name"
 
       - name: Check whether JRA races exist on target date
         id: day
