@@ -30,7 +30,7 @@ _ORIGINAL_MATCH_HISTORY_NAME = base.match_history_name
 
 
 def _match_history_name_or_new(current, candidates):
-    """Keep a valid current JRA name even when it has no historical rows yet."""
+    """Keep a valid current JRA/NAR name even when it has no historical rows yet."""
     matched = _ORIGINAL_MATCH_HISTORY_NAME(current, candidates)
     if matched is not None:
         return matched
@@ -72,10 +72,26 @@ def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> 
 
     hist_jockeys = sorted(set(hist["騎手"].dropna().astype(str)))
     hist_trainers = sorted(set(hist["調教師"].dropna().astype(str)))
-    entries["騎手"] = entries["騎手_JRA"].map(lambda x: base.match_history_name(x, hist_jockeys))
-    entries["調教師"] = entries["調教師_JRA"].map(lambda x: base.match_history_name(x, hist_trainers))
+    entries["騎手"] = [
+        live._match_history_name_or_current(
+            current,
+            hist_jockeys,
+            role="jockey",
+            horse_no=int(horse_no),
+        )
+        for horse_no, current in zip(entries["馬番"], entries["騎手_JRA"])
+    ]
+    entries["調教師"] = [
+        live._match_history_name_or_current(
+            current,
+            hist_trainers,
+            role="trainer",
+            horse_no=int(horse_no),
+        )
+        for horse_no, current in zip(entries["馬番"], entries["調教師_JRA"])
+    ]
     if entries["騎手"].isna().any() or entries["調教師"].isna().any():
-        raise RuntimeError("jockey/trainer history-name matching failed")
+        raise RuntimeError("internal jockey/trainer fallback failed")
 
     from horse_identity_runtime import assign_horse_keys
     entries["馬キー"] = assign_horse_keys(entries, hist, target_date)
@@ -173,9 +189,10 @@ def main() -> None:
         raise RuntimeError(f"unsupported KEIBAAI_EARLY_STAGE: {stage}")
 
     # Historical name dictionaries can legitimately lag newly licensed or
-    # newly represented jockeys/trainers. Treat a nonblank current JRA name as
-    # a new category instead of dropping the whole race. Feature smoothing then
-    # supplies the existing prior for zero-history categories.
+    # newly represented jockeys/trainers. Treat a nonblank current JRA/NAR name
+    # as a new category instead of dropping the whole race. The live TopK path
+    # additionally handles genuinely blank local-trainer cells with a stable
+    # unknown category, which receives the feature engine's zero-history prior.
     base.match_history_name = _match_history_name_or_new
     live.base.match_history_name = _match_history_name_or_new
     try:
