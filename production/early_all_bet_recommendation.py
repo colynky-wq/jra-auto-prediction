@@ -20,7 +20,6 @@ import all_bet_baseline as single
 import all_bet_forward as added
 import build_signal_data_v2 as signals
 import cross_bet_recommendation as cross
-import live_monitor_dry_run as live_base
 import research_triple_baseline as triple_model
 import triple_forward as triple
 import wide_odds_runtime as wide_odds
@@ -173,8 +172,15 @@ def build_one(race: dict, evidence, *, fetch_simple=added.fetch_odds,
     return result
 
 
+def _live_base():
+    """Import the heavy model/entry module only for the real network run."""
+    import live_monitor_dry_run
+    return live_monitor_dry_run
+
+
 def _entry_evidence(race: dict, date8: str):
     try:
+        live_base = _live_base()
         entries, _, _ = live_base.fetch_jra_entry_table(str(race['raceID']), date8, JST)
         return entries.attrs.get('allBetEntryEvidence')
     except Exception:
@@ -198,7 +204,7 @@ def build(root: Path, *, workers: int = 4) -> dict:
     date8 = day.replace('-', '')
     if datetime.now(JST).date().isoformat() != day:
         raise ValueError('morning real-odds snapshot is same-day only')
-    live_base.TARGET_DATE8 = date8
+    _live_base().TARGET_DATE8 = date8
 
     by_id = {}
     workers = max(1, min(int(workers), 8))
