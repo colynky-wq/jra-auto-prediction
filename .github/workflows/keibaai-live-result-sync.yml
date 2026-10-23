@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - '.github/workflows/keibaai-live-result-sync.yml'
+      - 'production/all_bet_recommendation_shadow.py'
+      - 'production/test_all_bet_recommendation_shadow.py'
   workflow_dispatch:
     inputs:
       target_date:
@@ -68,6 +70,8 @@ jobs:
           python -m py_compile production/evaluate_all_bet_forward.py
           python -m py_compile production/build_bet_research_data.py
           python -m py_compile production/portfolio_shadow.py
+          python -m py_compile production/all_bet_recommendation_shadow.py
+          python production/test_all_bet_recommendation_shadow.py
 
       - name: Choose continuous session runtime
         id: runtime
@@ -117,13 +121,11 @@ jobs:
             cycle=$((cycle + 1))
             echo "===== result sync cycle $cycle: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST') ====="
 
-            # This checkout is dedicated to result publishing. Always rebuild from the
-            # newest main so prediction commits that arrive between cycles are visible.
             if ! git fetch --no-tags origin main; then
               echo '::warning::Could not fetch latest main; retrying next cycle.'
             else
               git reset --hard origin/main
-              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json >/dev/null 2>&1 || true
+              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json >/dev/null 2>&1 || true
 
               cycle_failed=0
               python production/build_result_data_live.py || cycle_failed=1
@@ -133,32 +135,32 @@ jobs:
               if [ "$cycle_failed" -eq 0 ]; then python production/ticket_plan_shadow.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/wide_axis_shadow.py || cycle_failed=1; fi
 
-              # Research displays are useful but must never stop live result publication.
               python production/evaluate_triple_forward.py || echo '::warning::Triple research evaluation failed for this cycle.'
               python production/evaluate_all_bet_forward.py || echo '::warning::All-bet research evaluation failed for this cycle.'
               python production/build_bet_research_data.py || echo '::warning::Bet research display build failed for this cycle.'
               if [ -f BetResearchData.json ]; then
                 python production/portfolio_shadow.py || echo '::warning::Portfolio research build failed for this cycle.'
               fi
+              if [ -f RaceData.json ]; then
+                python production/all_bet_recommendation_shadow.py || echo '::warning::All-bet recommendation build failed for this cycle.'
+              fi
 
               if [ "$cycle_failed" -ne 0 ]; then
                 echo '::warning::Core result/validation build failed; retrying next cycle.'
-              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json reports)" ]; then
+              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json reports)" ]; then
                 echo 'No result/performance/validation changes to publish.'
               else
                 git add ResultData.json PerformanceData.json reports
                 if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
                 if [ -f PortfolioResearchData.json ]; then git add PortfolioResearchData.json; fi
+                if [ -f AllBetRecommendationData.json ]; then git add AllBetRecommendationData.json; fi
                 git commit -m "Update KeibaAI results and forward validation" || true
 
                 if ! git push origin HEAD:main; then
-                  # Do not leave this long-running checkout in a conflicted state. The
-                  # next cycle refetches main and deterministically rebuilds any result
-                  # that lost this push race.
                   echo '::warning::Main moved while publishing; latest results will be rebuilt next cycle.'
                   git fetch --no-tags origin main || true
                   git reset --hard origin/main || true
-                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json >/dev/null 2>&1 || true
+                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json >/dev/null 2>&1 || true
                 fi
               fi
             fi
