@@ -15,6 +15,49 @@ from topk_runtime import predict_top2_top3
 HERE = Path(__file__).resolve().parent
 TOP2_MODEL_PATH = HERE / "lightgbm_top2_fixed_2025.txt"
 TOP3_MODEL_PATH = HERE / "lightgbm_top3_fixed_2025.txt"
+UNKNOWN_JOCKEY = "__UNKNOWN_JOCKEY__"
+UNKNOWN_TRAINER = "__UNKNOWN_TRAINER__"
+
+
+def _match_history_name_or_current(
+    current,
+    candidates,
+    *,
+    role: str,
+    horse_no: int,
+):
+    """Keep current JRA/NAR names even when production history has no match.
+
+    JRA graded/special races can include locally trained horses and NAR jockeys.
+    Their current names are legitimate even if the JRA history parquet has no
+    rows for them.  The feature engine already shrinks zero-history categories
+    to its prior, so dropping the entire race is both unnecessary and harmful.
+
+    Some JRA entry layouts also leave the trainer field blank for local horses
+    because the legacy parser only recognises Miho/Ritto affiliations.  Use a
+    deterministic unknown category in that case; with zero historical rows it
+    receives the same prior-only trainer features.
+    """
+    matched = base.match_history_name(current, candidates)
+    if matched is not None:
+        return matched
+
+    raw = ""
+    if current is not None and not pd.isna(current):
+        raw = str(current).strip()
+    if raw:
+        print("LIVE_UNSEEN_HISTORY_NAME", role, horse_no, raw)
+        return raw
+
+    if role == "jockey":
+        fallback = UNKNOWN_JOCKEY
+    elif role == "trainer":
+        fallback = UNKNOWN_TRAINER
+    else:
+        raise ValueError(f"unsupported name role: {role}")
+
+    print("LIVE_MISSING_ENTRY_NAME", role, horse_no, fallback)
+    return fallback
 
 
 def predict_live_race_topk(
@@ -71,15 +114,27 @@ def predict_live_race_topk(
 
     hist_jockeys = sorted(set(hist["騎手"].dropna().astype(str)))
     hist_trainers = sorted(set(hist["調教師"].dropna().astype(str)))
-    entries["騎手"] = entries["騎手_JRA"].map(
-        lambda x: base.match_history_name(x, hist_jockeys)
-    )
-    entries["調教師"] = entries["調教師_JRA"].map(
-        lambda x: base.match_history_name(x, hist_trainers)
-    )
+    entries["騎手"] = [
+        _match_history_name_or_current(
+            current,
+            hist_jockeys,
+            role="jockey",
+            horse_no=int(horse_no),
+        )
+        for horse_no, current in zip(entries["馬番"], entries["騎手_JRA"])
+    ]
+    entries["調教師"] = [
+        _match_history_name_or_current(
+            current,
+            hist_trainers,
+            role="trainer",
+            horse_no=int(horse_no),
+        )
+        for horse_no, current in zip(entries["馬番"], entries["調教師_JRA"])
+    ]
 
     if entries["騎手"].isna().any() or entries["調教師"].isna().any():
-        raise RuntimeError("jockey/trainer history-name matching failed")
+        raise RuntimeError("internal jockey/trainer fallback failed")
 
     entries["馬キー"] = assign_horse_keys(entries, hist, target_date)
 
