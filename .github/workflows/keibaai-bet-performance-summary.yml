@@ -1,0 +1,63 @@
+name: KeibaAI Bet Performance Summary
+
+on:
+  pull_request:
+    paths:
+      - 'production/build_bet_performance_summary.py'
+      - '.github/workflows/keibaai-bet-performance-summary.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/build_bet_performance_summary.py'
+      - '.github/workflows/keibaai-bet-performance-summary.yml'
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-bet-performance-summary
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || 'main' }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Build per-bet performance summary
+        run: python production/build_bet_performance_summary.py
+      - name: Validate summary contract
+        run: |
+          python - <<'PY'
+          import json
+          p=json.load(open('BetPerformanceSummary.json',encoding='utf-8'))
+          assert p['status']=='research_evaluation_only'
+          assert len(p['betTypes'])==10
+          for x in p['betTypes']:
+              assert x['stakeYen'] >= 0 and x['returnYen'] >= 0
+              if x['candidateTickets']:
+                  assert 0 <= x['ticketHitRatePct'] <= 100
+              if x['stakeYen']:
+                  assert x['returnRatePct'] >= 0
+          print('BET_PERFORMANCE_SUMMARY_OK')
+          PY
+      - name: Publish summary
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add BetPerformanceSummary.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Update bet performance summary'
+          git pull --rebase origin main
+          git push origin HEAD:main
