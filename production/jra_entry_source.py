@@ -365,14 +365,25 @@ def _parse_entry_table(
             diff = np.nan
 
         trainer_full = None
-        affiliation_node = info_td.find(
-            string=re.compile(r"\(\s*(美浦|栗東)\s*\)")
-        )
 
-        if affiliation_node is not None:
-            trainer_a = affiliation_node.find_previous("a")
-            if trainer_a is not None and info_td in trainer_a.parents:
-                trainer_full = trainer_a.get_text(" ", strip=True)
+        # Current JRA pages expose trainers in p.trainer. Local/NAR trainers
+        # are labelled 本会外 and are not links, so previous-anchor lookup
+        # can accidentally return the horse-name link.
+        trainer_node = info_td.select_one("p.trainer")
+        if trainer_node is not None:
+            division_node = trainer_node.select_one(".division")
+            if division_node is not None:
+                division_node.extract()
+            trainer_full = trainer_node.get_text(" ", strip=True) or None
+        else:
+            # Historical-layout fallback kept for replay pages.
+            affiliation_node = info_td.find(
+                string=re.compile(r"\(\s*(美浦|栗東|本会外)\s*\)")
+            )
+            if affiliation_node is not None:
+                trainer_a = affiliation_node.find_previous("a")
+                if trainer_a is not None and info_td in trainer_a.parents:
+                    trainer_full = trainer_a.get_text(" ", strip=True)
 
         sex_td = tds[3]
         sex_text = re.sub(
