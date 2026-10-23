@@ -8,10 +8,13 @@ on:
       - 'production/publish_early_racedata.py'
       - '.github/workflows/keibaai-early-prediction.yml'
   schedule:
-    # 20:00 JST: snapshot for the next day
-    - cron: '0 11 * * *'
-    # 07:30 JST: refresh snapshot for the current day
-    - cron: '30 22 * * *'
+    # Previous-evening prediction: start early and retry so GitHub schedule delays
+    # do not push the first usable snapshot past 20:00 JST.
+    - cron: '0 10 * * *'   # 19:00 JST
+    - cron: '30 10 * * *'  # 19:30 JST retry
+    - cron: '0 11 * * *'   # 20:00 JST fallback
+    # Morning refresh for the current day.
+    - cron: '30 22 * * *'  # 07:30 JST
   workflow_dispatch:
     inputs:
       target_date:
@@ -38,23 +41,26 @@ jobs:
         id: target
         shell: bash
         run: |
+          schedule='${{ github.event.schedule }}'
           if [ -n '${{ github.event.inputs.target_date }}' ]; then
             date8='${{ github.event.inputs.target_date }}'
-          elif [ '${{ github.event.schedule }}' = '0 11 * * *' ]; then
+          elif [ "$schedule" = '0 10 * * *' ] || [ "$schedule" = '30 10 * * *' ] || [ "$schedule" = '0 11 * * *' ]; then
             date8=$(TZ=Asia/Tokyo date -d '+1 day' '+%Y%m%d')
           else
             date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
           fi
+
           if [ -n '${{ github.event.inputs.stage }}' ]; then
             stage='${{ github.event.inputs.stage }}'
-          elif [ '${{ github.event.schedule }}' = '0 11 * * *' ]; then
+          elif [ "$schedule" = '0 10 * * *' ] || [ "$schedule" = '30 10 * * *' ] || [ "$schedule" = '0 11 * * *' ]; then
             stage='previous_evening'
           else
             stage='morning'
           fi
+
           echo "date8=$date8" >> "$GITHUB_OUTPUT"
           echo "stage=$stage" >> "$GITHUB_OUTPUT"
-          echo "Early snapshot target=$date8 stage=$stage"
+          echo "Early snapshot target=$date8 stage=$stage schedule=$schedule"
 
       - name: Check whether JRA races exist on target date
         id: day
