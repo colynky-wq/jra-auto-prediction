@@ -8,6 +8,8 @@ on:
     paths:
       - 'production/portfolio_shadow.py'
       - 'production/test_portfolio_shadow.py'
+      - 'production/all_bet_recommendation_shadow.py'
+      - 'production/test_all_bet_recommendation_shadow.py'
       - 'production/portfolio_review_100.py'
       - 'production/test_portfolio_review_100.py'
       - 'production/portfolio_early_review.py'
@@ -42,13 +44,16 @@ jobs:
 
       - name: Verify fixed shadow rules and review contracts
         run: |
-          python -m py_compile production/portfolio_shadow.py production/portfolio_review_100.py production/portfolio_early_review.py
+          python -m py_compile production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/portfolio_review_100.py production/portfolio_early_review.py
           python production/test_portfolio_shadow.py
+          python production/test_all_bet_recommendation_shadow.py
           python production/test_portfolio_review_100.py
           python production/test_portfolio_early_review.py
 
       - name: Build portfolio research projection
-        run: python production/portfolio_shadow.py
+        run: |
+          python production/portfolio_shadow.py
+          python production/all_bet_recommendation_shadow.py
 
       - name: Build formal prospective 100-race review projection
         run: python production/portfolio_review_100.py
@@ -63,7 +68,7 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
-          git add PortfolioResearchData.json reports/*/PortfolioResearchData.json 2>/dev/null || true
+          git add PortfolioResearchData.json AllBetRecommendationData.json reports/*/PortfolioResearchData.json reports/*/AllBetRecommendationData.json 2>/dev/null || true
           git add -f PortfolioReview100.json PortfolioEarlyReview100.json 2>/dev/null || true
           for path in reports/*/PortfolioReview100.json; do
             [ -e "$path" ] || continue
@@ -76,4 +81,5 @@ jobs:
           fi
 
           git commit -m 'Update KeibaAI portfolio reviews'
+          git pull --rebase origin main
           git push origin HEAD:main
