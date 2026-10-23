@@ -37,6 +37,13 @@ on:
 permissions:
   contents: write
 
+# Never let two early-prediction runs publish the same generated JSON at once.
+# Queuing is preferred to cancellation because a complete validated snapshot is
+# always safer than interrupting a run midway through JRA data collection.
+concurrency:
+  group: keibaai-early-prediction-main
+  cancel-in-progress: false
+
 jobs:
   early:
     runs-on: ubuntu-24.04
@@ -127,10 +134,12 @@ jobs:
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/publish_early_racedata.py
 
-      - name: Publish snapshot if produced
+      - name: Publish validated snapshot atomically
         if: steps.day.outputs.has_races == 'true'
         shell: bash
         run: |
+          set -euo pipefail
+
           if [ ! -f EarlyPredictionData.json ]; then
             echo 'EarlyPredictionData.json was not produced.'
             exit 1
@@ -139,17 +148,51 @@ jobs:
             echo 'RaceData.json was not produced.'
             exit 1
           fi
+
           date8='${{ steps.target.outputs.date8 }}'
-          mkdir -p "reports/${date8}"
-          cp EarlyPredictionData.json "reports/${date8}/EarlyPredictionData.json"
-          cp RaceData.json "reports/${date8}/RaceData.early.json"
-          if git diff --quiet -- EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"; then
-            echo 'No early prediction change.'
-            exit 0
-          fi
+          stage='${{ steps.target.outputs.stage }}'
+          publish_dir="$RUNNER_TEMP/keibaai-early-${date8}-${stage}"
+          rm -rf "$publish_dir"
+          mkdir -p "$publish_dir/reports/${date8}"
+
+          # Freeze exactly the files that passed the completeness gate. Never
+          # text-merge generated JSON with another run's output.
+          cp EarlyPredictionData.json "$publish_dir/EarlyPredictionData.json"
+          cp RaceData.json "$publish_dir/RaceData.json"
+          cp EarlyPredictionData.json "$publish_dir/reports/${date8}/EarlyPredictionData.json"
+          cp RaceData.json "$publish_dir/reports/${date8}/RaceData.early.json"
+
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"
-          git commit -m "Update early prediction ${{ steps.target.outputs.date8 }} ${{ steps.target.outputs.stage }}"
-          git pull --rebase origin main
-          git push origin HEAD:main
+
+          for attempt in 1 2 3; do
+            echo "Atomic publish attempt ${attempt}/3"
+
+            # Start every attempt from the latest remote main, then re-apply
+            # the already validated generated files as complete replacements.
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p "reports/${date8}"
+            cp "$publish_dir/EarlyPredictionData.json" EarlyPredictionData.json
+            cp "$publish_dir/RaceData.json" RaceData.json
+            cp "$publish_dir/reports/${date8}/EarlyPredictionData.json" "reports/${date8}/EarlyPredictionData.json"
+            cp "$publish_dir/reports/${date8}/RaceData.early.json" "reports/${date8}/RaceData.early.json"
+
+            if git diff --quiet -- EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"; then
+              echo 'No early prediction change after syncing latest main.'
+              exit 0
+            fi
+
+            git add EarlyPredictionData.json RaceData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json"
+            git commit -m "Update early prediction ${date8} ${stage}"
+
+            if git push origin HEAD:main; then
+              echo "Atomic early prediction publish succeeded on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo 'Remote main advanced during publish; retrying from latest main without merging generated JSON.'
+          done
+
+          echo 'Failed to publish validated early prediction after 3 atomic attempts.'
+          exit 1
