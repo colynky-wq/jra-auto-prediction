@@ -4,6 +4,8 @@ on:
     paths:
       - 'production/*all_bet*.py'
       - 'production/*bet_research_data.py'
+      - 'production/cross_bet_recommendation.py'
+      - 'production/test_cross_bet_recommendation.py'
       - 'production/wide_axis_shadow.py'
       - 'production/test_wide_axis_rules.py'
       - 'production/*win5*.py'
@@ -21,6 +23,8 @@ on:
     paths:
       - 'production/*all_bet*.py'
       - 'production/*bet_research_data.py'
+      - 'production/cross_bet_recommendation.py'
+      - 'production/test_cross_bet_recommendation.py'
       - 'production/wide_axis_shadow.py'
       - 'production/test_wide_axis_rules.py'
       - 'production/*win5*.py'
@@ -48,6 +52,7 @@ jobs:
         run: |
           python -m unittest discover -s production -p 'test_all_bet*.py'
           python production/test_bet_research_data.py
+          python -m unittest discover -s production -p 'test_cross_bet_recommendation.py'
           python -m unittest discover -s production -p 'test_win5*.py'
           python -m unittest discover -s production -p test_live_bundle_publisher.py
       - name: Check existing Triple and entry observations still pass
