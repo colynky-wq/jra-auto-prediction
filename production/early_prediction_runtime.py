@@ -26,6 +26,19 @@ import live_monitor_topk as live
 HERE = Path(__file__).resolve().parent
 OUT_PATH = HERE.parent / "EarlyPredictionData.json"
 JST = base.JST
+_ORIGINAL_MATCH_HISTORY_NAME = base.match_history_name
+
+
+def _match_history_name_or_new(current, candidates):
+    """Keep a valid current JRA name even when it has no historical rows yet."""
+    matched = _ORIGINAL_MATCH_HISTORY_NAME(current, candidates)
+    if matched is not None:
+        return matched
+    raw = "" if current is None else str(current).strip()
+    if raw:
+        print("EARLY_UNSEEN_HISTORY_NAME", raw)
+        return raw
+    return None
 
 
 def _latest_body_state(hist: pd.DataFrame, horse_key: str) -> tuple[float, float]:
@@ -159,7 +172,18 @@ def main() -> None:
     if stage not in {"previous_evening", "morning"}:
         raise RuntimeError(f"unsupported KEIBAAI_EARLY_STAGE: {stage}")
 
-    snap = _snapshot(date8, stage)
+    # Historical name dictionaries can legitimately lag newly licensed or
+    # newly represented jockeys/trainers. Treat a nonblank current JRA name as
+    # a new category instead of dropping the whole race. Feature smoothing then
+    # supplies the existing prior for zero-history categories.
+    base.match_history_name = _match_history_name_or_new
+    live.base.match_history_name = _match_history_name_or_new
+    try:
+        snap = _snapshot(date8, stage)
+    finally:
+        base.match_history_name = _ORIGINAL_MATCH_HISTORY_NAME
+        live.base.match_history_name = _ORIGINAL_MATCH_HISTORY_NAME
+
     race_date = f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}"
     existing = _load_existing()
     snapshots = existing.get("snapshots", {}) if existing.get("raceDate") == race_date else {}
