@@ -8,11 +8,12 @@ on:
       - 'production/publish_early_racedata.py'
       - '.github/workflows/keibaai-early-prediction.yml'
   schedule:
-    # Previous-evening prediction: start early and retry so GitHub schedule delays
-    # do not push the first usable snapshot past 20:00 JST.
-    - cron: '0 10 * * *'   # 19:00 JST
-    - cron: '30 10 * * *'  # 19:30 JST retry
-    - cron: '0 11 * * *'   # 20:00 JST fallback
+    # Previous-evening prediction: stagger runs away from the top of the hour
+    # and retry so GitHub schedule delays do not push the first usable snapshot
+    # past 20:00 JST.
+    - cron: '15 10 * * *'  # 19:15 JST
+    - cron: '35 10 * * *'  # 19:35 JST retry
+    - cron: '55 10 * * *'  # 19:55 JST final evening retry
     # Morning refresh for the current day.
     - cron: '30 22 * * *'  # 07:30 JST
   workflow_dispatch:
@@ -44,7 +45,7 @@ jobs:
           schedule='${{ github.event.schedule }}'
           if [ -n '${{ github.event.inputs.target_date }}' ]; then
             date8='${{ github.event.inputs.target_date }}'
-          elif [ "$schedule" = '0 10 * * *' ] || [ "$schedule" = '30 10 * * *' ] || [ "$schedule" = '0 11 * * *' ]; then
+          elif [ "$schedule" = '15 10 * * *' ] || [ "$schedule" = '35 10 * * *' ] || [ "$schedule" = '55 10 * * *' ]; then
             date8=$(TZ=Asia/Tokyo date -d '+1 day' '+%Y%m%d')
           else
             date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
@@ -52,7 +53,7 @@ jobs:
 
           if [ -n '${{ github.event.inputs.stage }}' ]; then
             stage='${{ github.event.inputs.stage }}'
-          elif [ "$schedule" = '0 10 * * *' ] || [ "$schedule" = '30 10 * * *' ] || [ "$schedule" = '0 11 * * *' ]; then
+          elif [ "$schedule" = '15 10 * * *' ] || [ "$schedule" = '35 10 * * *' ] || [ "$schedule" = '55 10 * * *' ]; then
             stage='previous_evening'
           else
             stage='morning'
