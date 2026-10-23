@@ -6,6 +6,12 @@ on:
     paths:
       - 'production/early_prediction_runtime.py'
       - 'production/publish_early_racedata.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/live_monitor_dry_run.py'
+      - 'production/jra_entry_source.py'
+      - 'production/horse_identity_runtime.py'
+      - 'production/feature_engine.py'
+      - 'production/topk_runtime.py'
       - '.github/workflows/keibaai-early-prediction.yml'
   schedule:
     # Previous-evening prediction: stagger runs away from the top of the hour
