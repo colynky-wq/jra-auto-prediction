@@ -1,0 +1,17 @@
+name: One-off stop stale KeibaAI live session
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/stop-stale-live-once.yml'
+
+concurrency:
+  group: keibaai-live-permanent-safety-v3
+  cancel-in-progress: true
+
+jobs:
+  stop-stale:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'Superseding stale v3 live session before repaired 2026-10-25 monitor.'
