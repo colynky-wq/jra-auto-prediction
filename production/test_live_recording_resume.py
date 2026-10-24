@@ -137,4 +137,21 @@ class ResumeChecks(unittest.TestCase):
             self.assertEqual(digest,axis.fingerprint(record))
 
 
+
+    def test_wide_archive_identity_allows_later_official_post_time_update(self):
+        import build_signal_data_v2 as v2
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);rid='202605040810'
+            race={'raceID':rid,'raceDate':'2026-10-24','venue':'東京','raceNumber':10,'startTime':'15:01'}
+            saved={'raceID':rid,'raceDate':'2026-10-24','venue':'東京','raceNumber':10,'startTime':'15:00',
+                   'frozenAtFirstSuccessfulCapture':True,'pairs':[]}
+            path=root/'reports/20261024/wide_odds'/f'{rid}.json';path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(saved))
+            with patch.object(v2,'REPORTS_DIR',root/'reports'),patch.object(v2.wide,'_load_payload',return_value={'snapshots':[]}):
+                got=v2._load_wide_by_race([race])
+                self.assertEqual(got[rid]['startTime'],'15:00')
+                damaged={**saved,'venue':'京都'};path.write_text(json.dumps(damaged))
+                with self.assertRaises(ValueError):
+                    v2._load_wide_by_race([race])
+
 if __name__=='__main__':unittest.main()
