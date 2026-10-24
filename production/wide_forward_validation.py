@@ -32,6 +32,41 @@ def _numbers(value) -> list[int]:
     return [int(x) for x in re.findall(r"\d+", str(value))]
 
 
+def _pair_identity(pair: dict) -> tuple[tuple[int, int], object, object]:
+    """Return sorted horse numbers with the names kept attached to each horse."""
+    a, b = int(pair["number1"]), int(pair["number2"])
+    if a == b:
+        raise ValueError("Wide pair contains the same horse twice")
+    if a < b:
+        return (a, b), pair.get("name1"), pair.get("name2")
+    return (b, a), pair.get("name2"), pair.get("name1")
+
+
+def _normalize_validated_pair_names(race: dict, signal: dict | None) -> dict:
+    """Repair legacy validation rows whose sorted numbers retained unsorted names."""
+    if not signal:
+        return race
+    wide_eval = signal.get("wideEvaluation") or {}
+    source_pairs = wide_eval.get("validationPairs") or wide_eval.get("pairs") or []
+    identities = {}
+    for pair in source_pairs:
+        try:
+            key, name1, name2 = _pair_identity(pair)
+        except (KeyError, TypeError, ValueError):
+            continue
+        identities[key] = (name1, name2)
+    for pair in race.get("pairs") or []:
+        try:
+            key = tuple(sorted((int(pair["number1"]), int(pair["number2"]))))
+        except (KeyError, TypeError, ValueError):
+            continue
+        pair["number1"], pair["number2"] = key
+        names = identities.get(key)
+        if names:
+            pair["name1"], pair["name2"] = names
+    return race
+
+
 def fetch_wide_payouts(race_id: str) -> dict[tuple[int, int], int]:
     """Return final Wide payout per 100 yen keyed by sorted horse-number pair."""
     r = requests.get(RESULT_URL, params={"race_id": str(race_id)}, headers=HEADERS, timeout=30)
@@ -86,7 +121,7 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
     evaluated = []
     for p in source_pairs:
         try:
-            key = tuple(sorted((int(p["number1"]), int(p["number2"]))))
+            key, name1, name2 = _pair_identity(p)
         except Exception:
             continue
         odds = odds_by_pair.get(key)
@@ -101,9 +136,9 @@ def evaluate_race(signal: dict, snapshot: dict, payouts: dict[tuple[int, int], i
         metrics = practical_rank_metrics(ai_prob, low)
         evaluated.append({
             "number1": key[0],
-            "name1": p.get("name1"),
+            "name1": name1,
             "number2": key[1],
-            "name2": p.get("name2"),
+            "name2": name2,
             "marketWideProbabilityPct": p.get("marketWideProbability"),
             "aiWideProbabilityPct": round(ai_prob * 100.0, 3),
             "probabilityEdgePct": p.get("probabilityEdgePct"),
@@ -166,6 +201,12 @@ def build_date(date8: str) -> dict:
     signal_payload = _load_json(day / "SignalData.json", {})
     signals = signal_payload.get("races") if isinstance(signal_payload, dict) else []
     by_id = {str(r.get("raceID") or ""): r for r in (signals or [])}
+
+    # Older validation rows sorted the horse numbers but accidentally left the
+    # source names in their original order. Repair those rows deterministically
+    # from the same frozen SignalData before preserving them.
+    for rid, race in by_validated.items():
+        _normalize_validated_pair_names(race, by_id.get(rid))
 
     waiting = 0
     added = 0
