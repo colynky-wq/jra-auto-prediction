@@ -12,13 +12,23 @@ TOPK_PROBABILITY_KEYS = (
     'aiTop3Probability', 'marketTop3Probability',
 )
 LIVE_TIMING_MARKER = 'live_10min'
+ALL_BET_SIDECARS = ('win','place','frame_quinella','quinella','exacta')
+TRIPLE_SIDECARS = ('trio','trifecta')
+
+
+def research_sidecars_complete(root,date8,rid):
+    day=Path(root)/'reports'/date8
+    required=[day/'all_bet_v1'/kind/(rid+'.json') for kind in ALL_BET_SIDECARS]
+    required += [day/'triple_v1'/kind/(rid+'.json') for kind in TRIPLE_SIDECARS]
+    required.append(day/'wide_axis_v1'/(rid+'.json'))
+    return all(p.is_file() and p.stat().st_size>0 for p in required)
 
 
 def _valid_probability(value):
     return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 100
 
 
-def published_race_ids(root, date8, schedule):
+def published_race_ids(root, date8, schedule, require_research=False):
     """Return only races already captured in the formal live window.
 
     RaceData can contain morning/early forecasts for every race. Those rows must
@@ -68,5 +78,7 @@ def published_race_ids(root, date8, schedule):
             for key in TOPK_PROBABILITY_KEYS:
                 if key in h and not _valid_probability(h[key]):
                     raise ValueError('invalid published TopK probability')
+        if require_research and not research_sidecars_complete(root,date8,rid):
+            continue
         ready.add(rid)
     return ready

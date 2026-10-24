@@ -44,7 +44,7 @@ def resilient_main() -> None:
     processed: set[str] = set()
     if os.environ.get("KEIBAAI_PUBLISH_RACEDATA", "").lower() in {"true", "1"}:
         from live_recording_resume import published_race_ids
-        processed = published_race_ids(base.HERE.parent, base.TARGET_DATE8, flat)
+        processed = published_race_ids(base.HERE.parent, base.TARGET_DATE8, flat, require_research=True)
         print("LIVE_RESUME_PUBLISHED", sorted(processed))
     missed: set[str] = set()
     attempts: dict[str, int] = {}

@@ -65,20 +65,30 @@ def publish_race_to_racedata(race,out):
         horses.append({"number":int(row["馬番"]),"name":str(row["馬名"]),"age":int(row["年齢"]),"horseKey":str(row["馬キー"]),"jockey":_optional_text(row.get("騎手")),"carriedWeight":_optional_number(row.get("斤量"),1),"popularity":_optional_int(row.get("人気")),"bodyWeight":_optional_int(row.get("馬体重")),"bodyWeightChange":_optional_int(row.get("増減")),"odds":_number(row["単勝オッズ"],1),"marketProbability":_number(row["市場勝率(%)"]),"aiProbability":_number(row["AI勝率(%)"]),"marketTop2Probability":_number(row["市場2着内率(%)"]),"aiTop2Probability":_number(row["AI2着内率(%)"]),"marketTop3Probability":_number(row["市場3着内率(%)"]),"aiTop3Probability":_number(row["AI3着内率(%)"]),"aiMarketRatio":_number(row["AI÷市場"],4),"expectedIndex":_number(row["期待払戻指数"])})
     _validate_complete_live_prediction(race,horses); captured_at=base.now_jst().isoformat()
     published_race={"raceDate":target_date,"raceID":str(race["race_id"]),"venue":str(race["venue"]),"raceNumber":int(race["race_no"]),"startTime":str(race["start_time"]),"raceName":str(race.get("race_name","")),"course":f"{race['surface']}{int(race['distance'])}m","predictionTiming":"live_10min","capturedAtJST":captured_at,"recommendationSafety":{"status":"evidence_pending","enabled":False,"message":"全出走馬・正式10分前の対象券種実オッズ・トリガミ条件を確認するまで購入推奨を出しません。"},"horses":horses}
-    rid=published_race["raceID"]; replaced=False
-    for i,item in enumerate(todays):
-        if str(item.get("raceID",""))==rid: todays[i]=published_race; replaced=True; break
-    if not replaced: todays.append(published_race)
-    todays.sort(key=lambda x:(str(x.get("startTime","")),str(x.get("raceID",""))))
-    tmp=RACEDATA_PATH.with_suffix(".json.tmp"); tmp.write_text(json.dumps(todays,ensure_ascii=False,indent=2)+"\n",encoding="utf-8"); tmp.replace(RACEDATA_PATH)
-    print("KEIBAAI APP PUBLISH",rid,"live_10min",captured_at,"horses",len(horses),"recommendation disabled pending formal odds")
-    try:
-        from triple_research_runtime import schedule; schedule(RACEDATA_PATH.parent,published_race)
-    except Exception as exc: print('WARNING: TRIPLE_RESEARCH_NOT_SCHEDULED',type(exc).__name__)
-    try:
-        from all_bet_runtime import schedule as schedule_all_bets; schedule_all_bets(RACEDATA_PATH.parent,published_race,out.attrs.get('allBetEntryEvidence'))
-    except Exception as exc: print('WARNING: ALL_BET_RESEARCH_NOT_SCHEDULED',type(exc).__name__)
+    rid=published_race["raceID"]
+    frozen=next((item for item in todays if str(item.get("raceID",""))==rid and item.get("predictionTiming")=="live_10min"),None)
+    if frozen is not None:
+        published_race=frozen
+        captured_at=str(frozen.get("capturedAtJST") or captured_at)
+        print("KEIBAAI APP PRESERVE FIRST LIVE",rid,captured_at)
+    else:
+        replaced=False
+        for i,item in enumerate(todays):
+            if str(item.get("raceID",""))==rid: todays[i]=published_race; replaced=True; break
+        if not replaced: todays.append(published_race)
+        todays.sort(key=lambda x:(str(x.get("startTime","")),str(x.get("raceID",""))))
+        tmp=RACEDATA_PATH.with_suffix(".json.tmp"); tmp.write_text(json.dumps(todays,ensure_ascii=False,indent=2)+"\n",encoding="utf-8"); tmp.replace(RACEDATA_PATH)
+        print("KEIBAAI APP PUBLISH",rid,"live_10min",captured_at,"horses",len(horses),"recommendation disabled pending formal odds")
+    from triple_research_runtime import schedule as schedule_triple
+    from all_bet_runtime import schedule as schedule_all_bets
+    triple_future=schedule_triple(RACEDATA_PATH.parent,published_race)
+    all_bet_future=schedule_all_bets(RACEDATA_PATH.parent,published_race,out.attrs.get('allBetEntryEvidence'))
     _refresh_prediction_bundle(published_race)
+    triple_future.result(timeout=120)
+    all_bet_future.result(timeout=120)
+    from live_recording_resume import research_sidecars_complete
+    if not research_sidecars_complete(RACEDATA_PATH.parent,str(published_race["raceDate"]).replace("-",""),rid):
+        raise RuntimeError("formal live research sidecars incomplete")
 _original_predict=topk.predict_live_race_topk
 def predict_live_race_topk_and_publish(race,hist,target_date):
     out=_original_predict(race,hist,target_date)

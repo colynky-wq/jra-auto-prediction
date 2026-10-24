@@ -1,4 +1,4 @@
-"""Bounded background I/O for research; the prediction publisher never waits."""
+"""Retryable background I/O for trifecta/trio research records."""
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import datetime
@@ -6,26 +6,39 @@ import threading
 
 from triple_forward import JST, TYPES, record_first
 
-_pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix='triple-research')
+_pool = ThreadPoolExecutor(max_workers=1,thread_name_prefix="triple-research")
 _lock = threading.Lock()
-_submitted = set()
+_futures = {}
 
 
-def capture(root, race, predicted):
+def capture(root,race,predicted):
+    failures=[]
     for kind in TYPES:
         try:
-            saved = record_first(root, race, kind, predicted)
-            print('TRIPLE_RESEARCH_CAPTURE', kind, race['raceID'], str(saved) if saved else 'deadline_or_day_guard')
+            path=record_first(root,race,kind,predicted)
+            print("TRIPLE_RESEARCH_CAPTURE",kind,race["raceID"],str(path) if path else "deadline_or_day_guard")
+            if path is None:
+                failures.append(kind+":deadline_or_day_guard")
         except Exception as error:
-            print('WARNING: TRIPLE_RESEARCH_CAPTURE_FAILED', kind, race.get('raceID'), type(error).__name__)
-
-
-def schedule(root, race):
-    """One first attempt per race; the worker preserves the exact passed inputs."""
-    key = (race['raceDate'], race['raceID'])
-    with _lock:
-        if key in _submitted:
-            return False
-        _submitted.add(key)
-        _pool.submit(capture, root, deepcopy(race), datetime.now(JST).isoformat())
+            print("WARNING: TRIPLE_RESEARCH_CAPTURE_FAILED",kind,race.get("raceID"),type(error).__name__)
+            failures.append(kind+":"+type(error).__name__)
+    if failures:
+        raise RuntimeError("triple research incomplete: "+",".join(failures))
     return True
+
+
+def schedule(root,race):
+    key=(race["raceDate"],race["raceID"])
+    with _lock:
+        previous=_futures.get(key)
+        if previous is not None:
+            if not previous.done():
+                return previous
+            try:
+                if previous.exception() is None:
+                    return previous
+            except Exception:
+                pass
+        future=_pool.submit(capture,root,deepcopy(race),datetime.now(JST).isoformat())
+        _futures[key]=future
+        return future

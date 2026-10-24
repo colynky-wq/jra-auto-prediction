@@ -10,7 +10,7 @@ from threading import Barrier
 import unittest
 from unittest.mock import patch
 
-from live_recording_resume import published_race_ids
+from live_recording_resume import published_race_ids, research_sidecars_complete
 import build_signal_data as signals
 import wide_odds_runtime as wide
 
@@ -78,6 +78,23 @@ class ResumeChecks(unittest.TestCase):
             stack.enter_context(patch.dict('os.environ',{'KEIBAAI_PUBLISH_RACEDATA':'true','KEIBAAI_CAPTURE_PRERACE':'false'}))
             with contextlib.redirect_stdout(io.StringIO()):monitor.main()
             predict.assert_not_called()
+
+    def test_resume_can_require_complete_research_sidecars(self):
+        with tempfile.TemporaryDirectory() as t:
+            r=self.race();schedule=[{'race_id':r['raceID'],'start_time':'14:55'}]
+            root=Path(t);(root/'RaceData.json').write_text(json.dumps([r]))
+            self.assertEqual(published_race_ids(root,'20261018',schedule,require_research=True),set())
+            day=root/'reports/20261018'
+            for kind in ('win','place','frame_quinella','quinella','exacta'):
+                p=day/'all_bet_v1'/kind/(r['raceID']+'.json')
+                p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
+            for kind in ('trio','trifecta'):
+                p=day/'triple_v1'/kind/(r['raceID']+'.json')
+                p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
+            p=day/'wide_axis_v1'/(r['raceID']+'.json')
+            p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
+            self.assertTrue(research_sidecars_complete(root,'20261018',r['raceID']))
+            self.assertEqual(published_race_ids(root,'20261018',schedule,require_research=True),{r['raceID']})
 
     def test_concurrent_display_writes_use_distinct_temporary_files(self):
         with tempfile.TemporaryDirectory() as t:
