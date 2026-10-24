@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 import build_bet_research_data as ui
+import wide_forward_validation as wide_validation
 import all_bet_forward as added
 import triple_forward as triple
 from evaluate_all_bet_forward import build as evaluate_added
@@ -136,7 +137,24 @@ class ProjectionTests(unittest.TestCase):
         for c,p in zip(actual,weights):self.assertAlmostEqual(c['probabilityPct'],p*100,places=7)
         self.assertTrue(all(c['oddsLow'] is None and c['payoutYen'] is None for c in actual))
 
-    def test_wide_actual_payouts_match_frozen_pairs_and_reject_disagreement(self):
+    def test_wide_validation_keeps_names_attached_when_numbers_are_sorted(self):
+        signal={'raceID':'test','raceDate':'2026-10-17','startTime':'10:00',
+                'wideEvaluation':{'validationPairs':[{
+                    'number1':7,'name1':'馬7','number2':2,'name2':'馬2',
+                    'aiWideProbability':10,'marketWideProbability':5,'probabilityEdgePct':5}]}}
+        snap={'raceID':'test','capturedAtJST':'2026-10-17 09:05:00','minutesToPost':55,
+              'pairs':[{'number1':2,'number2':7,'oddsLow':3.0,'oddsHigh':4.0}]}
+        row=wide_validation.evaluate_race(signal,snap,{(2,7):410})
+        pair=row['pairs'][0]
+        self.assertEqual((pair['number1'],pair['name1'],pair['number2'],pair['name2']),
+                         (2,'馬2',7,'馬7'))
+        legacy={'pairs':[{'number1':2,'name1':'馬7','number2':7,'name2':'馬2'}]}
+        wide_validation._normalize_validated_pair_names(legacy,signal)
+        pair=legacy['pairs'][0]
+        self.assertEqual((pair['number1'],pair['name1'],pair['number2'],pair['name2']),
+                         (2,'馬2',7,'馬7'))
+
+    def test_wide_payout_cache_is_separate_from_frozen_candidate_snapshot(self):
         from test_wide_axis_rules import write_actual_result
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);race,signal=wide_fixture()
@@ -145,14 +163,22 @@ class ProjectionTests(unittest.TestCase):
             pairs=[]
             for value in signal['wideEvaluation']['validationPairs']:
                 key=(value['number1'],value['number2']);yen={(1,6):410,(1,4):100,(4,6):450}.get(key,0)
-                pairs.append({**value,'oddsLow':value['wideOddsLow'],'oddsHigh':value['wideOddsHigh'],
-                              'hit':yen>0,'payoutPer100Yen':yen})
+                # Payout validation may come from an earlier all-pairs odds snapshot.
+                # Keep those odds deliberately different from the frozen candidate odds.
+                item={**value,'oddsLow':value['wideOddsLow']+50,'oddsHigh':value['wideOddsHigh']+50,
+                      'hit':yen>0,'payoutPer100Yen':yen}
+                item['name1'],item['name2']=item['name2'],item['name1']
+                pairs.append(item)
             data={'races':[{'raceID':race['raceID'],'validationScope':'all_pairs',
-                  'snapshotCapturedAtJST':signal['wideEvaluation']['capturedAtJST'],'pairs':pairs}]}
+                  'snapshotCapturedAtJST':'2026-10-17 09:05:00','pairs':pairs}]}
             cache=p.parent.parent/'WideValidation.json';cache.write_text(json.dumps(data))
             row=self.row(ui.build(root,clock=lambda:NOW),'wide')
-            self.assertEqual(row['status'],'matched');self.assertEqual(row['candidates'][0]['payoutYen'],410)
-            data['races'][0]['snapshotCapturedAtJST']='2026-10-17 09:49:00';cache.write_text(json.dumps(data))
+            self.assertEqual(row['status'],'matched')
+            self.assertEqual(row['candidates'][0]['payoutYen'],410)
+            self.assertEqual(row['candidates'][0]['oddsLow'],4.1)
+            # A true payout/result contradiction must still fail closed.
+            data['races'][0]['pairs'][0]['payoutPer100Yen']=999
+            cache.write_text(json.dumps(data))
             row=self.row(ui.build(root,clock=lambda:NOW),'wide')
             self.assertEqual(row['status'],'invalid');self.assertFalse(row['candidates'])
 
