@@ -3,7 +3,7 @@
   "version": "all-bet-recommendation-shadow-v2-20261023",
   "status": "research_display_only",
   "raceDate": "2026-10-24",
-  "generatedAtJST": "2026-10-24T10:56:13+09:00",
+  "generatedAtJST": "2026-10-24T10:58:01+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
   "formalRecommendationsEnabled": false,
@@ -859,20 +859,6 @@
           "sourceScope": "all_saved_odds_outcomes"
         },
         {
-          "betType": "wide",
-          "betTypeLabel": "ワイド",
-          "candidateID": "0513",
-          "label": "5番 ユイノジカンカセギ → 13番 ビーテリオス",
-          "probabilityPct": 14.495,
-          "oddsLow": 50.3,
-          "oddsHigh": 54.0,
-          "expectedMultiplierLow": 7.290985,
-          "expectedMultiplierHigh": 7.8273,
-          "researchScore": 0.759898563,
-          "riskPenalty": 1.2,
-          "sourceScope": "frozen_wide_rule_candidates"
-        },
-        {
           "betType": "support",
           "betTypeLabel": "応援馬券",
           "candidateID": "05",
@@ -890,15 +876,29 @@
           "winOddsHigh": 2.7,
           "placeOddsLow": 4.9,
           "placeOddsHigh": 7.1
+        },
+        {
+          "betType": "quinella",
+          "betTypeLabel": "馬連",
+          "candidateID": "0405",
+          "label": "4番 エイダンバローズ − 5番 ユイノジカンカセギ",
+          "probabilityPct": 8.781951,
+          "oddsLow": 73.5,
+          "oddsHigh": 73.5,
+          "expectedMultiplierLow": 6.454734,
+          "expectedMultiplierHigh": 6.454734,
+          "researchScore": 0.399193389,
+          "riskPenalty": 1.2,
+          "sourceScope": "all_saved_odds_outcomes"
         }
       ],
-      "qualifyingPoolCount": 7,
+      "qualifyingPoolCount": 6,
       "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -906,7 +906,7 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -914,7 +914,7 @@
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -922,7 +922,7 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -930,15 +930,15 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "awaiting_results",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
+          "sourceStatus": "invalid",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -946,7 +946,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -954,7 +954,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -962,7 +962,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "awaiting_results",
+          "sourceStatus": "matched",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
