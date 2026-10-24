@@ -12,7 +12,7 @@ on:
       - 'production/test_live_recording_resume.py'
   schedule:
     - cron: '45 22 * * *'  # 07:45 JST: absorb scheduler/startup delays before first race
-    - cron: '45 4 * * *'   # 13:45 JST: queue continuation without cancelling pending research writes
+    - cron: '45 4 * * *'   # 13:45 JST: overlap before late races so +2/+4 minute research writes can finish safely
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -22,7 +22,9 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: keibaai-live-permanent-safety-v3
+  # Morning and afternoon schedules intentionally use different groups, so the
+  # handoff overlaps instead of cancelling or queueing a pending research write.
+  group: keibaai-live-permanent-${{ github.event.schedule || github.event_name }}
   cancel-in-progress: false
 jobs:
   monitor:
