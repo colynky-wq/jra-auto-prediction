@@ -46,6 +46,18 @@ def read(path):
     return json.loads(path.read_text())
 
 
+def read_optional(path):
+    # Legacy/partial runs may leave an empty optional cache behind.
+    # Treat only an absent/blank cache as unavailable; malformed
+    # non-empty JSON must still fail closed in the caller.
+    if not path.exists():
+        return None
+    raw=path.read_text()
+    if not raw.strip():
+        return None
+    return json.loads(raw)
+
+
 def deny_network(*_):
     raise OSError('reference projection never fetches source data')
 
@@ -162,8 +174,9 @@ def wide_row(root,path,clock):
     if state=='matched':
         cache=path.parent.parent/'WideValidation.json'
         state='payouts_pending'
-        if cache.exists():
-            found=[r for r in read(cache)['races'] if r['raceID']==race['raceID']]
+        cached=read_optional(cache)
+        if cached is not None:
+            found=[r for r in cached['races'] if r['raceID']==race['raceID']]
             if len(found)>1:raise ValueError('duplicate Wide payout race')
             if found:
                 r=found[0];all_pairs=r['pairs'];entrants=single.roster(race['horses'])

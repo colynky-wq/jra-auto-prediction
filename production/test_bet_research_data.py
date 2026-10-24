@@ -183,6 +183,25 @@ class ProjectionTests(unittest.TestCase):
             self.assertEqual(row['status'],'invalid');self.assertFalse(row['candidates'])
 
 
+    def test_empty_wide_payout_cache_is_pending_but_malformed_still_invalid(self):
+        from test_wide_axis_rules import write_actual_result
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);race,signal=wide_fixture()
+            p=ui.wide.record_first(root,race,signal,NOW.replace(hour=9,minute=51))
+            write_actual_result(p.parent.parent,race)
+            cache=p.parent.parent/'WideValidation.json';cache.write_text('')
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual(row['status'],'payouts_pending')
+            self.assertEqual(row['venue'],race.get('venue',''))
+            self.assertEqual(row['raceNumber'],race.get('raceNumber'))
+            self.assertTrue(row['candidates'])
+            # Non-empty malformed JSON remains a hard validation failure.
+            cache.write_text('{broken')
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual(row['status'],'invalid')
+            self.assertFalse(row['candidates'])
+
+
 if __name__=='__main__':
     import sys
     if '--emit-contract' in sys.argv:
