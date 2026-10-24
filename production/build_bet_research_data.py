@@ -168,7 +168,15 @@ def wide_row(root,path,clock):
         raise ValueError('invalid Wide saved evaluation')
     if state=='no_candidate':return row_for(race,'wide',state,value,e['message'])
     results=checked_results(path.parent.parent/'ResultData.json',race['raceDate'],clock())
-    actual=results.get((race['raceDate'],race['raceID']));state,finish=single.result_state(race,actual)
+    actual=results.get((race['raceDate'],race['raceID']))
+    if actual:
+        for key,empty in (('venue',''),('raceNumber',None),('raceName','')):
+            saved=race.get(key,empty); observed=actual.get(key,empty)
+            if saved not in (None,'') and observed not in (None,'') and saved!=observed:
+                raise ValueError('Wide race metadata mismatch')
+            if saved in (None,'') and observed not in (None,''):
+                race[key]=observed
+    state,finish=single.result_state(race,actual)
     if actual and added.stamp(actual['resultUpdatedAtJST'])>clock():raise ValueError('future Wide result')
     payouts={}
     if state=='matched':

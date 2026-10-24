@@ -202,6 +202,31 @@ class ProjectionTests(unittest.TestCase):
             self.assertFalse(row['candidates'])
 
 
+    def test_wide_metadata_is_saved_and_legacy_record_is_enriched_from_result(self):
+        from test_wide_axis_rules import write_actual_result
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);race,signal=wide_fixture()
+            race.update(venue='東京',raceNumber=1,raceName='2歳未勝利')
+            p=ui.wide.record_first(root,race,signal,NOW.replace(hour=9,minute=51))
+            saved=json.loads(p.read_text())
+            self.assertEqual((saved['venue'],saved['raceNumber'],saved['raceName']),('東京',1,'2歳未勝利'))
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual((row['venue'],row['raceNumber'],row['raceName']),('東京',1,'2歳未勝利'))
+
+            # Simulate a legacy frozen record created before display metadata was persisted.
+            for key in ('venue','raceNumber','raceName'):
+                saved.pop(key,None)
+            saved.pop('recordFingerprint',None)
+            saved['recordFingerprint']=ui.wide.fingerprint(saved)
+            p.write_text(json.dumps(saved))
+            actual=write_actual_result(p.parent.parent,race)
+            actual.update(venue='東京',raceNumber=1,raceName='2歳未勝利')
+            (p.parent.parent/'ResultData.json').write_text(json.dumps([actual]))
+            row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+            self.assertEqual(row['status'],'payouts_pending')
+            self.assertEqual((row['venue'],row['raceNumber'],row['raceName']),('東京',1,'2歳未勝利'))
+
+
 if __name__=='__main__':
     import sys
     if '--emit-contract' in sys.argv:

@@ -158,6 +158,7 @@ def record_first(root, race, signal, now):
         return None
     path = Path(root)/'reports'/day.replace('-','')/FOLDER/(rid+'.json')
     record = {'schemaVersion':1, 'ruleVersion':RULE_VERSION, 'raceID':rid, 'raceDate':day,
+        'venue':race.get('venue',''), 'raceNumber':race.get('raceNumber'), 'raceName':race.get('raceName',''),
         'startTime':race['startTime'], 'recordedAtJST':now.strftime('%Y-%m-%d %H:%M:%S'),
         'entrants': sorted([{'number':h['number'],'name':h['name']} for h in race['horses']], key=lambda h:h['number']),
         'sourceFingerprint':input_fingerprint(race,signal), 'evaluation':result}
