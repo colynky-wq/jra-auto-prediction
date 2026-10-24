@@ -7,6 +7,7 @@ on:
       - '.github/workflows/keibaai-live-permanent.yml'
       - 'production/live_monitor_topk_publish.py'
       - 'production/formal_wide_odds_runtime.py'
+      - 'production/resilient_live_entrypoint.py'
   schedule:
     - cron: '45 23 * * *'
     - cron: '15 5 * * *'
@@ -19,7 +20,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: keibaai-live-permanent-safety-v2
+  group: keibaai-live-permanent-safety-v3
   cancel-in-progress: true
 jobs:
   monitor:
@@ -63,6 +64,7 @@ jobs:
         if: steps.day.outputs.has_races == 'true'
         run: |
           python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/resilient_live_entrypoint.py
           python -m py_compile production/wide_odds_runtime.py
           python -m py_compile production/formal_wide_odds_runtime.py
           python -m py_compile production/build_signal_data_v2.py
@@ -90,7 +92,7 @@ jobs:
           KEIBAAI_LIVE_MODE: 'live'
           KEIBAAI_LIVE_RACE_ID: ''
           KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
-          KEIBAAI_LIVE_POLL_SECONDS: '20'
+          KEIBAAI_LIVE_POLL_SECONDS: '10'
           KEIBAAI_PUBLISH_RACEDATA: 'true'
           KEIBAAI_CAPTURE_WIDE_ODDS: 'true'
           KEIBAAI_CAPTURE_PRERACE: 'true'
@@ -100,7 +102,7 @@ jobs:
         run: |
           set -euo pipefail
           date8='${{ steps.day.outputs.target_date }}'
-          python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 20 -- python -u production/live_monitor_topk_publish.py
+          python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 10 -- python -u production/resilient_live_entrypoint.py
       - name: Preserve live outbox for recovery
         if: always() && steps.day.outputs.has_races == 'true'
         uses: actions/upload-artifact@v4
