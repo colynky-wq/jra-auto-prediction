@@ -31,35 +31,30 @@ jobs:
 
           p=Path('production/build_signal_data_v2.py')
           s=p.read_text()
-          old="""            if (saved.get(\"raceID\") != rid or saved.get(\"raceDate\") != race.get(\"raceDate\")
-                      or saved.get(\"startTime\") != race.get(\"startTime\")
-                      or saved.get(\"frozenAtFirstSuccessfulCapture\") is not True):
-                  raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
-              out[rid] = saved
-          """
-          new="""            if (saved.get(\"raceID\") != rid or saved.get(\"raceDate\") != race.get(\"raceDate\")
-                      or saved.get(\"frozenAtFirstSuccessfulCapture\") is not True):
-                  raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
-              # The JRA may revise the official post time after the immutable first
-              # Wide snapshot was captured. raceID/date/venue/race number identify
-              # the race; a later startTime update must not turn that snapshot into
-              # a different-race error.
-              for key in (\"venue\", \"raceNumber\"):
+          time_check='                    or saved.get("startTime") != race.get("startTime")\n'
+          if s.count(time_check)!=1:
+              raise SystemExit('startTime identity line mismatch')
+          s=s.replace(time_check,'',1)
+          anchor='            out[rid] = saved\n    return out\n'
+          replacement='''            # Official post time can move after the immutable first Wide snapshot.
+              # raceID/date plus venue/raceNumber identify the race; keep the frozen
+              # odds snapshot even when only the later official startTime changed.
+              for key in ("venue", "raceNumber"):
                   frozen = saved.get(key)
                   current = race.get(key)
-                  if frozen not in (None, \"\") and current not in (None, \"\") and frozen != current:
-                      raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
+                  if frozen not in (None, "") and current not in (None, "") and frozen != current:
+                      raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
               out[rid] = saved
-          """
-          if s.count(old)!=1:
-              raise SystemExit('build_signal_data_v2 identity anchor mismatch')
-          p.write_text(s.replace(old,new,1))
+          return out
+          '''
+          if s.count(anchor)!=1:
+              raise SystemExit('Wide identity insertion anchor mismatch')
+          p.write_text(s.replace(anchor,replacement,1))
 
           p=Path('production/test_live_recording_resume.py')
           s=p.read_text()
-          marker="\n\nif __name__=='__main__':unittest.main()\n"
+          marker="if __name__=='__main__':unittest.main()"
           addition=r'''
-
               def test_wide_archive_identity_allows_later_official_post_time_update(self):
                   import build_signal_data_v2 as v2
                   with tempfile.TemporaryDirectory() as t:
@@ -73,13 +68,15 @@ jobs:
                           got=v2._load_wide_by_race([race])
                           self.assertEqual(got[rid]['startTime'],'15:00')
                           damaged={**saved,'venue':'京都'};path.write_text(json.dumps(damaged))
-                          with self.assertRaises(ValueError):v2._load_wide_by_race([race])
+                          with self.assertRaises(ValueError):
+                              v2._load_wide_by_race([race])
+
           '''
-          if 'test_wide_archive_identity_allows_later_official_post_time_update' in s:
-              raise SystemExit('schedule drift regression test already present')
-          if s.count(marker)!=1:
-              raise SystemExit('test insertion anchor mismatch')
-          p.write_text(s.replace(marker,addition+marker,1))
+          if 'test_wide_archive_identity_allows_later_official_post_time_update' not in s:
+              if s.count(marker)!=1:
+                  raise SystemExit('test insertion anchor mismatch')
+              s=s.replace(marker,addition+marker,1)
+          p.write_text(s)
           PY
       - name: Run regression and current-data smoke
         env:
