@@ -8,6 +8,8 @@ on:
       - '.github/workflows/keibaai-live-result-sync.yml'
       - 'production/all_bet_recommendation_shadow.py'
       - 'production/test_all_bet_recommendation_shadow.py'
+      - 'production/build_bet_research_data.py'
+      - 'production/test_bet_research_data.py'
   workflow_dispatch:
     inputs:
       target_date:
@@ -71,6 +73,7 @@ jobs:
           python -m py_compile production/build_bet_research_data.py
           python -m py_compile production/portfolio_shadow.py
           python -m py_compile production/all_bet_recommendation_shadow.py
+          python production/test_bet_research_data.py
           python production/test_all_bet_recommendation_shadow.py
 
       - name: Choose continuous session runtime
