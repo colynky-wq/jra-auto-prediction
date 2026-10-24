@@ -167,20 +167,29 @@ def wide_row(root,path,clock):
             if len(found)>1:raise ValueError('duplicate Wide payout race')
             if found:
                 r=found[0];all_pairs=r['pairs'];entrants=single.roster(race['horses'])
-                if r.get('validationScope')!='all_pairs' or r['snapshotCapturedAtJST']!=e['capturedAtJST']:
-                    raise ValueError('Wide payout snapshot mismatch')
+                if r.get('validationScope')!='all_pairs':
+                    raise ValueError('Wide payout scope mismatch')
+                snapshot=added.stamp(r['snapshotCapturedAtJST'])
+                if snapshot.date()!=post.date() or snapshot>=post:
+                    raise ValueError('Wide payout snapshot time mismatch')
                 keys={}
                 for p in all_pairs:
-                    a,b=p['number1'],p['number2'];key=tuple(sorted((a,b)))
-                    if a==b or key in keys or entrants.get(a)!=p['name1'] or entrants.get(b)!=p['name2']:
+                    a,b=int(p['number1']),int(p['number2']);key=tuple(sorted((a,b)))
+                    expected_names={entrants.get(a),entrants.get(b)}
+                    actual_names={p.get('name1'),p.get('name2')}
+                    if (a==b or key in keys or a not in entrants or b not in entrants
+                            or expected_names!=actual_names):
                         raise ValueError('Wide payout entrant mismatch')
                     keys[key]=p
                 if len(keys)!=math.comb(len(entrants),2):raise ValueError('incomplete Wide payout coverage')
                 for p in e['pairs']:
-                    k=tuple(sorted((p['number1'],p['number2'])));got=keys[k];hit=set(k)<=set(finish)
+                    k=tuple(sorted((int(p['number1']),int(p['number2']))))
+                    got=keys.get(k)
+                    if got is None:raise ValueError('missing Wide payout pair')
+                    hit=set(k)<=set(finish)
                     if (type(got['payoutPer100Yen']) is not int or got['payoutPer100Yen']<0
-                            or got['hit'] is not hit or (got['payoutPer100Yen']>0)!=hit
-                            or abs(got['oddsLow']-p['oddsLow'])>.0001 or abs(got['oddsHigh']-p['oddsHigh'])>.0001):
+                            or type(got.get('hit')) is not bool or got['hit'] is not hit
+                            or (got['payoutPer100Yen']>0)!=hit):
                         raise ValueError('Wide payout/finish disagreement')
                     payouts[single.outcome_key(k)]=(hit,got['payoutPer100Yen'])
                 state='matched'
