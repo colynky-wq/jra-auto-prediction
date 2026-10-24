@@ -26,7 +26,9 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: pip install -r production/requirements.txt
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
 
       - name: Patch Wide cache handling and regression test
         shell: bash
