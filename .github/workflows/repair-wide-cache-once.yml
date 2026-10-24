@@ -1,0 +1,131 @@
+name: One-off Wide cache repair
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/repair-wide-cache-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Patch Wide cache handling and regression test
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          build = Path('production/build_bet_research_data.py')
+          text = build.read_text(encoding='utf-8')
+          old = "def read(path):\n    return json.loads(path.read_text())\n"
+          new = """def read(path):
+              return json.loads(path.read_text())
+
+
+          def read_optional(path):
+              # Legacy/partial runs may leave an empty optional cache behind.
+              # Treat only an absent/blank cache as unavailable; malformed
+              # non-empty JSON must still fail closed in the caller.
+              if not path.exists():
+                  return None
+              raw=path.read_text()
+              if not raw.strip():
+                  return None
+              return json.loads(raw)
+          """
+          if text.count(old) != 1:
+              raise SystemExit('read() patch anchor mismatch')
+          text = text.replace(old, new, 1)
+
+          old = """        if cache.exists():
+                      found=[r for r in read(cache)['races'] if r['raceID']==race['raceID']]
+          """
+          new = """        cached=read_optional(cache)
+                  if cached is not None:
+                      found=[r for r in cached['races'] if r['raceID']==race['raceID']]
+          """
+          if text.count(old) != 1:
+              raise SystemExit('Wide cache patch anchor mismatch')
+          build.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          test = Path('production/test_bet_research_data.py')
+          text = test.read_text(encoding='utf-8')
+          marker = "\n\nif __name__=='__main__':"
+          addition = r'''
+
+              def test_empty_wide_payout_cache_is_pending_but_malformed_still_invalid(self):
+                  from test_wide_axis_rules import write_actual_result
+                  with tempfile.TemporaryDirectory() as temp:
+                      root=Path(temp);race,signal=wide_fixture()
+                      p=ui.wide.record_first(root,race,signal,NOW.replace(hour=9,minute=51))
+                      write_actual_result(p.parent.parent,race)
+                      cache=p.parent.parent/'WideValidation.json';cache.write_text('')
+                      row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+                      self.assertEqual(row['status'],'payouts_pending')
+                      self.assertEqual(row['venue'],race.get('venue',''))
+                      self.assertEqual(row['raceNumber'],race.get('raceNumber'))
+                      self.assertTrue(row['candidates'])
+                      # Non-empty malformed JSON remains a hard validation failure.
+                      cache.write_text('{broken')
+                      row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+                      self.assertEqual(row['status'],'invalid')
+                      self.assertFalse(row['candidates'])
+          '''
+          if 'test_empty_wide_payout_cache_is_pending_but_malformed_still_invalid' in text:
+              raise SystemExit('regression test already exists')
+          if text.count(marker) != 1:
+              raise SystemExit('test insertion anchor mismatch')
+          test.write_text(text.replace(marker, addition + marker, 1), encoding='utf-8')
+
+          workflow = Path('.github/workflows/keibaai-live-result-sync.yml')
+          text = workflow.read_text(encoding='utf-8')
+          old = """      - 'production/all_bet_recommendation_shadow.py'
+                - 'production/test_all_bet_recommendation_shadow.py'
+          """
+          new = """      - 'production/all_bet_recommendation_shadow.py'
+                - 'production/test_all_bet_recommendation_shadow.py'
+                - 'production/build_bet_research_data.py'
+                - 'production/test_bet_research_data.py'
+          """
+          if text.count(old) != 1:
+              raise SystemExit('workflow path anchor mismatch')
+          workflow.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Run regression tests
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python -m py_compile production/build_bet_research_data.py production/test_bet_research_data.py
+          python production/test_bet_research_data.py
+
+      - name: Publish repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git rm .github/workflows/repair-wide-cache-once.yml
+          git add production/build_bet_research_data.py production/test_bet_research_data.py .github/workflows/keibaai-live-result-sync.yml
+          git commit -m 'Harden Wide payout cache handling'
+          git pull --rebase origin main
+          git push origin HEAD:main
