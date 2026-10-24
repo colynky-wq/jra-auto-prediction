@@ -23,8 +23,13 @@ def published_race_ids(root, date8, schedule):
     Win/market probabilities are the minimum contract for historical RaceData.
     Top2/Top3 fields were added later, so older rows may legitimately omit them.
     When any Top2/Top3 field is present we validate every present value, but missing
-    optional TopK fields must not abort the live recorder. This keeps resume logic
-    backward compatible without treating malformed values as valid.
+    optional TopK fields must not abort the live recorder.
+
+    The live schedule is authoritative for post time. A published morning forecast
+    can contain the post time known when it was created; JRA may subsequently move
+    that time. A time-only difference must therefore not abort odds capture. Race
+    identity and entrant/probability validation remain strict, and the monitor uses
+    the freshly fetched schedule to decide the 12-to-8-minute capture window.
     """
     day = datetime.strptime(date8, '%Y%m%d').date().isoformat()
     path = Path(root) / 'RaceData.json'
@@ -44,8 +49,9 @@ def published_race_ids(root, date8, schedule):
         seen.add(rid)
         if rid not in expected:
             continue
-        if row['startTime'] != expected[rid]['start_time']:
-            raise ValueError('published post time changed; review before predicting again')
+        # Do not fail on a post-time-only change. The current schedule fetched by
+        # the live monitor is authoritative for capture timing. We deliberately do
+        # not rewrite the already-published morning forecast here.
         horses = row['horses']
         if not isinstance(horses, list) or len(horses) < 2:
             raise ValueError('incomplete published forecast')
