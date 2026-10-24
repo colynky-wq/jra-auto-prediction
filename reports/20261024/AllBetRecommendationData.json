@@ -3,7 +3,7 @@
   "version": "all-bet-recommendation-shadow-v2-20261023",
   "status": "research_display_only",
   "raceDate": "2026-10-24",
-  "generatedAtJST": "2026-10-24T11:26:27+09:00",
+  "generatedAtJST": "2026-10-24T11:28:12+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
   "formalRecommendationsEnabled": false,
@@ -78,9 +78,9 @@
   "candidateScope": "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。ワイドは事前固定したワイド研究候補を使用。",
   "scoreMeaning": "researchScore = 表示確率 × 保守的期待値超過分 ÷ 券種リスク係数。研究上の並び順であり利益予測ではない。",
   "counts": {
-    "candidate": 6,
+    "candidate": 5,
     "skip": 3,
-    "odds_pending": 26,
+    "odds_pending": 27,
     "signal_pending": 0
   },
   "races": [
@@ -1221,41 +1221,13 @@
       "raceNumber": 4,
       "raceName": "3歳以上1勝クラス",
       "startTime": "11:15",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
       "battleGrade": "B",
       "chaosLevel": 3,
-      "bestBet": {
-        "betType": "wide",
-        "betTypeLabel": "ワイド",
-        "candidateID": "0102",
-        "label": "1番 ミッキーテネシー → 2番 フレキシブル",
-        "probabilityPct": 9.323,
-        "oddsLow": 12.7,
-        "oddsHigh": 13.5,
-        "expectedMultiplierLow": 1.184021,
-        "expectedMultiplierHigh": 1.258605,
-        "researchScore": 0.014296898,
-        "riskPenalty": 1.2,
-        "sourceScope": "frozen_wide_rule_candidates"
-      },
-      "betRecommendations": [
-        {
-          "betType": "wide",
-          "betTypeLabel": "ワイド",
-          "candidateID": "0102",
-          "label": "1番 ミッキーテネシー → 2番 フレキシブル",
-          "probabilityPct": 9.323,
-          "oddsLow": 12.7,
-          "oddsHigh": 13.5,
-          "expectedMultiplierLow": 1.184021,
-          "expectedMultiplierHigh": 1.258605,
-          "researchScore": 0.014296898,
-          "riskPenalty": 1.2,
-          "sourceScope": "frozen_wide_rule_candidates"
-        }
-      ],
-      "qualifyingPoolCount": 1,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
       "pendingBetTypes": [
         "win",
         "place",
@@ -1302,10 +1274,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "awaiting_results",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
+          "sourceStatus": "invalid",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
         },
         {
           "betType": "exacta",
