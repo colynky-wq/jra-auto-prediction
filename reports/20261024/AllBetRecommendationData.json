@@ -3,7 +3,7 @@
   "version": "all-bet-recommendation-shadow-v2-20261023",
   "status": "research_display_only",
   "raceDate": "2026-10-24",
-  "generatedAtJST": "2026-10-24T18:10:55+09:00",
+  "generatedAtJST": "2026-10-24T23:15:11+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
   "formalRecommendationsEnabled": false,
@@ -78,9 +78,9 @@
   "candidateScope": "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。ワイドは事前固定したワイド研究候補を使用。",
   "scoreMeaning": "researchScore = 表示確率 × 保守的期待値超過分 ÷ 券種リスク係数。研究上の並び順であり利益予測ではない。",
   "counts": {
-    "candidate": 14,
+    "candidate": 15,
     "skip": 18,
-    "odds_pending": 3,
+    "odds_pending": 2,
     "signal_pending": 0
   },
   "races": [
@@ -776,10 +776,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -859,6 +859,20 @@
           "sourceScope": "all_saved_odds_outcomes"
         },
         {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0513",
+          "label": "5番 ユイノジカンカセギ → 13番 ビーテリオス",
+          "probabilityPct": 14.495,
+          "oddsLow": 50.3,
+          "oddsHigh": 54.0,
+          "expectedMultiplierLow": 7.290985,
+          "expectedMultiplierHigh": 7.8273,
+          "researchScore": 0.759898563,
+          "riskPenalty": 1.2,
+          "sourceScope": "frozen_wide_rule_candidates"
+        },
+        {
           "betType": "support",
           "betTypeLabel": "応援馬券",
           "candidateID": "05",
@@ -876,23 +890,9 @@
           "winOddsHigh": 2.7,
           "placeOddsLow": 4.9,
           "placeOddsHigh": 7.1
-        },
-        {
-          "betType": "quinella",
-          "betTypeLabel": "馬連",
-          "candidateID": "0405",
-          "label": "4番 エイダンバローズ − 5番 ユイノジカンカセギ",
-          "probabilityPct": 8.781951,
-          "oddsLow": 73.5,
-          "oddsHigh": 73.5,
-          "expectedMultiplierLow": 6.454734,
-          "expectedMultiplierHigh": 6.454734,
-          "researchScore": 0.399193389,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
         }
       ],
-      "qualifyingPoolCount": 6,
+      "qualifyingPoolCount": 7,
       "pendingBetTypes": [],
       "coverage": [
         {
@@ -930,10 +930,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1023,10 +1023,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1172,10 +1172,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1221,13 +1221,41 @@
       "raceNumber": 4,
       "raceName": "3歳以上1勝クラス",
       "startTime": "11:15",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
       "battleGrade": "B",
       "chaosLevel": 3,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
+      "bestBet": {
+        "betType": "wide",
+        "betTypeLabel": "ワイド",
+        "candidateID": "0102",
+        "label": "1番 ミッキーテネシー → 2番 フレキシブル",
+        "probabilityPct": 9.323,
+        "oddsLow": 12.7,
+        "oddsHigh": 13.5,
+        "expectedMultiplierLow": 1.184021,
+        "expectedMultiplierHigh": 1.258605,
+        "researchScore": 0.014296898,
+        "riskPenalty": 1.2,
+        "sourceScope": "frozen_wide_rule_candidates"
+      },
+      "betRecommendations": [
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0102",
+          "label": "1番 ミッキーテネシー → 2番 フレキシブル",
+          "probabilityPct": 9.323,
+          "oddsLow": 12.7,
+          "oddsHigh": 13.5,
+          "expectedMultiplierLow": 1.184021,
+          "expectedMultiplierHigh": 1.258605,
+          "researchScore": 0.014296898,
+          "riskPenalty": 1.2,
+          "sourceScope": "frozen_wide_rule_candidates"
+        }
+      ],
+      "qualifyingPoolCount": 1,
       "pendingBetTypes": [
         "win",
         "place",
@@ -1274,10 +1302,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1367,10 +1395,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1460,10 +1488,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1515,7 +1543,7 @@
       "chaosLevel": 3,
       "bestBet": null,
       "betRecommendations": [],
-      "qualifyingPoolCount": 1,
+      "qualifyingPoolCount": 2,
       "pendingBetTypes": [],
       "coverage": [
         {
@@ -1553,10 +1581,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1646,10 +1674,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1781,10 +1809,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1874,10 +1902,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -1967,10 +1995,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2116,10 +2144,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2344,10 +2372,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2437,10 +2465,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2588,10 +2616,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2643,7 +2671,7 @@
       "chaosLevel": 2,
       "bestBet": null,
       "betRecommendations": [],
-      "qualifyingPoolCount": 6,
+      "qualifyingPoolCount": 7,
       "pendingBetTypes": [],
       "coverage": [
         {
@@ -2681,10 +2709,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -2830,10 +2858,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3016,10 +3044,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3165,10 +3193,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3258,10 +3286,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3351,10 +3379,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3444,10 +3472,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3537,10 +3565,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3658,10 +3686,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3769,7 +3797,7 @@
           "sourceScope": "all_saved_odds_outcomes"
         }
       ],
-      "qualifyingPoolCount": 5,
+      "qualifyingPoolCount": 6,
       "pendingBetTypes": [],
       "coverage": [
         {
@@ -3807,10 +3835,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -3918,7 +3946,7 @@
           "sourceScope": "all_saved_odds_outcomes"
         }
       ],
-      "qualifyingPoolCount": 6,
+      "qualifyingPoolCount": 7,
       "pendingBetTypes": [],
       "coverage": [
         {
@@ -3956,10 +3984,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
@@ -4049,10 +4077,10 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "invalid",
-          "realOddsAvailable": false,
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
