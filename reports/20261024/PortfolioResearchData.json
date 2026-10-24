@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-10-24T13:28:14+09:00",
+  "generatedAtJST": "2026-10-24T13:30:00+09:00",
   "prospectiveStartDate": "2026-10-24",
   "developmentDataPolicy": "Dates before prospectiveStartDate are development/backfill only and cannot prove performance.",
   "selectionPolicy": "Rules are fixed before prospectiveStartDate; selection never reads finish, hit, payout or return fields.",
@@ -71,13 +71,13 @@
   "prospective": {
     "racesSeen": 35,
     "selectedRaces": 5,
-    "settledSelectedRaces": 3,
+    "settledSelectedRaces": 4,
     "hitAnyRaces": 1,
     "profitableRaces": 1,
     "torigamiRaces": 0,
-    "stakeYen": 700,
+    "stakeYen": 900,
     "returnYen": 1330,
-    "returnIndex": 1.9
+    "returnIndex": 1.477778
   },
   "races": [
     {
@@ -2827,9 +2827,9 @@
       "battleGrade": "S",
       "scope": "prospective",
       "ruleVersion": "portfolio-shadow-v1-20261019",
-      "planType": "wide_plus_trio",
-      "planLabel": "ワイド＋3連複",
-      "reason": "混戦＋勝負度A以上。ワイドを主軸に、上位3頭の3連複を少量比較します",
+      "planType": "wide_focus",
+      "planLabel": "ワイド中心",
+      "reason": "混戦＋勝負度A以上。3連複条件は満たさないためワイドだけに絞ります",
       "legs": [
         {
           "betType": "wide",
@@ -2840,8 +2840,8 @@
           "oddsHigh": 15.3,
           "expectedMultiplierLow": 1.715,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         },
         {
           "betType": "wide",
@@ -2852,29 +2852,17 @@
           "oddsHigh": 14.3,
           "expectedMultiplierLow": 1.429,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
-        },
-        {
-          "betType": "trio",
-          "candidateID": "050710",
-          "label": "5番 オブシディアーナ − 7番 リーチグローリー − 10番 エイコーンドリーム",
-          "probabilityPct": 4.471117750821825,
-          "oddsLow": 30.2,
-          "oddsHigh": 30.2,
-          "expectedMultiplierLow": 1.3502775607481912,
-          "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
-      "totalStakeYen": 300,
-      "settled": false,
-      "returnYen": null,
-      "profitYen": null,
-      "hitAny": null,
-      "profitable": null,
-      "torigami": null
+      "totalStakeYen": 200,
+      "settled": true,
+      "returnYen": 0,
+      "profitYen": -200,
+      "hitAny": false,
+      "profitable": false,
+      "torigami": false
     },
     {
       "raceDate": "2026-10-24",
