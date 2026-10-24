@@ -150,11 +150,11 @@ jobs:
               snapshot2['capturedAtJST'] = '2026-10-12 10:01:00'
               wide._archive_snapshot(snapshot2)
               assert archived_path.read_text(encoding='utf-8') == before
-              damaged = dict(archived, startTime='00:00')
+              damaged = dict(archived, venue='別競馬場')
               archived_path.write_text(json.dumps(damaged))
               try:
                   v2._load_wide_by_race([race])
-                  raise AssertionError('mismatched archived post time accepted')
+                  raise AssertionError('mismatched archived venue accepted')
               except ValueError:
                   pass
 
