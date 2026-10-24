@@ -16,15 +16,11 @@ on:
         description: Optional live-monitor runtime for manual testing
         required: false
         default: '120'
-
 permissions:
   contents: write
-
 concurrency:
-  group: keibaai-live-permanent
-  # Safety fixes must replace an already-running checkout immediately.
+  group: keibaai-live-permanent-safety-v2
   cancel-in-progress: true
-
 jobs:
   monitor:
     name: Automatic Win Top2 Top3 Signal Wide monitor
@@ -37,7 +33,6 @@ jobs:
           path: startup-guard
           sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
           sparse-checkout-cone-mode: false
-
       - name: Check whether JRA races exist today
         id: day
         shell: bash
@@ -45,14 +40,12 @@ jobs:
           set -euo pipefail
           date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
           bash startup-guard/.github/scripts/keibaai-race-day-check.sh "$date8"
-
       - name: Checkout repository
         if: steps.day.outputs.has_races == 'true'
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: main
-
       - name: Set up Python
         if: steps.day.outputs.has_races == 'true'
         uses: actions/setup-python@v6
@@ -60,14 +53,12 @@ jobs:
           python-version: '3.13'
           cache: pip
           cache-dependency-path: production/requirements.txt
-
       - name: Install dependencies
         if: steps.day.outputs.has_races == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
-
       - name: Smoke-test bundled runtime
         if: steps.day.outputs.has_races == 'true'
         run: |
@@ -77,30 +68,20 @@ jobs:
           python -m py_compile production/build_signal_data_v2.py
           python -m py_compile production/repair_wide_odds.py
           python production/smoke_topk_runtime.py
-
       - name: Choose session runtime
         if: steps.day.outputs.has_races == 'true'
         id: runtime
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
-            minutes='${{ github.event.inputs.max_minutes }}'
-          elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then
-            minutes='345'
-          elif [ "${{ github.event_name }}" = 'push' ]; then
-            minutes='345'
-          else
-            minutes='180'
-          fi
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then minutes='${{ github.event.inputs.max_minutes }}';
+          elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then minutes='345';
+          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='345'; else minutes='180'; fi
           echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
-          echo "session runtime minutes=${minutes}"
-
       - name: Configure git publisher
         if: steps.day.outputs.has_races == 'true'
         run: |
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-
       - name: Monitor races and publish one consistent bundle
         id: session
         if: steps.day.outputs.has_races == 'true'
@@ -119,10 +100,7 @@ jobs:
         run: |
           set -euo pipefail
           date8='${{ steps.day.outputs.target_date }}'
-          python production/live_bundle_publisher.py --date "$date8" \
-            --outbox "$KEIBAAI_OUTBOX" --poll-seconds 20 \
-            -- python -u production/live_monitor_topk_publish.py
-
+          python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 20 -- python -u production/live_monitor_topk_publish.py
       - name: Preserve live outbox for recovery
         if: always() && steps.day.outputs.has_races == 'true'
         uses: actions/upload-artifact@v4
