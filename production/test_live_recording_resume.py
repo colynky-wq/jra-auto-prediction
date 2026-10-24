@@ -18,6 +18,7 @@ import wide_odds_runtime as wide
 class ResumeChecks(unittest.TestCase):
     def race(self):
         return {'raceID':'202608040710','raceDate':'2026-10-18','startTime':'14:55',
+                'predictionTiming':'live_10min',
                 'horses':[{'number':n,'name':str(n),**{k:20. for k in
                     ('aiProbability','marketProbability','aiTop2Probability','marketTop2Probability',
                      'aiTop3Probability','marketTop3Probability')}} for n in (1,2)]}
@@ -27,12 +28,35 @@ class ResumeChecks(unittest.TestCase):
             r=self.race();schedule=[{'race_id':r['raceID'],'start_time':'14:55'}]
             p=Path(t)/'RaceData.json'
             self.assertEqual(published_race_ids(t,'20261018',schedule),set())
-            p.write_text(json.dumps([r]));before=p.read_bytes()
+
+            # Morning/early predictions are not proof that the formal 10-minute
+            # capture has already completed.
+            early=copy.deepcopy(r);early.pop('predictionTiming',None)
+            for h in early['horses']:
+                for key in ('aiTop2Probability','marketTop2Probability','aiTop3Probability','marketTop3Probability'):
+                    h.pop(key,None)
+            p.write_text(json.dumps([early]));before=p.read_bytes()
+            self.assertEqual(published_race_ids(t,'20261018',schedule),set())
+            self.assertEqual(p.read_bytes(),before)
+
+            # Regression for 2026-10-24 startup: a genuine formal live row may
+            # come from a compatible older schema without optional Top2/Top3
+            # fields. Resume must accept it instead of raising KeyError.
+            live_base=copy.deepcopy(r)
+            for h in live_base['horses']:
+                for key in ('aiTop2Probability','marketTop2Probability','aiTop3Probability','marketTop3Probability'):
+                    h.pop(key,None)
+            p.write_text(json.dumps([live_base]));before=p.read_bytes()
             self.assertEqual(published_race_ids(t,'20261018',schedule),{r['raceID']})
             self.assertEqual(p.read_bytes(),before)
             self.assertEqual(published_race_ids(t,'20261019',schedule),set())
-            for damaged in ({**r,'startTime':'14:56'}, {**r,'horses':[]},
-                            {**r,'horses':[r['horses'][0]]*2}):
+
+            # Fresh live schedule is authoritative for a post-time-only change.
+            shifted={**r,'startTime':'14:56'};p.write_text(json.dumps([shifted]))
+            self.assertEqual(published_race_ids(t,'20261018',schedule),{r['raceID']})
+
+            # Structural corruption still fails closed.
+            for damaged in ({**r,'horses':[]}, {**r,'horses':[r['horses'][0]]*2}):
                 p.write_text(json.dumps([damaged]))
                 with self.assertRaises(ValueError):published_race_ids(t,'20261018',schedule)
             p.write_text(json.dumps([r,r]))
