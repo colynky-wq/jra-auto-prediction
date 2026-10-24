@@ -1,0 +1,99 @@
+name: One-off Wide schedule drift repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-wide-schedule-drift-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Patch immutable Wide identity check
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('production/build_signal_data_v2.py')
+          s=p.read_text()
+          old="""            if (saved.get(\"raceID\") != rid or saved.get(\"raceDate\") != race.get(\"raceDate\")
+                      or saved.get(\"startTime\") != race.get(\"startTime\")
+                      or saved.get(\"frozenAtFirstSuccessfulCapture\") is not True):
+                  raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
+              out[rid] = saved
+          """
+          new="""            if (saved.get(\"raceID\") != rid or saved.get(\"raceDate\") != race.get(\"raceDate\")
+                      or saved.get(\"frozenAtFirstSuccessfulCapture\") is not True):
+                  raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
+              # The JRA may revise the official post time after the immutable first
+              # Wide snapshot was captured. raceID/date/venue/race number identify
+              # the race; a later startTime update must not turn that snapshot into
+              # a different-race error.
+              for key in (\"venue\", \"raceNumber\"):
+                  frozen = saved.get(key)
+                  current = race.get(key)
+                  if frozen not in (None, \"\") and current not in (None, \"\") and frozen != current:
+                      raise ValueError(\"saved Wide snapshot identity is inconsistent: \" + str(path))
+              out[rid] = saved
+          """
+          if s.count(old)!=1:
+              raise SystemExit('build_signal_data_v2 identity anchor mismatch')
+          p.write_text(s.replace(old,new,1))
+
+          p=Path('production/test_live_recording_resume.py')
+          s=p.read_text()
+          marker="\n\nif __name__=='__main__':unittest.main()\n"
+          addition=r'''
+
+              def test_wide_archive_identity_allows_later_official_post_time_update(self):
+                  import build_signal_data_v2 as v2
+                  with tempfile.TemporaryDirectory() as t:
+                      root=Path(t);rid='202605040810'
+                      race={'raceID':rid,'raceDate':'2026-10-24','venue':'東京','raceNumber':10,'startTime':'15:01'}
+                      saved={'raceID':rid,'raceDate':'2026-10-24','venue':'東京','raceNumber':10,'startTime':'15:00',
+                             'frozenAtFirstSuccessfulCapture':True,'pairs':[]}
+                      path=root/'reports/20261024/wide_odds'/f'{rid}.json';path.parent.mkdir(parents=True)
+                      path.write_text(json.dumps(saved))
+                      with patch.object(v2,'REPORTS_DIR',root/'reports'),patch.object(v2.wide,'_load_payload',return_value={'snapshots':[]}):
+                          got=v2._load_wide_by_race([race])
+                          self.assertEqual(got[rid]['startTime'],'15:00')
+                          damaged={**saved,'venue':'京都'};path.write_text(json.dumps(damaged))
+                          with self.assertRaises(ValueError):v2._load_wide_by_race([race])
+          '''
+          if 'test_wide_archive_identity_allows_later_official_post_time_update' in s:
+              raise SystemExit('schedule drift regression test already present')
+          if s.count(marker)!=1:
+              raise SystemExit('test insertion anchor mismatch')
+          p.write_text(s.replace(marker,addition+marker,1))
+          PY
+      - name: Run regression and current-data smoke
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python -m py_compile production/build_signal_data_v2.py production/test_live_recording_resume.py
+          python production/test_live_recording_resume.py
+          python production/build_signal_data_v2.py
+      - name: Publish repair
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add production/build_signal_data_v2.py production/test_live_recording_resume.py
+          git commit -m 'Allow official post-time updates for frozen Wide snapshots'
+          git pull --rebase origin main
+          git push origin HEAD:main
