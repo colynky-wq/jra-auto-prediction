@@ -1,0 +1,97 @@
+name: One-off live resume regression repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-live-resume-tests-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Patch resume regression tests
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('production/test_live_recording_resume.py')
+          s=p.read_text()
+          old="""        return {'raceID':'202608040710','raceDate':'2026-10-18','startTime':'14:55',
+                  'horses':[{'number':n,'name':str(n),**{k:20. for k in
+          """
+          new="""        return {'raceID':'202608040710','raceDate':'2026-10-18','startTime':'14:55',
+                  'predictionTiming':'live_10min',
+                  'horses':[{'number':n,'name':str(n),**{k:20. for k in
+          """
+          if s.count(old)!=1: raise SystemExit('race fixture anchor mismatch')
+          s=s.replace(old,new,1)
+          old="""            p.write_text(json.dumps([r]));before=p.read_bytes()
+              self.assertEqual(published_race_ids(t,'20261018',schedule),{r['raceID']})
+              self.assertEqual(p.read_bytes(),before)
+              self.assertEqual(published_race_ids(t,'20261019',schedule),set())
+              for damaged in ({**r,'startTime':'14:56'}, {**r,'horses':[]},
+                              {**r,'horses':[r['horses'][0]]*2}):
+                  p.write_text(json.dumps([damaged]))
+                  with self.assertRaises(ValueError):published_race_ids(t,'20261018',schedule)
+          """
+          new="""            # An early/morning row is not proof of a formal live capture, even
+              # when it has only the base Win probabilities.
+              early=copy.deepcopy(r);early.pop('predictionTiming',None)
+              for h in early['horses']:
+                  for key in ('aiTop2Probability','marketTop2Probability','aiTop3Probability','marketTop3Probability'):
+                      h.pop(key,None)
+              p.write_text(json.dumps([early]));before=p.read_bytes()
+              self.assertEqual(published_race_ids(t,'20261018',schedule),set())
+              self.assertEqual(p.read_bytes(),before)
+
+              # A formal live capture remains resumable when optional TopK fields
+              # are absent; this is the compatibility case that failed on 2026-10-24.
+              live_base=copy.deepcopy(r)
+              for h in live_base['horses']:
+                  for key in ('aiTop2Probability','marketTop2Probability','aiTop3Probability','marketTop3Probability'):
+                      h.pop(key,None)
+              p.write_text(json.dumps([live_base]));before=p.read_bytes()
+              self.assertEqual(published_race_ids(t,'20261018',schedule),{r['raceID']})
+              self.assertEqual(p.read_bytes(),before)
+              self.assertEqual(published_race_ids(t,'20261019',schedule),set())
+
+              # A post-time-only change is explicitly allowed because the fresh
+              # live schedule is authoritative; structural damage still fails.
+              shifted={**r,'startTime':'14:56'};p.write_text(json.dumps([shifted]))
+              self.assertEqual(published_race_ids(t,'20261018',schedule),{r['raceID']})
+              for damaged in ({**r,'horses':[]}, {**r,'horses':[r['horses'][0]]*2}):
+                  p.write_text(json.dumps([damaged]))
+                  with self.assertRaises(ValueError):published_race_ids(t,'20261018',schedule)
+          """
+          if s.count(old)!=1: raise SystemExit('resume test anchor mismatch')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Run regression tests
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python -m py_compile production/live_recording_resume.py production/test_live_recording_resume.py production/resilient_live_entrypoint.py
+          python production/test_live_recording_resume.py
+      - name: Publish test repair
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add production/test_live_recording_resume.py
+          git commit -m 'Cover live resume compatibility regression'
+          git pull --rebase origin main
+          git push origin HEAD:main
