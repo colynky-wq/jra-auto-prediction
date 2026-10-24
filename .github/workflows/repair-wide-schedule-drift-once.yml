@@ -28,20 +28,16 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-
           p=Path('production/build_signal_data_v2.py')
           s=p.read_text()
-          old='''            if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
-                      or saved.get("startTime") != race.get("startTime")
-                      or saved.get("frozenAtFirstSuccessfulCapture") is not True):
-                  raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
-              out[rid] = saved
-          '''
-          new='''            if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
-                      or saved.get("frozenAtFirstSuccessfulCapture") is not True):
-                  raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
-              # Official post time can move after the immutable first Wide snapshot.
-              # Keep the snapshot when race identity matches; reject venue/R drift.
+          line='                    or saved.get("startTime") != race.get("startTime")\n'
+          if s.count(line)!=1:
+              raise SystemExit(f'startTime identity line count={s.count(line)}')
+          s=s.replace(line,'',1)
+          anchor='                raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))\n            out[rid] = saved\n'
+          insert='''                raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
+              # Official post time may move after the immutable first Wide snapshot.
+              # raceID/date plus venue/raceNumber identify the race; startTime drift is allowed.
               for key in ("venue", "raceNumber"):
                   frozen = saved.get(key)
                   current = race.get(key)
@@ -49,9 +45,9 @@ jobs:
                       raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
               out[rid] = saved
           '''
-          if s.count(old)!=1:
-              raise SystemExit('Wide identity block mismatch')
-          p.write_text(s.replace(old,new,1))
+          if s.count(anchor)!=1:
+              raise SystemExit(f'identity insertion anchor count={s.count(anchor)}')
+          p.write_text(s.replace(anchor,insert,1))
 
           p=Path('production/test_live_recording_resume.py')
           s=p.read_text()
