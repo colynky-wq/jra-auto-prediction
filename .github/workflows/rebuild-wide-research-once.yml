@@ -1,4 +1,4 @@
-name: One-off Wide research rebuild
+name: One-off Wide metadata repair
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  rebuild:
+  repair:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout latest main
@@ -30,49 +30,94 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
 
-      - name: Test and rebuild bet research data
+      - name: Patch Wide metadata persistence and legacy enrichment
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path=Path('production/wide_axis_rules.py')
+          text=path.read_text()
+          old="""    record = {'schemaVersion':1, 'ruleVersion':RULE_VERSION, 'raceID':rid, 'raceDate':day,
+                  'startTime':race['startTime'], 'recordedAtJST':now.strftime('%Y-%m-%d %H:%M:%S'),
+          """
+          new="""    record = {'schemaVersion':1, 'ruleVersion':RULE_VERSION, 'raceID':rid, 'raceDate':day,
+                  'venue':race.get('venue',''), 'raceNumber':race.get('raceNumber'), 'raceName':race.get('raceName',''),
+                  'startTime':race['startTime'], 'recordedAtJST':now.strftime('%Y-%m-%d %H:%M:%S'),
+          """
+          if text.count(old)!=1:
+              raise SystemExit('wide_axis_rules record anchor mismatch')
+          path.write_text(text.replace(old,new,1))
+
+          path=Path('production/build_bet_research_data.py')
+          text=path.read_text()
+          old="""    actual=results.get((race['raceDate'],race['raceID']));state,finish=single.result_state(race,actual)
+              if actual and added.stamp(actual['resultUpdatedAtJST'])>clock():raise ValueError('future Wide result')
+          """
+          new="""    actual=results.get((race['raceDate'],race['raceID']))
+              if actual:
+                  for key,empty in (('venue',''),('raceNumber',None),('raceName','')):
+                      saved=race.get(key,empty); observed=actual.get(key,empty)
+                      if saved not in (None,'') and observed not in (None,'') and saved!=observed:
+                          raise ValueError('Wide race metadata mismatch')
+                      if saved in (None,'') and observed not in (None,''):
+                          race[key]=observed
+              state,finish=single.result_state(race,actual)
+              if actual and added.stamp(actual['resultUpdatedAtJST'])>clock():raise ValueError('future Wide result')
+          """
+          if text.count(old)!=1:
+              raise SystemExit('build metadata anchor mismatch')
+          path.write_text(text.replace(old,new,1))
+
+          path=Path('production/test_bet_research_data.py')
+          text=path.read_text()
+          marker="\n\nif __name__=='__main__':"
+          addition=r'''
+
+              def test_wide_metadata_is_saved_and_legacy_record_is_enriched_from_result(self):
+                  from test_wide_axis_rules import write_actual_result
+                  with tempfile.TemporaryDirectory() as temp:
+                      root=Path(temp);race,signal=wide_fixture()
+                      race.update(venue='東京',raceNumber=1,raceName='2歳未勝利')
+                      p=ui.wide.record_first(root,race,signal,NOW.replace(hour=9,minute=51))
+                      saved=json.loads(p.read_text())
+                      self.assertEqual((saved['venue'],saved['raceNumber'],saved['raceName']),('東京',1,'2歳未勝利'))
+                      row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+                      self.assertEqual((row['venue'],row['raceNumber'],row['raceName']),('東京',1,'2歳未勝利'))
+
+                      # Simulate a legacy frozen record created before display metadata was persisted.
+                      for key in ('venue','raceNumber','raceName'):
+                          saved.pop(key,None)
+                      saved.pop('recordFingerprint',None)
+                      saved['recordFingerprint']=ui.wide.fingerprint(saved)
+                      p.write_text(json.dumps(saved))
+                      actual=write_actual_result(p.parent.parent,race)
+                      actual.update(venue='東京',raceNumber=1,raceName='2歳未勝利')
+                      (p.parent.parent/'ResultData.json').write_text(json.dumps([actual]))
+                      row=self.row(ui.build(root,clock=lambda:NOW),'wide')
+                      self.assertEqual(row['status'],'payouts_pending')
+                      self.assertEqual((row['venue'],row['raceNumber'],row['raceName']),('東京',1,'2歳未勝利'))
+          '''
+          if 'test_wide_metadata_is_saved_and_legacy_record_is_enriched_from_result' in text:
+              raise SystemExit('metadata regression test already present')
+          if text.count(marker)!=1:
+              raise SystemExit('test insertion anchor mismatch')
+          path.write_text(text.replace(marker,addition+marker,1))
+          PY
+
+      - name: Run Wide regression tests
         env:
           PYTHONDONTWRITEBYTECODE: '1'
         run: |
+          python -m py_compile production/wide_axis_rules.py production/build_bet_research_data.py production/test_bet_research_data.py
+          python production/test_wide_axis_rules.py
           python production/test_bet_research_data.py
-          python production/build_bet_research_data.py
 
-      - name: Verify Wide invalids are cleared
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          data=json.loads(Path('BetResearchData.json').read_text())
-          wide=next(x for x in data['catalog'] if x['id']=='wide')
-          invalid=[r for r in data['races'] if r.get('betType')=='wide' and r.get('status')=='invalid']
-          print('Wide cumulative:', json.dumps(wide['cumulative'], ensure_ascii=False))
-          print('Wide invalid rows:', len(invalid))
-          if invalid:
-              print('First invalid:', json.dumps(invalid[0], ensure_ascii=False))
-              raise SystemExit('Wide invalid rows remain after rebuild')
-          if wide['cumulative'].get('invalid') != 0:
-              raise SystemExit('Wide cumulative invalid is not zero')
-          current=[r for r in data['races'] if r.get('betType')=='wide' and r.get('raceDate')=='2026-10-24' and r.get('hasRecord')]
-          if not current:
-              raise SystemExit('No current-date Wide records found')
-          broken=[r for r in current if not r.get('venue') or r.get('raceNumber') is None or not r.get('candidates')]
-          print('2026-10-24 Wide recorded rows:', len(current), 'metadata/candidate failures:', len(broken))
-          if broken:
-              print('First broken:', json.dumps(broken[0], ensure_ascii=False))
-              raise SystemExit('Wide metadata/candidates remain broken')
-          PY
-
-      - name: Publish rebuilt BetResearchData
-        shell: bash
+      - name: Publish code repair
         run: |
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add BetResearchData.json
-          if git diff --cached --quiet; then
-            echo 'No BetResearchData changes to publish.'
-            exit 0
-          fi
-          git commit -m 'Rebuild Wide bet research data'
+          git add production/wide_axis_rules.py production/build_bet_research_data.py production/test_bet_research_data.py
+          git commit -m 'Preserve Wide race display metadata'
           git pull --rebase origin main
           git push origin HEAD:main
