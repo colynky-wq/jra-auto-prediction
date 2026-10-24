@@ -9,8 +9,8 @@ on:
 jobs:
   stop-stale:
     concurrency:
-      group: keibaai-live-permanent-safety-v3
+      group: keibaai-live-permanent-push
       cancel-in-progress: true
     runs-on: ubuntu-24.04
     steps:
-      - run: echo 'Superseding stale v3 live session before repaired 2026-10-25 monitor.'
+      - run: echo 'Superseding stale push live session before repaired 2026-10-25 monitor.'
