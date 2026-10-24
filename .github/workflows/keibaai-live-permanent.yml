@@ -8,9 +8,11 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/formal_wide_odds_runtime.py'
       - 'production/resilient_live_entrypoint.py'
+      - 'production/live_recording_resume.py'
+      - 'production/test_live_recording_resume.py'
   schedule:
-    - cron: '45 23 * * *'
-    - cron: '15 5 * * *'
+    - cron: '45 22 * * *'  # 07:45 JST: absorb scheduler/startup delays before first race
+    - cron: '45 4 * * *'   # 13:45 JST: overlap the morning session before late races
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -26,7 +28,7 @@ jobs:
   monitor:
     name: Automatic Win Top2 Top3 Signal Wide monitor
     runs-on: ubuntu-24.04
-    timeout-minutes: 355
+    timeout-minutes: 420
     steps:
       - name: Checkout lightweight startup guard
         uses: actions/checkout@v5
@@ -65,19 +67,23 @@ jobs:
         run: |
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/resilient_live_entrypoint.py
+          python -m py_compile production/live_recording_resume.py
+          python -m py_compile production/all_bet_runtime.py
+          python -m py_compile production/triple_research_runtime.py
           python -m py_compile production/wide_odds_runtime.py
           python -m py_compile production/formal_wide_odds_runtime.py
           python -m py_compile production/build_signal_data_v2.py
           python -m py_compile production/repair_wide_odds.py
           python production/smoke_topk_runtime.py
+          python production/test_live_recording_resume.py
       - name: Choose session runtime
         if: steps.day.outputs.has_races == 'true'
         id: runtime
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then minutes='${{ github.event.inputs.max_minutes }}';
-          elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then minutes='345';
-          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='345'; else minutes='180'; fi
+          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then minutes='405';
+          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='405'; else minutes='210'; fi
           echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
       - name: Configure git publisher
         if: steps.day.outputs.has_races == 'true'
