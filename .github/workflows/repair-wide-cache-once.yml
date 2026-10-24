@@ -97,20 +97,6 @@ jobs:
           if text.count(marker) != 1:
               raise SystemExit('test insertion anchor mismatch')
           test.write_text(text.replace(marker, addition + marker, 1), encoding='utf-8')
-
-          workflow = Path('.github/workflows/keibaai-live-result-sync.yml')
-          text = workflow.read_text(encoding='utf-8')
-          old = """      - 'production/all_bet_recommendation_shadow.py'
-                - 'production/test_all_bet_recommendation_shadow.py'
-          """
-          new = """      - 'production/all_bet_recommendation_shadow.py'
-                - 'production/test_all_bet_recommendation_shadow.py'
-                - 'production/build_bet_research_data.py'
-                - 'production/test_bet_research_data.py'
-          """
-          if text.count(old) != 1:
-              raise SystemExit('workflow path anchor mismatch')
-          workflow.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
 
       - name: Run regression tests
@@ -126,8 +112,7 @@ jobs:
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git rm .github/workflows/repair-wide-cache-once.yml
-          git add production/build_bet_research_data.py production/test_bet_research_data.py .github/workflows/keibaai-live-result-sync.yml
+          git add production/build_bet_research_data.py production/test_bet_research_data.py
           git commit -m 'Harden Wide payout cache handling'
           git pull --rebase origin main
           git push origin HEAD:main
