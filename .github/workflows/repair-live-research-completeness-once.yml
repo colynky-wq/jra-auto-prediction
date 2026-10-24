@@ -24,68 +24,8 @@ jobs:
         run: |
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
-      - name: Patch live completeness guards
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          Path('production/all_bet_runtime.py').write_text('''"""Retryable I/O worker for added-pool research records."""\nfrom concurrent.futures import ThreadPoolExecutor\nfrom copy import deepcopy\nfrom datetime import datetime\nimport threading\n\nfrom all_bet_forward import JST, record_first\nfrom all_bet_baseline import TYPES\n\n_pool = ThreadPoolExecutor(max_workers=1,thread_name_prefix="all-bet-research")\n_lock = threading.Lock()\n_futures = {}\n\n\ndef capture(root,race,predicted,evidence):\n    failures=[]\n    for kind in TYPES:\n        try:\n            path=record_first(root,race,kind,predicted,evidence)\n            print("ALL_BET_RESEARCH_CAPTURE",kind,race["raceID"],str(path) if path else "deadline_or_day_guard")\n            if path is None:\n                failures.append(kind+":deadline_or_day_guard")\n        except Exception as error:\n            print("WARNING: ALL_BET_RESEARCH_CAPTURE_FAILED",kind,race.get("raceID"),type(error).__name__)\n            failures.append(kind+":"+type(error).__name__)\n    if failures:\n        raise RuntimeError("all-bet research incomplete: "+",".join(failures))\n    return True\n\n\ndef schedule(root,race,evidence=None):\n    key=(race["raceDate"],race["raceID"])\n    with _lock:\n        previous=_futures.get(key)\n        if previous is not None:\n            if not previous.done():\n                return previous\n            try:\n                if previous.exception() is None:\n                    return previous\n            except Exception:\n                pass\n        future=_pool.submit(capture,root,deepcopy(race),datetime.now(JST).isoformat(),deepcopy(evidence))\n        _futures[key]=future\n        return future\n''')
-
-          Path('production/triple_research_runtime.py').write_text('''"""Retryable background I/O for trifecta/trio research records."""\nfrom concurrent.futures import ThreadPoolExecutor\nfrom copy import deepcopy\nfrom datetime import datetime\nimport threading\n\nfrom triple_forward import JST, TYPES, record_first\n\n_pool = ThreadPoolExecutor(max_workers=1,thread_name_prefix="triple-research")\n_lock = threading.Lock()\n_futures = {}\n\n\ndef capture(root,race,predicted):\n    failures=[]\n    for kind in TYPES:\n        try:\n            path=record_first(root,race,kind,predicted)\n            print("TRIPLE_RESEARCH_CAPTURE",kind,race["raceID"],str(path) if path else "deadline_or_day_guard")\n            if path is None:\n                failures.append(kind+":deadline_or_day_guard")\n        except Exception as error:\n            print("WARNING: TRIPLE_RESEARCH_CAPTURE_FAILED",kind,race.get("raceID"),type(error).__name__)\n            failures.append(kind+":"+type(error).__name__)\n    if failures:\n        raise RuntimeError("triple research incomplete: "+",".join(failures))\n    return True\n\n\ndef schedule(root,race):\n    key=(race["raceDate"],race["raceID"])\n    with _lock:\n        previous=_futures.get(key)\n        if previous is not None:\n            if not previous.done():\n                return previous\n            try:\n                if previous.exception() is None:\n                    return previous\n            except Exception:\n                pass\n        future=_pool.submit(capture,root,deepcopy(race),datetime.now(JST).isoformat())\n        _futures[key]=future\n        return future\n''')
-
-          path=Path('production/live_recording_resume.py')
-          text=path.read_text()
-          marker="LIVE_TIMING_MARKER = 'live_10min'\n"
-          addition="""LIVE_TIMING_MARKER = 'live_10min'\nALL_BET_SIDECARS = ('win','place','frame_quinella','quinella','exacta')\nTRIPLE_SIDECARS = ('trio','trifecta')\n\n\ndef research_sidecars_complete(root,date8,rid):\n    day=Path(root)/'reports'/date8\n    required=[day/'all_bet_v1'/kind/(rid+'.json') for kind in ALL_BET_SIDECARS]\n    required += [day/'triple_v1'/kind/(rid+'.json') for kind in TRIPLE_SIDECARS]\n    required.append(day/'wide_axis_v1'/(rid+'.json'))\n    return all(p.is_file() and p.stat().st_size>0 for p in required)\n"""
-          if text.count(marker)!=1: raise SystemExit('resume marker mismatch')
-          text=text.replace(marker,addition,1)
-          old='def published_race_ids(root, date8, schedule):'
-          new='def published_race_ids(root, date8, schedule, require_research=False):'
-          if text.count(old)!=1: raise SystemExit('resume signature mismatch')
-          text=text.replace(old,new,1)
-          old='        ready.add(rid)\n'
-          new="""        if require_research and not research_sidecars_complete(root,date8,rid):\n            continue\n        ready.add(rid)\n"""
-          if text.count(old)!=1: raise SystemExit('resume ready anchor mismatch')
-          path.write_text(text.replace(old,new,1))
-
-          path=Path('production/resilient_live_entrypoint.py')
-          text=path.read_text()
-          old='processed = published_race_ids(base.HERE.parent, base.TARGET_DATE8, flat)'
-          new='processed = published_race_ids(base.HERE.parent, base.TARGET_DATE8, flat, require_research=True)'
-          if text.count(old)!=1: raise SystemExit('resilient anchor mismatch')
-          path.write_text(text.replace(old,new,1))
-
-          path=Path('production/live_monitor_topk_publish.py')
-          text=path.read_text()
-          old='''    rid=published_race["raceID"]; replaced=False\n    for i,item in enumerate(todays):\n        if str(item.get("raceID",""))==rid: todays[i]=published_race; replaced=True; break\n    if not replaced: todays.append(published_race)\n    todays.sort(key=lambda x:(str(x.get("startTime","")),str(x.get("raceID",""))))\n    tmp=RACEDATA_PATH.with_suffix(".json.tmp"); tmp.write_text(json.dumps(todays,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8"); tmp.replace(RACEDATA_PATH)\n    print("KEIBAAI APP PUBLISH",rid,"live_10min",captured_at,"horses",len(horses),"recommendation disabled pending formal odds")\n    try:\n        from triple_research_runtime import schedule; schedule(RACEDATA_PATH.parent,published_race)\n    except Exception as exc: print('WARNING: TRIPLE_RESEARCH_NOT_SCHEDULED',type(exc).__name__)\n    try:\n        from all_bet_runtime import schedule as schedule_all_bets; schedule_all_bets(RACEDATA_PATH.parent,published_race,out.attrs.get('allBetEntryEvidence'))\n    except Exception as exc: print('WARNING: ALL_BET_RESEARCH_NOT_SCHEDULED',type(exc).__name__)\n    _refresh_prediction_bundle(published_race)\n'''
-          new='''    rid=published_race["raceID"]\n    frozen=next((item for item in todays if str(item.get("raceID",""))==rid and item.get("predictionTiming")=="live_10min"),None)\n    if frozen is not None:\n        published_race=frozen\n        captured_at=str(frozen.get("capturedAtJST") or captured_at)\n        print("KEIBAAI APP PRESERVE FIRST LIVE",rid,captured_at)\n    else:\n        replaced=False\n        for i,item in enumerate(todays):\n            if str(item.get("raceID",""))==rid: todays[i]=published_race; replaced=True; break\n        if not replaced: todays.append(published_race)\n        todays.sort(key=lambda x:(str(x.get("startTime","")),str(x.get("raceID",""))))\n        tmp=RACEDATA_PATH.with_suffix(".json.tmp"); tmp.write_text(json.dumps(todays,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8"); tmp.replace(RACEDATA_PATH)\n        print("KEIBAAI APP PUBLISH",rid,"live_10min",captured_at,"horses",len(horses),"recommendation disabled pending formal odds")\n    from triple_research_runtime import schedule as schedule_triple\n    from all_bet_runtime import schedule as schedule_all_bets\n    triple_future=schedule_triple(RACEDATA_PATH.parent,published_race)\n    all_bet_future=schedule_all_bets(RACEDATA_PATH.parent,published_race,out.attrs.get('allBetEntryEvidence'))\n    _refresh_prediction_bundle(published_race)\n    triple_future.result(timeout=120)\n    all_bet_future.result(timeout=120)\n    from live_recording_resume import research_sidecars_complete\n    if not research_sidecars_complete(RACEDATA_PATH.parent,str(published_race["raceDate"]).replace("-",""),rid):\n        raise RuntimeError("formal live research sidecars incomplete")\n'''
-          if text.count(old)!=1: raise SystemExit('publisher anchor mismatch')
-          path.write_text(text.replace(old,new,1))
-
-          path=Path('production/test_live_recording_resume.py')
-          text=path.read_text()
-          text=text.replace('from live_recording_resume import published_race_ids','from live_recording_resume import published_race_ids, research_sidecars_complete')
-          marker="\n    def test_concurrent_display_writes_use_distinct_temporary_files(self):"
-          addition=r'''
-    def test_resume_can_require_complete_research_sidecars(self):
-        with tempfile.TemporaryDirectory() as t:
-            r=self.race();schedule=[{'race_id':r['raceID'],'start_time':'14:55'}]
-            root=Path(t);(root/'RaceData.json').write_text(json.dumps([r]))
-            self.assertEqual(published_race_ids(root,'20261018',schedule,require_research=True),set())
-            day=root/'reports/20261018'
-            for kind in ('win','place','frame_quinella','quinella','exacta'):
-                p=day/'all_bet_v1'/kind/(r['raceID']+'.json');p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
-            for kind in ('trio','trifecta'):
-                p=day/'triple_v1'/kind/(r['raceID']+'.json');p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
-            p=day/'wide_axis_v1'/(r['raceID']+'.json');p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
-            self.assertTrue(research_sidecars_complete(root,'20261018',r['raceID']))
-            self.assertEqual(published_race_ids(root,'20261018',schedule,require_research=True),{r['raceID']})
-
-'''
-          if text.count(marker)!=1: raise SystemExit('test marker mismatch')
-          if 'test_resume_can_require_complete_research_sidecars' in text: raise SystemExit('test already exists')
-          path.write_text(text.replace(marker,'\n'+addition+marker,1))
-          PY
+      - name: Apply reviewed completeness repair
+        run: python .github/scripts/repair_live_research_completeness.py
       - name: Run regression tests
         env:
           PYTHONDONTWRITEBYTECODE: '1'
