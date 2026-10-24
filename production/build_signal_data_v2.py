@@ -38,19 +38,20 @@ def _load_wide_by_race(races: list[dict] | None = None) -> dict[str, dict]:
         if not (len(rid) == 12 and rid.isdigit() and len(day) == 8 and day.isdigit()):
             continue
         path = REPORTS_DIR / day / "wide_odds" / (rid + ".json")
-        if path.exists():
-            saved = json.loads(path.read_text(encoding="utf-8"))
-            if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
-                    or saved.get("frozenAtFirstSuccessfulCapture") is not True):
-                raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
-    # Official post time may move after the immutable first Wide snapshot.
-    # raceID/date plus venue/raceNumber identify the race; startTime drift is allowed.
-    for key in ("venue", "raceNumber"):
-        frozen = saved.get(key)
-        current = race.get(key)
-        if frozen not in (None, "") and current not in (None, "") and frozen != current:
+        if not path.exists():
+            continue
+        saved = json.loads(path.read_text(encoding="utf-8"))
+        if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
+                or saved.get("frozenAtFirstSuccessfulCapture") is not True):
             raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
-    out[rid] = saved
+        # Official post time may move after the immutable first Wide snapshot.
+        # raceID/date plus venue/raceNumber identify the race; startTime drift is allowed.
+        for key in ("venue", "raceNumber"):
+            frozen = saved.get(key)
+            current = race.get(key)
+            if frozen not in (None, "") and current not in (None, "") and frozen != current:
+                raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
+        out[rid] = saved
     return out
 
 

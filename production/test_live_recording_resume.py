@@ -138,6 +138,26 @@ class ResumeChecks(unittest.TestCase):
 
 
 
+    def test_wide_archive_fallback_recovers_all_saved_races_when_cache_is_empty(self):
+        import build_signal_data_v2 as v2
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);races=[];expected=set()
+            for number,rid in ((10,'202605040810'),(11,'202605040811')):
+                race={'raceID':rid,'raceDate':'2026-10-24','venue':'東京',
+                      'raceNumber':number,'startTime':'15:00'}
+                saved={**race,'frozenAtFirstSuccessfulCapture':True,'pairs':[]}
+                p=root/'reports/20261024/wide_odds'/f'{rid}.json'
+                p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(saved))
+                races.append(race);expected.add(rid)
+            # A scheduled race without an archive must not break recovery of the others.
+            races.append({'raceID':'202605040812','raceDate':'2026-10-24','venue':'東京',
+                          'raceNumber':12,'startTime':'16:30'})
+            with patch.object(v2,'REPORTS_DIR',root/'reports'),                    patch.object(v2.wide,'_load_payload',return_value={'snapshots':[]}):
+                got=v2._load_wide_by_race(races)
+            self.assertEqual(set(got),expected)
+            self.assertEqual(got['202605040810']['raceNumber'],10)
+            self.assertEqual(got['202605040811']['raceNumber'],11)
+
     def test_wide_archive_identity_allows_later_official_post_time_update(self):
         import build_signal_data_v2 as v2
         with tempfile.TemporaryDirectory() as t:
