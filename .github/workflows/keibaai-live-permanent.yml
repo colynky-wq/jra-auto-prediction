@@ -12,7 +12,7 @@ on:
       - 'production/test_live_recording_resume.py'
   schedule:
     - cron: '45 22 * * *'  # 07:45 JST: absorb scheduler/startup delays before first race
-    - cron: '45 4 * * *'   # 13:45 JST: overlap the morning session before late races
+    - cron: '45 4 * * *'   # 13:45 JST: queue continuation without cancelling pending research writes
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -23,7 +23,7 @@ permissions:
   contents: write
 concurrency:
   group: keibaai-live-permanent-safety-v3
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   monitor:
     name: Automatic Win Top2 Top3 Signal Wide monitor
