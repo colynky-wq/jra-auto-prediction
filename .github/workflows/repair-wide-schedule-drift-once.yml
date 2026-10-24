@@ -88,8 +88,9 @@ jobs:
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git restore SignalData.json
           git add production/build_signal_data_v2.py production/test_live_recording_resume.py
           git commit -m 'Allow official post-time updates for frozen Wide snapshots'
+          git reset --hard HEAD
+          git clean -fd
           git pull --rebase origin main
           git push origin HEAD:main
