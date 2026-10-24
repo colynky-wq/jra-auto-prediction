@@ -1,4 +1,4 @@
-"""Resume live sessions from published forecasts without making new predictions."""
+"""Resume live sessions only from forecasts proven to be live-window captures."""
 from datetime import datetime
 import json
 import math
@@ -11,6 +11,7 @@ TOPK_PROBABILITY_KEYS = (
     'aiTop2Probability', 'marketTop2Probability',
     'aiTop3Probability', 'marketTop3Probability',
 )
+LIVE_TIMING_MARKER = 'live_10min'
 
 
 def _valid_probability(value):
@@ -18,18 +19,16 @@ def _valid_probability(value):
 
 
 def published_race_ids(root, date8, schedule):
-    """Return races that already have a safe published forecast.
+    """Return only races already captured in the formal live window.
 
-    Win/market probabilities are the minimum contract for historical RaceData.
-    Top2/Top3 fields were added later, so older rows may legitimately omit them.
-    When any Top2/Top3 field is present we validate every present value, but missing
-    optional TopK fields must not abort the live recorder.
+    RaceData can contain morning/early forecasts for every race. Those rows must
+    never be treated as proof that the 12-to-8-minute live capture has happened.
+    New live publications carry predictionTiming='live_10min'; only those rows
+    are safe to mark processed when a monitor session resumes.
 
-    The live schedule is authoritative for post time. A published morning forecast
-    can contain the post time known when it was created; JRA may subsequently move
-    that time. A time-only difference must therefore not abort odds capture. Race
-    identity and entrant/probability validation remain strict, and the monitor uses
-    the freshly fetched schedule to decide the 12-to-8-minute capture window.
+    Historical/morning rows are still validated enough to detect corrupt race
+    identity, but they remain pending for live capture. A post-time-only change
+    is allowed because the freshly fetched live schedule is authoritative.
     """
     day = datetime.strptime(date8, '%Y%m%d').date().isoformat()
     path = Path(root) / 'RaceData.json'
@@ -49,12 +48,14 @@ def published_race_ids(root, date8, schedule):
         seen.add(rid)
         if rid not in expected:
             continue
-        # Do not fail on a post-time-only change. The current schedule fetched by
-        # the live monitor is authoritative for capture timing. We deliberately do
-        # not rewrite the already-published morning forecast here.
+
+        # Morning/early forecasts are not completed live captures.
+        if row.get('predictionTiming') != LIVE_TIMING_MARKER:
+            continue
+
         horses = row['horses']
         if not isinstance(horses, list) or len(horses) < 2:
-            raise ValueError('incomplete published forecast')
+            raise ValueError('incomplete published live forecast')
         numbers = set()
         for h in horses:
             n = h['number']
