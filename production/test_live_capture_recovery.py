@@ -53,15 +53,28 @@ class LiveCapturePolicyTests(unittest.TestCase):
             ],
         }
 
-    def test_late_recovery_resumes_without_formal_research_sidecars(self):
+    def test_quarantined_late_recovery_resumes_without_formal_sidecars(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            row = self.race(RECOVERY_TIMING_MARKER)
+            recovery = root / 'reports' / '20261018' / 'late_recovery'
+            recovery.mkdir(parents=True)
+            (recovery / (row['raceID'] + '.json')).write_text(json.dumps(row), encoding='utf-8')
+            schedule = [{'race_id': row['raceID'], 'start_time': row['startTime']}]
+            self.assertEqual(
+                published_race_ids(root, '20261018', schedule, require_research=True),
+                {row['raceID']},
+            )
+
+    def test_recovery_row_inside_racedata_is_not_formal_resume_evidence(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             row = self.race(RECOVERY_TIMING_MARKER)
             (root / 'RaceData.json').write_text(json.dumps([row]), encoding='utf-8')
             schedule = [{'race_id': row['raceID'], 'start_time': row['startTime']}]
             self.assertEqual(
-                published_race_ids(root, '20261018', schedule, require_research=True),
-                {row['raceID']},
+                published_race_ids(root, '20261018', schedule, require_research=False),
+                set(),
             )
 
     def test_formal_capture_still_requires_formal_research_when_requested(self):
