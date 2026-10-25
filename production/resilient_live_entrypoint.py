@@ -5,6 +5,8 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import live_monitor_dry_run as base
 import live_monitor_topk as topk
@@ -19,6 +21,27 @@ from live_capture_policy import (
 
 RECOVERY_LATE_MINUTES = float(os.environ.get("KEIBAAI_LIVE_GRACE_MINUTES", "5").strip() or "5")
 validate_capture_windows(base.WINDOW_EARLY_MINUTES, base.WINDOW_LATE_MINUTES, RECOVERY_LATE_MINUTES)
+
+
+def configure_http_retries() -> None:
+    """Harden all netkeiba/JRA GETs made through the shared production session."""
+    retry = Retry(
+        total=3,
+        connect=3,
+        read=3,
+        status=3,
+        backoff_factor=0.5,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET"}),
+        respect_retry_after_header=True,
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+    base.SESSION.mount("https://", adapter)
+    base.SESSION.mount("http://", adapter)
+
+
+configure_http_retries()
 
 
 def resilient_main() -> None:
