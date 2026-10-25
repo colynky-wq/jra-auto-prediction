@@ -1,9 +1,15 @@
-"""Resume live sessions only from forecasts proven to be live-window captures."""
+"""Resume live sessions from captures whose timing quality is explicit."""
 from datetime import datetime
 import json
 import math
 from pathlib import Path
 import re
+
+from live_capture_policy import (
+    CAPTURE_TIMING_MARKERS,
+    FORMAL_TIMING_MARKER,
+    RECOVERY_TIMING_MARKER,
+)
 
 
 BASE_PROBABILITY_KEYS = ('aiProbability', 'marketProbability')
@@ -11,7 +17,7 @@ TOPK_PROBABILITY_KEYS = (
     'aiTop2Probability', 'marketTop2Probability',
     'aiTop3Probability', 'marketTop3Probability',
 )
-LIVE_TIMING_MARKER = 'live_10min'
+LIVE_TIMING_MARKER = FORMAL_TIMING_MARKER
 ALL_BET_SIDECARS = ('win','place','frame_quinella','quinella','exacta')
 TRIPLE_SIDECARS = ('trio','trifecta')
 
@@ -29,16 +35,13 @@ def _valid_probability(value):
 
 
 def published_race_ids(root, date8, schedule, require_research=False):
-    """Return only races already captured in the formal live window.
+    """Return races whose live capture is already complete enough to resume past.
 
-    RaceData can contain morning/early forecasts for every race. Those rows must
-    never be treated as proof that the 12-to-8-minute live capture has happened.
-    New live publications carry predictionTiming='live_10min'; only those rows
-    are safe to mark processed when a monitor session resumes.
-
-    Historical/morning rows are still validated enough to detect corrupt race
-    identity, but they remain pending for live capture. A post-time-only change
-    is allowed because the freshly fetched live schedule is authoritative.
+    Formal 8-12 minute captures use predictionTiming='live_10min'.  A bounded
+    late fallback uses 'live_late_recovery'.  Recovery rows count as captured so
+    overlapping/restarted monitors do not fetch them repeatedly, but they never
+    satisfy or create formal research evidence.  Morning/early forecasts remain
+    pending for a proper live capture.
     """
     day = datetime.strptime(date8, '%Y%m%d').date().isoformat()
     path = Path(root) / 'RaceData.json'
@@ -59,8 +62,8 @@ def published_race_ids(root, date8, schedule, require_research=False):
         if rid not in expected:
             continue
 
-        # Morning/early forecasts are not completed live captures.
-        if row.get('predictionTiming') != LIVE_TIMING_MARKER:
+        timing = row.get('predictionTiming')
+        if timing not in CAPTURE_TIMING_MARKERS:
             continue
 
         horses = row['horses']
@@ -78,7 +81,14 @@ def published_race_ids(root, date8, schedule, require_research=False):
             for key in TOPK_PROBABILITY_KEYS:
                 if key in h and not _valid_probability(h[key]):
                     raise ValueError('invalid published TopK probability')
-        if require_research and not research_sidecars_complete(root,date8,rid):
+
+        # Formal captures are only resume-safe when all formal research writes
+        # required by this monitor are present.  Late recovery deliberately has
+        # no formal sidecars and is nevertheless complete as recovery evidence.
+        if timing == FORMAL_TIMING_MARKER and require_research and not research_sidecars_complete(root,date8,rid):
+            continue
+        if timing == RECOVERY_TIMING_MARKER:
+            ready.add(rid)
             continue
         ready.add(rid)
     return ready
