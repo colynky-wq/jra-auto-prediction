@@ -1,4 +1,4 @@
-# 2026-10-25 preflight: repaired runtime active; stale sessions cleared.
+# 2026-10-25 preflight: resilient formal T-10 capture with bounded late recovery.
 name: KeibaAI Live Permanent
 
 on:
@@ -9,11 +9,13 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/formal_wide_odds_runtime.py'
       - 'production/resilient_live_entrypoint.py'
+      - 'production/live_capture_policy.py'
       - 'production/live_recording_resume.py'
       - 'production/test_live_recording_resume.py'
+      - 'production/test_live_capture_recovery.py'
   schedule:
-    - cron: '45 22 * * *'  # 07:45 JST: absorb scheduler/startup delays before first race
-    - cron: '45 4 * * *'   # 13:45 JST: overlap before late races so +2/+4 minute research writes can finish safely
+    - cron: '45 22 * * *'  # 07:45 JST: start well before first race
+    - cron: '45 3 * * *'   # 12:45 JST: overlap morning session before the 6-hour hosted-runner limit
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -31,7 +33,7 @@ jobs:
   monitor:
     name: Automatic Win Top2 Top3 Signal Wide monitor
     runs-on: ubuntu-24.04
-    timeout-minutes: 420
+    timeout-minutes: 360
     steps:
       - name: Checkout lightweight startup guard
         uses: actions/checkout@v5
@@ -70,6 +72,7 @@ jobs:
         run: |
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/resilient_live_entrypoint.py
+          python -m py_compile production/live_capture_policy.py
           python -m py_compile production/live_recording_resume.py
           python -m py_compile production/all_bet_runtime.py
           python -m py_compile production/triple_research_runtime.py
@@ -79,14 +82,15 @@ jobs:
           python -m py_compile production/repair_wide_odds.py
           python production/smoke_topk_runtime.py
           python production/test_live_recording_resume.py
+          python production/test_live_capture_recovery.py
       - name: Choose session runtime
         if: steps.day.outputs.has_races == 'true'
         id: runtime
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then minutes='${{ github.event.inputs.max_minutes }}';
-          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then minutes='405';
-          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='405'; else minutes='210'; fi
+          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then minutes='330';
+          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='330'; else minutes='285'; fi
           echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
       - name: Configure git publisher
         if: steps.day.outputs.has_races == 'true'
@@ -102,6 +106,7 @@ jobs:
           KEIBAAI_LIVE_RACE_ID: ''
           KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
           KEIBAAI_LIVE_POLL_SECONDS: '10'
+          KEIBAAI_LIVE_GRACE_MINUTES: '5'
           KEIBAAI_PUBLISH_RACEDATA: 'true'
           KEIBAAI_CAPTURE_WIDE_ODDS: 'true'
           KEIBAAI_CAPTURE_PRERACE: 'true'
