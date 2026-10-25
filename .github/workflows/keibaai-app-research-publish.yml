@@ -9,6 +9,7 @@ on:
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
+      - 'production/production_history.parquet'
       - '.github/workflows/keibaai-app-research-publish.yml'
       - '.github/workflows/keibaai-live-permanent.yml'
   push:
@@ -20,6 +21,7 @@ on:
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
+      - 'production/production_history.parquet'
       - '.github/workflows/keibaai-app-research-publish.yml'
   schedule:
     - cron: '50 9 * * *' # 18:50 JST; live updates use the existing publisher.
