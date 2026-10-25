@@ -14,8 +14,8 @@ on:
       - 'production/test_live_recording_resume.py'
       - 'production/test_live_capture_recovery.py'
   schedule:
-    - cron: '45 22 * * *'  # 07:45 JST: start well before first race
-    - cron: '45 3 * * *'   # 12:45 JST: overlap morning session before the 6-hour hosted-runner limit
+    - cron: '45 22 * * *'  # 07:45 JST
+    - cron: '45 3 * * *'   # 12:45 JST; queues behind the morning production session
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -25,9 +25,10 @@ on:
 permissions:
   contents: write
 concurrency:
-  # Scheduled sessions intentionally use separate groups so the 12:45 handoff
-  # can overlap the morning process. Push is CI-only and never touches live data.
-  group: keibaai-live-permanent-${{ github.event.schedule || github.event_name }}
+  # Every production run shares one group so two independent checkouts never
+  # publish RaceData/research JSON concurrently. Push runs are CI-only and use
+  # their own commit-specific group, so code validation cannot block production.
+  group: keibaai-live-${{ github.event_name == 'push' && github.sha || 'production' }}
   cancel-in-progress: false
 jobs:
   monitor:
@@ -103,7 +104,9 @@ jobs:
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
           elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
-            minutes='330'
+            # 5h05m leaves substantial room for setup/teardown inside the 6h job cap.
+            # The 12:45 session is already queued and resumes after this job exits.
+            minutes='305'
           else
             minutes='285'
           fi
