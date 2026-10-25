@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/scripts/keibaai-race-day-check.sh'
       - 'production/live_monitor_topk_publish.py'
       - 'production/formal_wide_odds_runtime.py'
       - 'production/resilient_live_entrypoint.py'
@@ -82,6 +83,7 @@ jobs:
       - name: Smoke-test bundled runtime
         if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         run: |
+          bash -n .github/scripts/keibaai-race-day-check.sh
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/resilient_live_entrypoint.py
           python -m py_compile production/live_capture_policy.py
