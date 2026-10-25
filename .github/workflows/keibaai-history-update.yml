@@ -27,7 +27,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 concurrency:
   group: keibaai-production-history-update
@@ -98,8 +98,16 @@ jobs:
         run: python production/update_production_history.py
 
       - name: Commit production history when changed
+        id: publish_history
         shell: bash
         run: |
+          set -euo pipefail
+          history_changed=false
+          if ! git diff --quiet -- production/production_history.parquet; then
+            history_changed=true
+          fi
+          echo "history_changed=$history_changed" >> "$GITHUB_OUTPUT"
+
           if [ -z "$(git status --porcelain -- production/production_history.parquet reports/history_updates)" ]; then
             echo 'No production history changes to commit.'
             exit 0
@@ -111,3 +119,9 @@ jobs:
           git commit -m "Update KeibaAI production history"
           git pull --rebase origin main
           git push origin HEAD:main
+
+      - name: Refresh app research display after history changes
+        if: steps.publish_history.outputs.history_changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run keibaai-app-research-publish.yml --ref main
