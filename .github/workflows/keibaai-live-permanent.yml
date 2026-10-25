@@ -25,8 +25,8 @@ on:
 permissions:
   contents: write
 concurrency:
-  # Morning and afternoon schedules intentionally use different groups, so the
-  # handoff overlaps instead of cancelling or queueing a pending research write.
+  # Scheduled sessions intentionally use separate groups so the 12:45 handoff
+  # can overlap the morning process. Push is CI-only and never touches live data.
   group: keibaai-live-permanent-${{ github.event.schedule || github.event_name }}
   cancel-in-progress: false
 jobs:
@@ -41,34 +41,45 @@ jobs:
           path: startup-guard
           sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
           sparse-checkout-cone-mode: false
-      - name: Check whether JRA races exist today
+
+      - name: Decide CI or live race day
         id: day
         shell: bash
         run: |
           set -euo pipefail
           date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
+          if [ "${{ github.event_name }}" = 'push' ]; then
+            echo "target_date=$date8" >> "$GITHUB_OUTPUT"
+            echo "has_races=false" >> "$GITHUB_OUTPUT"
+            echo 'Push event: run CI only; production live monitor is disabled.'
+            exit 0
+          fi
           bash startup-guard/.github/scripts/keibaai-race-day-check.sh "$date8"
+
       - name: Checkout repository
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: main
+
       - name: Set up Python
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip
           cache-dependency-path: production/requirements.txt
+
       - name: Install dependencies
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
       - name: Smoke-test bundled runtime
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         run: |
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/resilient_live_entrypoint.py
@@ -83,23 +94,30 @@ jobs:
           python production/smoke_topk_runtime.py
           python production/test_live_recording_resume.py
           python production/test_live_capture_recovery.py
-      - name: Choose session runtime
-        if: steps.day.outputs.has_races == 'true'
+
+      - name: Choose live session runtime
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
         id: runtime
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then minutes='${{ github.event.inputs.max_minutes }}';
-          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then minutes='330';
-          elif [ "${{ github.event_name }}" = 'push' ]; then minutes='330'; else minutes='285'; fi
+          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
+            minutes='${{ github.event.inputs.max_minutes }}'
+          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
+            minutes='330'
+          else
+            minutes='285'
+          fi
           echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
+
       - name: Configure git publisher
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
         run: |
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
+
       - name: Monitor races and publish one consistent bundle
         id: session
-        if: steps.day.outputs.has_races == 'true'
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
         env:
           KEIBAAI_LIVE_DATE: ${{ steps.day.outputs.target_date }}
           KEIBAAI_LIVE_MODE: 'live'
@@ -117,8 +135,9 @@ jobs:
           set -euo pipefail
           date8='${{ steps.day.outputs.target_date }}'
           python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 10 -- python -u production/resilient_live_entrypoint.py
+
       - name: Preserve live outbox for recovery
-        if: always() && steps.day.outputs.has_races == 'true'
+        if: always() && github.event_name != 'push' && steps.day.outputs.has_races == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: keibaai-live-outbox-${{ github.run_id }}
