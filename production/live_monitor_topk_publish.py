@@ -16,6 +16,7 @@ from live_capture_policy import (
 
 HERE = Path(__file__).resolve().parent
 RACEDATA_PATH = HERE.parent / "RaceData.json"
+REPORTS_PATH = HERE.parent / "reports"
 
 
 def _env_flag(name: str, default: bool) -> bool:
@@ -123,10 +124,26 @@ def _capture_timing(race: dict) -> tuple[str, float | None]:
     return timing, (None if trigger is None else round(float(trigger), 3))
 
 
+def _save_late_recovery(published_race: dict) -> Path:
+    """Persist recovery evidence outside RaceData/SignalData formal inputs."""
+    date8 = str(published_race["raceDate"]).replace("-", "")
+    rid = str(published_race["raceID"])
+    path = REPORTS_PATH / date8 / "late_recovery" / f"{rid}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(published_race, ensure_ascii=False, indent=2) + "\n"
+    if path.exists():
+        existing = path.read_text(encoding="utf-8")
+        if existing != payload:
+            raise RuntimeError(f"conflicting late recovery evidence: {path}")
+        return path
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(payload, encoding="utf-8")
+    tmp.replace(path)
+    return path
+
+
 def publish_race_to_racedata(race, out):
     target_date = _target_date_text()
-    existing = _load_existing()
-    todays = [item for item in existing if str(item.get("raceDate", "")).strip() == target_date]
     timing, trigger_minutes = _capture_timing(race)
     formal = timing == FORMAL_TIMING_MARKER
 
@@ -181,21 +198,27 @@ def publish_race_to_racedata(race, out):
     }
     rid = published_race["raceID"]
 
-    # Freeze the first successful live capture, whether formal or recovery.  A
-    # recovery row must never be relabelled as formal on a retry/restart.
+    # Recovery evidence is deliberately quarantined from RaceData.json.  That
+    # guarantees later SignalData rebuilds and app/research consumers cannot
+    # accidentally promote a T-7/T-5 fallback into formal T-10 evidence.
+    if not formal:
+        path = _save_late_recovery(published_race)
+        print("KEIBAAI LATE RECOVERY SAVED", rid, path, "formal app/research inputs untouched")
+        return
+
+    existing = _load_existing()
+    todays = [item for item in existing if str(item.get("raceDate", "")).strip() == target_date]
     frozen = next(
         (
             item for item in todays
-            if str(item.get("raceID", "")) == rid and item.get("predictionTiming") in CAPTURE_TIMING_MARKERS
+            if str(item.get("raceID", "")) == rid and item.get("predictionTiming") == FORMAL_TIMING_MARKER
         ),
         None,
     )
     if frozen is not None:
         published_race = frozen
         captured_at = str(frozen.get("capturedAtJST") or captured_at)
-        timing = str(frozen.get("predictionTiming") or timing)
-        formal = timing == FORMAL_TIMING_MARKER
-        print("KEIBAAI APP PRESERVE FIRST LIVE", rid, timing, captured_at)
+        print("KEIBAAI APP PRESERVE FIRST FORMAL LIVE", rid, captured_at)
     else:
         replaced = False
         for index, item in enumerate(todays):
@@ -210,15 +233,9 @@ def publish_race_to_racedata(race, out):
         tmp.write_text(json.dumps(todays, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         tmp.replace(RACEDATA_PATH)
         print(
-            "KEIBAAI APP PUBLISH", rid, timing, captured_at, "horses", len(horses),
-            "recommendation disabled pending formal odds" if formal else "formal research disabled for late recovery",
+            "KEIBAAI APP PUBLISH", rid, FORMAL_TIMING_MARKER, captured_at, "horses", len(horses),
+            "recommendation disabled pending formal odds",
         )
-
-    # Late recovery exists to avoid total data loss, not to fabricate formal
-    # T-10 evidence.  Do not create formal odds/research sidecars from it.
-    if not formal:
-        print("KEIBAAI LATE RECOVERY SAVED", rid, "formal research sidecars intentionally skipped")
-        return
 
     from triple_research_runtime import schedule as schedule_triple
     from all_bet_runtime import schedule as schedule_all_bets
