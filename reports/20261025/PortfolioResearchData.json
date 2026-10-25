@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-10-25T16:11:09+09:00",
+  "generatedAtJST": "2026-10-25T16:15:54+09:00",
   "prospectiveStartDate": "2026-10-24",
   "developmentDataPolicy": "Dates before prospectiveStartDate are development/backfill only and cannot prove performance.",
   "selectionPolicy": "Rules are fixed before prospectiveStartDate; selection never reads finish, hit, payout or return fields.",
@@ -71,13 +71,13 @@
   "prospective": {
     "racesSeen": 70,
     "selectedRaces": 12,
-    "settledSelectedRaces": 10,
+    "settledSelectedRaces": 11,
     "hitAnyRaces": 2,
     "profitableRaces": 2,
     "torigamiRaces": 0,
-    "stakeYen": 2100,
+    "stakeYen": 2300,
     "returnYen": 3950,
-    "returnIndex": 1.880952
+    "returnIndex": 1.717391
   },
   "races": [
     {
@@ -4178,9 +4178,9 @@
       "battleGrade": "S",
       "scope": "prospective",
       "ruleVersion": "portfolio-shadow-v1-20261019",
-      "planType": "wide_plus_trio",
-      "planLabel": "ワイド＋3連複",
-      "reason": "混戦＋勝負度A以上。ワイドを主軸に、上位3頭の3連複を少量比較します",
+      "planType": "wide_focus",
+      "planLabel": "ワイド中心",
+      "reason": "混戦＋勝負度A以上。3連複条件は満たさないためワイドだけに絞ります",
       "legs": [
         {
           "betType": "wide",
@@ -4191,8 +4191,8 @@
           "oddsHigh": 17.8,
           "expectedMultiplierLow": 2.368,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         },
         {
           "betType": "wide",
@@ -4203,29 +4203,17 @@
           "oddsHigh": 10.6,
           "expectedMultiplierLow": 1.292,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
-        },
-        {
-          "betType": "trio",
-          "candidateID": "010512",
-          "label": "1番 シュヴァルツシルト − 5番 ジャスパーメルチェ − 12番 サンライズブレイク",
-          "probabilityPct": 4.994591892175084,
-          "oddsLow": 43.6,
-          "oddsHigh": 43.6,
-          "expectedMultiplierLow": 2.1776420649883366,
-          "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
-      "totalStakeYen": 300,
-      "settled": false,
-      "returnYen": null,
-      "profitYen": null,
-      "hitAny": null,
-      "profitable": null,
-      "torigami": null
+      "totalStakeYen": 200,
+      "settled": true,
+      "returnYen": 0,
+      "profitYen": -200,
+      "hitAny": false,
+      "profitable": false,
+      "torigami": false
     },
     {
       "raceDate": "2026-10-25",
