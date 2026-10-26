@@ -2877,10 +2877,6 @@ private struct KeibaAIRaceDetailNew: View {
                 }
                 .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
                 }
-                .accessibilityIdentifier("wide-evaluation-table-probability")
-                }
-                .accessibilityIdentifier("wide-evaluation-table-validated")
-                }
                 .accessibilityIdentifier("wide-evaluation-table-live")
 
                 Text(evaluation.note ?? "実戦優先度は候補の順位づけ専用です。")
@@ -2970,6 +2966,8 @@ private struct KeibaAIRaceDetailNew: View {
                     }
                 }
                 .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+                }
+                .accessibilityIdentifier("wide-evaluation-table-validated")
 
             } else if let evaluation = signal?.wideEvaluation, !rankedSignalWidePairs.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
@@ -3026,6 +3024,8 @@ private struct KeibaAIRaceDetailNew: View {
                     }
                 }
                 .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+                }
+                .accessibilityIdentifier("wide-evaluation-table-probability")
 
                 Text(evaluation.note ?? "発走前ワイド実オッズの取得待ちです。")
                     .font(.caption)
