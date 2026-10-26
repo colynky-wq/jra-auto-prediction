@@ -254,4 +254,53 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["凡例"].waitForExistence(timeout: 5))
         print("PHONE_NAVIGATION_OK: predicted/unpredicted detail, repeated return, full guide terms")
     }
+
+    @MainActor
+    func testWideEvaluationStaysInsidePhoneViewport() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_LAYOUT"] = "1"
+        app.launch()
+
+        let predicted = app.descendants(matching: .any)
+            .matching(identifier: "race-card-202605040601").firstMatch
+        XCTAssertTrue(predicted.waitForExistence(timeout: 20))
+        predicted.tap()
+
+        let title = app.staticTexts["race-detail-name"]
+        XCTAssertTrue(title.waitForExistence(timeout: 5))
+        XCTAssertEqual(title.label, "オクトーバー")
+
+        let tabs = app.scrollViews["detail-tabs"]
+        XCTAssertTrue(tabs.waitForExistence(timeout: 5))
+        let wide = app.buttons["detail-tab-ワイド評価"]
+        for _ in 0..<6 {
+            if wide.isHittable { break }
+            tabs.swipeLeft()
+        }
+        XCTAssertTrue(wide.isHittable)
+        wide.tap()
+
+        XCTAssertGreaterThanOrEqual(title.frame.minX, app.frame.minX - 1)
+        XCTAssertLessThanOrEqual(title.frame.maxX, app.frame.maxX + 1)
+
+        let detail = app.scrollViews["race-detail"]
+        let table = app.scrollViews["wide-evaluation-table-live"]
+        for _ in 0..<8 {
+            if table.exists && table.isHittable { break }
+            detail.swipeUp()
+        }
+        XCTAssertTrue(table.exists && table.isHittable)
+        XCTAssertGreaterThanOrEqual(table.frame.minX, app.frame.minX - 1)
+        XCTAssertLessThanOrEqual(table.frame.maxX, app.frame.maxX + 1)
+
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "wide-phone-layout-contained"
+        shot.lifetime = .keepAlways
+        add(shot)
+        print("PHONE_WIDE_LAYOUT_OK: wide table scrolls independently and race detail remains inside phone viewport")
+    }
+
 }

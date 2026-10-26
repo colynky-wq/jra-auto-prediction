@@ -2516,9 +2516,11 @@ private struct KeibaAIRaceDetailNew: View {
                             }
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("detail-tab-\(tab.rawValue)")
                 }
             }
         }
+        .accessibilityIdentifier("detail-tabs")
     }
 
     private var predictionSection: some View {
@@ -2784,7 +2786,8 @@ private struct KeibaAIRaceDetailNew: View {
                 .padding(12)
                 .background(.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
 
-                VStack(spacing: 0) {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    VStack(spacing: 0) {
                     HStack(spacing: 8) {
                         Text("順位").frame(width: 38, alignment: .leading)
                         Text("組み合わせ").frame(maxWidth: .infinity, alignment: .leading)
@@ -2873,6 +2876,12 @@ private struct KeibaAIRaceDetailNew: View {
                     }
                 }
                 .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+                }
+                .accessibilityIdentifier("wide-evaluation-table-probability")
+                }
+                .accessibilityIdentifier("wide-evaluation-table-validated")
+                }
+                .accessibilityIdentifier("wide-evaluation-table-live")
 
                 Text(evaluation.note ?? "実戦優先度は候補の順位づけ専用です。")
                     .font(.caption)
@@ -2896,7 +2905,8 @@ private struct KeibaAIRaceDetailNew: View {
                     .foregroundStyle(.secondary)
                 }
 
-                VStack(spacing: 0) {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    VStack(spacing: 0) {
                     HStack(spacing: 8) {
                         Text("順位").frame(width: 38, alignment: .leading)
                         Text("組み合わせ").frame(maxWidth: .infinity, alignment: .leading)
@@ -2974,7 +2984,8 @@ private struct KeibaAIRaceDetailNew: View {
                 .padding(12)
                 .background(.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
 
-                VStack(spacing: 0) {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    VStack(spacing: 0) {
                     HStack {
                         Text("順位").frame(width: 38, alignment: .leading)
                         Text("組み合わせ").frame(maxWidth: .infinity, alignment: .leading)
