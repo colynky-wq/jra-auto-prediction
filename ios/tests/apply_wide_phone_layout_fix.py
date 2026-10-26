@@ -30,25 +30,41 @@ def patch_source() -> None:
     wide_start = text.index("    private var wideSection: some View {")
     wide_end = text.index("    private var paceSection: some View {", wide_start)
     wide = text[wide_start:wide_end]
-    if "wide-evaluation-table-live" not in wide:
-        table_open = "                VStack(spacing: 0) {\n"
-        assert wide.count(table_open) == 3, wide.count(table_open)
-        wide = wide.replace(
-            table_open,
-            "                ScrollView(.horizontal, showsIndicators: true) {\n                    VStack(spacing: 0) {\n",
-        )
-        background = "                .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))"
-        assert wide.count(background) == 3, wide.count(background)
-        for identifier in ("live", "validated", "probability"):
-            wide = wide.replace(
-                background,
-                background
-                + "\n                }\n"
-                + f'                .accessibilityIdentifier("wide-evaluation-table-{identifier}")',
-                1,
-            )
-        text = text[:wide_start] + wide + text[wide_end:]
 
+    table_open = "                VStack(spacing: 0) {\n"
+    scroll_open = "                ScrollView(.horizontal, showsIndicators: true) {\n                    VStack(spacing: 0) {\n"
+    if wide.count(scroll_open) == 0:
+        assert wide.count(table_open) == 3, wide.count(table_open)
+        wide = wide.replace(table_open, scroll_open)
+    else:
+        assert wide.count(scroll_open) == 3, wide.count(scroll_open)
+
+    background = "                .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))"
+    assert wide.count(background) == 3, wide.count(background)
+
+    # Normalize any previous generated closures/identifiers, then place exactly
+    # one closure after each table in source order.
+    for identifier in ("live", "validated", "probability"):
+        generated = (
+            "\n                }\n"
+            + f'                .accessibilityIdentifier("wide-evaluation-table-{identifier}")'
+        )
+        wide = wide.replace(generated, "")
+
+    parts = wide.split(background)
+    assert len(parts) == 4, len(parts)
+    names = ("live", "validated", "probability")
+    rebuilt = parts[0]
+    for index, name in enumerate(names):
+        rebuilt += (
+            background
+            + "\n                }\n"
+            + f'                .accessibilityIdentifier("wide-evaluation-table-{name}")'
+            + parts[index + 1]
+        )
+    wide = rebuilt
+
+    text = text[:wide_start] + wide + text[wide_end:]
     SOURCE.write_text(text, encoding="utf-8")
 
 
