@@ -82,7 +82,7 @@ jobs:
       - name: Verify all-bet app contract and the actual refresh store
         run: |
           python3 -m venv /tmp/keibaai-bet-app-venv
-          /tmp/keibaai-bet-app-venv/bin/pip install 'beautifulsoup4==4.13.4'
+          /tmp/keibaai-bet-app-venv/bin/pip install 'beautifulsoup4==4.13.4' pandas requests lxml
           /tmp/keibaai-bet-app-venv/bin/python production/test_bet_research_data.py --emit-contract /tmp/bet-research-contract.json
           swiftc -swift-version 5 -parse-as-library ios/KeibaAI/KeibaAI/KeibaAIBetResearchModels.swift ios/tests/BetResearchChecks.swift -o /tmp/keibaai-bet-research-checks
           /tmp/keibaai-bet-research-checks
