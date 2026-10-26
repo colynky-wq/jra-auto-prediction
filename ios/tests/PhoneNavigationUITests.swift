@@ -217,9 +217,12 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["東京 1R"].exists)
         XCTAssertTrue(app.staticTexts["操作確認レース"].exists)
         back.tap()
-        XCTAssertTrue(predicted.waitForExistence(timeout: 5))
-        // Repeating the same selection catches a stale compact-column binding.
-        predicted.tap()
+        let predictedAgain = app.descendants(matching: .any).matching(identifier: "race-card-202605040601").firstMatch
+        XCTAssertTrue(predictedAgain.waitForExistence(timeout: 5))
+        // Repeating the same selection catches a stale compact-column binding. Re-query after
+        // returning because an XCUIElement resolved before a NavigationSplitView column switch
+        // can become stale while the newly rendered card is already visible.
+        predictedAgain.tap()
         XCTAssertTrue(back.waitForExistence(timeout: 5))
         back.tap()
         let missing = app.descendants(matching: .any).matching(identifier: "race-card-202605040602").firstMatch
