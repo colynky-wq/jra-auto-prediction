@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "version": "bet-research-reference-v1-20261015",
+  "status": "reference_display_only",
+  "referenceDisplayEnabled": true,
+  "formalRecommendationsEnabled": false,
+  "autoBetEnabled": false,
+  "stakeSizingEnabled": false,
+  "generatedAtJST": "2026-10-29T09:15:03.692919+09:00",
+  "raceDate": "2026-10-29",
+  "collectionStatus": "attention_required",
+  "availableDates": [
+    "2026-10-28",
+    "2026-10-27",
+    "2026-10-26",
+    "2026-10-25",
+    "2026-10-24",
+    "2026-10-23",
+    "2026-10-22",
+    "2026-10-21",
+    "2026-10-20",
+    "2026-10-19",
+    "2026-10-18",
+    "2026-10-17",
+    "2026-10-16"
+  ],
+  "catalog": [
+    {
+      "id": "win",
+      "label": "単勝",
+      "description": "1着になる馬を当てる",
+      "methodNote": "既存のAI勝率から比較",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 134,
+        "matched": 129,
+        "held": 3,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "place",
+      "label": "複勝",
+      "description": "発売条件に応じて2着または3着まで",
+      "methodNote": "保存した勝率を着順の組合せに換算",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 133,
+        "matched": 128,
+        "held": 4,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "frame_quinella",
+      "label": "枠連",
+      "description": "1・2着の枠の組合せ。順番は問わない",
+      "methodNote": "同じ枠どうしも含めた比較",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 121,
+        "matched": 117,
+        "held": 16,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 4,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "quinella",
+      "label": "馬連",
+      "description": "1・2着の馬の組合せ。順番は問わない",
+      "methodNote": "保存した勝率を着順の組合せに換算",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 134,
+        "matched": 129,
+        "held": 3,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "wide",
+      "label": "ワイド",
+      "description": "選んだ2頭がともに3着以内",
+      "methodNote": "保存された穴軸・相手の固定評価",
+      "recordingStartDate": "2026-10-14",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 136,
+        "saved": 136,
+        "matched": 120,
+        "held": 0,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 4,
+        "invalid": 0,
+        "noCandidate": 11
+      }
+    },
+    {
+      "id": "exacta",
+      "label": "馬単",
+      "description": "1・2着の馬を順番どおりに当てる",
+      "methodNote": "保存した勝率を着順の組合せに換算",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 134,
+        "matched": 129,
+        "held": 3,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "trio",
+      "label": "3連複",
+      "description": "1～3着の3頭の組合せ。順番は問わない",
+      "methodNote": "保存した勝率を使う比較基準",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 134,
+        "matched": 129,
+        "held": 3,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "trifecta",
+      "label": "3連単",
+      "description": "1～3着の3頭を順番どおりに当てる",
+      "methodNote": "保存した勝率を使う比較基準",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 134,
+        "matched": 129,
+        "held": 3,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "support",
+      "label": "応援馬券",
+      "description": "同じ馬の単勝と複勝を同額ずつ組み合わせる",
+      "methodNote": "単勝100円＋複勝100円の計200円",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "レース",
+      "cumulative": {
+        "records": 137,
+        "saved": 133,
+        "matched": 128,
+        "held": 4,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 5,
+        "missingRecords": 3,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    },
+    {
+      "id": "win5",
+      "label": "WIN5",
+      "description": "対象5レースすべての1着を当てる",
+      "methodNote": "5レース共通の締切前に別記録",
+      "recordingStartDate": "2026-10-15",
+      "countUnit": "開催日",
+      "cumulative": {
+        "records": 4,
+        "saved": 4,
+        "matched": 3,
+        "held": 0,
+        "awaitingResults": 0,
+        "payoutsPending": 0,
+        "excluded": 1,
+        "missingRecords": 0,
+        "invalid": 0,
+        "noCandidate": 0
+      }
+    }
+  ],
+  "races": [],
+  "warnings": [
+    "一部の研究記録・集計の対応に確認が必要です。"
+  ],
+  "meaning": "研究中の参考候補です。追加5券種・3連複・3連単・WIN5はAI確率順の最大3候補。おすすめや購入指示への採用は検証中です。"
+}
