@@ -1,18 +1,21 @@
 """Build the preregistered first-100-race review for portfolio shadow v1.
 
 Evaluation only: this module never changes portfolio selection rules, predictions,
-thresholds, or stake sizing.  The review cohort is chronologically locked to the
-first 100 prospective races beginning 2026-10-24.  Later races never rewrite the
-100-race snapshot.
+thresholds, or stake sizing. The review cohort is chronologically locked to the
+first 100 *verified formal T-10* prospective races beginning 2026-10-24.
+Later races never rewrite the 100-race snapshot.
 """
 from __future__ import annotations
 
 from collections import Counter
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import json
 import os
 from pathlib import Path
 from typing import Any
+
+from formal_10min_evidence import inspect_formal_10min_evidence
 
 JST = timezone(timedelta(hours=9))
 SOURCE_VERSION = "portfolio-shadow-v1-20261019"
@@ -126,6 +129,21 @@ def breakdown(rows: list[dict[str, Any]], field: str, order: list[Any]) -> list[
     return out
 
 
+def attach_formal_evidence(root: Path, data: dict[str, Any]) -> dict[str, Any]:
+    """Attach immutable T-10 provenance without mutating PortfolioResearchData."""
+    checked = deepcopy(data)
+    races = checked.get("races")
+    if not isinstance(races, list):
+        return checked
+    for row in races:
+        if not isinstance(row, dict) or row.get("scope") != "prospective":
+            continue
+        evidence = inspect_formal_10min_evidence(root, row)
+        row["formal10minEligible"] = evidence.get("eligible") is True
+        row["formal10minEvidence"] = evidence
+    return checked
+
+
 def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
     validate_source(data)
     now = now or datetime.now(JST)
@@ -133,8 +151,11 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
     if not isinstance(races, list):
         raise ValueError("portfolio races must be a list")
 
-    prospective: list[dict[str, Any]] = []
+    prospective_all: list[dict[str, Any]] = []
+    formal_prospective: list[dict[str, Any]] = []
     ids: set[tuple[str, str]] = set()
+    excluded_nonformal: list[dict[str, Any]] = []
+
     for row in races:
         if not isinstance(row, dict) or row.get("scope") != "prospective":
             continue
@@ -148,15 +169,32 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
         ids.add(key)
         if row.get("ruleVersion") != SOURCE_VERSION:
             raise ValueError("mixed portfolio rule versions")
-        prospective.append(row)
+        prospective_all.append(row)
 
-    prospective.sort(key=race_key)
-    observed = len(prospective)
-    cohort = prospective[:TARGET_RACES]
+        if row.get("formal10minEligible") is True:
+            formal_prospective.append(row)
+        else:
+            evidence = row.get("formal10minEvidence")
+            reason = evidence.get("reason") if isinstance(evidence, dict) else "formal_evidence_missing"
+            excluded_nonformal.append({
+                "raceDate": day,
+                "raceID": rid,
+                "venue": row.get("venue"),
+                "raceNumber": row.get("raceNumber"),
+                "startTime": row.get("startTime"),
+                "reason": reason,
+            })
+
+    prospective_all.sort(key=race_key)
+    formal_prospective.sort(key=race_key)
+    excluded_nonformal.sort(key=lambda x: (str(x.get("raceDate")), str(x.get("startTime")), str(x.get("raceID"))))
+
+    observed = len(formal_prospective)
+    cohort = formal_prospective[:TARGET_RACES]
     overall = summary(cohort)
 
     if observed == 0:
-        review_status = "waiting_for_prospective_start"
+        review_status = "waiting_for_formal_prospective_capture"
     elif observed < TARGET_RACES:
         review_status = "collecting"
     elif overall["resultsPendingSelectedRaces"] > 0:
@@ -177,10 +215,14 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
         "generatedAtJST": now.astimezone(JST).isoformat(timespec="seconds"),
         "prospectiveStartDate": PROSPECTIVE_START,
         "targetRaces": TARGET_RACES,
+        "prospectiveRacesObserved": len(prospective_all),
         "racesObserved": observed,
         "reviewWindowRaces": len(cohort),
         "remainingTo100": max(0, TARGET_RACES - observed),
         "progressPct": round(min(1.0, observed / TARGET_RACES) * 100.0, 1),
+        "excludedNonFormalRaces": len(excluded_nonformal),
+        "excludedNonFormalRaceDetails": excluded_nonformal,
+        "formal10minEvidenceSource": "reports/YYYYMMDD/all_bet_v1/win/<raceID>.json",
         "raceDaysInReviewWindow": len(race_days),
         "reviewWindowStartDate": race_days[0] if race_days else None,
         "reviewWindowEndDate": race_days[-1] if len(cohort) == TARGET_RACES else None,
@@ -201,12 +243,17 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
             "sourceRuleVersionMatches": True,
             "prospectiveStartMatches": True,
             "duplicateRaceCount": 0,
+            "formal10minEvidenceRequired": True,
+            "formal10minVerifiedRaces": observed,
+            "nonFormalProspectiveExcluded": len(excluded_nonformal),
             "selectedPendingSettlement": overall["resultsPendingSelectedRaces"],
             "cohortExcludesDevelopmentBackfill": True,
-            "laterRacesExcludedAfterFirst100": max(0, observed - TARGET_RACES),
+            "laterFormalRacesExcludedAfterFirst100": max(0, observed - TARGET_RACES),
         },
         "interpretationPolicy": {
             "shortTermPurpose": "100Rは合否判定ではなく、動作異常・極端な失敗・参加率・見送り率・的中・利益・トリガミ・プラン構成を点検する。",
+            "formalEvidencePolicy": "正式100Rには、発走8〜12分前に保存されたlive_10min予測の凍結sidecarが確認できるレースだけを数える。朝予測・後付け・遅延救済は除外する。",
+            "protocolCorrection": "正式10分前の証拠確認を追加するデータ品質修正であり、portfolio-shadow-v1の選択閾値や買い目ルールは変更しない。",
             "noThresholdTuning": "100Rの結果を見てportfolio-shadow-v1の閾値を変更しない。改善案はv2 shadowとして分離する。",
             "roiWarning": "回収指数は標本が小さい間は振れが大きいため、単独で採否を決めない。",
             "nextMilestone": "300Rで候補ロジックの絞り込み材料とし、小さい予測優位の本格評価は1000R前後以上を想定する。",
@@ -217,6 +264,7 @@ def build(data: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
 def main() -> None:
     root = Path(os.environ.get("KEIBAAI_ROOT", Path(__file__).resolve().parent.parent))
     source = read_json(root / "PortfolioResearchData.json")
+    source = attach_formal_evidence(root, source)
     review = build(source)
     write_json(root / "PortfolioReview100.json", review)
     newest = review.get("reviewWindowEndDate") or review.get("reviewWindowStartDate")
@@ -224,7 +272,9 @@ def main() -> None:
         write_json(root / "reports" / newest.replace("-", "") / "PortfolioReview100.json", review)
     print(json.dumps({
         "reviewStatus": review["reviewStatus"],
+        "prospectiveRacesObserved": review["prospectiveRacesObserved"],
         "racesObserved": review["racesObserved"],
+        "excludedNonFormalRaces": review["excludedNonFormalRaces"],
         "reviewWindowRaces": review["reviewWindowRaces"],
         "remainingTo100": review["remainingTo100"],
         "overall": review["overall"],
