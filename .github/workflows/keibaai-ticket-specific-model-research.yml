@@ -9,7 +9,9 @@ on:
       - 'production/research_ticket_oos_compare.py'
       - 'production/ticket_shadow_forward.py'
       - 'production/test_ticket_shadow_forward.py'
+      - 'production/test_ticket_shadow_publisher.py'
       - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
       - 'production/all_bet_runtime.py'
       - 'production/triple_research_runtime.py'
       - 'production/live_recording_resume.py'
@@ -37,11 +39,12 @@ jobs:
       - name: Test ticket probability and prospective shadow runtimes
         run: |
           cd production
-          pytest -q test_ticket_probability_runtime.py test_ticket_shadow_forward.py
+          pytest -q test_ticket_probability_runtime.py test_ticket_shadow_forward.py test_ticket_shadow_publisher.py
       - name: Compile live integration
         run: |
           python -m py_compile production/ticket_shadow_forward.py
           python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/all_bet_runtime.py
           python -m py_compile production/triple_research_runtime.py
           python -m py_compile production/live_recording_resume.py
