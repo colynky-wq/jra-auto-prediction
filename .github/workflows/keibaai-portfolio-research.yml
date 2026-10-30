@@ -6,6 +6,8 @@ on:
     branches:
       - main
     paths:
+      - 'production/build_bet_research_data.py'
+      - 'production/test_bet_research_data.py'
       - 'production/portfolio_shadow.py'
       - 'production/test_portfolio_shadow.py'
       - 'production/all_bet_recommendation_shadow.py'
@@ -19,6 +21,10 @@ on:
       - 'production/PORTFOLIO_SHADOW_V1.md'
       - '.github/workflows/keibaai-portfolio-research.yml'
   schedule:
+    # 08:25 JST on normal JRA race-day weekdays. By this point the 07:45
+    # live session has published RaceData/SignalData, so the app can show the
+    # current day's research plan before the first races instead of yesterday's.
+    - cron: '25 23 * * 0,1,6'
     # 17:45 JST. Result sync normally finishes by about 17:15 JST.
     - cron: '45 8 * * *'
 
@@ -46,12 +52,16 @@ jobs:
 
       - name: Verify fixed shadow rules and review contracts
         run: |
-          python -m py_compile production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
+          python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
+          python production/test_bet_research_data.py
           python production/test_portfolio_shadow.py
           python production/test_all_bet_recommendation_shadow.py
           python production/test_formal_10min_evidence.py
           python production/test_portfolio_review_100.py
           python production/test_portfolio_early_review.py
+
+      - name: Refresh reference display inputs before portfolio projection
+        run: python production/build_bet_research_data.py
 
       - name: Build portfolio research projection
         run: |
@@ -71,7 +81,7 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
-          git add PortfolioResearchData.json AllBetRecommendationData.json reports/*/PortfolioResearchData.json reports/*/AllBetRecommendationData.json 2>/dev/null || true
+          git add BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json reports/*/BetResearchData.json reports/*/PortfolioResearchData.json reports/*/AllBetRecommendationData.json 2>/dev/null || true
           git add -f PortfolioReview100.json PortfolioEarlyReview100.json 2>/dev/null || true
           for path in reports/*/PortfolioReview100.json; do
             [ -e "$path" ] || continue
