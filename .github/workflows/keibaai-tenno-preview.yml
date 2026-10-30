@@ -30,10 +30,10 @@ jobs:
           KEIBAAI_EARLY_DATE: '20261101'
           KEIBAAI_EARLY_STAGE: 'previous_evening'
         run: |
+          cd production
           python - <<'PY'
-          import json
           import pandas as pd
-          import production.early_prediction_runtime as ep
+          import early_prediction_runtime as ep
 
           date8='20261101'
           ep.base.TARGET_DATE8=date8
