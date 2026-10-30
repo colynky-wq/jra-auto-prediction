@@ -24,6 +24,7 @@ def payload(
     start="10:05",
     timing="live_10min",
     captured="2026-10-24T09:53:45+09:00",
+    entry_scheduled=None,
     entry_captured="2026-10-24T09:53:26+09:00",
     trigger=None,
 ):
@@ -43,7 +44,7 @@ def payload(
         "entryEvidence": {
             "raceID": rid,
             "raceDate": day,
-            "scheduledPostJST": f"{day}T{start}:00+09:00",
+            "scheduledPostJST": entry_scheduled or f"{day}T{start}:00+09:00",
             "capturedAtJST": entry_captured,
         },
     }
@@ -92,5 +93,38 @@ with TemporaryDirectory() as td:
     out = m.inspect_formal_10min_evidence(root, row("BADTRIGGER"))
     assert out["eligible"] is False
     assert out["reason"] == "trigger_outside_formal_window"
+
+    # A one-minute official schedule update must not retroactively invalidate
+    # the immutable snapshot if the prediction was captured in its formal window.
+    write_sidecar(
+        root,
+        payload(
+            rid="DELAY",
+            start="10:00",
+            captured="2026-10-24T09:48:31+09:00",
+            entry_scheduled="2026-10-24T10:01:00+09:00",
+            entry_captured="2026-10-24T09:48:19+09:00",
+        ),
+        rid="DELAY",
+    )
+    out = m.inspect_formal_10min_evidence(root, row("DELAY", start="10:00"))
+    assert out["eligible"] is True
+    assert out["entryScheduleDriftMinutes"] == 1.0
+
+    # Portfolio's earlier schedule may also differ from the frozen prediction.
+    write_sidecar(
+        root,
+        payload(
+            rid="PORTFOLIO_DRIFT",
+            start="15:01",
+            captured="2026-10-24T14:49:21+09:00",
+            entry_scheduled="2026-10-24T15:01:00+09:00",
+            entry_captured="2026-10-24T14:49:11+09:00",
+        ),
+        rid="PORTFOLIO_DRIFT",
+    )
+    out = m.inspect_formal_10min_evidence(root, row("PORTFOLIO_DRIFT", start="15:00"))
+    assert out["eligible"] is True
+    assert out["portfolioScheduleDriftMinutes"] == 1.0
 
 print("formal 10-minute evidence tests OK")
