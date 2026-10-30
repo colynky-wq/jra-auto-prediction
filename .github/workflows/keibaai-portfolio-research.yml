@@ -21,10 +21,10 @@ on:
       - 'production/PORTFOLIO_SHADOW_V1.md'
       - '.github/workflows/keibaai-portfolio-research.yml'
   schedule:
-    # 08:25 JST on normal JRA race-day weekdays. By this point the 07:45
-    # live session has published RaceData/SignalData, so the app can show the
-    # current day's research plan before the first races instead of yesterday's.
-    - cron: '25 23 * * 0,1,6'
+    # 08:25 JST on Sat/Sun/Mon = 23:25 UTC on Fri/Sat/Sun.
+    # By this point the 07:45 live session has published RaceData/SignalData,
+    # so the app can show the current day's research plan before the first races.
+    - cron: '25 23 * * 0,5,6'
     # 17:45 JST. Result sync normally finishes by about 17:15 JST.
     - cron: '45 8 * * *'
 
