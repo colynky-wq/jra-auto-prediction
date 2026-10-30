@@ -31,3 +31,5 @@ jobs:
           git diff --cached --exit-code && { echo 'No changes to commit'; exit 1; } || true
           git commit -m 'Fix KeibaAI race date display for next-day data'
           git push origin HEAD:main
+
+# Retry marker: exact race-date propagation sites verified.
