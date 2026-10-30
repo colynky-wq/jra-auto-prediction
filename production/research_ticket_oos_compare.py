@@ -1,4 +1,5 @@
 from __future__ import annotations
+# OOS_TRIGGER: 2026-10-31T research CI rerun; no production behavior change.
 import json, math
 from pathlib import Path
 from itertools import permutations
