@@ -80,53 +80,60 @@ jobs:
               url=f'https://race.netkeiba.com/race/shutuba.html?race_id={race_id}'
               r=requests.get(url, headers={'User-Agent':'Mozilla/5.0','Accept-Language':'ja'}, timeout=30)
               r.raise_for_status()
-              html=r.content.decode('utf-8', errors='replace')
-              soup=BeautifulSoup(html, 'html.parser')
+              soup=BeautifulSoup(r.content.decode('utf-8', errors='replace'), 'html.parser')
               horse_rows=soup.select('tr.HorseList')
               print('HIST_HORSE_ROWS_RAW', len(horse_rows))
-              if horse_rows:
-                  print('HIST_FIRST_ROW', ' | '.join(horse_rows[0].stripped_strings))
 
               rows=[]
               for tr in horse_rows:
-                  no_node=tr.select_one('.Umaban')
-                  name_node=tr.select_one('.HorseName a') or tr.select_one('.HorseInfo a')
-                  age_node=tr.select_one('.Barei')
-                  jockey_node=tr.select_one('.Jockey a') or tr.select_one('.Jockey')
-                  trainer_node=tr.select_one('.Trainer a') or tr.select_one('.Trainer')
-                  bw_node=tr.select_one('.Weight')
-                  if not all([no_node,name_node,age_node,jockey_node,trainer_node]):
+                  items=[x.strip() for x in tr.stripped_strings if str(x).strip()]
+                  if len(items) < 10:
                       continue
-                  mno=re.search(r'\d+', no_node.get_text(' ',strip=True))
-                  mage=re.search(r'(\d+)', age_node.get_text(' ',strip=True))
-                  if not mno or not mage:
+                  sex_idx=None
+                  for i,x in enumerate(items):
+                      if re.fullmatch(r'(牡|牝|せん|セン|セ)\s*\d+', x):
+                          sex_idx=i
+                          break
+                  if sex_idx is None or sex_idx < 2 or sex_idx + 6 >= len(items):
                       continue
-                  no=int(mno.group())
-                  name=name_node.get_text(' ',strip=True)
-                  age=int(mage.group(1))
-                  carried_td=age_node.find_next_sibling('td')
-                  mcarry=re.search(r'\d+(?:\.\d+)?', carried_td.get_text(' ',strip=True) if carried_td else '')
-                  if not mcarry:
+                  no=None
+                  for x in items[:min(4,len(items))]:
+                      if re.fullmatch(r'\d{1,2}', x):
+                          v=int(x)
+                          if 1 <= v <= 18:
+                              no=v
+                  if no is None:
                       continue
-                  carried=float(mcarry.group())
-                  jockey=resolve_abbrev(jockey_node.get_text(' ',strip=True), hist_jockeys)
-                  trainer=resolve_abbrev(trainer_node.get_text(' ',strip=True), hist_trainers)
-                  bw_text=bw_node.get_text(' ',strip=True) if bw_node else ''
-                  mw=re.search(r'(\d{3})\s*\(\s*([+-]?\d+)\s*\)', bw_text)
-                  if mw:
-                      bw=float(mw.group(1)); diff=float(mw.group(2))
-                  else:
-                      mw2=re.search(r'(\d{3})', bw_text)
-                      bw=float(mw2.group(1)) if mw2 else np.nan
-                      diff=np.nan
+                  name=items[sex_idx-1]
+                  age=int(re.search(r'\d+', items[sex_idx]).group())
+                  try:
+                      carried=float(re.search(r'\d+(?:\.\d+)?', items[sex_idx+1]).group())
+                  except Exception:
+                      continue
+                  jockey_raw=items[sex_idx+2]
+                  aff=items[sex_idx+3]
+                  trainer_raw=items[sex_idx+4]
+                  if aff not in {'美浦','栗東'}:
+                      continue
+                  jockey=resolve_abbrev(jockey_raw, hist_jockeys)
+                  trainer=resolve_abbrev(trainer_raw, hist_trainers)
+                  bw_token=items[sex_idx+5]
+                  diff_token=items[sex_idx+6]
+                  mbw=re.search(r'\d{3}', bw_token)
+                  bw=float(mbw.group()) if mbw else np.nan
+                  mdiff=re.search(r'([+-]?\d+)', diff_token)
+                  diff=float(mdiff.group(1)) if mdiff and '前計不' not in diff_token else np.nan
                   rows.append({'馬番':no,'馬名':name,'年齢':age,'斤量':carried,
                                '騎手_JRA':jockey,'調教師_JRA':trainer,'馬体重':bw,'増減':diff})
+
               d=pd.DataFrame(rows)
               if d.empty:
-                  raise RuntimeError('historical HorseList parse returned 0 rows')
-              d=d.sort_values('馬番').reset_index(drop=True)
+                  raise RuntimeError('historical positional parse returned 0 rows')
+              d=d.drop_duplicates('馬番', keep='first').sort_values('馬番').reset_index(drop=True)
               print('HIST_ENTRY_ROWS', len(d))
               print(d.to_string(index=False))
+              if len(d) != 16:
+                  raise RuntimeError(f'historical entry rows expected 16 got {len(d)}')
               return d, ep.base.now_jst(), url
 
           ep.base.fetch_jra_entry_table=historical_entry_table
