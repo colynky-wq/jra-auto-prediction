@@ -45,11 +45,20 @@ def _legacy_fit(win,top2,top3,*,iterations=40,lr=.08):
 
 
 def test_batched_finite_difference_fit_matches_legacy():
+    # Use valid coherent PL marginals. The previous fixture mixed Win from one
+    # random distribution with Top2/Top3 from another, which can violate the
+    # runtime's required per-horse monotonicity (Win <= Top2 <= Top3) before the
+    # optimizer is even exercised.
     rng=np.random.default_rng(314159)
     for n in (4,7,12):
         win=rng.dirichlet(np.ones(n)*2)
-        target_w=rng.dirichlet(np.ones(n)*2)
-        _,t2,t3=_legacy_pl_marginals(target_w)
+        _,t2,t3=_legacy_pl_marginals(win)
+        # Shift valid targets slightly upward while preserving monotonicity so
+        # the optimizer has non-zero work rather than only testing a fixed point.
+        room2=np.maximum(0.0,t3-t2)
+        t2=t2+0.07*room2
+        room3=np.maximum(0.0,1.0-t3)
+        t3=t3+0.04*room3
         old=_legacy_fit(win,t2,t3,iterations=40)
         new=fit_race_weights(win,t2,t3,iterations=40)
         assert np.allclose(old,new,rtol=2e-10,atol=2e-12)
