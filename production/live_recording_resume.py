@@ -16,6 +16,7 @@ TOPK_PROBABILITY_KEYS = (
 LIVE_TIMING_MARKER = FORMAL_TIMING_MARKER
 ALL_BET_SIDECARS = ('win','place','frame_quinella','quinella','exacta')
 TRIPLE_SIDECARS = ('trio','trifecta')
+TICKET_SHADOW_START_DATE8 = '20261101'
 
 
 def research_sidecars_complete(root,date8,rid):
@@ -23,10 +24,14 @@ def research_sidecars_complete(root,date8,rid):
     required=[day/'all_bet_v1'/kind/(rid+'.json') for kind in ALL_BET_SIDECARS]
     required += [day/'triple_v1'/kind/(rid+'.json') for kind in TRIPLE_SIDECARS]
     required.append(day/'wide_axis_v1'/(rid+'.json'))
-    required += [
-        day/'ticket_shadow_v1'/'prediction'/(rid+'.json'),
-        day/'ticket_shadow_v1'/'manifest'/(rid+'.json'),
-    ]
+    # Ticket-specific prospective capture starts on 2026-11-01. Older formal
+    # races remain valid historical evidence and must not become incomplete just
+    # because the new shadow sidecars did not exist yet.
+    if str(date8) >= TICKET_SHADOW_START_DATE8:
+        required += [
+            day/'ticket_shadow_v1'/'prediction'/(rid+'.json'),
+            day/'ticket_shadow_v1'/'manifest'/(rid+'.json'),
+        ]
     return all(p.is_file() and p.stat().st_size>0 for p in required)
 
 
