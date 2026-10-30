@@ -156,18 +156,24 @@ class ForwardTests(unittest.TestCase):
             out=build(root,clock=lambda:NOW+timedelta(hours=1))
             self.assertEqual(out['counts']['trio']['invalid'],1)
 
-    def test_background_queue_returns_without_fetch_and_freezes_inputs(self):
+    def test_background_queue_returns_future_and_freezes_inputs(self):
         import triple_research_runtime as runtime
         submitted=[]
+        class Future:
+            def done(self):return False
         class Pool:
-            def submit(self,*args):submitted.append(args)
+            def submit(self,*args):
+                submitted.append(args)
+                return Future()
         r=forecast()
-        with patch.object(runtime,'_pool',Pool()),patch.object(runtime,'_submitted',set()):
-            self.assertTrue(runtime.schedule(Path('/unused'),r))
-            self.assertFalse(runtime.schedule(Path('/unused'),r))
+        with patch.object(runtime,'_pool',Pool()),patch.object(runtime,'_futures',{}):
+            first=runtime.schedule(Path('/unused'),r,NOW.isoformat())
+            second=runtime.schedule(Path('/unused'),r,NOW.isoformat())
+            self.assertIs(first,second)
             r['horses'][0]['name']='changed later'
             self.assertEqual(len(submitted),1)
             self.assertEqual(submitted[0][2]['horses'][0]['name'],'horse1')
+            self.assertEqual(submitted[0][3],NOW.isoformat())
 
     def test_write_crossing_deadline_leaves_no_record_or_temporary_file(self):
         with tempfile.TemporaryDirectory() as tmp:
