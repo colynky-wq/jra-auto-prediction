@@ -24,7 +24,9 @@ def resolve(race_dates, today8, snapshot_date8=None):
     return snapshot_date8 or today8
 
 
+# Regression: a race captured/saved on 10/30 but held on 10/31 must display 10/31.
 assert resolve(["2026-10-31"], "20261030", "20261030") == "20261031"
+# Legacy snapshots without raceDate may still fall back to their save date.
 assert resolve([], "20261030", "20261025") == "20261025"
 
 source = SOURCE.read_text(encoding="utf-8")
@@ -34,8 +36,8 @@ assert 'raceDate: Self.normalizedDate8(prediction?.raceDate)' in source
 assert source.count('raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8') == 2
 assert 'Text("開催日")' in source
 assert 'accessibilityIdentifier("race-date-display")' in source
-assert 'Text(snapshot.id == "latest" ? "最新" : "保存 \(snapshot.label)")' in source
-assert '"\(Self.displayDate(selectedDate8))の全レース"' in source
+assert r'Text(snapshot.id == "latest" ? "最新" : "保存 \(snapshot.label)")' in source
+assert r'"\(Self.displayDate(selectedDate8))の全レース"' in source
 
 races = json.loads(RACE_DATA.read_text(encoding="utf-8"))
 assert races, "RaceData.json is empty"
