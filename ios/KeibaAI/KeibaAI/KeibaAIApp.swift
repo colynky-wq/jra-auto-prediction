@@ -163,12 +163,45 @@ private struct KeibaAIEarlyReviewEnvelope: Decodable {
     let summaries: Summaries
 }
 
+private struct KeibaAIFormalReviewEnvelope: Decodable {
+    struct Overall: Decodable {
+        let selectedRaces: Int
+        let settledSelectedRaces: Int
+        let hitAnyRaces: Int
+        let profitableRaces: Int
+        let torigamiRaces: Int
+        let returnIndex: Double?
+    }
+
+    struct QualityChecks: Decodable {
+        let formal10minEvidenceRequired: Bool
+        let formal10minVerifiedRaces: Int
+        let nonFormalProspectiveExcluded: Int
+    }
+
+    let schemaVersion: Int
+    let version: String
+    let sourceVersion: String
+    let status: String
+    let reviewStatus: String
+    let generatedAtJST: String
+    let prospectiveStartDate: String
+    let targetRaces: Int
+    let racesObserved: Int
+    let remainingTo100: Int
+    let progressPct: Double
+    let overall: Overall
+    let qualityChecks: QualityChecks
+}
+
 @MainActor
 private final class KeibaAIPortfolioQuickStore: ObservableObject {
     @Published private(set) var data: KeibaAIPortfolioQuickEnvelope?
     @Published private(set) var earlyReview: KeibaAIEarlyReviewEnvelope?
+    @Published private(set) var formalReview: KeibaAIFormalReviewEnvelope?
     @Published private(set) var sourceMessage = "研究プラン 未読み込み"
     @Published private(set) var earlyReviewMessage = "初期評価 未読み込み"
+    @Published private(set) var formalReviewMessage = "正式評価 未読み込み"
     @Published private(set) var isLoading = false
 
     private static let dateFormatter: DateFormatter = {
@@ -212,7 +245,7 @@ private final class KeibaAIPortfolioQuickStore: ObservableObject {
 
     func load(force: Bool = false) async {
         if isLoading { return }
-        if !force, data != nil, earlyReview != nil { return }
+        if !force, data != nil, earlyReview != nil, formalReview != nil { return }
         isLoading = true
         defer { isLoading = false }
 
@@ -249,6 +282,25 @@ private final class KeibaAIPortfolioQuickStore: ObservableObject {
             earlyReviewMessage = "初期評価取得済"
         } catch {
             earlyReviewMessage = "初期評価 更新待ち"
+        }
+
+        do {
+            let decoded: KeibaAIFormalReviewEnvelope = try await fetchJSON(
+                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioReview100.json"
+            )
+            guard decoded.schemaVersion == 1,
+                  decoded.version == "portfolio-review-100-v1-20261020",
+                  decoded.sourceVersion == "portfolio-shadow-v1-20261019",
+                  decoded.status == "research_evaluation_only",
+                  decoded.targetRaces == 100,
+                  decoded.qualityChecks.formal10minEvidenceRequired,
+                  decoded.qualityChecks.formal10minVerifiedRaces == decoded.racesObserved else {
+                throw URLError(.cannotParseResponse)
+            }
+            formalReview = decoded
+            formalReviewMessage = "正式T-10評価取得済"
+        } catch {
+            formalReviewMessage = "正式T-10評価 更新待ち"
         }
     }
 
@@ -314,7 +366,7 @@ private struct KeibaAIPortfolioQuickView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("この画面はshadow研究です。初期評価は既存データを含む参考値、正式forward評価は10/24以降だけで別集計します。")
+                    Text("この画面はshadow研究です。初期評価は既存データを含む参考値、正式forward評価は発走8〜12分前のlive_10min証拠があるレースだけを別集計します。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.top, 4)
@@ -400,21 +452,25 @@ private struct KeibaAIPortfolioQuickView: View {
                 statusCard(title: "初期評価（参考）", message: store.earlyReviewMessage)
             }
 
-            evaluationCard(
-                title: "正式forward評価",
-                subtitle: "10/24以降だけ。固定ルールの本番検証",
-                current: min(data.prospective.racesSeen, 100),
-                target: 100,
-                metrics: [
-                    ("参加候補", "\(data.prospective.selectedRaces)R"),
-                    ("結果照合", "\(data.prospective.settledSelectedRaces)R"),
-                    ("的中R", "\(data.prospective.hitAnyRaces)R"),
-                    ("利益R", "\(data.prospective.profitableRaces)R"),
-                    ("トリガミ", "\(data.prospective.torigamiRaces)R"),
-                    ("回収指数", formatReturnIndex(data.prospective.returnIndex))
-                ],
-                badge: data.prospective.racesSeen == 0 ? "10/24開始" : "forward"
-            )
+            if let formal = store.formalReview {
+                evaluationCard(
+                    title: "正式forward評価",
+                    subtitle: "10/24以降。発走8〜12分前のlive_10min証拠があるレースだけ",
+                    current: min(formal.racesObserved, formal.targetRaces),
+                    target: formal.targetRaces,
+                    metrics: [
+                        ("参加候補", "\(formal.overall.selectedRaces)R"),
+                        ("結果照合", "\(formal.overall.settledSelectedRaces)R"),
+                        ("的中R", "\(formal.overall.hitAnyRaces)R"),
+                        ("利益R", "\(formal.overall.profitableRaces)R"),
+                        ("除外", "\(formal.qualityChecks.nonFormalProspectiveExcluded)R"),
+                        ("回収指数", formatReturnIndex(formal.overall.returnIndex))
+                    ],
+                    badge: formal.racesObserved == 0 ? "10/24開始" : "正式T-10"
+                )
+            } else {
+                statusCard(title: "正式forward評価", message: store.formalReviewMessage)
+            }
         }
     }
 
