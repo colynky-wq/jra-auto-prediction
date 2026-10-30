@@ -1235,21 +1235,41 @@ struct KeibaAINewDesignView: View {
     // MARK: - Schedule merge / filter / sort
 
     private var selectedDate8: String {
-        if store.selectedSnapshotID == "latest" {
-            return Self.todayJST8
-        }
-
-        let savedDates = Set(store.races.compactMap { $0.raceDate?.replacingOccurrences(of: "-", with: "") })
-        if savedDates.count == 1, let date8 = savedDates.first, date8.count == 8 {
+        // 開催日は保存日時や端末の「今日」より、RaceData.raceDateを最優先する。
+        // 前夜に翌日分を取得した場合も、翌日の開催日として扱う。
+        let raceDates = Set(store.races.compactMap { Self.normalizedDate8($0.raceDate) })
+        if raceDates.count == 1, let date8 = raceDates.first {
             return date8
         }
 
-        if let snapshot = store.snapshots.first(where: { $0.id == store.selectedSnapshotID }),
+        if let preferred = raceDates.sorted().first(where: { $0 >= Self.todayJST8 })
+            ?? raceDates.sorted().last {
+            return preferred
+        }
+
+        // raceDateを持たない古い履歴だけ、保存日のラベルへフォールバックする。
+        if store.selectedSnapshotID != "latest",
+           let snapshot = store.snapshots.first(where: { $0.id == store.selectedSnapshotID }),
            let date = snapshot.date {
             return Self.date8Formatter.string(from: date)
         }
 
         return Self.todayJST8
+    }
+
+    private static func normalizedDate8(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let digits = raw.filter { $0.isNumber }
+        return digits.count == 8 ? digits : nil
+    }
+
+    private static func displayDate(_ date8: String) -> String {
+        guard date8.count == 8 else { return date8 }
+        let y = date8.prefix(4)
+        let mStart = date8.index(date8.startIndex, offsetBy: 4)
+        let mEnd = date8.index(mStart, offsetBy: 2)
+        let dStart = mEnd
+        return "\(y)/\(date8[mStart..<mEnd])/\(date8[dStart...])"
     }
 
     private static var date8Formatter: DateFormatter = {
@@ -1284,7 +1304,9 @@ struct KeibaAINewDesignView: View {
                     startTime: prediction?.startTime ?? entry.startTime,
                     raceName: prediction?.raceName ?? entry.raceName,
                     course: prediction?.course ?? entry.course,
-                    raceDate: entry.raceDate ?? selectedDate8,
+                    raceDate: Self.normalizedDate8(prediction?.raceDate)
+                        ?? Self.normalizedDate8(entry.raceDate)
+                        ?? selectedDate8,
                     fieldSize: prediction?.horses.count ?? entry.fieldSize,
                     prediction: prediction
                 )
@@ -1301,7 +1323,7 @@ struct KeibaAINewDesignView: View {
                     startTime: race.startTime,
                     raceName: race.raceName,
                     course: race.course,
-                    raceDate: selectedDate8,
+                    raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8,
                     fieldSize: race.horses.count,
                     prediction: race
                 )
@@ -1567,13 +1589,21 @@ struct KeibaAINewDesignView: View {
 
     private var snapshotBar: some View {
         HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("表示データ")
+            VStack(alignment: .leading, spacing: 3) {
+                Text("開催日")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
+                Text(Self.displayDate(selectedDate8))
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .accessibilityIdentifier("race-date-display")
+
+                Text("保存データ")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+
                 Picker(
-                    "表示データ",
+                    "保存データ",
                     selection: Binding(
                         get: { store.selectedSnapshotID },
                         set: { newValue in
@@ -1593,7 +1623,7 @@ struct KeibaAINewDesignView: View {
                     )
                 ) {
                     ForEach(store.snapshots) { snapshot in
-                        Text(snapshot.label)
+                        Text(snapshot.id == "latest" ? "最新" : "保存 \(snapshot.label)")
                             .tag(snapshot.id)
                     }
                 }
@@ -1705,7 +1735,9 @@ struct KeibaAINewDesignView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 sectionHeader(
-                    title: selectedVenue == "全場" ? "本日の全レース" : "\(selectedVenue)のレース",
+                    title: selectedVenue == "全場"
+                        ? "\(Self.displayDate(selectedDate8))の全レース"
+                        : "\(Self.displayDate(selectedDate8)) \(selectedVenue)のレース",
                     subtitle: "未予測を含む予定表 / \(displayedTodayItems.count)レース"
                 )
 
@@ -2007,7 +2039,7 @@ struct KeibaAINewDesignView: View {
             startTime: race.startTime,
             raceName: race.raceName,
             course: race.course,
-            raceDate: selectedDate8,
+            raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8,
             fieldSize: race.horses.count,
             prediction: race
         )
@@ -2453,6 +2485,9 @@ private struct KeibaAIRaceDetailNew: View {
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 10) {
                 if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
+                if let raceDate = race.raceDate {
+                    Label(raceDate.replacingOccurrences(of: "-", with: "/"), systemImage: "calendar")
+                }
                 Label(race.course, systemImage: "map")
                 Label("\(race.horses.count)頭", systemImage: "person.3.fill")
             }
