@@ -249,23 +249,17 @@ def publish_race_to_racedata(race, out):
             "recommendation disabled pending formal odds",
         )
 
-    from ticket_shadow_forward import record_manifest_first, record_prediction_first
+    # Ticket-specific probabilities are strictly shadow research.  Failure is
+    # frozen as its own immutable evidence and must never stop formal A or odds.
+    from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort
 
-    ticket_prediction_path = (
-        RACEDATA_PATH.parent / "reports" / str(published_race["raceDate"]).replace("-", "") /
-        "ticket_shadow_v1" / "prediction" / f"{rid}.json"
-    )
-    if not first_formal_capture and not ticket_prediction_path.is_file():
-        # Never reconstruct a missing prospective research prediction from a
-        # later odds/model run.  Missing evidence stays missing rather than
-        # becoming hindsight data.
-        raise RuntimeError("prospective ticket shadow missing for frozen formal prediction; refusing hindsight backfill")
-    ticket_prediction_path = record_prediction_first(
+    ticket_status = record_prediction_best_effort(
         RACEDATA_PATH.parent,
         published_race,
         _ticket_research_inputs(out),
+        first_formal_capture=first_formal_capture,
     )
-    print("TICKET_SHADOW_PREDICTION_RECORDED", rid, ticket_prediction_path)
+    print("TICKET_SHADOW_PREDICTION_STATUS", rid, ticket_status)
 
     from triple_research_runtime import schedule as schedule_triple
     from all_bet_runtime import schedule as schedule_all_bets
@@ -285,8 +279,8 @@ def publish_race_to_racedata(race, out):
     triple_future.result(timeout=120)
     all_bet_future.result(timeout=120)
 
-    manifest_path = record_manifest_first(RACEDATA_PATH.parent, published_race)
-    print("TICKET_SHADOW_ODDS_MANIFEST_RECORDED", rid, manifest_path)
+    manifest_status = record_manifest_best_effort(RACEDATA_PATH.parent, published_race)
+    print("TICKET_SHADOW_ODDS_MANIFEST_STATUS", rid, manifest_status)
 
     from live_recording_resume import research_sidecars_complete
     if not research_sidecars_complete(
