@@ -24,15 +24,24 @@ def research_sidecars_complete(root,date8,rid):
     required=[day/'all_bet_v1'/kind/(rid+'.json') for kind in ALL_BET_SIDECARS]
     required += [day/'triple_v1'/kind/(rid+'.json') for kind in TRIPLE_SIDECARS]
     required.append(day/'wide_axis_v1'/(rid+'.json'))
+    if not all(p.is_file() and p.stat().st_size>0 for p in required):
+        return False
     # Ticket-specific prospective capture starts on 2026-11-01. Older formal
     # races remain valid historical evidence and must not become incomplete just
     # because the new shadow sidecars did not exist yet.
     if str(date8) >= TICKET_SHADOW_START_DATE8:
-        required += [
-            day/'ticket_shadow_v1'/'prediction'/(rid+'.json'),
-            day/'ticket_shadow_v1'/'manifest'/(rid+'.json'),
-        ]
-    return all(p.is_file() and p.stat().st_size>0 for p in required)
+        prediction=day/'ticket_shadow_v1'/'prediction'/(rid+'.json')
+        manifest=day/'ticket_shadow_v1'/'manifest'/(rid+'.json')
+        failure=day/'ticket_shadow_v1'/'failure'/(rid+'.json')
+        # A frozen failure marker is intentionally complete evidence of a failed
+        # prospective research attempt.  It prevents a later retry from creating
+        # hindsight probabilities while allowing formal A recording to finish.
+        ticket_complete=(prediction.is_file() and prediction.stat().st_size>0
+                         and manifest.is_file() and manifest.stat().st_size>0)
+        failure_complete=failure.is_file() and failure.stat().st_size>0
+        if not (ticket_complete or failure_complete):
+            return False
+    return True
 
 
 def _valid_probability(value):
