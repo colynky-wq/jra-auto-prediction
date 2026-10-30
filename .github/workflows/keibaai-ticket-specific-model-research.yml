@@ -6,6 +6,7 @@ on:
     paths:
       - 'production/ticket_probability_runtime.py'
       - 'production/test_ticket_probability_runtime.py'
+      - 'production/research_ticket_oos_compare.py'
       - '.github/workflows/keibaai-ticket-specific-model-research.yml'
   workflow_dispatch:
 
@@ -15,7 +16,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -31,3 +32,6 @@ jobs:
         run: |
           cd production
           pytest -q test_ticket_probability_runtime.py
+      - name: OOS compare formal A vs ticket-specific model
+        run: |
+          python production/research_ticket_oos_compare.py
