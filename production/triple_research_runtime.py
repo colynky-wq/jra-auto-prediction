@@ -27,8 +27,10 @@ def capture(root,race,predicted):
     return True
 
 
-def schedule(root,race):
+def schedule(root,race,predicted=None):
+    """Schedule odds capture against the exact formal live_10min timestamp."""
     key=(race["raceDate"],race["raceID"])
+    predicted = predicted or datetime.now(JST).isoformat()
     with _lock:
         previous=_futures.get(key)
         if previous is not None:
@@ -39,6 +41,6 @@ def schedule(root,race):
                     return previous
             except Exception:
                 pass
-        future=_pool.submit(capture,root,deepcopy(race),datetime.now(JST).isoformat())
+        future=_pool.submit(capture,root,deepcopy(race),str(predicted))
         _futures[key]=future
         return future

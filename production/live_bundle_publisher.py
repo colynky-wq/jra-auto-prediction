@@ -184,7 +184,10 @@ class Outbox:
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
         immutable = (('/prerace/' in path and not path.endswith('/index.json'))
                      or path.endswith('/PaceRecordingSchedule.json')
-                     or any(part in path for part in ('/wide_odds/','/wide_axis_v1/','/triple_v1/','/all_bet_v1/','/win5_v1/')))
+                     or any(part in path for part in (
+                         '/wide_odds/','/wide_odds_live10/','/wide_axis_v1/',
+                         '/triple_v1/','/all_bet_v1/','/ticket_shadow_v1/','/win5_v1/'
+                     )))
         if immutable and remote is not None and remote != data:
             raise PublishError(f'既存の発走前記録と競合しています: {path}')
         if path == 'WideOddsData.json' and remote is not None:
