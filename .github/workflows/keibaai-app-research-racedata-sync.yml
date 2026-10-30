@@ -1,0 +1,99 @@
+name: KeibaAI App Research RaceData Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'RaceData.json'
+      - 'production/build_app_research_data.py'
+      - 'production/app_research_runtime.py'
+      - 'production/formation_runtime.py'
+      - 'production/horse_identity_runtime.py'
+      - 'production/horse_profile_runtime.py'
+      - 'production/production_history.parquet'
+      - '.github/workflows/keibaai-app-research-racedata-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-app-research-racedata-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r production/requirements.txt
+
+      - name: Build research plan from current RaceData
+        run: |
+          python production/build_app_research_data.py
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+
+          race_bytes = Path('RaceData.json').read_bytes()
+          races = json.loads(race_bytes)
+          payload = json.loads(Path('AppResearchData.json').read_text(encoding='utf-8'))
+          expected_sha = hashlib.sha256(race_bytes).hexdigest()
+          assert payload['sourceInputs']['predictionSHA256'] == expected_sha
+          race_dates = {r['raceDate'] for r in races}
+          plan_dates = {r['raceDate'] for r in payload.get('races', [])}
+          assert races and payload.get('races'), 'race/research data must not be empty'
+          assert plan_dates == race_dates, f'date mismatch: RaceData={race_dates}, plan={plan_dates}'
+          print('APP_RESEARCH_RACEDATA_SYNC_OK', sorted(plan_dates), len(payload['races']))
+          PY
+
+      - name: Publish only if RaceData source is still current
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_sha=$(python - <<'PY'
+          import json
+          print(json.load(open('AppResearchData.json', encoding='utf-8'))['sourceInputs']['predictionSHA256'])
+          PY
+          )
+
+          git fetch origin main
+          remote_sha=$(git show origin/main:RaceData.json | python -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())')
+          if [ "$source_sha" != "$remote_sha" ]; then
+            echo 'RaceData advanced while research plan was building; a newer push will regenerate it.'
+            exit 0
+          fi
+
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git reset --hard origin/main
+
+          # Rebuild against exactly the current main snapshot after the freshness gate.
+          python production/build_app_research_data.py
+          date8=$(python - <<'PY'
+          import json
+          races=json.load(open('RaceData.json', encoding='utf-8'))
+          days={r['raceDate'].replace('-','') for r in races}
+          if len(days) != 1: raise SystemExit('RaceData must contain one race day')
+          print(next(iter(days)))
+          PY
+          )
+
+          git add AppResearchData.json "reports/${date8}/AppResearchData.json"
+          if git diff --cached --quiet; then
+            echo 'App research plan already matches RaceData.'
+            exit 0
+          fi
+          git commit -m "Sync app research plan to RaceData ${date8}"
+          git push origin HEAD:main
