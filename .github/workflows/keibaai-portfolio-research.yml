@@ -10,6 +10,8 @@ on:
       - 'production/test_portfolio_shadow.py'
       - 'production/all_bet_recommendation_shadow.py'
       - 'production/test_all_bet_recommendation_shadow.py'
+      - 'production/formal_10min_evidence.py'
+      - 'production/test_formal_10min_evidence.py'
       - 'production/portfolio_review_100.py'
       - 'production/test_portfolio_review_100.py'
       - 'production/portfolio_early_review.py'
@@ -44,9 +46,10 @@ jobs:
 
       - name: Verify fixed shadow rules and review contracts
         run: |
-          python -m py_compile production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/portfolio_review_100.py production/portfolio_early_review.py
+          python -m py_compile production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
           python production/test_portfolio_shadow.py
           python production/test_all_bet_recommendation_shadow.py
+          python production/test_formal_10min_evidence.py
           python production/test_portfolio_review_100.py
           python production/test_portfolio_early_review.py
 
