@@ -9,6 +9,7 @@ on:
       - 'production/research_tenno_shadow_compare.py'
       - 'production/research_ac_coverage.py'
       - 'production/research_ac_betting_backtest.py'
+      - 'production/research_ac_signal_filter_backtest.py'
       - '.github/workflows/keibaai-market-independence-experiment.yml'
   workflow_dispatch:
 
@@ -30,10 +31,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
-      - name: Run A/C betting backtest
+      - name: Run A/C signal-filtered betting backtest
         run: |
           cd production
-          python research_ac_betting_backtest.py
+          python research_ac_signal_filter_backtest.py
       - name: Upload research artifacts
         uses: actions/upload-artifact@v4
         with:
