@@ -25,19 +25,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
-      - name: Run early prediction for 2026 Tenno Sho Autumn day
+      - name: Run isolated Tokyo 11R early prediction
         env:
           KEIBAAI_EARLY_DATE: '20261101'
           KEIBAAI_EARLY_STAGE: 'previous_evening'
-        run: python production/early_prediction_runtime.py
-      - name: Print Tenno Sho Autumn prediction only
         run: |
           python - <<'PY'
           import json
-          d=json.load(open('EarlyPredictionData.json', encoding='utf-8'))
-          snap=d['snapshots']['previous_evening']
-          hits=[r for r in snap['races'] if r.get('venue')=='東京' and int(r.get('raceNumber',0))==11]
+          import pandas as pd
+          import production.early_prediction_runtime as ep
+
+          date8='20261101'
+          ep.base.TARGET_DATE8=date8
+          ep.live.base.TARGET_DATE8=date8
+          target_date=pd.Timestamp('2026-11-01')
+          hist=ep.base.load_history(target_date)
+          races=ep.base.fetch_schedule(date8)
+          target=[r for r in races if r.get('venue')=='東京' and int(r.get('race_no') or 0)==11]
+          if len(target) != 1:
+              raise RuntimeError(f'Tokyo 11R target count={len(target)}')
+          out=ep._safe_predict(target[0], hist, target_date)
+          ranked=out.sort_values('AI勝率(%)', ascending=False).reset_index(drop=True)
           print('TENNO_PREVIEW_BEGIN')
-          print(json.dumps(hits, ensure_ascii=False, indent=2))
+          print(ranked.to_json(orient='records', force_ascii=False))
           print('TENNO_PREVIEW_END')
           PY
