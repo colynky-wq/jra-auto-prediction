@@ -76,36 +76,68 @@ new = '''    private var selectedDate8: String {
 '''
 source = replace_once(source, old, new, "selectedDate8 resolver")
 
-old = '''                    raceDate: entry.raceDate ?? selectedDate8,
-'''
-new = '''                    raceDate: Self.normalizedDate8(prediction?.raceDate)
+source = replace_once(
+    source,
+    '''                    raceDate: entry.raceDate ?? selectedDate8,
+''',
+    '''                    raceDate: Self.normalizedDate8(prediction?.raceDate)
                         ?? Self.normalizedDate8(entry.raceDate)
                         ?? selectedDate8,
-'''
-source = replace_once(source, old, new, "schedule merge raceDate")
+''',
+    "schedule merge raceDate",
+)
 
-old = '''                    course: race.course,
+source = replace_once(
+    source,
+    '''                    course: race.course,
                     raceDate: selectedDate8,
                     fieldSize: race.horses.count,
-'''
-count = source.count(old)
-if count != 2:
-    raise SystemExit(f"prediction raceDate propagation: expected 2 matches, got {count}")
-new = '''                    course: race.course,
+                    prediction: race
+''',
+    '''                    course: race.course,
                     raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8,
                     fieldSize: race.horses.count,
-'''
-source = source.replace(old, new)
+                    prediction: race
+''',
+    "predicted-only schedule raceDate",
+)
 
-old = '''            VStack(alignment: .leading, spacing: 2) {
+source = replace_once(
+    source,
+    '''    private func item(from race: Race) -> KeibaAIScheduleItem {
+        KeibaAIScheduleItem(
+            raceID: race.raceID,
+            venue: race.venue,
+            raceNumber: race.raceNumber,
+            startTime: race.startTime,
+            raceName: race.raceName,
+            course: race.course,
+            raceDate: selectedDate8,
+''',
+    '''    private func item(from race: Race) -> KeibaAIScheduleItem {
+        KeibaAIScheduleItem(
+            raceID: race.raceID,
+            venue: race.venue,
+            raceNumber: race.raceNumber,
+            startTime: race.startTime,
+            raceName: race.raceName,
+            course: race.course,
+            raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8,
+''',
+    "focus item raceDate",
+)
+
+source = replace_once(
+    source,
+    '''            VStack(alignment: .leading, spacing: 2) {
                 Text("表示データ")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
                 Picker(
                     "表示データ",
-'''
-new = '''            VStack(alignment: .leading, spacing: 3) {
+''',
+    '''            VStack(alignment: .leading, spacing: 3) {
                 Text("開催日")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -120,39 +152,49 @@ new = '''            VStack(alignment: .leading, spacing: 3) {
 
                 Picker(
                     "保存データ",
-'''
-source = replace_once(source, old, new, "snapshot bar date display")
+''',
+    "snapshot bar date display",
+)
 
-old = '''                    ForEach(store.snapshots) { snapshot in
+source = replace_once(
+    source,
+    '''                    ForEach(store.snapshots) { snapshot in
                         Text(snapshot.label)
                             .tag(snapshot.id)
                     }
-'''
-new = '''                    ForEach(store.snapshots) { snapshot in
+''',
+    '''                    ForEach(store.snapshots) { snapshot in
                         Text(snapshot.id == "latest" ? "最新" : "保存 \\(snapshot.label)")
                             .tag(snapshot.id)
                     }
-'''
-source = replace_once(source, old, new, "snapshot labels")
+''',
+    "snapshot labels",
+)
 
-old = '''                    title: selectedVenue == "全場" ? "本日の全レース" : "\\(selectedVenue)のレース",
-'''
-new = '''                    title: selectedVenue == "全場"
+source = replace_once(
+    source,
+    '''                    title: selectedVenue == "全場" ? "本日の全レース" : "\\(selectedVenue)のレース",
+''',
+    '''                    title: selectedVenue == "全場"
                         ? "\\(Self.displayDate(selectedDate8))の全レース"
                         : "\\(Self.displayDate(selectedDate8)) \\(selectedVenue)のレース",
-'''
-source = replace_once(source, old, new, "race list day title")
+''',
+    "race list day title",
+)
 
-old = '''                if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
+source = replace_once(
+    source,
+    '''                if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
                 Label(race.course, systemImage: "map")
-'''
-new = '''                if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
+''',
+    '''                if !race.startTime.isEmpty { Label(race.startTime, systemImage: "clock") }
                 if let raceDate = race.raceDate {
                     Label(raceDate.replacingOccurrences(of: "-", with: "/"), systemImage: "calendar")
                 }
                 Label(race.course, systemImage: "map")
-'''
-source = replace_once(source, old, new, "race detail date")
+''',
+    "race detail date",
+)
 
 SOURCE_PATH.write_text(source, encoding="utf-8")
 
@@ -182,19 +224,18 @@ def resolve(race_dates, today8, snapshot_date8=None):
     return snapshot_date8 or today8
 
 
-# Core regression: data saved on 10/30 for a 10/31 race must display 10/31.
 assert resolve(["2026-10-31"], "20261030", "20261030") == "20261031"
-# Historical fallback still works when old data has no raceDate.
 assert resolve([], "20261030", "20261025") == "20261025"
 
 source = SOURCE.read_text(encoding="utf-8")
 assert 'if store.selectedSnapshotID == "latest" {\\n            return Self.todayJST8' not in source
 assert 'let raceDates = Set(store.races.compactMap { Self.normalizedDate8($0.raceDate) })' in source
 assert 'raceDate: Self.normalizedDate8(prediction?.raceDate)' in source
-assert 'raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8' in source
+assert source.count('raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8') == 2
 assert 'Text("開催日")' in source
 assert 'accessibilityIdentifier("race-date-display")' in source
 assert 'Text(snapshot.id == "latest" ? "最新" : "保存 \\(snapshot.label)")' in source
+assert '"\\(Self.displayDate(selectedDate8))の全レース"' in source
 
 races = json.loads(RACE_DATA.read_text(encoding="utf-8"))
 assert races, "RaceData.json is empty"
