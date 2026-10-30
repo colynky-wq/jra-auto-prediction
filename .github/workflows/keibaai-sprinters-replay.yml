@@ -24,7 +24,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
-          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml>=5,<7'
       - name: Replay 2026 Sprinters Stakes with pre-race history only
         env:
           KEIBAAI_EARLY_DATE: '20260927'
@@ -32,13 +32,113 @@ jobs:
         run: |
           cd production
           python - <<'PY'
+          from io import StringIO
+          import re
+          import unicodedata
+          import numpy as np
           import pandas as pd
+          import requests
           import early_prediction_runtime as ep
 
           date8='20260927'
           target_rid='202606040911'
           ep.base.TARGET_DATE8=date8
           ep.live.base.TARGET_DATE8=date8
+
+          target_date=pd.Timestamp('2026-09-27')
+          hist=ep.base.load_history(target_date)
+          print('HISTORY_MAX_DATE', hist['日付'].max())
+
+          def norm(x):
+              s=unicodedata.normalize('NFKC', str(x or ''))
+              s=re.sub(r'[\s・\.．]', '', s)
+              s=re.sub(r'^(美浦|栗東)', '', s)
+              return s
+
+          hist_jockeys=sorted(set(hist['騎手'].dropna().astype(str)))
+          hist_trainers=sorted(set(hist['調教師'].dropna().astype(str)))
+
+          def resolve_abbrev(raw, candidates):
+              n=norm(raw)
+              if not n:
+                  return raw
+              scored=[]
+              for c in candidates:
+                  cn=norm(c)
+                  if n==cn:
+                      scored.append((10000+len(cn), c))
+                  elif cn.startswith(n) or n.startswith(cn):
+                      scored.append((5000+min(len(n),len(cn)), c))
+                  elif n in cn or cn in n:
+                      scored.append((1000+min(len(n),len(cn)), c))
+              if scored:
+                  scored.sort(reverse=True)
+                  return scored[0][1]
+              return str(raw)
+
+          def historical_entry_table(race_id, date8_arg, jst):
+              url=f'https://race.netkeiba.com/race/shutuba.html?race_id={race_id}'
+              r=requests.get(url, headers={'User-Agent':'Mozilla/5.0','Accept-Language':'ja'}, timeout=30)
+              r.raise_for_status()
+              html=r.content.decode('utf-8', errors='replace')
+              tables=pd.read_html(StringIO(html))
+              chosen=None
+              for t in tables:
+                  tt=t.copy()
+                  if isinstance(tt.columns, pd.MultiIndex):
+                      tt.columns=[''.join([str(z) for z in c if 'Unnamed' not in str(z)]).strip() for c in tt.columns]
+                  else:
+                      tt.columns=[str(c).strip() for c in tt.columns]
+                  cols='|'.join(tt.columns)
+                  if '馬番' in cols and '馬名' in cols and '性齢' in cols and '斤量' in cols and '騎手' in cols:
+                      chosen=tt
+                      break
+              if chosen is None:
+                  raise RuntimeError('historical shutuba table not found')
+              print('HIST_ENTRY_COLUMNS', list(chosen.columns))
+
+              def col_like(key):
+                  for c in chosen.columns:
+                      if key in c:
+                          return c
+                  raise KeyError(key)
+
+              c_no=col_like('馬番'); c_name=col_like('馬名'); c_age=col_like('性齢')
+              c_wt=col_like('斤量'); c_j=col_like('騎手'); c_t=col_like('厩舎'); c_bw=col_like('馬体重')
+              rows=[]
+              for _,row in chosen.iterrows():
+                  try:
+                      no=int(re.search(r'\d+', str(row[c_no])).group())
+                  except Exception:
+                      continue
+                  name=str(row[c_name]).strip().split()[0]
+                  age_m=re.search(r'(\d+)', str(row[c_age]))
+                  if not age_m:
+                      continue
+                  age=int(age_m.group(1))
+                  try:
+                      carried=float(re.search(r'\d+(?:\.\d+)?', str(row[c_wt])).group())
+                  except Exception:
+                      continue
+                  jockey=resolve_abbrev(str(row[c_j]).strip(), hist_jockeys)
+                  trainer=resolve_abbrev(str(row[c_t]).strip(), hist_trainers)
+                  bw_text=str(row[c_bw])
+                  mw=re.search(r'(\d{3})\s*\(\s*([+-]?\d+)\s*\)', bw_text)
+                  if mw:
+                      bw=float(mw.group(1)); diff=float(mw.group(2))
+                  else:
+                      mw2=re.search(r'(\d{3})', bw_text)
+                      bw=float(mw2.group(1)) if mw2 else np.nan
+                      diff=np.nan
+                  rows.append({'馬番':no,'馬名':name,'年齢':age,'斤量':carried,
+                               '騎手_JRA':jockey,'調教師_JRA':trainer,'馬体重':bw,'増減':diff})
+              d=pd.DataFrame(rows).sort_values('馬番').reset_index(drop=True)
+              print('HIST_ENTRY_ROWS', len(d))
+              print(d.to_string(index=False))
+              return d, ep.base.now_jst(), url
+
+          ep.base.fetch_jra_entry_table=historical_entry_table
+          ep.live.base.fetch_jra_entry_table=historical_entry_table
 
           original_fetch_meta = ep.base.fetch_meta
           def corrected_fetch_meta(race):
@@ -49,9 +149,6 @@ jobs:
           ep.base.fetch_meta = corrected_fetch_meta
           ep.live.base.fetch_meta = corrected_fetch_meta
 
-          target_date=pd.Timestamp('2026-09-27')
-          hist=ep.base.load_history(target_date)
-          print('HISTORY_MAX_DATE', hist['日付'].max())
           races=ep.base.fetch_schedule(date8)
           target=[r for r in races if str(r.get('race_id'))==target_rid]
           if len(target) != 1:
