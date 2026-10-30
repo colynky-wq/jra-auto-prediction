@@ -226,13 +226,21 @@ class ForwardTests(unittest.TestCase):
     def test_background_copy_once_without_waiting(self):
         import all_bet_runtime as runtime
         submitted=[]
+        class Future:
+            def done(self):return False
         class Pool:
-            def submit(self,*args):submitted.append(args)
+            def submit(self,*args):
+                submitted.append(args)
+                return Future()
         r=forecast();e=entry(r)
-        with patch.object(runtime,'_pool',Pool()),patch.object(runtime,'_submitted',set()):
-            self.assertTrue(runtime.schedule('.',r,e));self.assertFalse(runtime.schedule('.',r,e))
+        with patch.object(runtime,'_pool',Pool()),patch.object(runtime,'_futures',{}):
+            first=runtime.schedule('.',r,e,NOW.isoformat())
+            second=runtime.schedule('.',r,e,NOW.isoformat())
+            self.assertIs(first,second)
             r['horses'][0]['name']='changed';e['runners'][0]['frame']=8
+            self.assertEqual(len(submitted),1)
             self.assertEqual(submitted[0][2]['horses'][0]['name'],'horse1')
+            self.assertEqual(submitted[0][3],NOW.isoformat())
             self.assertEqual(submitted[0][4]['runners'][0]['frame'],1)
 
 
