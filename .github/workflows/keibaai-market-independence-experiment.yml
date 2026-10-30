@@ -6,6 +6,7 @@ on:
     paths:
       - 'production/research_market_independence.py'
       - 'production/research_market_independence_fair.py'
+      - 'production/research_tenno_shadow_compare.py'
       - '.github/workflows/keibaai-market-independence-experiment.yml'
   workflow_dispatch:
 
@@ -28,10 +29,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
-      - name: Run fair A B C market-independence experiment
+      - name: Run Tenno Sho A versus C shadow comparison
         run: |
           cd production
-          python research_market_independence_fair.py
+          python research_tenno_shadow_compare.py
       - name: Upload research artifacts
         uses: actions/upload-artifact@v4
         with:
