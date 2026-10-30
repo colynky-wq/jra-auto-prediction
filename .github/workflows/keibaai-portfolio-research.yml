@@ -50,6 +50,9 @@ jobs:
         with:
           python-version: '3.13'
 
+      - name: Install reference projection test dependency
+        run: pip install 'beautifulsoup4==4.13.4'
+
       - name: Verify fixed shadow rules and review contracts
         run: |
           python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
