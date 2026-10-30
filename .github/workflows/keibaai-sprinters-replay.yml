@@ -1,0 +1,64 @@
+name: KeibaAI Sprinters Stakes Replay
+
+on:
+  push:
+    branches: [keibaai-sprinters-replay]
+    paths:
+      - '.github/workflows/keibaai-sprinters-replay.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Replay 2026 Sprinters Stakes with pre-race history only
+        env:
+          KEIBAAI_EARLY_DATE: '20260927'
+          KEIBAAI_EARLY_STAGE: 'historical_replay'
+        run: |
+          cd production
+          python - <<'PY'
+          import pandas as pd
+          import early_prediction_runtime as ep
+
+          date8='20260927'
+          target_rid='202606040911'
+          ep.base.TARGET_DATE8=date8
+          ep.live.base.TARGET_DATE8=date8
+
+          original_fetch_meta = ep.base.fetch_meta
+          def corrected_fetch_meta(race):
+              out = original_fetch_meta(race)
+              if str(out.get('race_id')) == target_rid:
+                  out['class'] = 'OP'
+              return out
+          ep.base.fetch_meta = corrected_fetch_meta
+          ep.live.base.fetch_meta = corrected_fetch_meta
+
+          target_date=pd.Timestamp('2026-09-27')
+          hist=ep.base.load_history(target_date)
+          print('HISTORY_MAX_DATE', hist['日付'].max())
+          races=ep.base.fetch_schedule(date8)
+          target=[r for r in races if str(r.get('race_id'))==target_rid]
+          if len(target) != 1:
+              raise RuntimeError(f'Sprinters target count={len(target)}')
+          out=ep._safe_predict(target[0], hist, target_date)
+          ranked=out.sort_values('AI勝率(%)', ascending=False).reset_index(drop=True)
+          print('SPRINTERS_REPLAY_BEGIN')
+          print(ranked.to_json(orient='records', force_ascii=False))
+          print('SPRINTERS_REPLAY_END')
+          PY
