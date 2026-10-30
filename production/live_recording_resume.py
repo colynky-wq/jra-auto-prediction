@@ -23,6 +23,10 @@ def research_sidecars_complete(root,date8,rid):
     required=[day/'all_bet_v1'/kind/(rid+'.json') for kind in ALL_BET_SIDECARS]
     required += [day/'triple_v1'/kind/(rid+'.json') for kind in TRIPLE_SIDECARS]
     required.append(day/'wide_axis_v1'/(rid+'.json'))
+    required += [
+        day/'ticket_shadow_v1'/'prediction'/(rid+'.json'),
+        day/'ticket_shadow_v1'/'manifest'/(rid+'.json'),
+    ]
     return all(p.is_file() and p.stat().st_size>0 for p in required)
 
 
