@@ -50,8 +50,11 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install reference projection test dependency
-        run: pip install 'beautifulsoup4==4.13.4'
+      - name: Install reference projection dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
       - name: Verify fixed shadow rules and review contracts
         run: |
