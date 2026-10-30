@@ -37,6 +37,7 @@ jobs:
           import numpy as np
           import pandas as pd
           import requests
+          import lightgbm as lgb
           from bs4 import BeautifulSoup
           import early_prediction_runtime as ep
 
@@ -131,7 +132,6 @@ jobs:
                   raise RuntimeError('historical positional parse returned 0 rows')
               d=d.drop_duplicates('馬番', keep='first').sort_values('馬番').reset_index(drop=True)
               print('HIST_ENTRY_ROWS', len(d))
-              print(d.to_string(index=False))
               if len(d) != 16:
                   raise RuntimeError(f'historical entry rows expected 16 got {len(d)}')
               return d, ep.base.now_jst(), url
@@ -152,9 +152,86 @@ jobs:
           target=[r for r in races if str(r.get('race_id'))==target_rid]
           if len(target) != 1:
               raise RuntimeError(f'Sprinters target count={len(target)}')
+
           out=ep._safe_predict(target[0], hist, target_date)
           ranked=out.sort_values('AI勝率(%)', ascending=False).reset_index(drop=True)
           print('SPRINTERS_REPLAY_BEGIN')
           print(ranked.to_json(orient='records', force_ascii=False))
           print('SPRINTERS_REPLAY_END')
+
+          # Rebuild exactly the same 37-feature matrix so the fixed LightGBM
+          # contribution for each feature can be inspected without using result data.
+          race=corrected_fetch_meta(target[0])
+          odds,_=ep.base.fetch_win_odds(target_rid)
+          entries,_,_=historical_entry_table(target_rid, date8, ep.base.JST)
+          entries['騎手']=entries['騎手_JRA']
+          entries['調教師']=entries['調教師_JRA']
+          entries['馬キー']=ep.live.assign_horse_keys(entries, hist, target_date)
+          current=entries.merge(odds,on='馬番',how='inner',validate='one_to_one').sort_values('馬番').reset_index(drop=True)
+          current['人気']=current['単勝オッズ'].rank(ascending=True,method='min')
+
+          cur=pd.DataFrame(index=np.arange(len(current)))
+          cur['レースID']=target_rid
+          cur['日付']=target_date
+          for col in ['馬番','馬名','馬キー','年齢','斤量','騎手','調教師','人気','単勝オッズ','馬体重','増減']:
+              cur[col]=current[col].to_numpy()
+          cur['着順']=np.nan
+          cur['出典']='Sprinters historical diagnostic'
+          cur['芝ダ']=race['surface']
+          cur['距離']=int(race['distance'])
+          cur['クラス']=race['class']
+          cur['障害']=False
+          cur['タイム秒']=np.nan
+          cur['上がり3F']=np.nan
+          cur['初角']=np.nan
+          cur['頭数']=len(cur)
+
+          work=pd.concat([hist,cur],ignore_index=True)
+          work['日付']=pd.to_datetime(work['日付'],errors='coerce')
+          work=work.sort_values(['日付','レースID','馬番']).reset_index(drop=True)
+          work=ep.base.add_rating(work)
+          work=ep.base.add_features(work)
+          pred=(work.loc[(work['日付'].dt.normalize()==target_date.normalize()) & (work['レースID'].astype(str)==target_rid)]
+                    .copy().sort_values('馬番').reset_index(drop=True))
+          X=pred[ep.base.ALLF].astype(np.float32)
+          model=lgb.Booster(model_file=str(ep.base.MODEL_PATH))
+          raw=np.asarray(model.predict(X,raw_score=True,validate_features=True),dtype=float)
+          pc=np.asarray(model.predict(X,pred_contrib=True,validate_features=True),dtype=float)
+          features=list(ep.base.ALLF)
+
+          print('FEATURE_DIAGNOSTICS_BEGIN')
+          for horse_no in [16,6,5,9,13]:
+              i=int(pred.index[pred['馬番'].astype(int)==horse_no][0])
+              row=pred.iloc[i]
+              feature_contrib=pc[i,:len(features)]
+              bias=float(pc[i,len(features)])
+              recs=[]
+              for f,v,c in zip(features,X.iloc[i].to_numpy(dtype=float),feature_contrib):
+                  recs.append({'feature':f,'value':float(v),'contribution':float(c),'abs':abs(float(c))})
+              recs_sorted=sorted(recs,key=lambda z:z['abs'],reverse=True)
+              neg=sorted(recs,key=lambda z:z['contribution'])[:12]
+              pos=sorted(recs,key=lambda z:z['contribution'],reverse=True)[:12]
+              print('HORSE_SUMMARY', {
+                  'horse_no':horse_no,
+                  'horse_name':str(row['馬名']),
+                  'odds':float(row['単勝オッズ']),
+                  'market_probability':float(row['市場確率']),
+                  'market_logit':float(row['市場ロジット']),
+                  'tree_raw_correction':float(raw[i]),
+                  'bias':bias,
+                  'contrib_sum':float(feature_contrib.sum()+bias),
+                  'final_logit':float(row['市場ロジット']+raw[i]),
+                  'style_first_corner':float(row['脚質初角']),
+                  'gate_position':float(row['枠位置']),
+                  'inside_front':float(row['内枠先行']),
+                  'rating_diff':float(row['点数差']),
+                  'same_distance_mean':float(row['同距離帯平均']),
+                  'prev_finish_rate':float(row['前走着順率f'])
+              })
+              print('TOP_ABS_CONTRIB', horse_no, recs_sorted[:15])
+              print('TOP_NEG_CONTRIB', horse_no, neg)
+              print('TOP_POS_CONTRIB', horse_no, pos)
+              if horse_no==16:
+                  print('PYURO_ALL_FEATURES', recs)
+          print('FEATURE_DIAGNOSTICS_END')
           PY
