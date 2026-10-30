@@ -1,0 +1,39 @@
+name: KeibaAI Market Independence Experiment
+
+on:
+  push:
+    branches: [keibaai-market-independence-experiment]
+    paths:
+      - 'production/research_market_independence.py'
+      - '.github/workflows/keibaai-market-independence-experiment.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  experiment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Run A B C market-independence experiment
+        run: |
+          cd production
+          python research_market_independence.py
+      - name: Upload research artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-independence-artifacts
+          path: market_independence_artifacts/
+          if-no-files-found: error
