@@ -23,13 +23,13 @@ jobs:
           git diff --check
       - name: Build complete KeibaAI app without signing
         run: xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-race-date-build CODE_SIGNING_ALLOWED=NO build
-      - name: Commit repaired app and permanent test
+      - name: Commit repaired app and regression test
         run: |
           git config user.name 'KeibaAI Repair Bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift ios/tests/test_race_date_display_regression.py .github/workflows/keibaai-ios-verify.yml
+          git add ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift ios/tests/test_race_date_display_regression.py
           git diff --cached --exit-code && { echo 'No changes to commit'; exit 1; } || true
           git commit -m 'Fix KeibaAI race date display for next-day data'
           git push origin HEAD:main
 
-# Retry marker: exact race-date propagation sites verified.
+# Workflow verification update is applied separately through the GitHub connector.
