@@ -79,6 +79,17 @@ def _validate_complete_live_prediction(race, horses):
             raise RuntimeError(f"incomplete live horse evidence: {horse.get('number')} {horse.get('name')}")
 
 
+def _ticket_research_inputs(out):
+    """Preserve pre-rounding model outputs for prospective ticket research."""
+    ordered = out.sort_values("馬番").reset_index(drop=True)
+    return {
+        "numbers": ordered["馬番"].astype(int).tolist(),
+        "win": (ordered["AI勝率(%)"].astype(float) / 100.0).tolist(),
+        "top2": (ordered["AI2着内率(%)"].astype(float) / 100.0).tolist(),
+        "top3": (ordered["AI3着内率(%)"].astype(float) / 100.0).tolist(),
+    }
+
+
 def _refresh_prediction_bundle(published_race):
     snapshot = None
     if CAPTURE_WIDE_ODDS:
@@ -215,6 +226,7 @@ def publish_race_to_racedata(race, out):
         ),
         None,
     )
+    first_formal_capture = frozen is None
     if frozen is not None:
         published_race = frozen
         captured_at = str(frozen.get("capturedAtJST") or captured_at)
@@ -237,18 +249,44 @@ def publish_race_to_racedata(race, out):
             "recommendation disabled pending formal odds",
         )
 
+    from ticket_shadow_forward import record_manifest_first, record_prediction_first
+
+    ticket_prediction_path = (
+        RACEDATA_PATH.parent / "reports" / str(published_race["raceDate"]).replace("-", "") /
+        "ticket_shadow_v1" / "prediction" / f"{rid}.json"
+    )
+    if not first_formal_capture and not ticket_prediction_path.is_file():
+        # Never reconstruct a missing prospective research prediction from a
+        # later odds/model run.  Missing evidence stays missing rather than
+        # becoming hindsight data.
+        raise RuntimeError("prospective ticket shadow missing for frozen formal prediction; refusing hindsight backfill")
+    ticket_prediction_path = record_prediction_first(
+        RACEDATA_PATH.parent,
+        published_race,
+        _ticket_research_inputs(out),
+    )
+    print("TICKET_SHADOW_PREDICTION_RECORDED", rid, ticket_prediction_path)
+
     from triple_research_runtime import schedule as schedule_triple
     from all_bet_runtime import schedule as schedule_all_bets
 
-    triple_future = schedule_triple(RACEDATA_PATH.parent, published_race)
+    triple_future = schedule_triple(
+        RACEDATA_PATH.parent,
+        published_race,
+        predicted=published_race["capturedAtJST"],
+    )
     all_bet_future = schedule_all_bets(
         RACEDATA_PATH.parent,
         published_race,
         out.attrs.get("allBetEntryEvidence"),
+        predicted=published_race["capturedAtJST"],
     )
     _refresh_prediction_bundle(published_race)
     triple_future.result(timeout=120)
     all_bet_future.result(timeout=120)
+
+    manifest_path = record_manifest_first(RACEDATA_PATH.parent, published_race)
+    print("TICKET_SHADOW_ODDS_MANIFEST_RECORDED", rid, manifest_path)
 
     from live_recording_resume import research_sidecars_complete
     if not research_sidecars_complete(
