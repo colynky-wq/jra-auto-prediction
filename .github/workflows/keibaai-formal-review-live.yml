@@ -1,0 +1,81 @@
+name: KeibaAI Formal T-10 Review Live Refresh
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'production/formal_10min_evidence.py'
+      - 'production/portfolio_review_100.py'
+      - 'production/refresh_portfolio_review_live.py'
+      - 'production/test_formal_10min_evidence.py'
+      - 'production/test_portfolio_review_100.py'
+      - 'production/test_refresh_portfolio_review_live.py'
+      - '.github/workflows/keibaai-formal-review-live.yml'
+  schedule:
+    # 09:00-17:59 JST on Sat/Sun/Mon. Formal T-10 sidecars appear during racing,
+    # and the app polls the strict review independently of live prediction writes.
+    - cron: '*/5 0-8 * * 0,1,6'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-formal-review-live
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify strict formal review refresh
+        run: |
+          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/refresh_portfolio_review_live.py
+          python production/test_formal_10min_evidence.py
+          python production/test_portfolio_review_100.py
+          python production/test_refresh_portfolio_review_live.py
+
+      - name: Refresh and publish only material formal-review changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+
+            python production/refresh_portfolio_review_live.py
+
+            if git diff --quiet -- PortfolioReview100.json; then
+              echo 'No material formal T-10 review change.'
+              exit 0
+            fi
+
+            git add -f PortfolioReview100.json
+            git commit -m 'Refresh KeibaAI formal T-10 review'
+
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+
+            echo "Concurrent main update detected; rebuilding from latest main (attempt ${attempt}/4)."
+            sleep $((attempt * 2))
+          done
+
+          echo 'Unable to publish formal review after bounded retries.' >&2
+          exit 1
