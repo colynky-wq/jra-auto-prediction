@@ -8,6 +8,12 @@ on:
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/scripts/keibaai-race-day-check.sh'
       - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/ticket_shadow_forward.py'
+      - 'production/ticket_shadow_bridge.py'
+      - 'production/ticket_probability_runtime.py'
+      - 'production/all_bet_runtime.py'
+      - 'production/triple_research_runtime.py'
       - 'production/formal_wide_odds_runtime.py'
       - 'production/resilient_live_entrypoint.py'
       - 'production/live_capture_policy.py'
@@ -85,6 +91,10 @@ jobs:
         run: |
           bash -n .github/scripts/keibaai-race-day-check.sh
           python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/live_bundle_publisher.py
+          python -m py_compile production/ticket_shadow_forward.py
+          python -m py_compile production/ticket_shadow_bridge.py
+          python -m py_compile production/ticket_probability_runtime.py
           python -m py_compile production/resilient_live_entrypoint.py
           python -m py_compile production/live_capture_policy.py
           python -m py_compile production/live_recording_resume.py

@@ -28,8 +28,15 @@ def capture(root,race,predicted,evidence):
     return True
 
 
-def schedule(root,race,evidence=None):
+def schedule(root,race,evidence=None,predicted=None):
+    """Schedule odds capture against the exact formal prediction timestamp.
+
+    ``predicted`` is optional for backwards compatibility, but the formal live
+    publisher passes RaceData.capturedAtJST so every saved odds record is bound
+    to the same immutable live_10min prediction rather than a later worker time.
+    """
     key=(race["raceDate"],race["raceID"])
+    predicted = predicted or datetime.now(JST).isoformat()
     with _lock:
         previous=_futures.get(key)
         if previous is not None:
@@ -40,6 +47,6 @@ def schedule(root,race,evidence=None):
                     return previous
             except Exception:
                 pass
-        future=_pool.submit(capture,root,deepcopy(race),datetime.now(JST).isoformat(),deepcopy(evidence))
+        future=_pool.submit(capture,root,deepcopy(race),str(predicted),deepcopy(evidence))
         _futures[key]=future
         return future
