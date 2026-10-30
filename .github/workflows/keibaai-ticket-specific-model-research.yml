@@ -35,3 +35,10 @@ jobs:
       - name: OOS compare formal A vs ticket-specific model
         run: |
           python production/research_ticket_oos_compare.py
+      - name: Upload OOS result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ticket-oos-compare
+          path: reports/model_research/ticket_oos_compare_2026.json
+          if-no-files-found: warn
