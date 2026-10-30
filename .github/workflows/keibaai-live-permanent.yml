@@ -10,6 +10,7 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/live_bundle_publisher.py'
       - 'production/ticket_shadow_forward.py'
+      - 'production/ticket_shadow_bridge.py'
       - 'production/ticket_probability_runtime.py'
       - 'production/all_bet_runtime.py'
       - 'production/triple_research_runtime.py'
@@ -92,6 +93,7 @@ jobs:
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/ticket_shadow_forward.py
+          python -m py_compile production/ticket_shadow_bridge.py
           python -m py_compile production/ticket_probability_runtime.py
           python -m py_compile production/resilient_live_entrypoint.py
           python -m py_compile production/live_capture_policy.py
