@@ -86,6 +86,8 @@ jobs:
           /tmp/keibaai-bet-app-venv/bin/python production/test_bet_research_data.py --emit-contract /tmp/bet-research-contract.json
           swiftc -swift-version 5 -parse-as-library ios/KeibaAI/KeibaAI/KeibaAIBetResearchModels.swift ios/tests/BetResearchChecks.swift -o /tmp/keibaai-bet-research-checks
           /tmp/keibaai-bet-research-checks
+      - name: Verify race-day resolution and display regression
+        run: python3 ios/tests/test_race_date_display_regression.py
       - name: Build the complete iOS app without signing
         run: |
           xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/KeibaAI-build CODE_SIGNING_ALLOWED=NO build
