@@ -1,0 +1,2457 @@
+{
+  "schemaVersion": 2,
+  "version": "all-bet-recommendation-shadow-v2-20261023",
+  "status": "research_display_only",
+  "raceDate": "2026-10-31",
+  "generatedAtJST": "2026-10-30T20:01:31+09:00",
+  "prospectiveStartDate": "2026-10-24",
+  "rulesFrozenAtJST": "2026-10-23",
+  "formalRecommendationsEnabled": false,
+  "autoBetEnabled": false,
+  "stakeSizingEnabled": false,
+  "ordinaryBetTypes": [
+    {
+      "id": "win",
+      "label": "単勝",
+      "minProbabilityPct": 15.0,
+      "minExpectedMultiplier": 1.03,
+      "riskPenalty": 1.0
+    },
+    {
+      "id": "place",
+      "label": "複勝",
+      "minProbabilityPct": 25.0,
+      "minExpectedMultiplier": 1.03,
+      "riskPenalty": 1.0
+    },
+    {
+      "id": "frame_quinella",
+      "label": "枠連",
+      "minProbabilityPct": 10.0,
+      "minExpectedMultiplier": 1.05,
+      "riskPenalty": 1.2
+    },
+    {
+      "id": "quinella",
+      "label": "馬連",
+      "minProbabilityPct": 8.0,
+      "minExpectedMultiplier": 1.05,
+      "riskPenalty": 1.2
+    },
+    {
+      "id": "wide",
+      "label": "ワイド",
+      "minProbabilityPct": 8.0,
+      "minExpectedMultiplier": 1.05,
+      "riskPenalty": 1.2
+    },
+    {
+      "id": "exacta",
+      "label": "馬単",
+      "minProbabilityPct": 4.0,
+      "minExpectedMultiplier": 1.08,
+      "riskPenalty": 1.45
+    },
+    {
+      "id": "trio",
+      "label": "3連複",
+      "minProbabilityPct": 3.0,
+      "minExpectedMultiplier": 1.1,
+      "riskPenalty": 1.6
+    },
+    {
+      "id": "trifecta",
+      "label": "3連単",
+      "minProbabilityPct": 1.0,
+      "minExpectedMultiplier": 1.15,
+      "riskPenalty": 2.0
+    },
+    {
+      "id": "support",
+      "label": "応援馬券",
+      "minProbabilityPct": 25.0,
+      "minExpectedMultiplier": 1.03,
+      "riskPenalty": 1.1
+    }
+  ],
+  "win5Policy": "WIN5は5対象レース共通締切の別研究として扱い、1レース単位の9券種横断順位には混ぜない。",
+  "candidateScope": "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。ワイドは事前固定したワイド研究候補を使用。",
+  "scoreMeaning": "researchScore = 表示確率 × 保守的期待値超過分 ÷ 券種リスク係数。研究上の並び順であり利益予測ではない。",
+  "counts": {
+    "candidate": 0,
+    "skip": 0,
+    "odds_pending": 23,
+    "signal_pending": 0
+  },
+  "races": [
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041001",
+      "venue": "東京",
+      "raceNumber": 1,
+      "raceName": "2歳未勝利",
+      "startTime": "09:50",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041001",
+      "venue": "京都",
+      "raceNumber": 1,
+      "raceName": "2歳未勝利",
+      "startTime": "10:05",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041002",
+      "venue": "東京",
+      "raceNumber": 2,
+      "raceName": "2歳未勝利",
+      "startTime": "10:20",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041002",
+      "venue": "京都",
+      "raceNumber": 2,
+      "raceName": "2歳未勝利",
+      "startTime": "10:35",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041003",
+      "venue": "東京",
+      "raceNumber": 3,
+      "raceName": "2歳未勝利",
+      "startTime": "10:50",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041003",
+      "venue": "京都",
+      "raceNumber": 3,
+      "raceName": "2歳未勝利",
+      "startTime": "11:05",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041004",
+      "venue": "東京",
+      "raceNumber": 4,
+      "raceName": "2歳新馬",
+      "startTime": "11:20",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041005",
+      "venue": "東京",
+      "raceNumber": 5,
+      "raceName": "2歳新馬",
+      "startTime": "12:10",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041005",
+      "venue": "京都",
+      "raceNumber": 5,
+      "raceName": "2歳新馬",
+      "startTime": "12:25",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041006",
+      "venue": "東京",
+      "raceNumber": 6,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "12:40",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041006",
+      "venue": "京都",
+      "raceNumber": 6,
+      "raceName": "2歳新馬",
+      "startTime": "12:55",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041007",
+      "venue": "東京",
+      "raceNumber": 7,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "13:10",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041007",
+      "venue": "京都",
+      "raceNumber": 7,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "13:25",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041008",
+      "venue": "東京",
+      "raceNumber": 8,
+      "raceName": "3歳以上2勝クラス",
+      "startTime": "13:45",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041008",
+      "venue": "京都",
+      "raceNumber": 8,
+      "raceName": "3歳以上2勝クラス",
+      "startTime": "14:00",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041009",
+      "venue": "東京",
+      "raceNumber": 9,
+      "raceName": "オキザリス賞",
+      "startTime": "14:20",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041009",
+      "venue": "京都",
+      "raceNumber": 9,
+      "raceName": "北野特別",
+      "startTime": "14:35",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041010",
+      "venue": "東京",
+      "raceNumber": 10,
+      "raceName": "国立特別",
+      "startTime": "14:55",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041010",
+      "venue": "京都",
+      "raceNumber": 10,
+      "raceName": "ハロウィンS",
+      "startTime": "15:10",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041011",
+      "venue": "東京",
+      "raceNumber": 11,
+      "raceName": "ペルセウスS",
+      "startTime": "15:30",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041011",
+      "venue": "京都",
+      "raceNumber": 11,
+      "raceName": "ファンタジー",
+      "startTime": "15:45",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202605041012",
+      "venue": "東京",
+      "raceNumber": 12,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "16:15",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-10-31",
+      "raceID": "202608041012",
+      "venue": "京都",
+      "raceNumber": 12,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "16:25",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": null,
+      "chaosLevel": null,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "win",
+        "place",
+        "frame_quinella",
+        "quinella",
+        "wide",
+        "exacta",
+        "trio",
+        "trifecta",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "missing_record",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    }
+  ]
+}
