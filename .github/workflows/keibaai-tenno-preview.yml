@@ -1,0 +1,43 @@
+name: KeibaAI Tenno Sho Preview
+
+on:
+  push:
+    branches: [keibaai-tenno-preview]
+    paths:
+      - '.github/workflows/keibaai-tenno-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Run early prediction for 2026 Tenno Sho Autumn day
+        env:
+          KEIBAAI_EARLY_DATE: '20261101'
+          KEIBAAI_EARLY_STAGE: 'previous_evening'
+        run: python production/early_prediction_runtime.py
+      - name: Print Tenno Sho Autumn prediction only
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('EarlyPredictionData.json', encoding='utf-8'))
+          snap=d['snapshots']['previous_evening']
+          hits=[r for r in snap['races'] if r.get('venue')=='東京' and int(r.get('raceNumber',0))==11]
+          print('TENNO_PREVIEW_BEGIN')
+          print(json.dumps(hits, ensure_ascii=False, indent=2))
+          print('TENNO_PREVIEW_END')
+          PY
