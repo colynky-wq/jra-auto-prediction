@@ -79,7 +79,10 @@ final class RaceStore: ObservableObject {
     }
 
     func refresh() async {
-        await loadSnapshot(id: selectedSnapshotID)
+        // The refresh button means "return to the current live data".
+        // Historical snapshots remain selectable explicitly from the picker,
+        // but a refresh must not keep the app pinned to an old race day.
+        await loadSnapshot(id: "latest")
         await loadHistory()
     }
 
