@@ -7,6 +7,12 @@ on:
       - 'production/ticket_probability_runtime.py'
       - 'production/test_ticket_probability_runtime.py'
       - 'production/research_ticket_oos_compare.py'
+      - 'production/ticket_shadow_forward.py'
+      - 'production/test_ticket_shadow_forward.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/all_bet_runtime.py'
+      - 'production/triple_research_runtime.py'
+      - 'production/live_recording_resume.py'
       - '.github/workflows/keibaai-ticket-specific-model-research.yml'
   workflow_dispatch:
 
@@ -28,10 +34,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install pytest
-      - name: Test ticket probability runtime
+      - name: Test ticket probability and prospective shadow runtimes
         run: |
           cd production
-          pytest -q test_ticket_probability_runtime.py
+          pytest -q test_ticket_probability_runtime.py test_ticket_shadow_forward.py
+      - name: Compile live integration
+        run: |
+          python -m py_compile production/ticket_shadow_forward.py
+          python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/all_bet_runtime.py
+          python -m py_compile production/triple_research_runtime.py
+          python -m py_compile production/live_recording_resume.py
       - name: OOS compare formal A vs ticket-specific model
         run: |
           python production/research_ticket_oos_compare.py
