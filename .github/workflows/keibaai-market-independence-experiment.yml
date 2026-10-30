@@ -12,6 +12,7 @@ on:
       - 'production/research_ac_signal_filter_backtest.py'
       - 'production/research_ac_battle_skip_backtest.py'
       - 'production/research_ac_chaos_filter_backtest.py'
+      - 'production/research_ac_chaos_filter_backtest_fast.py'
       - '.github/workflows/keibaai-market-independence-experiment.yml'
   workflow_dispatch:
 
@@ -36,7 +37,7 @@ jobs:
       - name: Run exact Chaos-filter A/C betting backtest
         run: |
           cd production
-          python research_ac_chaos_filter_backtest.py
+          python research_ac_chaos_filter_backtest_fast.py
       - name: Upload research artifacts
         uses: actions/upload-artifact@v4
         with:
