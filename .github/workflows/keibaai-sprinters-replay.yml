@@ -24,7 +24,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
-          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml>=5,<7'
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
       - name: Replay 2026 Sprinters Stakes with pre-race history only
         env:
           KEIBAAI_EARLY_DATE: '20260927'
@@ -32,12 +32,12 @@ jobs:
         run: |
           cd production
           python - <<'PY'
-          from io import StringIO
           import re
           import unicodedata
           import numpy as np
           import pandas as pd
           import requests
+          from bs4 import BeautifulSoup
           import early_prediction_runtime as ep
 
           date8='20260927'
@@ -61,7 +61,7 @@ jobs:
           def resolve_abbrev(raw, candidates):
               n=norm(raw)
               if not n:
-                  return raw
+                  return str(raw)
               scored=[]
               for c in candidates:
                   cn=norm(c)
@@ -81,48 +81,37 @@ jobs:
               r=requests.get(url, headers={'User-Agent':'Mozilla/5.0','Accept-Language':'ja'}, timeout=30)
               r.raise_for_status()
               html=r.content.decode('utf-8', errors='replace')
-              tables=pd.read_html(StringIO(html))
-              chosen=None
-              for t in tables:
-                  tt=t.copy()
-                  if isinstance(tt.columns, pd.MultiIndex):
-                      tt.columns=[''.join([str(z) for z in c if 'Unnamed' not in str(z)]).strip() for c in tt.columns]
-                  else:
-                      tt.columns=[str(c).strip() for c in tt.columns]
-                  cols='|'.join(tt.columns)
-                  if '馬番' in cols and '馬名' in cols and '性齢' in cols and '斤量' in cols and '騎手' in cols:
-                      chosen=tt
-                      break
-              if chosen is None:
-                  raise RuntimeError('historical shutuba table not found')
-              print('HIST_ENTRY_COLUMNS', list(chosen.columns))
+              soup=BeautifulSoup(html, 'html.parser')
+              horse_rows=soup.select('tr.HorseList')
+              print('HIST_HORSE_ROWS_RAW', len(horse_rows))
+              if horse_rows:
+                  print('HIST_FIRST_ROW', ' | '.join(horse_rows[0].stripped_strings))
 
-              def col_like(key):
-                  for c in chosen.columns:
-                      if key in c:
-                          return c
-                  raise KeyError(key)
-
-              c_no=col_like('馬番'); c_name=col_like('馬名'); c_age=col_like('性齢')
-              c_wt=col_like('斤量'); c_j=col_like('騎手'); c_t=col_like('厩舎'); c_bw=col_like('馬体重')
               rows=[]
-              for _,row in chosen.iterrows():
-                  try:
-                      no=int(re.search(r'\d+', str(row[c_no])).group())
-                  except Exception:
+              for tr in horse_rows:
+                  no_node=tr.select_one('.Umaban')
+                  name_node=tr.select_one('.HorseName a') or tr.select_one('.HorseInfo a')
+                  age_node=tr.select_one('.Barei')
+                  jockey_node=tr.select_one('.Jockey a') or tr.select_one('.Jockey')
+                  trainer_node=tr.select_one('.Trainer a') or tr.select_one('.Trainer')
+                  bw_node=tr.select_one('.Weight')
+                  if not all([no_node,name_node,age_node,jockey_node,trainer_node]):
                       continue
-                  name=str(row[c_name]).strip().split()[0]
-                  age_m=re.search(r'(\d+)', str(row[c_age]))
-                  if not age_m:
+                  mno=re.search(r'\d+', no_node.get_text(' ',strip=True))
+                  mage=re.search(r'(\d+)', age_node.get_text(' ',strip=True))
+                  if not mno or not mage:
                       continue
-                  age=int(age_m.group(1))
-                  try:
-                      carried=float(re.search(r'\d+(?:\.\d+)?', str(row[c_wt])).group())
-                  except Exception:
+                  no=int(mno.group())
+                  name=name_node.get_text(' ',strip=True)
+                  age=int(mage.group(1))
+                  carried_td=age_node.find_next_sibling('td')
+                  mcarry=re.search(r'\d+(?:\.\d+)?', carried_td.get_text(' ',strip=True) if carried_td else '')
+                  if not mcarry:
                       continue
-                  jockey=resolve_abbrev(str(row[c_j]).strip(), hist_jockeys)
-                  trainer=resolve_abbrev(str(row[c_t]).strip(), hist_trainers)
-                  bw_text=str(row[c_bw])
+                  carried=float(mcarry.group())
+                  jockey=resolve_abbrev(jockey_node.get_text(' ',strip=True), hist_jockeys)
+                  trainer=resolve_abbrev(trainer_node.get_text(' ',strip=True), hist_trainers)
+                  bw_text=bw_node.get_text(' ',strip=True) if bw_node else ''
                   mw=re.search(r'(\d{3})\s*\(\s*([+-]?\d+)\s*\)', bw_text)
                   if mw:
                       bw=float(mw.group(1)); diff=float(mw.group(2))
@@ -132,7 +121,10 @@ jobs:
                       diff=np.nan
                   rows.append({'馬番':no,'馬名':name,'年齢':age,'斤量':carried,
                                '騎手_JRA':jockey,'調教師_JRA':trainer,'馬体重':bw,'増減':diff})
-              d=pd.DataFrame(rows).sort_values('馬番').reset_index(drop=True)
+              d=pd.DataFrame(rows)
+              if d.empty:
+                  raise RuntimeError('historical HorseList parse returned 0 rows')
+              d=d.sort_values('馬番').reset_index(drop=True)
               print('HIST_ENTRY_ROWS', len(d))
               print(d.to_string(index=False))
               return d, ep.base.now_jst(), url
