@@ -25,7 +25,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
-      - name: Run isolated Tokyo 11R early prediction
+      - name: Run isolated Tokyo 11R corrected early prediction
         env:
           KEIBAAI_EARLY_DATE: '20261101'
           KEIBAAI_EARLY_STAGE: 'previous_evening'
@@ -36,17 +36,28 @@ jobs:
           import early_prediction_runtime as ep
 
           date8='20261101'
+          target_rid='202605041111'
           ep.base.TARGET_DATE8=date8
           ep.live.base.TARGET_DATE8=date8
+
+          original_fetch_meta = ep.base.fetch_meta
+          def corrected_fetch_meta(race):
+              out = original_fetch_meta(race)
+              if str(out.get('race_id')) == target_rid:
+                  out['class'] = 'OP'
+              return out
+          ep.base.fetch_meta = corrected_fetch_meta
+          ep.live.base.fetch_meta = corrected_fetch_meta
+
           target_date=pd.Timestamp('2026-11-01')
           hist=ep.base.load_history(target_date)
           races=ep.base.fetch_schedule(date8)
-          target=[r for r in races if r.get('venue')=='東京' and int(r.get('race_no') or 0)==11]
+          target=[r for r in races if str(r.get('race_id'))==target_rid]
           if len(target) != 1:
-              raise RuntimeError(f'Tokyo 11R target count={len(target)}')
+              raise RuntimeError(f'Tenno target count={len(target)}')
           out=ep._safe_predict(target[0], hist, target_date)
           ranked=out.sort_values('AI勝率(%)', ascending=False).reset_index(drop=True)
-          print('TENNO_PREVIEW_BEGIN')
+          print('TENNO_CORRECTED_BEGIN')
           print(ranked.to_json(orient='records', force_ascii=False))
-          print('TENNO_PREVIEW_END')
+          print('TENNO_CORRECTED_END')
           PY
