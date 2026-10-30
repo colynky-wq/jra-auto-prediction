@@ -113,6 +113,7 @@ jobs:
           python -m py_compile production/cross_bet_recommendation.py
           python -m py_compile production/all_bet_recommendation_shadow.py
           python -m py_compile production/early_all_bet_recommendation.py
+          python -m py_compile production/build_app_research_data.py
           python production/test_all_bet_recommendation_shadow.py
           python production/test_cross_bet_recommendation.py
           python production/test_early_all_bet_recommendation.py
@@ -144,13 +145,30 @@ jobs:
           KEIBAAI_EARLY_ALL_BET_WORKERS: '4'
         run: python production/early_all_bet_recommendation.py
 
+      - name: Build app research display from the same early RaceData
+        if: steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
+        run: |
+          python production/build_app_research_data.py
+          python - <<'PY'
+          import json, os
+          date8 = os.environ['KEIBAAI_EARLY_DATE']
+          day = f'{date8[:4]}-{date8[4:6]}-{date8[6:]}'
+          payload = json.load(open('AppResearchData.json', encoding='utf-8'))
+          races = payload.get('races') or []
+          assert races, 'AppResearchData has no races'
+          assert all(r.get('raceDate') == day for r in races), 'AppResearchData day mismatch'
+          print('APP_RESEARCH_EARLY_SYNC_OK', day, len(races))
+          PY
+
       - name: Publish validated snapshot atomically
         if: steps.day.outputs.has_races == 'true'
         shell: bash
         run: |
           set -euo pipefail
 
-          for required in EarlyPredictionData.json RaceData.json AllBetRecommendationData.json; do
+          for required in EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json; do
             if [ ! -f "$required" ]; then
               echo "$required was not produced."
               exit 1
@@ -166,10 +184,12 @@ jobs:
           cp EarlyPredictionData.json "$publish_dir/EarlyPredictionData.json"
           cp RaceData.json "$publish_dir/RaceData.json"
           cp AllBetRecommendationData.json "$publish_dir/AllBetRecommendationData.json"
+          cp AppResearchData.json "$publish_dir/AppResearchData.json"
           cp EarlyPredictionData.json "$publish_dir/reports/${date8}/EarlyPredictionData.json"
           cp RaceData.json "$publish_dir/reports/${date8}/RaceData.early.json"
           cp AllBetRecommendationData.json "$publish_dir/reports/${date8}/AllBetRecommendationData.json"
           cp AllBetRecommendationData.json "$publish_dir/reports/${date8}/AllBetRecommendationData.${stage}.json"
+          cp AppResearchData.json "$publish_dir/reports/${date8}/AppResearchData.json"
 
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
@@ -182,17 +202,19 @@ jobs:
             cp "$publish_dir/EarlyPredictionData.json" EarlyPredictionData.json
             cp "$publish_dir/RaceData.json" RaceData.json
             cp "$publish_dir/AllBetRecommendationData.json" AllBetRecommendationData.json
+            cp "$publish_dir/AppResearchData.json" AppResearchData.json
             cp "$publish_dir/reports/${date8}/EarlyPredictionData.json" "reports/${date8}/EarlyPredictionData.json"
             cp "$publish_dir/reports/${date8}/RaceData.early.json" "reports/${date8}/RaceData.early.json"
             cp "$publish_dir/reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.json"
             cp "$publish_dir/reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"
+            cp "$publish_dir/reports/${date8}/AppResearchData.json" "reports/${date8}/AppResearchData.json"
 
-            if git diff --quiet -- EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"; then
-              echo 'No early prediction change after syncing latest main.'
+            if git diff --quiet -- EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AppResearchData.json"; then
+              echo 'No early prediction or app research change after syncing latest main.'
               exit 0
             fi
 
-            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"
+            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AppResearchData.json"
             git commit -m "Update early prediction ${date8} ${stage}"
 
             if git push origin HEAD:main; then
