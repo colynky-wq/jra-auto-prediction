@@ -8,6 +8,7 @@ Wide/Quinella/Exacta/Trio/Trifecta. No odds, stakes, or recommendations here.
 The hot-path marginal calculation is vectorized, but the objective, finite-
 difference optimizer, iteration count, learning-rate schedule, and probability
 formulas are unchanged from v1. This is a computational optimization only.
+The test suite contains a legacy-equivalence gate for realistic field sizes.
 """
 from __future__ import annotations
 from functools import lru_cache
