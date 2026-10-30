@@ -49,11 +49,16 @@ def _result(eligible: bool, reason: str, **extra: Any) -> dict[str, Any]:
 
 
 def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, Any]:
-    """Return fail-closed evidence for one portfolio race."""
+    """Return fail-closed evidence for one portfolio race.
+
+    The immutable prediction snapshot's own startTime is the schedule used when
+    the live runtime classified the capture. A later one-minute official delay
+    must not retroactively turn an authentic T-10 snapshot into a miss.
+    """
     day = row.get("raceDate")
     rid = row.get("raceID")
-    start = row.get("startTime")
-    if not isinstance(day, str) or not isinstance(rid, str) or not rid or not isinstance(start, str):
+    portfolio_start = row.get("startTime")
+    if not isinstance(day, str) or not isinstance(rid, str) or not rid:
         return _result(False, "invalid_portfolio_identity")
 
     day8 = day.replace("-", "")
@@ -78,13 +83,15 @@ def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, 
         return _result(False, "prediction_race_id_mismatch", source=rel)
     if prediction.get("raceDate") != day:
         return _result(False, "prediction_race_date_mismatch", source=rel)
-    if str(prediction.get("startTime") or "") != start:
-        return _result(False, "prediction_start_time_mismatch", source=rel)
     if prediction.get("predictionTiming") != FORMAL_TIMING:
         return _result(False, "prediction_not_formal_10min", source=rel)
 
+    prediction_start = prediction.get("startTime")
+    if not isinstance(prediction_start, str) or not prediction_start:
+        return _result(False, "prediction_start_time_missing", source=rel)
+
     captured = _parse_jst(prediction.get("capturedAtJST"))
-    scheduled = _scheduled_post(day, start)
+    scheduled = _scheduled_post(day, prediction_start)
     if captured is None or scheduled is None:
         return _result(False, "formal_timestamp_unusable", source=rel)
 
@@ -110,6 +117,15 @@ def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, 
         if not (MIN_MINUTES_TO_POST <= trigger_value <= MAX_MINUTES_TO_POST):
             return _result(False, "trigger_outside_formal_window", source=rel, triggerMinutesToPost=trigger_value)
 
+    extra: dict[str, Any] = {}
+    if isinstance(portfolio_start, str) and portfolio_start:
+        portfolio_scheduled = _scheduled_post(day, portfolio_start)
+        if portfolio_scheduled is not None:
+            extra["portfolioStartTime"] = portfolio_start
+            extra["portfolioScheduleDriftMinutes"] = round(
+                (scheduled - portfolio_scheduled).total_seconds() / 60.0, 3
+            )
+
     entry = payload.get("entryEvidence")
     if isinstance(entry, dict):
         entry_rid = entry.get("raceID")
@@ -118,19 +134,16 @@ def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, 
             return _result(False, "entry_evidence_race_id_mismatch", source=rel)
         if entry_day is not None and entry_day != day:
             return _result(False, "entry_evidence_race_date_mismatch", source=rel)
+
         entry_scheduled = _parse_jst(entry.get("scheduledPostJST"))
         entry_captured = _parse_jst(entry.get("capturedAtJST"))
-        if entry_scheduled is not None and abs((entry_scheduled - scheduled).total_seconds()) > 1:
-            return _result(False, "entry_evidence_post_time_mismatch", source=rel)
+        if entry_scheduled is not None:
+            extra["entryScheduledPostJST"] = entry_scheduled.isoformat()
+            extra["entryScheduleDriftMinutes"] = round(
+                (entry_scheduled - scheduled).total_seconds() / 60.0, 3
+            )
         if entry_captured is not None:
-            entry_minutes = (scheduled - entry_captured).total_seconds() / 60.0
-            if not (MIN_MINUTES_TO_POST <= entry_minutes <= MAX_MINUTES_TO_POST):
-                return _result(
-                    False,
-                    "entry_evidence_outside_formal_window",
-                    source=rel,
-                    entryMinutesToPost=round(entry_minutes, 3),
-                )
+            extra["entryCapturedAtJST"] = entry_captured.isoformat()
 
     return _result(
         True,
@@ -138,5 +151,7 @@ def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, 
         source=rel,
         capturedAtJST=captured.isoformat(),
         scheduledPostJST=scheduled.isoformat(),
+        predictionStartTime=prediction_start,
         minutesToPost=round(minutes_to_post, 3),
+        **extra,
     )
