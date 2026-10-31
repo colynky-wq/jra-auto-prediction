@@ -25,6 +25,7 @@ from formal_10min_evidence import (
 )
 from portfolio_review_100 import (
     PROSPECTIVE_START,
+    SOURCE_VERSION,
     TARGET_RACES,
     race_key as portfolio_race_key,
     read_json,
@@ -86,6 +87,8 @@ def authoritative_formal_cohort(root):
         if key in seen:
             raise ValueError(f'duplicate prospective race: {key}')
         seen.add(key)
+        if row.get('ruleVersion') != SOURCE_VERSION:
+            raise ValueError('mixed portfolio rule versions')
         prospective.append(row)
         evidence = inspect_formal_10min_evidence(root, row)
         reason = str(evidence.get('reason') or 'unknown')
