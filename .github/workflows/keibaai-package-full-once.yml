@@ -1,0 +1,34 @@
+name: KeibaAI Full Xcode Package Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-package-full-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify full KeibaAI source
+        run: |
+          set -e
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/KeibaAIBetResearchView.swift
+          grep -F 'case research = "券種別研究"' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          grep -F 'preferredCompactColumn = .detail' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          grep -F 'openRace(item.raceID)' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+      - name: Package
+        run: |
+          cp -R ios/KeibaAI KeibaAI_FULL_FIXED_20261101
+          printf '%s\n' 'KeibaAI 完全版。KeibaAI.xcodeproj を開いてください。前回の簡易版へ上書きせず別フォルダに展開してください。' > KeibaAI_FULL_FIXED_20261101/README_最初に読む.txt
+          zip -qr KeibaAI_FULL_FIXED_20261101.zip KeibaAI_FULL_FIXED_20261101
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI_FULL_FIXED_20261101
+          path: KeibaAI_FULL_FIXED_20261101.zip
+          if-no-files-found: error
