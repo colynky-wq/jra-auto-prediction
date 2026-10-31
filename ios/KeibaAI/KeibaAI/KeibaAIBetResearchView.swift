@@ -7,6 +7,7 @@ struct KeibaAIBetResearchView: View {
     @StateObject private var store = KeibaAIBetResearchStore()
     @StateObject private var earlyStore = KeibaAIEarlyPredictionStore()
     @StateObject private var performanceStore = KeibaAIBetPerformanceStore()
+    @StateObject private var win5FormalStore = KeibaAIWin5FormalReviewStore()
     @State private var selectedType = "win"
     @State private var selectedDay = ""
     @State private var showEarlyPredictions = false
@@ -96,32 +97,39 @@ struct KeibaAIBetResearchView: View {
                         await store.load(date8:chosenDate8)
                         await earlyStore.load(date8:chosenDate8, force:true)
                         await performanceStore.load(force:true)
+                        await win5FormalStore.load(force:true)
                     }
                 } label:{Image(systemName:"arrow.clockwise")}
-                    .accessibilityLabel("券種別研究を更新").disabled(store.isLoading || performanceStore.isLoading)
+                    .accessibilityLabel("券種別研究を更新")
+                    .disabled(store.isLoading || performanceStore.isLoading || win5FormalStore.isLoading)
             }
         }
         .refreshable {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8, force:true)
             await performanceStore.load(force:true)
+            await win5FormalStore.load(force:true)
         }
         .task(id:chosenDate8) {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8)
             await performanceStore.load()
+            await win5FormalStore.load()
         }
         .task(id:refreshID) {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8, force:true)
             await performanceStore.load(force:true)
+            await win5FormalStore.load(force:true)
         }
         .onChange(of:date8) { _,_ in selectedDay = "" }
     }
 
     @ViewBuilder
     private var formalPerformanceSection: some View {
-        if let formal = performanceStore.data?.formalT10, let performance = formalPerformance {
+        if selectedType == "win5" {
+            win5FormalPerformanceSection
+        } else if let formal = performanceStore.data?.formalT10, let performance = formalPerformance {
             VStack(alignment:.leading, spacing:10) {
                 HStack {
                     Label("正式T-10 前向き評価", systemImage:"checkmark.seal.fill")
@@ -130,29 +138,22 @@ struct KeibaAIBetResearchView: View {
                     Text("\(formal.eligibleRaces)/\(formal.targetRaces)R")
                         .font(.headline.monospacedDigit())
                 }
-                if performance.formalCohortApplicable == false {
-                    Text("WIN5は5レース1組の馬券なので、1レース単位の正式\(formal.targetRaces)R母集団では評価しません。専用の5レース組プロトコルで別評価します。")
-                        .font(.subheadline).fixedSize(horizontal:false,vertical:true)
-                    Label("通常券種の正式R数に対して『未記録』とは数えません。", systemImage:"info.circle")
-                        .font(.caption).foregroundStyle(.secondary)
-                } else {
-                    LazyVGrid(columns:[GridItem(.adaptive(minimum:140),alignment:.leading)],alignment:.leading,spacing:10) {
-                        formalMetric("記録率", percentText(performance.recordingCoveragePct))
-                        formalMetric("結果照合率", percentText(performance.settledCoveragePct))
-                        formalMetric("レース的中率", percentText(performance.raceHitRatePct))
-                        formalMetric("回収率", percentText(performance.returnRatePct))
-                    }
-                    Text("記録 \(performance.recordedRaces)/\(formal.eligibleRaces)R・結果照合 \(performance.settledRaces)/\(formal.eligibleRaces)R・的中 \(performance.hitRaces)R")
-                        .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
-                    Text("投資 \(performance.stakeYen)円 → 払戻 \(performance.returnYen)円 / 損益 \(signedYen(performance.profitYen))")
-                        .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
-                    if let missing = performance.missingRecordRaces, let pending = performance.unsettledOrUnmatchedRaces {
-                        Text("未記録 \(missing)R・未照合/未確定 \(pending)R")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    Text("10/24以降の厳格な発走8〜12分前記録だけを使い、最初の100Rで固定します。結果を見て後から母集団を差し替えません。")
-                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                LazyVGrid(columns:[GridItem(.adaptive(minimum:140),alignment:.leading)],alignment:.leading,spacing:10) {
+                    formalMetric("記録率", percentText(performance.recordingCoveragePct))
+                    formalMetric("結果照合率", percentText(performance.settledCoveragePct))
+                    formalMetric("レース的中率", percentText(performance.raceHitRatePct))
+                    formalMetric("回収率", percentText(performance.returnRatePct))
                 }
+                Text("記録 \(performance.recordedRaces)/\(formal.eligibleRaces)R・結果照合 \(performance.settledRaces)/\(formal.eligibleRaces)R・的中 \(performance.hitRaces)R")
+                    .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                Text("投資 \(performance.stakeYen)円 → 払戻 \(performance.returnYen)円 / 損益 \(signedYen(performance.profitYen))")
+                    .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                if let missing = performance.missingRecordRaces, let pending = performance.unsettledOrUnmatchedRaces {
+                    Text("未記録 \(missing)R・未照合/未確定 \(pending)R")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Text("10/24以降の厳格な発走8〜12分前記録だけを使い、最初の100Rで固定します。結果を見て後から母集団を差し替えません。")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
             }
             .padding(16)
             .frame(maxWidth:.infinity,alignment:.leading)
@@ -162,6 +163,54 @@ struct KeibaAIBetResearchView: View {
             ProgressView("正式T-10成績を取得中…")
                 .frame(maxWidth:.infinity,alignment:.leading)
         } else if let error = performanceStore.errorMessage {
+            Label(error,systemImage:"exclamationmark.triangle")
+                .font(.caption).foregroundStyle(.orange)
+        }
+    }
+
+    @ViewBuilder
+    private var win5FormalPerformanceSection: some View {
+        if let review = win5FormalStore.data {
+            let probability = review.probabilityEvaluation
+            VStack(alignment:.leading, spacing:10) {
+                HStack {
+                    Label("正式WIN5 前向き評価", systemImage:"checkmark.seal.fill")
+                        .font(.headline)
+                    Spacer()
+                    Text("\(review.sessionsEligible)開催")
+                        .font(.headline.monospacedDigit())
+                }
+                Text("1観測＝共通締切前に凍結したWIN5対象5レース1組。通常券種の100R評価とは別母集団です。")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                LazyVGrid(columns:[GridItem(.adaptive(minimum:140),alignment:.leading)],alignment:.leading,spacing:10) {
+                    formalMetric("確率評価完了", "\(review.sessionsResultMatched)開催")
+                    formalMetric("払戻検証済み", "\(review.sessionsPayoutVerified)開催")
+                    formalMetric("結果待ち", "\(review.sessionsPending)開催")
+                    formalMetric("結果除外", "\(review.sessionsOutcomeExcluded ?? 0)開催")
+                    formalMetric("AI 1位的中率", percentText(probability.aiTopOneLegHitRatePct))
+                    formalMetric("市場1位的中率", percentText(probability.marketTopOneLegHitRatePct))
+                }
+                if probability.sessionsEvaluated > 0 {
+                    Text("評価済み \(probability.sessionsEvaluated)開催 / \(probability.totalLegsEvaluated)レース・AI1位的中 \(probability.aiTopOneLegHits)R / 市場1位 \(probability.marketTopOneLegHits)R")
+                        .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                    if let aiNLL = probability.meanAINegativeLogProbability, let marketNLL = probability.meanMarketNegativeLogProbability {
+                        Text("平均NLL（小さいほど良い）：AI \(String(format:"%.3f",aiNLL)) / 市場 \(String(format:"%.3f",marketNLL))")
+                            .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                    }
+                }
+                Label("正式ROIは未開始です。既存開催では購入点・予算ルールを事前固定していないため、結果を見て後から買い目を復元しません。", systemImage:"info.circle")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                Text("正式開始：\(review.prospectiveStartDate) / 更新：\(review.generatedAtJST.replacingOccurrences(of:"T",with:" "))")
+                    .font(.caption2).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+            }
+            .padding(16)
+            .frame(maxWidth:.infinity,alignment:.leading)
+            .background(Color.green.opacity(0.08),in:RoundedRectangle(cornerRadius:16))
+            .accessibilityIdentifier("formal-win5-performance")
+        } else if win5FormalStore.isLoading {
+            ProgressView("正式WIN5評価を取得中…")
+                .frame(maxWidth:.infinity,alignment:.leading)
+        } else if let error = win5FormalStore.errorMessage {
             Label(error,systemImage:"exclamationmark.triangle")
                 .font(.caption).foregroundStyle(.orange)
         }
