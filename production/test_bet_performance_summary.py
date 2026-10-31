@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import build_bet_performance_summary as summary
 
@@ -35,6 +36,18 @@ def formal_sidecar(captured='2026-10-25T09:50:00+09:00', timing='live_10min'):
             'predictionTiming': timing,
             'capturedAtJST': captured,
         },
+    }
+
+
+def direct_row(day, rid, minute=0):
+    return {
+        'id': f'win:{day}:{rid}',
+        'betType': 'win',
+        'raceDate': day,
+        'raceID': rid,
+        'startTime': f'10:{minute:02d}',
+        'status': 'matched',
+        'candidates': [{'id': '01', 'unitYen': 100, 'hit': False, 'payoutYen': 0}],
     }
 
 
@@ -80,6 +93,8 @@ class TestBetPerformanceSummary(unittest.TestCase):
 
         self.write_sidecar(formal_sidecar())
         with_formal = summary.build(self.root)
+        self.assertEqual(with_formal['formalT10']['prospectiveStartDate'], '2026-10-24')
+        self.assertEqual(with_formal['formalT10']['targetRaces'], 100)
         self.assertEqual(with_formal['formalT10']['eligibleRaces'], 1)
         self.assertEqual(with_formal['formalT10']['excludedRaces'], 0)
         formal_win = next(row for row in with_formal['formalT10']['betTypes'] if row['id'] == 'win')
@@ -101,6 +116,23 @@ class TestBetPerformanceSummary(unittest.TestCase):
         built = summary.build(self.root)
         self.assertEqual(built['formalT10']['eligibleRaces'], 0)
         self.assertEqual(built['formalT10']['evidenceReasons']['captured_outside_formal_window'], 1)
+
+    @patch.object(summary, 'inspect_formal_10min_evidence', return_value={'eligible': True, 'reason': 'formal_10min_verified'})
+    def test_formal_cohort_ignores_prestart_and_locks_first_100(self, inspect_mock):
+        rows = [direct_row('2026-10-23', 'prestart', 0)]
+        rows += [direct_row('2026-10-24', f'race{i:03d}', i % 60) for i in range(101)]
+
+        filtered, meta = summary.formal_t10_rows(self.root, rows)
+
+        self.assertEqual(inspect_mock.call_count, 101)
+        self.assertEqual(meta['prospectiveRacesObserved'], 101)
+        self.assertEqual(meta['verifiedFormalRacesObserved'], 101)
+        self.assertEqual(meta['eligibleRaces'], 100)
+        self.assertEqual(meta['remainingTo100'], 0)
+        self.assertEqual(meta['laterFormalRacesExcludedAfterFirst100'], 1)
+        self.assertTrue(meta['first100CohortLockedByRule'])
+        self.assertEqual(len(filtered), 100)
+        self.assertNotIn('prestart', {row['raceID'] for row in filtered})
 
     def test_source_timestamp_only_does_not_rewrite(self):
         self.write_source(source('2026-10-25T17:00:00+09:00'))
