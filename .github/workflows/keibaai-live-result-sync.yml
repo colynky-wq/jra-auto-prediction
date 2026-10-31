@@ -40,7 +40,9 @@ permissions:
 
 concurrency:
   group: keibaai-live-result-sync
-  cancel-in-progress: false
+  # A newer code generation must replace an older long-running monitor; otherwise
+  # a V1 runner can block a V2 verification run for hours.
+  cancel-in-progress: true
 
 jobs:
   sync-results:
@@ -101,7 +103,6 @@ jobs:
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
           elif [ "${{ github.event_name }}" = 'push' ]; then
-            # A workflow-file change should start the repaired monitor immediately.
             minutes='240'
           elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then
             minutes='330'
