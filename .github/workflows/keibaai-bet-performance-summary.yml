@@ -4,14 +4,17 @@ on:
   pull_request:
     paths:
       - 'production/build_bet_performance_summary.py'
+      - 'production/test_bet_performance_summary.py'
       - '.github/workflows/keibaai-bet-performance-summary.yml'
   push:
     branches: [main]
     paths:
       - 'production/build_bet_performance_summary.py'
+      - 'production/test_bet_performance_summary.py'
       - '.github/workflows/keibaai-bet-performance-summary.yml'
   schedule:
-    - cron: '*/10 * * * *'
+    # 09:00-18:59 JST on Sat/Sun/Mon. The result sync updates source data during racing.
+    - cron: '*/10 0-9 * * 0,1,6'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +22,7 @@ permissions:
 
 concurrency:
   group: keibaai-bet-performance-summary
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   aggregate:
@@ -33,6 +36,10 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      - name: Verify material-change aggregation
+        run: |
+          python -m py_compile production/build_bet_performance_summary.py
+          python production/test_bet_performance_summary.py
       - name: Build per-bet performance summary
         run: python production/build_bet_performance_summary.py
       - name: Validate summary contract
@@ -50,14 +57,35 @@ jobs:
                   assert x['returnRatePct'] >= 0
           print('BET_PERFORMANCE_SUMMARY_OK')
           PY
-      - name: Publish summary
+      - name: Publish summary when material metrics changed
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add BetPerformanceSummary.json
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Update bet performance summary'
-          git pull --rebase origin main
-          git push origin HEAD:main
+
+          if git diff --quiet -- BetPerformanceSummary.json; then
+            echo 'No material bet-performance change.'
+            exit 0
+          fi
+
+          for attempt in 1 2 3 4; do
+            git add BetPerformanceSummary.json
+            git commit -m 'Update bet performance summary' || true
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            git reset --hard origin/main
+            python production/build_bet_performance_summary.py
+            if git diff --quiet -- BetPerformanceSummary.json; then
+              echo 'Concurrent update already contains equivalent summary.'
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+
+          echo 'Unable to publish bet performance summary after bounded retries.' >&2
+          exit 1

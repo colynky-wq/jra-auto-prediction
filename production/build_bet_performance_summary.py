@@ -1,8 +1,11 @@
 """Aggregate settled BetResearchData rows into deterministic per-bet performance metrics.
 
 This is evaluation-only. It never changes selection rules, recommendations, or stakes.
-Each frozen candidate is treated at its recorded unit amount.
+Each frozen candidate is treated at its recorded unit amount. The published summary is
+rewritten only when material metrics change; source-generation timestamps alone do not
+create repository churn.
 """
+from copy import deepcopy
 import json
 from pathlib import Path
 
@@ -10,6 +13,7 @@ BET_LABELS = {
     'win':'単勝','place':'複勝','frame_quinella':'枠連','quinella':'馬連','wide':'ワイド',
     'exacta':'馬単','trio':'3連複','trifecta':'3連単','support':'応援馬券','win5':'WIN5'
 }
+VOLATILE_TOP_LEVEL_FIELDS = {'sourceGeneratedAtJST'}
 
 
 def load_rows(root):
@@ -63,12 +67,35 @@ def build(root):
     }
 
 
+def material(value):
+    if not isinstance(value, dict):
+        return value
+    result = deepcopy(value)
+    for field in VOLATILE_TOP_LEVEL_FIELDS:
+        result.pop(field, None)
+    return result
+
+
+def write_if_material_changed(root):
+    root = Path(root)
+    output = root / 'BetPerformanceSummary.json'
+    candidate = build(root)
+    if output.exists():
+        try:
+            current = json.loads(output.read_text(encoding='utf-8'))
+        except (OSError, json.JSONDecodeError):
+            current = None
+        if isinstance(current, dict) and material(current) == material(candidate):
+            return False, current
+    output.write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    return True, candidate
+
+
 def main():
     root = Path(__file__).resolve().parent.parent
-    output = root / 'BetPerformanceSummary.json'
-    text = json.dumps(build(root), ensure_ascii=False, indent=2) + '\n'
-    output.write_text(text, encoding='utf-8')
-    print('BET_PERFORMANCE_SUMMARY', output)
+    changed, summary = write_if_material_changed(root)
+    print('BET_PERFORMANCE_SUMMARY', 'changed' if changed else 'unchanged',
+          'betTypes', len(summary.get('betTypes', [])))
 
 
 if __name__ == '__main__':
