@@ -1,0 +1,62 @@
+name: KeibaAI Same-Day Shadow Evaluation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-same-day-shadow-evaluate.yml'
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'JST date YYYYMMDD. Leave blank for today.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-same-day-shadow-evaluate
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Test evaluator
+        run: |
+          python -m py_compile production/evaluate_same_day_shadow.py
+          python -m pip install 'pytest==8.4.2'
+          python -m pytest -q production/test_evaluate_same_day_shadow.py
+
+      - name: Evaluate saved formal A versus Same-Day V2
+        env:
+          KEIBAAI_SAME_DAY_DATE: ${{ github.event.inputs.target_date || '' }}
+        run: python production/evaluate_same_day_shadow.py
+
+      - name: Publish evaluation when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- SameDayShadowEvaluation.json reports)" ]; then
+            echo 'No evaluation changes.'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add SameDayShadowEvaluation.json reports
+          git commit -m 'Update Same-Day Shadow A-B evaluation'
+          git pull --rebase origin main
+          git push origin HEAD:main
