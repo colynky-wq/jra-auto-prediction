@@ -8,9 +8,11 @@ on:
     paths:
       - 'production/formal_10min_evidence.py'
       - 'production/portfolio_review_100.py'
+      - 'production/portfolio_review_100_diagnostics.py'
       - 'production/refresh_portfolio_review_live.py'
       - 'production/test_formal_10min_evidence.py'
       - 'production/test_portfolio_review_100.py'
+      - 'production/test_portfolio_review_100_diagnostics.py'
       - 'production/test_refresh_portfolio_review_live.py'
       - '.github/workflows/keibaai-formal-review-live.yml'
   schedule:
@@ -41,14 +43,15 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Verify strict formal review refresh
+      - name: Verify strict formal review refresh and frozen 100R diagnostics
         run: |
-          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/refresh_portfolio_review_live.py
+          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_review_100_diagnostics.py production/refresh_portfolio_review_live.py
           python production/test_formal_10min_evidence.py
           python production/test_portfolio_review_100.py
+          python production/test_portfolio_review_100_diagnostics.py
           python production/test_refresh_portfolio_review_live.py
 
-      - name: Refresh and publish only material formal-review changes
+      - name: Refresh review and publish material 100R diagnostics
         shell: bash
         run: |
           set -euo pipefail
@@ -60,14 +63,21 @@ jobs:
             git reset --hard origin/main
 
             python production/refresh_portfolio_review_live.py
+            python production/portfolio_review_100_diagnostics.py
 
-            if git diff --quiet -- PortfolioReview100.json; then
-              echo 'No material formal T-10 review change.'
+            if [ -z "$(git status --porcelain -- PortfolioReview100.json PortfolioReview100Diagnostics.json PortfolioReview100Diagnostics.md)" ]; then
+              echo 'No material formal T-10 review or frozen 100R diagnostic change.'
               exit 0
             fi
 
             git add -f PortfolioReview100.json
-            git commit -m 'Refresh KeibaAI formal T-10 review'
+            if [ -f PortfolioReview100Diagnostics.json ]; then
+              git add -f PortfolioReview100Diagnostics.json
+            fi
+            if [ -f PortfolioReview100Diagnostics.md ]; then
+              git add -f PortfolioReview100Diagnostics.md
+            fi
+            git commit -m 'Refresh KeibaAI formal T-10 review and diagnostics'
 
             if git push origin HEAD:main; then
               exit 0
