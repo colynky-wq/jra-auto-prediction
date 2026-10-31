@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "version": "bet-performance-summary-v2",
   "status": "research_evaluation_only",
-  "sourceGeneratedAtJST": "2026-10-31T11:35:08.533696+09:00",
+  "sourceGeneratedAtJST": "2026-10-31T12:19:33.623093+09:00",
   "definition": "発走前に保存された各候補を記録単位額で1点ずつ購入したと仮定した実測集計。選定ルールや正式推奨は変更しない。",
   "referenceCohortNote": "betTypes は全研究記録の参考集計で、正式forward性能の証明には使わない。",
   "betTypes": [
@@ -166,22 +166,25 @@
       12.0
     ],
     "prospectiveRacesObserved": 93,
-    "verifiedFormalRacesObserved": 75,
-    "eligibleRaces": 75,
-    "remainingTo100": 25,
-    "excludedRaces": 18,
+    "verifiedFormalRacesObserved": 77,
+    "eligibleRaces": 77,
+    "remainingTo100": 23,
+    "excludedRaces": 16,
     "laterFormalRacesExcludedAfterFirst100": 0,
     "first100CohortLockedByRule": true,
     "evidenceReasons": {
-      "formal_10min_verified": 75,
-      "formal_win_sidecar_missing": 18
+      "formal_10min_verified": 77,
+      "formal_win_sidecar_missing": 16
     },
-    "definition": "PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。",
+    "nonPerRaceBetTypes": [
+      "win5"
+    ],
+    "definition": "PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。WIN5は5レース1組のため、この単一レース母集団では正式評価せず専用プロトコル待ちとする。",
     "betTypes": [
       {
         "id": "win",
         "label": "単勝",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 70,
         "hitRaces": 46,
         "raceHitRatePct": 65.71,
@@ -193,14 +196,16 @@
         "profitYen": -5830,
         "returnRatePct": 72.24,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 93.33,
+        "settledCoveragePct": 90.91,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 5
+        "unsettledOrUnmatchedRaces": 7,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "place",
         "label": "複勝",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 69,
         "hitRaces": 63,
         "raceHitRatePct": 91.3,
@@ -212,14 +217,16 @@
         "profitYen": -5050,
         "returnRatePct": 75.6,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 92.0,
+        "settledCoveragePct": 89.61,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 6
+        "unsettledOrUnmatchedRaces": 8,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "frame_quinella",
         "label": "枠連",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 63,
         "hitRaces": 26,
         "raceHitRatePct": 41.27,
@@ -231,14 +238,16 @@
         "profitYen": -4690,
         "returnRatePct": 75.19,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 84.0,
+        "settledCoveragePct": 81.82,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 12
+        "unsettledOrUnmatchedRaces": 14,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "quinella",
         "label": "馬連",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 70,
         "hitRaces": 20,
         "raceHitRatePct": 28.57,
@@ -250,14 +259,16 @@
         "profitYen": -8130,
         "returnRatePct": 61.29,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 93.33,
+        "settledCoveragePct": 90.91,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 5
+        "unsettledOrUnmatchedRaces": 7,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "wide",
         "label": "ワイド",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 67,
         "hitRaces": 5,
         "raceHitRatePct": 7.46,
@@ -269,14 +280,16 @@
         "profitYen": 4430,
         "returnRatePct": 131.42,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 89.33,
+        "settledCoveragePct": 87.01,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 8
+        "unsettledOrUnmatchedRaces": 10,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "exacta",
         "label": "馬単",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 70,
         "hitRaces": 9,
         "raceHitRatePct": 12.86,
@@ -288,14 +301,16 @@
         "profitYen": -11970,
         "returnRatePct": 43.0,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 93.33,
+        "settledCoveragePct": 90.91,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 5
+        "unsettledOrUnmatchedRaces": 7,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "trio",
         "label": "3連複",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 70,
         "hitRaces": 10,
         "raceHitRatePct": 14.29,
@@ -307,14 +322,16 @@
         "profitYen": -13590,
         "returnRatePct": 35.29,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 93.33,
+        "settledCoveragePct": 90.91,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 5
+        "unsettledOrUnmatchedRaces": 7,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "trifecta",
         "label": "3連単",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 70,
         "hitRaces": 2,
         "raceHitRatePct": 2.86,
@@ -326,14 +343,16 @@
         "profitYen": -14360,
         "returnRatePct": 31.62,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 93.33,
+        "settledCoveragePct": 90.91,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 5
+        "unsettledOrUnmatchedRaces": 7,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "support",
         "label": "応援馬券",
-        "recordedRaces": 75,
+        "recordedRaces": 77,
         "settledRaces": 69,
         "hitRaces": 63,
         "raceHitRatePct": 91.3,
@@ -345,9 +364,11 @@
         "profitYen": -10720,
         "returnRatePct": 74.11,
         "recordingCoveragePct": 100.0,
-        "settledCoveragePct": 92.0,
+        "settledCoveragePct": 89.61,
         "missingRecordRaces": 0,
-        "unsettledOrUnmatchedRaces": 6
+        "unsettledOrUnmatchedRaces": 8,
+        "formalCohortApplicable": true,
+        "formalEvaluationStatus": "active"
       },
       {
         "id": "win5",
@@ -363,10 +384,12 @@
         "returnYen": 0,
         "profitYen": 0,
         "returnRatePct": null,
-        "recordingCoveragePct": 0.0,
-        "settledCoveragePct": 0.0,
-        "missingRecordRaces": 75,
-        "unsettledOrUnmatchedRaces": 0
+        "formalCohortApplicable": false,
+        "formalEvaluationStatus": "dedicated_multi_race_protocol_required",
+        "recordingCoveragePct": null,
+        "settledCoveragePct": null,
+        "missingRecordRaces": null,
+        "unsettledOrUnmatchedRaces": null
       }
     ]
   }
