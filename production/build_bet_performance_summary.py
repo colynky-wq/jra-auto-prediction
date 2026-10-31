@@ -6,10 +6,13 @@ rewritten only when material metrics change; source-generation timestamps alone 
 create repository churn.
 
 The legacy/reference aggregate remains available as ``betTypes``. A separate
-``formalT10`` cohort uses the same prospective start, immutable live_10min evidence,
-8-12 minute capture window, chronological ordering and first-100 lock as
-PortfolioReview100.json, so reference and formal-forward performance are never conflated.
+``formalT10`` cohort uses the same PortfolioResearchData source, prospective start,
+immutable live_10min evidence, 8-12 minute capture window, chronological ordering and
+first-100 lock as PortfolioReview100.json. Per-bet recording and settlement coverage is
+measured against that independent formal race cohort so missing bet records cannot
+silently shrink the denominator.
 """
+from collections import Counter
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -20,13 +23,23 @@ from formal_10min_evidence import (
     MIN_MINUTES_TO_POST,
     inspect_formal_10min_evidence,
 )
-from portfolio_review_100 import PROSPECTIVE_START, TARGET_RACES
+from portfolio_review_100 import (
+    PROSPECTIVE_START,
+    TARGET_RACES,
+    race_key as portfolio_race_key,
+    read_json,
+    validate_source,
+)
 
 BET_LABELS = {
     'win':'単勝','place':'複勝','frame_quinella':'枠連','quinella':'馬連','wide':'ワイド',
     'exacta':'馬単','trio':'3連複','trifecta':'3連単','support':'応援馬券','win5':'WIN5'
 }
 VOLATILE_TOP_LEVEL_FIELDS = {'sourceGeneratedAtJST'}
+
+
+def pct(n, d):
+    return round(n / d * 100, 2) if d else None
 
 
 def load_rows(root):
@@ -51,77 +64,92 @@ def race_key(row):
     return day, rid
 
 
-def formal_order_key(row):
-    key = race_key(row)
-    if key is None:
-        return ('', '', '')
-    return key[0], str(row.get('startTime') or ''), key[1]
-
-
-def formal_t10_rows(root, rows):
-    """Return the preregistered prospective first-100 strict formal T-10 cohort."""
+def authoritative_formal_cohort(root):
+    """Recreate PortfolioReview100's formal race cohort from its authoritative source."""
     root = Path(root)
-    evidence = {}
-    representatives = {}
-    prospective_observed = set()
-    verified = set()
-    reason_counts = {}
+    data = read_json(root / 'PortfolioResearchData.json')
+    validate_source(data)
+    races = data.get('races')
+    if not isinstance(races, list):
+        raise ValueError('portfolio races must be a list')
 
-    for row in rows:
+    prospective = []
+    verified = []
+    reasons = Counter()
+    seen = set()
+    for row in races:
+        if not isinstance(row, dict) or row.get('scope') != 'prospective':
+            continue
         key = race_key(row)
         if key is None or key[0] < PROSPECTIVE_START:
-            continue
-        prospective_observed.add(key)
-        representatives.setdefault(key, row)
-        if key not in evidence:
-            result = inspect_formal_10min_evidence(root, row)
-            evidence[key] = result
-            reason = str(result.get('reason') or 'unknown')
-            reason_counts[reason] = reason_counts.get(reason, 0) + 1
-            if result.get('eligible') is True:
-                verified.add(key)
+            raise ValueError('invalid prospective race identity/date')
+        if key in seen:
+            raise ValueError(f'duplicate prospective race: {key}')
+        seen.add(key)
+        prospective.append(row)
+        evidence = inspect_formal_10min_evidence(root, row)
+        reason = str(evidence.get('reason') or 'unknown')
+        reasons[reason] += 1
+        if evidence.get('eligible') is True:
+            verified.append(row)
 
-    ordered_verified = sorted(verified, key=lambda key: formal_order_key(representatives[key]))
-    cohort_keys = set(ordered_verified[:TARGET_RACES])
-    filtered = [row for row in rows if race_key(row) in cohort_keys]
-
-    return filtered, {
+    prospective.sort(key=portfolio_race_key)
+    verified.sort(key=portfolio_race_key)
+    cohort = verified[:TARGET_RACES]
+    cohort_keys = {race_key(row) for row in cohort}
+    return cohort_keys, {
         'prospectiveStartDate': PROSPECTIVE_START,
         'targetRaces': TARGET_RACES,
         'requiredTiming': FORMAL_TIMING,
         'formalWindowMinutesToPost': [MIN_MINUTES_TO_POST, MAX_MINUTES_TO_POST],
-        'prospectiveRacesObserved': len(prospective_observed),
-        'verifiedFormalRacesObserved': len(ordered_verified),
-        'eligibleRaces': len(cohort_keys),
-        'remainingTo100': max(0, TARGET_RACES - len(cohort_keys)),
-        'excludedRaces': len(prospective_observed - verified),
-        'laterFormalRacesExcludedAfterFirst100': max(0, len(ordered_verified) - TARGET_RACES),
+        'prospectiveRacesObserved': len(prospective),
+        'verifiedFormalRacesObserved': len(verified),
+        'eligibleRaces': len(cohort),
+        'remainingTo100': max(0, TARGET_RACES - len(cohort)),
+        'excludedRaces': len(prospective) - len(verified),
+        'laterFormalRacesExcludedAfterFirst100': max(0, len(verified) - TARGET_RACES),
         'first100CohortLockedByRule': True,
-        'evidenceReasons': dict(sorted(reason_counts.items())),
+        'evidenceReasons': dict(sorted(reasons.items())),
     }
 
 
-def summarize(kind, rows):
-    settled = [r for r in rows if r.get('betType') == kind and r.get('status') == 'matched']
+def formal_t10_rows(root, rows):
+    cohort_keys, meta = authoritative_formal_cohort(root)
+    filtered = [row for row in rows if race_key(row) in cohort_keys]
+    return filtered, meta
+
+
+def summarize(kind, rows, cohort_size=None):
+    kind_rows = [r for r in rows if r.get('betType') == kind]
+    recorded_keys = {race_key(r) for r in kind_rows if race_key(r) is not None}
+    settled = [r for r in kind_rows if r.get('status') == 'matched']
+    settled_keys = {race_key(r) for r in settled if race_key(r) is not None}
     candidates = [c for r in settled for c in r.get('candidates', []) if c.get('hit') is not None]
     hits = sum(c.get('hit') is True for c in candidates)
     hit_races = sum(any(c.get('hit') is True for c in r.get('candidates', [])) for r in settled)
     stake = sum(int(c.get('unitYen') or 0) for c in candidates)
     returned = sum(int(c.get('payoutYen') or 0) for c in candidates)
-    return {
+    result = {
         'id': kind,
         'label': BET_LABELS[kind],
-        'settledRaces': len(settled),
+        'recordedRaces': len(recorded_keys),
+        'settledRaces': len(settled_keys),
         'hitRaces': hit_races,
-        'raceHitRatePct': round(hit_races / len(settled) * 100, 2) if settled else None,
+        'raceHitRatePct': pct(hit_races, len(settled_keys)),
         'candidateTickets': len(candidates),
         'hitTickets': hits,
-        'ticketHitRatePct': round(hits / len(candidates) * 100, 2) if candidates else None,
+        'ticketHitRatePct': pct(hits, len(candidates)),
         'stakeYen': stake,
         'returnYen': returned,
         'profitYen': returned - stake,
         'returnRatePct': round(returned / stake * 100, 2) if stake else None,
     }
+    if cohort_size is not None:
+        result['recordingCoveragePct'] = pct(len(recorded_keys), cohort_size)
+        result['settledCoveragePct'] = pct(len(settled_keys), cohort_size)
+        result['missingRecordRaces'] = max(0, cohort_size - len(recorded_keys))
+        result['unsettledOrUnmatchedRaces'] = max(0, len(recorded_keys) - len(settled_keys))
+    return result
 
 
 def build(root):
@@ -129,7 +157,7 @@ def build(root):
     rows, generated = load_rows(root)
     metrics = [summarize(k, rows) for k in BET_LABELS]
     formal_rows, formal_meta = formal_t10_rows(root, rows)
-    formal_metrics = [summarize(k, formal_rows) for k in BET_LABELS]
+    formal_metrics = [summarize(k, formal_rows, formal_meta['eligibleRaces']) for k in BET_LABELS]
     return {
         'schemaVersion': 2,
         'version': 'bet-performance-summary-v2',
@@ -140,7 +168,7 @@ def build(root):
         'betTypes': metrics,
         'formalT10': {
             **formal_meta,
-            'definition': 'PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホートだけの券種別集計。結果判明後の後付け復元はしない。',
+            'definition': 'PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。',
             'betTypes': formal_metrics,
         },
     }
