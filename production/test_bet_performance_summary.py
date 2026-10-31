@@ -147,6 +147,8 @@ class TestBetPerformanceSummary(unittest.TestCase):
         self.assertEqual(formal_win['stakeYen'], 200)
         self.assertEqual(formal_win['returnYen'], 250)
         self.assertEqual(formal_win['returnRatePct'], 125.0)
+        self.assertTrue(formal_win['formalCohortApplicable'])
+        self.assertEqual(formal_win['formalEvaluationStatus'], 'active')
 
     def test_non_formal_timing_stays_excluded(self):
         self.write_source(source('2026-10-25T17:00:00+09:00'))
@@ -197,6 +199,25 @@ class TestBetPerformanceSummary(unittest.TestCase):
         self.assertEqual(win['missingRecordRaces'], 1)
         self.assertEqual(win['settledRaces'], 1)
         self.assertEqual(win['settledCoveragePct'], 50.0)
+
+    @patch.object(summary, 'inspect_formal_10min_evidence', return_value={'eligible': True, 'reason': 'formal_10min_verified'})
+    def test_win5_is_not_scored_against_single_race_formal_denominator(self, _inspect_mock):
+        race1 = direct_row('2026-10-25', 'race1', 0)
+        race2 = direct_row('2026-10-25', 'race2', 5)
+        self.write_portfolio([race1, race2])
+        self.write_bet_source({'generatedAtJST': '2026-10-25T17:00:00+09:00', 'races': [race1]})
+
+        built = summary.build(self.root)
+
+        self.assertIn('win5', built['formalT10']['nonPerRaceBetTypes'])
+        win5 = next(row for row in built['formalT10']['betTypes'] if row['id'] == 'win5')
+        self.assertFalse(win5['formalCohortApplicable'])
+        self.assertEqual(win5['formalEvaluationStatus'], 'dedicated_multi_race_protocol_required')
+        self.assertIsNone(win5['recordingCoveragePct'])
+        self.assertIsNone(win5['settledCoveragePct'])
+        self.assertIsNone(win5['missingRecordRaces'])
+        self.assertIsNone(win5['unsettledOrUnmatchedRaces'])
+        self.assertIsNone(win5['returnRatePct'])
 
     def test_source_timestamp_only_does_not_rewrite(self):
         self.write_source(source('2026-10-25T17:00:00+09:00'))
