@@ -10,7 +10,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "ダート",
@@ -28,14 +28,34 @@
       "confidence": 0.0,
       "sourceRaceNumbers": [],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 0,
+      "detailSourceRaceNumbers": [],
+      "frontGroupTop3Rate": null,
+      "backGroupTop3Rate": null,
+      "top3AverageFinalCornerPct": null,
+      "top3AverageLatePositionGain": null,
+      "runningStyleBiasScore": null,
+      "runningStyleBiasLabel": "insufficient",
+      "runningStyleConfidence": 0.0,
+      "sectionalRaceCount": 0,
+      "fastLast3Top3Rate": null,
+      "slowLast3Top3Rate": null,
+      "closingSpeedBiasScore": null,
+      "closingSpeedBiasLabel": "insufficient",
+      "closingSpeedConfidence": 0.0,
+      "lapRaceCount": 0,
+      "first600MinusLast600AvgSeconds": null,
+      "paceShapeLabel": "insufficient"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 5,
@@ -56,7 +76,10 @@
           "aiTop3Probability": 66.757,
           "aiMarketRatio": 0.909,
           "expectedIndex": 72.197,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.6279,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 36.098,
           "sameDayShadowRank": 1
         },
@@ -79,7 +102,10 @@
           "aiTop3Probability": 34.769,
           "aiMarketRatio": 1.111,
           "expectedIndex": 88.24,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 1.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 12.788,
           "sameDayShadowRank": 2
         },
@@ -102,6 +128,9 @@
           "aiTop3Probability": 24.13,
           "aiMarketRatio": 1.0411,
           "expectedIndex": 82.69,
+          "sameDayExpectedFrontness": 0.7677,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 8.797,
           "sameDayShadowRank": 3
@@ -125,6 +154,9 @@
           "aiTop3Probability": 25.933,
           "aiMarketRatio": 1.0411,
           "expectedIndex": 82.688,
+          "sameDayExpectedFrontness": 0.6477,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 7.19,
           "sameDayShadowRank": 4
@@ -148,7 +180,10 @@
           "aiTop3Probability": 23.361,
           "aiMarketRatio": 1.0609,
           "expectedIndex": 84.26,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 6.795,
           "sameDayShadowRank": 5
         },
@@ -171,6 +206,9 @@
           "aiTop3Probability": 24.059,
           "aiMarketRatio": 1.1025,
           "expectedIndex": 87.565,
+          "sameDayExpectedFrontness": 0.6648,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 5.877,
           "sameDayShadowRank": 6
@@ -194,7 +232,10 @@
           "aiTop3Probability": 21.253,
           "aiMarketRatio": 1.0852,
           "expectedIndex": 86.186,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.1111,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 4.897,
           "sameDayShadowRank": 7
         },
@@ -217,6 +258,9 @@
           "aiTop3Probability": 18.758,
           "aiMarketRatio": 1.0567,
           "expectedIndex": 83.927,
+          "sameDayExpectedFrontness": 0.1693,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.904,
           "sameDayShadowRank": 8
@@ -240,6 +284,9 @@
           "aiTop3Probability": 14.453,
           "aiMarketRatio": 1.1572,
           "expectedIndex": 91.909,
+          "sameDayExpectedFrontness": 0.5227,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.894,
           "sameDayShadowRank": 9
@@ -263,6 +310,9 @@
           "aiTop3Probability": 10.447,
           "aiMarketRatio": 1.0875,
           "expectedIndex": 86.37,
+          "sameDayExpectedFrontness": 0.8571,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.742,
           "sameDayShadowRank": 10
@@ -286,6 +336,9 @@
           "aiTop3Probability": 10.813,
           "aiMarketRatio": 1.0015,
           "expectedIndex": 79.54,
+          "sameDayExpectedFrontness": 0.4667,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.279,
           "sameDayShadowRank": 11
@@ -309,7 +362,10 @@
           "aiTop3Probability": 7.016,
           "aiMarketRatio": 0.996,
           "expectedIndex": 79.101,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.6484,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.454,
           "sameDayShadowRank": 12
         },
@@ -332,7 +388,10 @@
           "aiTop3Probability": 6.27,
           "aiMarketRatio": 0.9638,
           "expectedIndex": 76.545,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.5294,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.261,
           "sameDayShadowRank": 13
         },
@@ -355,7 +414,10 @@
           "aiTop3Probability": 5.226,
           "aiMarketRatio": 0.7674,
           "expectedIndex": 60.949,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.5,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.903,
           "sameDayShadowRank": 14
         },
@@ -378,6 +440,9 @@
           "aiTop3Probability": 4.952,
           "aiMarketRatio": 0.9852,
           "expectedIndex": 78.247,
+          "sameDayExpectedFrontness": 0.2,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.887,
           "sameDayShadowRank": 15
@@ -401,7 +466,10 @@
           "aiTop3Probability": 1.804,
           "aiMarketRatio": 0.4928,
           "expectedIndex": 39.137,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.233,
           "sameDayShadowRank": 16
         }
@@ -419,7 +487,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -437,14 +505,34 @@
       "confidence": 0.0,
       "sourceRaceNumbers": [],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 0,
+      "detailSourceRaceNumbers": [],
+      "frontGroupTop3Rate": null,
+      "backGroupTop3Rate": null,
+      "top3AverageFinalCornerPct": null,
+      "top3AverageLatePositionGain": null,
+      "runningStyleBiasScore": null,
+      "runningStyleBiasLabel": "insufficient",
+      "runningStyleConfidence": 0.0,
+      "sectionalRaceCount": 0,
+      "fastLast3Top3Rate": null,
+      "slowLast3Top3Rate": null,
+      "closingSpeedBiasScore": null,
+      "closingSpeedBiasLabel": "insufficient",
+      "closingSpeedConfidence": 0.0,
+      "lapRaceCount": 0,
+      "first600MinusLast600AvgSeconds": null,
+      "paceShapeLabel": "insufficient"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 9,
@@ -465,6 +553,9 @@
           "aiTop3Probability": 74.301,
           "aiMarketRatio": 1.0039,
           "expectedIndex": 78.81,
+          "sameDayExpectedFrontness": 0.8182,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 35.823,
           "sameDayShadowRank": 1
@@ -488,6 +579,9 @@
           "aiTop3Probability": 69.014,
           "aiMarketRatio": 0.9409,
           "expectedIndex": 73.864,
+          "sameDayExpectedFrontness": 0.3889,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 27.357,
           "sameDayShadowRank": 2
@@ -511,6 +605,9 @@
           "aiTop3Probability": 42.754,
           "aiMarketRatio": 1.1219,
           "expectedIndex": 88.079,
+          "sameDayExpectedFrontness": 1.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 12.406,
           "sameDayShadowRank": 3
@@ -534,7 +631,10 @@
           "aiTop3Probability": 31.687,
           "aiMarketRatio": 1.0105,
           "expectedIndex": 79.328,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.6154,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 7.854,
           "sameDayShadowRank": 4
         },
@@ -557,7 +657,10 @@
           "aiTop3Probability": 27.327,
           "aiMarketRatio": 1.0176,
           "expectedIndex": 79.886,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.4667,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 6.145,
           "sameDayShadowRank": 5
         },
@@ -580,6 +683,9 @@
           "aiTop3Probability": 24.27,
           "aiMarketRatio": 1.0263,
           "expectedIndex": 80.569,
+          "sameDayExpectedFrontness": 0.8571,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 4.943,
           "sameDayShadowRank": 6
@@ -603,6 +709,9 @@
           "aiTop3Probability": 14.298,
           "aiMarketRatio": 1.009,
           "expectedIndex": 79.214,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.667,
           "sameDayShadowRank": 7
@@ -626,7 +735,10 @@
           "aiTop3Probability": 7.491,
           "aiMarketRatio": 1.1154,
           "expectedIndex": 87.565,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.1,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.347,
           "sameDayShadowRank": 8
         },
@@ -649,7 +761,10 @@
           "aiTop3Probability": 4.982,
           "aiMarketRatio": 1.0473,
           "expectedIndex": 82.222,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.3636,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.849,
           "sameDayShadowRank": 9
         },
@@ -672,7 +787,10 @@
           "aiTop3Probability": 3.877,
           "aiMarketRatio": 0.6844,
           "expectedIndex": 53.729,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.0417,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.61,
           "sameDayShadowRank": 10
         }
@@ -690,7 +808,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -710,14 +828,36 @@
         2
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 1,
+      "detailSourceRaceNumbers": [
+        2
+      ],
+      "frontGroupTop3Rate": 0.25,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.35,
+      "top3AverageLatePositionGain": 0.2222,
+      "runningStyleBiasScore": -0.1261,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.17,
+      "sectionalRaceCount": 1,
+      "fastLast3Top3Rate": 0.25,
+      "slowLast3Top3Rate": 0.25,
+      "closingSpeedBiasScore": 0.0,
+      "closingSpeedBiasLabel": "neutral",
+      "closingSpeedConfidence": 0.15,
+      "lapRaceCount": 1,
+      "first600MinusLast600AvgSeconds": 0.3,
+      "paceShapeLabel": "balanced_600m"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 7,
@@ -738,8 +878,11 @@
           "aiTop3Probability": 70.212,
           "aiMarketRatio": 0.9188,
           "expectedIndex": 72.52,
-          "sameDayShadowAdjustment": 0.0135,
-          "sameDayShadowScore": 30.62493,
+          "sameDayExpectedFrontness": 0.5333,
+          "sameDayDrawAdjustment": 0.0135,
+          "sameDayStyleAdjustment": 8.6e-05,
+          "sameDayShadowAdjustment": 0.013586,
+          "sameDayShadowScore": 30.627521,
           "sameDayShadowRank": 1
         },
         {
@@ -761,8 +904,11 @@
           "aiTop3Probability": 59.645,
           "aiMarketRatio": 1.1306,
           "expectedIndex": 89.237,
-          "sameDayShadowAdjustment": 0.0027,
-          "sameDayShadowScore": 22.942779,
+          "sameDayExpectedFrontness": 0.5437,
+          "sameDayDrawAdjustment": 0.0027,
+          "sameDayStyleAdjustment": 0.000113,
+          "sameDayShadowAdjustment": 0.002813,
+          "sameDayShadowScore": 22.945354,
           "sameDayShadowRank": 2
         },
         {
@@ -784,8 +930,11 @@
           "aiTop3Probability": 49.884,
           "aiMarketRatio": 1.0274,
           "expectedIndex": 81.092,
-          "sameDayShadowAdjustment": -0.0027,
-          "sameDayShadowScore": 17.581402,
+          "sameDayExpectedFrontness": 0.9286,
+          "sameDayDrawAdjustment": -0.0027,
+          "sameDayStyleAdjustment": 0.001102,
+          "sameDayShadowAdjustment": -0.001598,
+          "sameDayShadowScore": 17.600837,
           "sameDayShadowRank": 3
         },
         {
@@ -807,8 +956,11 @@
           "aiTop3Probability": 50.446,
           "aiMarketRatio": 0.9443,
           "expectedIndex": 74.532,
-          "sameDayShadowAdjustment": 0.0189,
-          "sameDayShadowScore": 15.187723,
+          "sameDayExpectedFrontness": 0.7273,
+          "sameDayDrawAdjustment": 0.0189,
+          "sameDayStyleAdjustment": 0.000585,
+          "sameDayShadowAdjustment": 0.019485,
+          "sameDayShadowScore": 15.196438,
           "sameDayShadowRank": 4
         },
         {
@@ -830,8 +982,11 @@
           "aiTop3Probability": 29.789,
           "aiMarketRatio": 1.0482,
           "expectedIndex": 82.731,
-          "sameDayShadowAdjustment": -0.0189,
-          "sameDayShadowScore": 6.652839,
+          "sameDayExpectedFrontness": 0.2,
+          "sameDayDrawAdjustment": -0.0189,
+          "sameDayStyleAdjustment": -0.000772,
+          "sameDayShadowAdjustment": -0.019672,
+          "sameDayShadowScore": 6.647606,
           "sameDayShadowRank": 5
         },
         {
@@ -853,8 +1008,11 @@
           "aiTop3Probability": 17.525,
           "aiMarketRatio": 1.0752,
           "expectedIndex": 84.859,
-          "sameDayShadowAdjustment": -0.0081,
-          "sameDayShadowScore": 3.6125,
+          "sameDayExpectedFrontness": 0.6471,
+          "sameDayDrawAdjustment": -0.0081,
+          "sameDayStyleAdjustment": 0.000378,
+          "sameDayShadowAdjustment": -0.007722,
+          "sameDayShadowScore": 3.613878,
           "sameDayShadowRank": 6
         },
         {
@@ -876,8 +1034,11 @@
           "aiTop3Probability": 10.864,
           "aiMarketRatio": 0.9197,
           "expectedIndex": 72.591,
-          "sameDayShadowAdjustment": 0.0081,
-          "sameDayShadowScore": 2.061564,
+          "sameDayExpectedFrontness": 0.1333,
+          "sameDayDrawAdjustment": 0.0081,
+          "sameDayStyleAdjustment": -0.000943,
+          "sameDayShadowAdjustment": 0.007157,
+          "sameDayShadowScore": 2.059636,
           "sameDayShadowRank": 7
         },
         {
@@ -899,8 +1060,11 @@
           "aiTop3Probability": 11.634,
           "aiMarketRatio": 1.0247,
           "expectedIndex": 80.877,
-          "sameDayShadowAdjustment": -0.0135,
-          "sameDayShadowScore": 1.873364,
+          "sameDayExpectedFrontness": 0.3333,
+          "sameDayDrawAdjustment": -0.0135,
+          "sameDayStyleAdjustment": -0.000429,
+          "sameDayShadowAdjustment": -0.013929,
+          "sameDayShadowScore": 1.872549,
           "sameDayShadowRank": 8
         }
       ]
@@ -917,7 +1081,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -938,14 +1102,37 @@
         3
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 2,
+      "detailSourceRaceNumbers": [
+        2,
+        3
+      ],
+      "frontGroupTop3Rate": 0.375,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.3104,
+      "top3AverageLatePositionGain": 0.1587,
+      "runningStyleBiasScore": -0.2378,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.34,
+      "sectionalRaceCount": 2,
+      "fastLast3Top3Rate": 0.4286,
+      "slowLast3Top3Rate": 0.2857,
+      "closingSpeedBiasScore": 0.1429,
+      "closingSpeedBiasLabel": "neutral",
+      "closingSpeedConfidence": 0.3,
+      "lapRaceCount": 2,
+      "first600MinusLast600AvgSeconds": 0.4,
+      "paceShapeLabel": "balanced_600m"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 10,
@@ -966,8 +1153,11 @@
           "aiTop3Probability": 56.534,
           "aiMarketRatio": 1.0226,
           "expectedIndex": 80.883,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.022254,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.022254,
-          "sameDayShadowScore": 25.838497,
+          "sameDayShadowScore": 25.838492,
           "sameDayShadowRank": 1
         },
         {
@@ -989,8 +1179,11 @@
           "aiTop3Probability": 56.42,
           "aiMarketRatio": 0.9941,
           "expectedIndex": 78.63,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.014836,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.014836,
-          "sameDayShadowScore": 22.7829,
+          "sameDayShadowScore": 22.782903,
           "sameDayShadowRank": 2
         },
         {
@@ -1012,8 +1205,11 @@
           "aiTop3Probability": 40.842,
           "aiMarketRatio": 0.9924,
           "expectedIndex": 78.497,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.014836,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.014836,
-          "sameDayShadowScore": 14.224958,
+          "sameDayShadowScore": 14.224956,
           "sameDayShadowRank": 3
         },
         {
@@ -1035,8 +1231,11 @@
           "aiTop3Probability": 29.377,
           "aiMarketRatio": 0.968,
           "expectedIndex": 76.565,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.044508,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.044508,
-          "sameDayShadowScore": 9.260625,
+          "sameDayShadowScore": 9.260628,
           "sameDayShadowRank": 4
         },
         {
@@ -1058,8 +1257,11 @@
           "aiTop3Probability": 24.751,
           "aiMarketRatio": 1.0426,
           "expectedIndex": 82.463,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.029672,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.029672,
-          "sameDayShadowScore": 6.432363,
+          "sameDayShadowScore": 6.432361,
           "sameDayShadowRank": 5
         },
         {
@@ -1081,8 +1283,11 @@
           "aiTop3Probability": 23.794,
           "aiMarketRatio": 1.0286,
           "expectedIndex": 81.355,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.03709,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.03709,
-          "sameDayShadowScore": 5.979669,
+          "sameDayShadowScore": 5.979671,
           "sameDayShadowRank": 6
         },
         {
@@ -1104,6 +1309,9 @@
           "aiTop3Probability": 18.35,
           "aiMarketRatio": 1.0347,
           "expectedIndex": 81.845,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.007418,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.007418,
           "sameDayShadowScore": 4.58073,
           "sameDayShadowRank": 7
@@ -1127,8 +1335,11 @@
           "aiTop3Probability": 18.266,
           "aiMarketRatio": 0.9728,
           "expectedIndex": 76.947,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.022254,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.022254,
-          "sameDayShadowScore": 4.478076,
+          "sameDayShadowScore": 4.478077,
           "sameDayShadowRank": 8
         },
         {
@@ -1150,6 +1361,9 @@
           "aiTop3Probability": 9.431,
           "aiMarketRatio": 0.9768,
           "expectedIndex": 77.258,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.966,
           "sameDayShadowRank": 9
@@ -1173,6 +1387,9 @@
           "aiTop3Probability": 9.635,
           "aiMarketRatio": 0.9379,
           "expectedIndex": 74.185,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.029672,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.029672,
           "sameDayShadowScore": 1.879525,
           "sameDayShadowRank": 10
@@ -1196,6 +1413,9 @@
           "aiTop3Probability": 4.828,
           "aiMarketRatio": 0.9119,
           "expectedIndex": 72.126,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.03709,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.03709,
           "sameDayShadowScore": 0.956197,
           "sameDayShadowRank": 11
@@ -1219,6 +1439,9 @@
           "aiTop3Probability": 4.488,
           "aiMarketRatio": 0.8907,
           "expectedIndex": 70.45,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.007418,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.007418,
           "sameDayShadowScore": 0.846672,
           "sameDayShadowRank": 12
@@ -1242,6 +1465,9 @@
           "aiTop3Probability": 3.284,
           "aiMarketRatio": 0.8902,
           "expectedIndex": 70.411,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.044508,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.044508,
           "sameDayShadowScore": 0.653862,
           "sameDayShadowRank": 13
@@ -1260,7 +1486,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "ダート",
@@ -1280,14 +1506,36 @@
         1
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 1,
+      "detailSourceRaceNumbers": [
+        1
+      ],
+      "frontGroupTop3Rate": 0.2,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2812,
+      "top3AverageLatePositionGain": 0.2,
+      "runningStyleBiasScore": -0.1512,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.17,
+      "sectionalRaceCount": 1,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.5,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.15,
+      "lapRaceCount": 1,
+      "first600MinusLast600AvgSeconds": -2.3,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 10,
@@ -1308,8 +1556,11 @@
           "aiTop3Probability": 56.946,
           "aiMarketRatio": 1.0053,
           "expectedIndex": 79.723,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.002531,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.002531,
-          "sameDayShadowScore": 27.421413,
+          "sameDayShadowScore": 27.42142,
           "sameDayShadowRank": 1
         },
         {
@@ -1331,8 +1582,11 @@
           "aiTop3Probability": 32.564,
           "aiMarketRatio": 0.9521,
           "expectedIndex": 75.504,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.009281,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.009281,
-          "sameDayShadowScore": 12.492883,
+          "sameDayShadowScore": 12.49288,
           "sameDayShadowRank": 2
         },
         {
@@ -1354,8 +1608,11 @@
           "aiTop3Probability": 29.747,
           "aiMarketRatio": 1.0152,
           "expectedIndex": 80.512,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.000844,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.000844,
-          "sameDayShadowScore": 10.072491,
+          "sameDayShadowScore": 10.072494,
           "sameDayShadowRank": 3
         },
         {
@@ -1377,8 +1634,11 @@
           "aiTop3Probability": 30.234,
           "aiMarketRatio": 1.0209,
           "expectedIndex": 80.962,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.005906,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.005906,
-          "sameDayShadowScore": 9.935967,
+          "sameDayShadowScore": 9.93597,
           "sameDayShadowRank": 4
         },
         {
@@ -1400,8 +1660,11 @@
           "aiTop3Probability": 25.639,
           "aiMarketRatio": 1.0265,
           "expectedIndex": 81.404,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.000844,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.000844,
-          "sameDayShadowScore": 7.327812,
+          "sameDayShadowScore": 7.32781,
           "sameDayShadowRank": 5
         },
         {
@@ -1423,8 +1686,11 @@
           "aiTop3Probability": 23.548,
           "aiMarketRatio": 1.0088,
           "expectedIndex": 80.005,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.012656,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.012656,
-          "sameDayShadowScore": 6.98429,
+          "sameDayShadowScore": 6.984288,
           "sameDayShadowRank": 6
         },
         {
@@ -1446,8 +1712,11 @@
           "aiTop3Probability": 23.238,
           "aiMarketRatio": 1.0157,
           "expectedIndex": 80.553,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.010969,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.010969,
-          "sameDayShadowScore": 6.530573,
+          "sameDayShadowScore": 6.530572,
           "sameDayShadowRank": 7
         },
         {
@@ -1469,8 +1738,11 @@
           "aiTop3Probability": 17.643,
           "aiMarketRatio": 1.0284,
           "expectedIndex": 81.56,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.007594,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.007594,
-          "sameDayShadowScore": 4.642992,
+          "sameDayShadowScore": 4.642993,
           "sameDayShadowRank": 8
         },
         {
@@ -1492,8 +1764,11 @@
           "aiTop3Probability": 15.254,
           "aiMarketRatio": 1.0209,
           "expectedIndex": 80.965,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.002531,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.002531,
-          "sameDayShadowScore": 3.959998,
+          "sameDayShadowScore": 3.959997,
           "sameDayShadowRank": 9
         },
         {
@@ -1515,8 +1790,11 @@
           "aiTop3Probability": 14.039,
           "aiMarketRatio": 1.0193,
           "expectedIndex": 80.838,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.010969,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.010969,
-          "sameDayShadowScore": 3.698124,
+          "sameDayShadowScore": 3.698125,
           "sameDayShadowRank": 10
         },
         {
@@ -1538,8 +1816,11 @@
           "aiTop3Probability": 13.164,
           "aiMarketRatio": 1.028,
           "expectedIndex": 81.522,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.009281,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.009281,
-          "sameDayShadowScore": 3.309991,
+          "sameDayShadowScore": 3.309992,
           "sameDayShadowRank": 11
         },
         {
@@ -1561,6 +1842,9 @@
           "aiTop3Probability": 4.298,
           "aiMarketRatio": 0.8582,
           "expectedIndex": 68.062,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.004219,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.004219,
           "sameDayShadowScore": 0.876683,
           "sameDayShadowRank": 12
@@ -1584,6 +1868,9 @@
           "aiTop3Probability": 3.858,
           "aiMarketRatio": 0.8825,
           "expectedIndex": 69.989,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.012656,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.012656,
           "sameDayShadowScore": 0.783951,
           "sameDayShadowRank": 13
@@ -1607,6 +1894,9 @@
           "aiTop3Probability": 3.636,
           "aiMarketRatio": 0.8743,
           "expectedIndex": 69.34,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.005906,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.005906,
           "sameDayShadowScore": 0.760465,
           "sameDayShadowRank": 14
@@ -1630,6 +1920,9 @@
           "aiTop3Probability": 3.167,
           "aiMarketRatio": 0.8627,
           "expectedIndex": 68.418,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.004219,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.004219,
           "sameDayShadowScore": 0.65622,
           "sameDayShadowRank": 15
@@ -1653,6 +1946,9 @@
           "aiTop3Probability": 3.024,
           "aiMarketRatio": 0.8181,
           "expectedIndex": 64.878,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.007594,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.007594,
           "sameDayShadowScore": 0.596436,
           "sameDayShadowRank": 16
@@ -1671,7 +1967,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "ダート",
@@ -1692,14 +1988,37 @@
         6
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 2,
+      "detailSourceRaceNumbers": [
+        1,
+        6
+      ],
+      "frontGroupTop3Rate": 0.3636,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2188,
+      "top3AverageLatePositionGain": 0.1333,
+      "runningStyleBiasScore": -0.2972,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.34,
+      "sectionalRaceCount": 2,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.5,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.3,
+      "lapRaceCount": 2,
+      "first600MinusLast600AvgSeconds": -2.0,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 10,
@@ -1720,8 +2039,11 @@
           "aiTop3Probability": 59.909,
           "aiMarketRatio": 1.0166,
           "expectedIndex": 80.249,
-          "sameDayShadowAdjustment": 0.015823,
-          "sameDayShadowScore": 28.109852,
+          "sameDayExpectedFrontness": 0.4002,
+          "sameDayDrawAdjustment": 0.015823,
+          "sameDayStyleAdjustment": -0.00121,
+          "sameDayShadowAdjustment": 0.014613,
+          "sameDayShadowScore": 28.076367,
           "sameDayShadowRank": 1
         },
         {
@@ -1743,8 +2065,11 @@
           "aiTop3Probability": 50.737,
           "aiMarketRatio": 1.0893,
           "expectedIndex": 85.982,
-          "sameDayShadowAdjustment": -0.020344,
-          "sameDayShadowScore": 22.765252,
+          "sameDayExpectedFrontness": 0.6437,
+          "sameDayDrawAdjustment": -0.020344,
+          "sameDayStyleAdjustment": 0.001742,
+          "sameDayShadowAdjustment": -0.018602,
+          "sameDayShadowScore": 22.805731,
           "sameDayShadowRank": 2
         },
         {
@@ -1766,8 +2091,11 @@
           "aiTop3Probability": 34.598,
           "aiMarketRatio": 0.9359,
           "expectedIndex": 73.871,
-          "sameDayShadowAdjustment": 0.024865,
-          "sameDayShadowScore": 10.370605,
+          "sameDayExpectedFrontness": 0.5143,
+          "sameDayDrawAdjustment": 0.024865,
+          "sameDayStyleAdjustment": 0.000173,
+          "sameDayShadowAdjustment": 0.025038,
+          "sameDayShadowScore": 10.372362,
           "sameDayShadowRank": 3
         },
         {
@@ -1789,8 +2117,11 @@
           "aiTop3Probability": 34.164,
           "aiMarketRatio": 0.9142,
           "expectedIndex": 72.166,
-          "sameDayShadowAdjustment": 0.006781,
-          "sameDayShadowScore": 10.090968,
+          "sameDayExpectedFrontness": 0.9652,
+          "sameDayDrawAdjustment": 0.006781,
+          "sameDayStyleAdjustment": 0.00564,
+          "sameDayShadowAdjustment": 0.012421,
+          "sameDayShadowScore": 10.147499,
           "sameDayShadowRank": 4
         },
         {
@@ -1812,8 +2143,11 @@
           "aiTop3Probability": 25.849,
           "aiMarketRatio": 1.0426,
           "expectedIndex": 82.294,
-          "sameDayShadowAdjustment": 0.00226,
-          "sameDayShadowScore": 9.480381,
+          "sameDayExpectedFrontness": 0.3227,
+          "sameDayDrawAdjustment": 0.00226,
+          "sameDayStyleAdjustment": -0.00215,
+          "sameDayShadowAdjustment": 0.00011,
+          "sameDayShadowScore": 9.46004,
           "sameDayShadowRank": 5
         },
         {
@@ -1835,8 +2169,11 @@
           "aiTop3Probability": 22.626,
           "aiMarketRatio": 1.0748,
           "expectedIndex": 84.837,
-          "sameDayShadowAdjustment": -0.011302,
-          "sameDayShadowScore": 6.122018,
+          "sameDayExpectedFrontness": 0.7175,
+          "sameDayDrawAdjustment": -0.011302,
+          "sameDayStyleAdjustment": 0.002637,
+          "sameDayShadowAdjustment": -0.008665,
+          "sameDayShadowScore": 6.138349,
           "sameDayShadowRank": 6
         },
         {
@@ -1858,8 +2195,11 @@
           "aiTop3Probability": 23.614,
           "aiMarketRatio": 0.9216,
           "expectedIndex": 72.748,
-          "sameDayShadowAdjustment": -0.00226,
-          "sameDayShadowScore": 4.682392,
+          "sameDayExpectedFrontness": 0.5503,
+          "sameDayDrawAdjustment": -0.00226,
+          "sameDayStyleAdjustment": 0.00061,
+          "sameDayShadowAdjustment": -0.00165,
+          "sameDayShadowScore": 4.685257,
           "sameDayShadowRank": 7
         },
         {
@@ -1881,8 +2221,11 @@
           "aiTop3Probability": 15.29,
           "aiMarketRatio": 0.9095,
           "expectedIndex": 71.794,
-          "sameDayShadowAdjustment": -0.006781,
-          "sameDayShadowScore": 2.807829,
+          "sameDayExpectedFrontness": 0.4722,
+          "sameDayDrawAdjustment": -0.006781,
+          "sameDayStyleAdjustment": -0.000338,
+          "sameDayShadowAdjustment": -0.007119,
+          "sameDayShadowScore": 2.806876,
           "sameDayShadowRank": 8
         },
         {
@@ -1904,8 +2247,11 @@
           "aiTop3Probability": 10.367,
           "aiMarketRatio": 0.99,
           "expectedIndex": 78.149,
-          "sameDayShadowAdjustment": 0.020344,
-          "sameDayShadowScore": 1.828456,
+          "sameDayExpectedFrontness": 0.4448,
+          "sameDayDrawAdjustment": 0.020344,
+          "sameDayStyleAdjustment": -0.000669,
+          "sameDayShadowAdjustment": 0.019675,
+          "sameDayShadowScore": 1.827258,
           "sameDayShadowRank": 9
         },
         {
@@ -1927,8 +2273,11 @@
           "aiTop3Probability": 11.04,
           "aiMarketRatio": 0.8441,
           "expectedIndex": 66.631,
-          "sameDayShadowAdjustment": 0.011302,
-          "sameDayShadowScore": 1.786971,
+          "sameDayExpectedFrontness": 0.521,
+          "sameDayDrawAdjustment": 0.011302,
+          "sameDayStyleAdjustment": 0.000255,
+          "sameDayShadowAdjustment": 0.011557,
+          "sameDayShadowScore": 1.787421,
           "sameDayShadowRank": 10
         },
         {
@@ -1950,8 +2299,11 @@
           "aiTop3Probability": 6.56,
           "aiMarketRatio": 0.682,
           "expectedIndex": 53.829,
-          "sameDayShadowAdjustment": -0.015823,
-          "sameDayShadowScore": 1.203649,
+          "sameDayExpectedFrontness": 0.3311,
+          "sameDayDrawAdjustment": -0.015823,
+          "sameDayStyleAdjustment": -0.002048,
+          "sameDayShadowAdjustment": -0.017871,
+          "sameDayShadowScore": 1.201144,
           "sameDayShadowRank": 11
         },
         {
@@ -1973,8 +2325,11 @@
           "aiTop3Probability": 5.245,
           "aiMarketRatio": 1.0575,
           "expectedIndex": 83.473,
-          "sameDayShadowAdjustment": -0.024865,
-          "sameDayShadowScore": 0.968309,
+          "sameDayExpectedFrontness": 0.3153,
+          "sameDayDrawAdjustment": -0.024865,
+          "sameDayStyleAdjustment": -0.00224,
+          "sameDayShadowAdjustment": -0.027105,
+          "sameDayShadowScore": 0.966085,
           "sameDayShadowRank": 12
         }
       ]
@@ -1991,7 +2346,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "ダート",
@@ -2013,14 +2368,38 @@
         7
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 3,
+      "detailSourceRaceNumbers": [
+        1,
+        6,
+        7
+      ],
+      "frontGroupTop3Rate": 0.4,
+      "backGroupTop3Rate": 0.0769,
+      "top3AverageFinalCornerPct": 0.2523,
+      "top3AverageLatePositionGain": 0.1596,
+      "runningStyleBiasScore": -0.2463,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.51,
+      "sectionalRaceCount": 3,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.5,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.45,
+      "lapRaceCount": 3,
+      "first600MinusLast600AvgSeconds": -1.533,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 13,
@@ -2041,8 +2420,11 @@
           "aiTop3Probability": 37.164,
           "aiMarketRatio": 1.1297,
           "expectedIndex": 89.79,
-          "sameDayShadowAdjustment": 0.034831,
-          "sameDayShadowScore": 16.020214,
+          "sameDayExpectedFrontness": 0.6848,
+          "sameDayDrawAdjustment": 0.034831,
+          "sameDayStyleAdjustment": 0.002786,
+          "sameDayShadowAdjustment": 0.037617,
+          "sameDayShadowScore": 16.063354,
           "sameDayShadowRank": 1
         },
         {
@@ -2064,8 +2446,11 @@
           "aiTop3Probability": 38.976,
           "aiMarketRatio": 0.8676,
           "expectedIndex": 68.955,
-          "sameDayShadowAdjustment": 0.003166,
-          "sameDayShadowScore": 15.721624,
+          "sameDayExpectedFrontness": 0.5079,
+          "sameDayDrawAdjustment": 0.003166,
+          "sameDayStyleAdjustment": 0.000119,
+          "sameDayShadowAdjustment": 0.003285,
+          "sameDayShadowScore": 15.723479,
           "sameDayShadowRank": 2
         },
         {
@@ -2087,8 +2472,11 @@
           "aiTop3Probability": 36.597,
           "aiMarketRatio": 1.066,
           "expectedIndex": 84.724,
-          "sameDayShadowAdjustment": 0.015832,
-          "sameDayShadowScore": 13.881346,
+          "sameDayExpectedFrontness": 0.7255,
+          "sameDayDrawAdjustment": 0.015832,
+          "sameDayStyleAdjustment": 0.003398,
+          "sameDayShadowAdjustment": 0.01923,
+          "sameDayShadowScore": 13.927783,
           "sameDayShadowRank": 3
         },
         {
@@ -2110,8 +2498,11 @@
           "aiTop3Probability": 38.284,
           "aiMarketRatio": 0.9285,
           "expectedIndex": 73.798,
-          "sameDayShadowAdjustment": -0.028498,
-          "sameDayShadowScore": 13.276548,
+          "sameDayExpectedFrontness": 0.4867,
+          "sameDayDrawAdjustment": -0.028498,
+          "sameDayStyleAdjustment": -0.000201,
+          "sameDayShadowAdjustment": -0.028699,
+          "sameDayShadowScore": 13.2738,
           "sameDayShadowRank": 4
         },
         {
@@ -2133,8 +2524,11 @@
           "aiTop3Probability": 28.815,
           "aiMarketRatio": 1.0114,
           "expectedIndex": 80.384,
-          "sameDayShadowAdjustment": 0.028498,
-          "sameDayShadowScore": 10.334346,
+          "sameDayExpectedFrontness": 0.4747,
+          "sameDayDrawAdjustment": 0.028498,
+          "sameDayStyleAdjustment": -0.000381,
+          "sameDayShadowAdjustment": 0.028117,
+          "sameDayShadowScore": 10.330521,
           "sameDayShadowRank": 5
         },
         {
@@ -2156,8 +2550,11 @@
           "aiTop3Probability": 23.642,
           "aiMarketRatio": 0.9971,
           "expectedIndex": 79.25,
-          "sameDayShadowAdjustment": -0.041164,
-          "sameDayShadowScore": 6.846092,
+          "sameDayExpectedFrontness": 0.481,
+          "sameDayDrawAdjustment": -0.041164,
+          "sameDayStyleAdjustment": -0.000287,
+          "sameDayShadowAdjustment": -0.041451,
+          "sameDayShadowScore": 6.844039,
           "sameDayShadowRank": 6
         },
         {
@@ -2179,8 +2576,11 @@
           "aiTop3Probability": 17.114,
           "aiMarketRatio": 1.0351,
           "expectedIndex": 82.264,
-          "sameDayShadowAdjustment": -0.022165,
-          "sameDayShadowScore": 5.362447,
+          "sameDayExpectedFrontness": 0.839,
+          "sameDayDrawAdjustment": -0.022165,
+          "sameDayStyleAdjustment": 0.005111,
+          "sameDayShadowAdjustment": -0.017054,
+          "sameDayShadowScore": 5.390474,
           "sameDayShadowRank": 7
         },
         {
@@ -2202,8 +2602,11 @@
           "aiTop3Probability": 20.048,
           "aiMarketRatio": 0.939,
           "expectedIndex": 74.63,
-          "sameDayShadowAdjustment": -0.003166,
-          "sameDayShadowScore": 4.155799,
+          "sameDayExpectedFrontness": 0.3133,
+          "sameDayDrawAdjustment": -0.003166,
+          "sameDayStyleAdjustment": -0.002814,
+          "sameDayShadowAdjustment": -0.00598,
+          "sameDayShadowScore": 4.144068,
           "sameDayShadowRank": 8
         },
         {
@@ -2225,8 +2628,11 @@
           "aiTop3Probability": 13.029,
           "aiMarketRatio": 1.0968,
           "expectedIndex": 87.168,
-          "sameDayShadowAdjustment": -0.015832,
-          "sameDayShadowScore": 3.486907,
+          "sameDayExpectedFrontness": 0.77,
+          "sameDayDrawAdjustment": -0.015832,
+          "sameDayStyleAdjustment": 0.00407,
+          "sameDayShadowAdjustment": -0.011762,
+          "sameDayShadowScore": 3.501329,
           "sameDayShadowRank": 9
         },
         {
@@ -2248,8 +2654,11 @@
           "aiTop3Probability": 12.015,
           "aiMarketRatio": 1.2632,
           "expectedIndex": 100.396,
-          "sameDayShadowAdjustment": -0.009499,
-          "sameDayShadowScore": 3.359778,
+          "sameDayExpectedFrontness": 0.9385,
+          "sameDayDrawAdjustment": -0.009499,
+          "sameDayStyleAdjustment": 0.006609,
+          "sameDayShadowAdjustment": -0.00289,
+          "sameDayShadowScore": 3.382198,
           "sameDayShadowRank": 10
         },
         {
@@ -2271,8 +2680,11 @@
           "aiTop3Probability": 10.106,
           "aiMarketRatio": 1.0424,
           "expectedIndex": 82.85,
-          "sameDayShadowAdjustment": 0.009499,
-          "sameDayShadowScore": 2.613594,
+          "sameDayExpectedFrontness": 0.8794,
+          "sameDayDrawAdjustment": 0.009499,
+          "sameDayStyleAdjustment": 0.005719,
+          "sameDayShadowAdjustment": 0.015218,
+          "sameDayShadowScore": 2.628401,
           "sameDayShadowRank": 11
         },
         {
@@ -2294,8 +2706,11 @@
           "aiTop3Probability": 12.202,
           "aiMarketRatio": 0.8641,
           "expectedIndex": 68.675,
-          "sameDayShadowAdjustment": 0.022165,
-          "sameDayShadowScore": 2.363245,
+          "sameDayExpectedFrontness": 0.1867,
+          "sameDayDrawAdjustment": 0.022165,
+          "sameDayStyleAdjustment": -0.004723,
+          "sameDayShadowAdjustment": 0.017442,
+          "sameDayShadowScore": 2.352326,
           "sameDayShadowRank": 12
         },
         {
@@ -2317,8 +2732,11 @@
           "aiTop3Probability": 7.368,
           "aiMarketRatio": 1.0064,
           "expectedIndex": 79.984,
-          "sameDayShadowAdjustment": -0.034831,
-          "sameDayShadowScore": 1.678429,
+          "sameDayExpectedFrontness": 0.4849,
+          "sameDayDrawAdjustment": -0.034831,
+          "sameDayStyleAdjustment": -0.000228,
+          "sameDayShadowAdjustment": -0.035059,
+          "sameDayShadowScore": 1.678032,
           "sameDayShadowRank": 13
         },
         {
@@ -2340,8 +2758,11 @@
           "aiTop3Probability": 4.64,
           "aiMarketRatio": 1.0376,
           "expectedIndex": 82.468,
-          "sameDayShadowAdjustment": 0.041164,
-          "sameDayShadowScore": 1.14528,
+          "sameDayExpectedFrontness": 0.4595,
+          "sameDayDrawAdjustment": 0.041164,
+          "sameDayStyleAdjustment": -0.000611,
+          "sameDayShadowAdjustment": 0.040553,
+          "sameDayShadowScore": 1.144609,
           "sameDayShadowRank": 14
         }
       ]
@@ -2358,7 +2779,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -2380,14 +2801,38 @@
         5
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 3,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5
+      ],
+      "frontGroupTop3Rate": 0.3571,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2967,
+      "top3AverageLatePositionGain": 0.1614,
+      "runningStyleBiasScore": -0.236,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.51,
+      "sectionalRaceCount": 3,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.1667,
+      "closingSpeedBiasScore": 0.3333,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.45,
+      "lapRaceCount": 3,
+      "first600MinusLast600AvgSeconds": 1.433,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 8,
@@ -2408,8 +2853,11 @@
           "aiTop3Probability": 52.349,
           "aiMarketRatio": 1.1372,
           "expectedIndex": 89.635,
-          "sameDayShadowAdjustment": 0.013536,
-          "sameDayShadowScore": 25.236039,
+          "sameDayExpectedFrontness": 0.5167,
+          "sameDayDrawAdjustment": 0.013536,
+          "sameDayStyleAdjustment": 0.000241,
+          "sameDayShadowAdjustment": 0.013777,
+          "sameDayShadowScore": 25.242027,
           "sameDayShadowRank": 1
         },
         {
@@ -2431,8 +2879,11 @@
           "aiTop3Probability": 53.673,
           "aiMarketRatio": 0.9939,
           "expectedIndex": 78.337,
-          "sameDayShadowAdjustment": 0.008122,
-          "sameDayShadowScore": 19.743056,
+          "sameDayExpectedFrontness": 0.6578,
+          "sameDayDrawAdjustment": 0.008122,
+          "sameDayStyleAdjustment": 0.002279,
+          "sameDayShadowAdjustment": 0.010401,
+          "sameDayShadowScore": 19.78769,
           "sameDayShadowRank": 2
         },
         {
@@ -2454,8 +2905,11 @@
           "aiTop3Probability": 48.532,
           "aiMarketRatio": 0.9239,
           "expectedIndex": 72.824,
-          "sameDayShadowAdjustment": 0.002707,
-          "sameDayShadowScore": 17.385941,
+          "sameDayExpectedFrontness": 0.5453,
+          "sameDayDrawAdjustment": 0.002707,
+          "sameDayStyleAdjustment": 0.000655,
+          "sameDayShadowAdjustment": 0.003362,
+          "sameDayShadowScore": 17.397286,
           "sameDayShadowRank": 3
         },
         {
@@ -2477,8 +2931,11 @@
           "aiTop3Probability": 39.466,
           "aiMarketRatio": 0.9834,
           "expectedIndex": 77.511,
-          "sameDayShadowAdjustment": -0.008122,
-          "sameDayShadowScore": 12.012637,
+          "sameDayExpectedFrontness": 0.3139,
+          "sameDayDrawAdjustment": -0.008122,
+          "sameDayStyleAdjustment": -0.002688,
+          "sameDayShadowAdjustment": -0.01081,
+          "sameDayShadowScore": 11.98008,
           "sameDayShadowRank": 4
         },
         {
@@ -2500,32 +2957,12 @@
           "aiTop3Probability": 22.645,
           "aiMarketRatio": 0.9967,
           "expectedIndex": 78.558,
-          "sameDayShadowAdjustment": -0.002707,
-          "sameDayShadowScore": 5.556915,
+          "sameDayExpectedFrontness": 0.5667,
+          "sameDayDrawAdjustment": -0.002707,
+          "sameDayStyleAdjustment": 0.000963,
+          "sameDayShadowAdjustment": -0.001744,
+          "sameDayShadowScore": 5.562282,
           "sameDayShadowRank": 5
-        },
-        {
-          "number": 3,
-          "name": "スターリングアップ",
-          "age": 5,
-          "horseKey": "スターリングアップ_2021",
-          "jockey": "池添謙一",
-          "carriedWeight": 56.0,
-          "popularity": 6,
-          "bodyWeight": 456,
-          "bodyWeightChange": 2,
-          "odds": 12.6,
-          "marketProbability": 6.256,
-          "aiProbability": 5.442,
-          "marketTop2Probability": 13.257,
-          "aiTop2Probability": 13.86,
-          "marketTop3Probability": 21.231,
-          "aiTop3Probability": 24.322,
-          "aiMarketRatio": 0.8699,
-          "expectedIndex": 68.566,
-          "sameDayShadowAdjustment": -0.013536,
-          "sameDayShadowScore": 5.368336,
-          "sameDayShadowRank": 6
         },
         {
           "number": 2,
@@ -2546,8 +2983,37 @@
           "aiTop3Probability": 21.839,
           "aiMarketRatio": 0.8511,
           "expectedIndex": 67.083,
-          "sameDayShadowAdjustment": -0.018951,
-          "sameDayShadowScore": 5.350643,
+          "sameDayExpectedFrontness": 0.9152,
+          "sameDayDrawAdjustment": -0.018951,
+          "sameDayStyleAdjustment": 0.005996,
+          "sameDayShadowAdjustment": -0.012955,
+          "sameDayShadowScore": 5.383344,
+          "sameDayShadowRank": 6
+        },
+        {
+          "number": 3,
+          "name": "スターリングアップ",
+          "age": 5,
+          "horseKey": "スターリングアップ_2021",
+          "jockey": "池添謙一",
+          "carriedWeight": 56.0,
+          "popularity": 6,
+          "bodyWeight": 456,
+          "bodyWeightChange": 2,
+          "odds": 12.6,
+          "marketProbability": 6.256,
+          "aiProbability": 5.442,
+          "marketTop2Probability": 13.257,
+          "aiTop2Probability": 13.86,
+          "marketTop3Probability": 21.231,
+          "aiTop3Probability": 24.322,
+          "aiMarketRatio": 0.8699,
+          "expectedIndex": 68.566,
+          "sameDayExpectedFrontness": 0.2016,
+          "sameDayDrawAdjustment": -0.013536,
+          "sameDayStyleAdjustment": -0.00431,
+          "sameDayShadowAdjustment": -0.017846,
+          "sameDayShadowScore": 5.344882,
           "sameDayShadowRank": 7
         },
         {
@@ -2569,8 +3035,11 @@
           "aiTop3Probability": 18.346,
           "aiMarketRatio": 1.1109,
           "expectedIndex": 87.564,
-          "sameDayShadowAdjustment": 0.018951,
-          "sameDayShadowScore": 4.849187,
+          "sameDayExpectedFrontness": 0.8643,
+          "sameDayDrawAdjustment": 0.018951,
+          "sameDayStyleAdjustment": 0.005261,
+          "sameDayShadowAdjustment": 0.024212,
+          "sameDayShadowScore": 4.874227,
           "sameDayShadowRank": 8
         },
         {
@@ -2592,8 +3061,11 @@
           "aiTop3Probability": 16.279,
           "aiMarketRatio": 1.1151,
           "expectedIndex": 87.897,
-          "sameDayShadowAdjustment": -0.024365,
-          "sameDayShadowScore": 4.398161,
+          "sameDayExpectedFrontness": 0.7012,
+          "sameDayDrawAdjustment": -0.024365,
+          "sameDayStyleAdjustment": 0.002906,
+          "sameDayShadowAdjustment": -0.021459,
+          "sameDayShadowScore": 4.411261,
           "sameDayShadowRank": 9
         },
         {
@@ -2615,8 +3087,11 @@
           "aiTop3Probability": 2.55,
           "aiMarketRatio": 0.4517,
           "expectedIndex": 35.599,
-          "sameDayShadowAdjustment": 0.024365,
-          "sameDayShadowScore": 0.341114,
+          "sameDayExpectedFrontness": 0.2973,
+          "sameDayDrawAdjustment": 0.024365,
+          "sameDayStyleAdjustment": -0.002928,
+          "sameDayShadowAdjustment": 0.021437,
+          "sameDayShadowScore": 0.340139,
           "sameDayShadowRank": 10
         }
       ]
@@ -2633,7 +3108,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "ダート",
@@ -2656,14 +3131,39 @@
         8
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 4,
+      "detailSourceRaceNumbers": [
+        1,
+        6,
+        7,
+        8
+      ],
+      "frontGroupTop3Rate": 0.3,
+      "backGroupTop3Rate": 0.0625,
+      "top3AverageFinalCornerPct": 0.3113,
+      "top3AverageLatePositionGain": 0.2223,
+      "runningStyleBiasScore": -0.1431,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.68,
+      "sectionalRaceCount": 4,
+      "fastLast3Top3Rate": 0.4762,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.4762,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.6,
+      "lapRaceCount": 4,
+      "first600MinusLast600AvgSeconds": -1.6,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 9,
@@ -2684,8 +3184,11 @@
           "aiTop3Probability": 43.261,
           "aiMarketRatio": 0.9833,
           "expectedIndex": 78.374,
-          "sameDayShadowAdjustment": 0.00375,
-          "sameDayShadowScore": 19.187685,
+          "sameDayExpectedFrontness": 0.4769,
+          "sameDayDrawAdjustment": 0.003125,
+          "sameDayStyleAdjustment": -0.000269,
+          "sameDayShadowAdjustment": 0.002856,
+          "sameDayShadowScore": 19.170586,
           "sameDayShadowRank": 1
         },
         {
@@ -2707,8 +3210,11 @@
           "aiTop3Probability": 32.228,
           "aiMarketRatio": 0.9037,
           "expectedIndex": 72.032,
-          "sameDayShadowAdjustment": 0.04125,
-          "sameDayShadowScore": 12.712621,
+          "sameDayExpectedFrontness": 0.0667,
+          "sameDayDrawAdjustment": 0.034375,
+          "sameDayStyleAdjustment": -0.00506,
+          "sameDayShadowAdjustment": 0.029315,
+          "sameDayShadowScore": 12.566907,
           "sameDayShadowRank": 2
         },
         {
@@ -2730,8 +3236,11 @@
           "aiTop3Probability": 34.302,
           "aiMarketRatio": 0.9474,
           "expectedIndex": 75.514,
-          "sameDayShadowAdjustment": 0.01875,
-          "sameDayShadowScore": 12.020231,
+          "sameDayExpectedFrontness": 0.681,
+          "sameDayDrawAdjustment": 0.015625,
+          "sameDayStyleAdjustment": 0.002113,
+          "sameDayShadowAdjustment": 0.017738,
+          "sameDayShadowScore": 12.00829,
           "sameDayShadowRank": 3
         },
         {
@@ -2753,8 +3262,11 @@
           "aiTop3Probability": 30.405,
           "aiMarketRatio": 0.9389,
           "expectedIndex": 74.836,
-          "sameDayShadowAdjustment": -0.04125,
-          "sameDayShadowScore": 10.249996,
+          "sameDayExpectedFrontness": 0.8591,
+          "sameDayDrawAdjustment": -0.034375,
+          "sameDayStyleAdjustment": 0.004193,
+          "sameDayShadowAdjustment": -0.030182,
+          "sameDayShadowScore": 10.368325,
           "sameDayShadowRank": 4
         },
         {
@@ -2776,8 +3288,11 @@
           "aiTop3Probability": 24.814,
           "aiMarketRatio": 1.2507,
           "expectedIndex": 99.686,
-          "sameDayShadowAdjustment": 0.05625,
-          "sameDayShadowScore": 9.571737,
+          "sameDayExpectedFrontness": 1.0,
+          "sameDayDrawAdjustment": 0.046875,
+          "sameDayStyleAdjustment": 0.005838,
+          "sameDayShadowAdjustment": 0.052713,
+          "sameDayShadowScore": 9.53969,
           "sameDayShadowRank": 5
         },
         {
@@ -2799,8 +3314,11 @@
           "aiTop3Probability": 24.448,
           "aiMarketRatio": 0.9615,
           "expectedIndex": 76.637,
-          "sameDayShadowAdjustment": -0.03375,
-          "sameDayShadowScore": 6.793704,
+          "sameDayExpectedFrontness": 0.0986,
+          "sameDayDrawAdjustment": -0.028125,
+          "sameDayStyleAdjustment": -0.004687,
+          "sameDayShadowAdjustment": -0.032812,
+          "sameDayShadowScore": 6.8003,
           "sameDayShadowRank": 6
         },
         {
@@ -2822,8 +3340,11 @@
           "aiTop3Probability": 18.094,
           "aiMarketRatio": 0.9531,
           "expectedIndex": 75.967,
-          "sameDayShadowAdjustment": 0.01125,
-          "sameDayShadowScore": 4.713436,
+          "sameDayExpectedFrontness": 0.5481,
+          "sameDayDrawAdjustment": 0.009375,
+          "sameDayStyleAdjustment": 0.000562,
+          "sameDayShadowAdjustment": 0.009937,
+          "sameDayShadowScore": 4.707315,
           "sameDayShadowRank": 7
         },
         {
@@ -2845,8 +3366,11 @@
           "aiTop3Probability": 14.66,
           "aiMarketRatio": 0.9782,
           "expectedIndex": 77.969,
-          "sameDayShadowAdjustment": -0.00375,
-          "sameDayShadowScore": 4.08861,
+          "sameDayExpectedFrontness": 0.9778,
+          "sameDayDrawAdjustment": -0.003125,
+          "sameDayStyleAdjustment": 0.005579,
+          "sameDayShadowAdjustment": 0.002454,
+          "sameDayShadowScore": 4.114071,
           "sameDayShadowRank": 8
         },
         {
@@ -2868,8 +3392,11 @@
           "aiTop3Probability": 10.373,
           "aiMarketRatio": 1.176,
           "expectedIndex": 93.732,
-          "sameDayShadowAdjustment": 0.02625,
-          "sameDayShadowScore": 3.742734,
+          "sameDayExpectedFrontness": 0.6921,
+          "sameDayDrawAdjustment": 0.021875,
+          "sameDayStyleAdjustment": 0.002243,
+          "sameDayShadowAdjustment": 0.024118,
+          "sameDayShadowScore": 3.73496,
           "sameDayShadowRank": 9
         },
         {
@@ -2891,8 +3418,11 @@
           "aiTop3Probability": 12.385,
           "aiMarketRatio": 1.16,
           "expectedIndex": 92.46,
-          "sameDayShadowAdjustment": -0.04875,
-          "sameDayShadowScore": 3.695606,
+          "sameDayExpectedFrontness": 0.4643,
+          "sameDayDrawAdjustment": -0.040625,
+          "sameDayStyleAdjustment": -0.000417,
+          "sameDayShadowAdjustment": -0.041042,
+          "sameDayShadowScore": 3.725552,
           "sameDayShadowRank": 10
         },
         {
@@ -2914,8 +3444,11 @@
           "aiTop3Probability": 12.797,
           "aiMarketRatio": 1.0645,
           "expectedIndex": 84.849,
-          "sameDayShadowAdjustment": -0.05625,
-          "sameDayShadowScore": 3.607013,
+          "sameDayExpectedFrontness": 0.6552,
+          "sameDayDrawAdjustment": -0.046875,
+          "sameDayStyleAdjustment": 0.001812,
+          "sameDayShadowAdjustment": -0.045063,
+          "sameDayShadowScore": 3.64977,
           "sameDayShadowRank": 11
         },
         {
@@ -2937,8 +3470,11 @@
           "aiTop3Probability": 14.402,
           "aiMarketRatio": 1.1258,
           "expectedIndex": 89.733,
-          "sameDayShadowAdjustment": -0.01875,
-          "sameDayShadowScore": 3.400031,
+          "sameDayExpectedFrontness": 0.614,
+          "sameDayDrawAdjustment": -0.015625,
+          "sameDayStyleAdjustment": 0.001331,
+          "sameDayShadowAdjustment": -0.014294,
+          "sameDayShadowScore": 3.415471,
           "sameDayShadowRank": 12
         },
         {
@@ -2960,8 +3496,11 @@
           "aiTop3Probability": 14.048,
           "aiMarketRatio": 1.0073,
           "expectedIndex": 80.29,
-          "sameDayShadowAdjustment": 0.03375,
-          "sameDayShadowScore": 3.333844,
+          "sameDayExpectedFrontness": 0.2838,
+          "sameDayDrawAdjustment": 0.028125,
+          "sameDayStyleAdjustment": -0.002524,
+          "sameDayShadowAdjustment": 0.025601,
+          "sameDayShadowScore": 3.307562,
           "sameDayShadowRank": 13
         },
         {
@@ -2983,8 +3522,11 @@
           "aiTop3Probability": 7.642,
           "aiMarketRatio": 1.183,
           "expectedIndex": 94.289,
-          "sameDayShadowAdjustment": -0.01125,
-          "sameDayShadowScore": 2.057589,
+          "sameDayExpectedFrontness": 0.5049,
+          "sameDayDrawAdjustment": -0.009375,
+          "sameDayStyleAdjustment": 5.7e-05,
+          "sameDayShadowAdjustment": -0.009318,
+          "sameDayShadowScore": 2.061609,
           "sameDayShadowRank": 14
         },
         {
@@ -3006,8 +3548,11 @@
           "aiTop3Probability": 3.976,
           "aiMarketRatio": 0.883,
           "expectedIndex": 70.384,
-          "sameDayShadowAdjustment": -0.02625,
-          "sameDayShadowScore": 0.76342,
+          "sameDayExpectedFrontness": 0.0882,
+          "sameDayDrawAdjustment": -0.021875,
+          "sameDayStyleAdjustment": -0.004808,
+          "sameDayShadowAdjustment": -0.026683,
+          "sameDayShadowScore": 0.76308,
           "sameDayShadowRank": 15
         },
         {
@@ -3029,8 +3574,11 @@
           "aiTop3Probability": 2.167,
           "aiMarketRatio": 0.7018,
           "expectedIndex": 55.937,
-          "sameDayShadowAdjustment": 0.04875,
-          "sameDayShadowScore": 0.440475,
+          "sameDayExpectedFrontness": 0.169,
+          "sameDayDrawAdjustment": 0.040625,
+          "sameDayStyleAdjustment": -0.003865,
+          "sameDayShadowAdjustment": 0.03676,
+          "sameDayShadowScore": 0.435439,
           "sameDayShadowRank": 16
         }
       ]
@@ -3047,7 +3595,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -3070,14 +3618,39 @@
         9
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 4,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5,
+        9
+      ],
+      "frontGroupTop3Rate": 0.4118,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2933,
+      "top3AverageLatePositionGain": 0.1581,
+      "runningStyleBiasScore": -0.2666,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.68,
+      "sectionalRaceCount": 4,
+      "fastLast3Top3Rate": 0.4375,
+      "slowLast3Top3Rate": 0.125,
+      "closingSpeedBiasScore": 0.3125,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.6,
+      "lapRaceCount": 4,
+      "first600MinusLast600AvgSeconds": 1.675,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 8,
@@ -3098,8 +3671,11 @@
           "aiTop3Probability": 65.014,
           "aiMarketRatio": 1.0329,
           "expectedIndex": 81.665,
-          "sameDayShadowAdjustment": 0.002252,
-          "sameDayShadowScore": 34.103615,
+          "sameDayExpectedFrontness": 0.7333,
+          "sameDayDrawAdjustment": 0.002252,
+          "sameDayStyleAdjustment": 0.005076,
+          "sameDayShadowAdjustment": 0.007328,
+          "sameDayShadowScore": 34.276352,
           "sameDayShadowRank": 1
         },
         {
@@ -3121,8 +3697,11 @@
           "aiTop3Probability": 46.039,
           "aiMarketRatio": 0.9818,
           "expectedIndex": 77.63,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 15.843,
+          "sameDayExpectedFrontness": 0.7917,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.006345,
+          "sameDayShadowAdjustment": 0.006345,
+          "sameDayShadowScore": 15.943525,
           "sameDayShadowRank": 2
         },
         {
@@ -3144,8 +3723,11 @@
           "aiTop3Probability": 37.562,
           "aiMarketRatio": 1.0499,
           "expectedIndex": 83.011,
-          "sameDayShadowAdjustment": -0.003377,
-          "sameDayShadowScore": 11.990367,
+          "sameDayExpectedFrontness": 0.4375,
+          "sameDayDrawAdjustment": -0.003377,
+          "sameDayStyleAdjustment": -0.00136,
+          "sameDayShadowAdjustment": -0.004737,
+          "sameDayShadowScore": 11.974013,
           "sameDayShadowRank": 3
         },
         {
@@ -3167,8 +3749,11 @@
           "aiTop3Probability": 37.693,
           "aiMarketRatio": 0.9748,
           "expectedIndex": 77.076,
-          "sameDayShadowAdjustment": -0.002252,
-          "sameDayShadowScore": 10.986208,
+          "sameDayExpectedFrontness": 0.3989,
+          "sameDayDrawAdjustment": -0.002252,
+          "sameDayStyleAdjustment": -0.002198,
+          "sameDayShadowAdjustment": -0.00445,
+          "sameDayShadowScore": 10.961996,
           "sameDayShadowRank": 4
         },
         {
@@ -3190,8 +3775,11 @@
           "aiTop3Probability": 28.182,
           "aiMarketRatio": 1.0045,
           "expectedIndex": 79.423,
-          "sameDayShadowAdjustment": 0.004503,
-          "sameDayShadowScore": 8.310255,
+          "sameDayExpectedFrontness": 0.8333,
+          "sameDayDrawAdjustment": 0.004503,
+          "sameDayStyleAdjustment": 0.007252,
+          "sameDayShadowAdjustment": 0.011755,
+          "sameDayShadowScore": 8.370245,
           "sameDayShadowRank": 5
         },
         {
@@ -3213,8 +3801,11 @@
           "aiTop3Probability": 17.472,
           "aiMarketRatio": 1.0052,
           "expectedIndex": 79.479,
-          "sameDayShadowAdjustment": -0.005629,
-          "sameDayShadowScore": 4.648684,
+          "sameDayExpectedFrontness": 1.0,
+          "sameDayDrawAdjustment": -0.005629,
+          "sameDayStyleAdjustment": 0.010877,
+          "sameDayShadowAdjustment": 0.005248,
+          "sameDayShadowScore": 4.699536,
           "sameDayShadowRank": 6
         },
         {
@@ -3236,8 +3827,11 @@
           "aiTop3Probability": 16.626,
           "aiMarketRatio": 0.9819,
           "expectedIndex": 77.633,
+          "sameDayExpectedFrontness": 0.5,
+          "sameDayDrawAdjustment": 0.001126,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.001126,
-          "sameDayShadowScore": 3.925414,
+          "sameDayShadowScore": 3.925415,
           "sameDayShadowRank": 7
         },
         {
@@ -3259,8 +3853,11 @@
           "aiTop3Probability": 17.227,
           "aiMarketRatio": 0.924,
           "expectedIndex": 73.052,
-          "sameDayShadowAdjustment": 0.005629,
-          "sameDayShadowScore": 3.728872,
+          "sameDayExpectedFrontness": 0.8462,
+          "sameDayDrawAdjustment": 0.005629,
+          "sameDayStyleAdjustment": 0.00753,
+          "sameDayShadowAdjustment": 0.013159,
+          "sameDayShadowScore": 3.756795,
           "sameDayShadowRank": 8
         },
         {
@@ -3282,8 +3879,11 @@
           "aiTop3Probability": 16.911,
           "aiMarketRatio": 0.9266,
           "expectedIndex": 73.264,
-          "sameDayShadowAdjustment": 0.003377,
-          "sameDayShadowScore": 3.195757,
+          "sameDayExpectedFrontness": 0.5278,
+          "sameDayDrawAdjustment": 0.003377,
+          "sameDayStyleAdjustment": 0.000604,
+          "sameDayShadowAdjustment": 0.003981,
+          "sameDayShadowScore": 3.19768,
           "sameDayShadowRank": 9
         },
         {
@@ -3305,8 +3905,11 @@
           "aiTop3Probability": 12.211,
           "aiMarketRatio": 0.8738,
           "expectedIndex": 69.086,
-          "sameDayShadowAdjustment": -0.004503,
-          "sameDayShadowScore": 2.556436,
+          "sameDayExpectedFrontness": 1.0,
+          "sameDayDrawAdjustment": -0.004503,
+          "sameDayStyleAdjustment": 0.010877,
+          "sameDayShadowAdjustment": 0.006374,
+          "sameDayShadowScore": 2.584369,
           "sameDayShadowRank": 10
         },
         {
@@ -3328,8 +3931,11 @@
           "aiTop3Probability": 5.064,
           "aiMarketRatio": 0.8452,
           "expectedIndex": 66.824,
-          "sameDayShadowAdjustment": -0.001126,
-          "sameDayShadowScore": 0.757147,
+          "sameDayExpectedFrontness": 0.8632,
+          "sameDayDrawAdjustment": -0.001126,
+          "sameDayStyleAdjustment": 0.007902,
+          "sameDayShadowAdjustment": 0.006776,
+          "sameDayShadowScore": 0.763136,
           "sameDayShadowRank": 11
         }
       ]
@@ -3346,7 +3952,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "京都",
       "surface": "芝",
@@ -3370,14 +3976,40 @@
         11
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 5,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5,
+        9,
+        11
+      ],
+      "frontGroupTop3Rate": 0.4286,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2862,
+      "top3AverageLatePositionGain": 0.1531,
+      "runningStyleBiasScore": -0.2813,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.85,
+      "sectionalRaceCount": 5,
+      "fastLast3Top3Rate": 0.4,
+      "slowLast3Top3Rate": 0.15,
+      "closingSpeedBiasScore": 0.25,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.75,
+      "lapRaceCount": 5,
+      "first600MinusLast600AvgSeconds": 1.68,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 2,
@@ -3398,8 +4030,11 @@
           "aiTop3Probability": 46.363,
           "aiMarketRatio": 1.0043,
           "expectedIndex": 79.912,
-          "sameDayShadowAdjustment": 0.007362,
-          "sameDayShadowScore": 20.125081,
+          "sameDayExpectedFrontness": 0.1955,
+          "sameDayDrawAdjustment": 0.007362,
+          "sameDayStyleAdjustment": -0.008737,
+          "sameDayShadowAdjustment": -0.001375,
+          "sameDayShadowScore": 19.950539,
           "sameDayShadowRank": 1
         },
         {
@@ -3421,8 +4056,11 @@
           "aiTop3Probability": 40.731,
           "aiMarketRatio": 0.8943,
           "expectedIndex": 71.164,
-          "sameDayShadowAdjustment": 0.003436,
-          "sameDayShadowScore": 15.19302,
+          "sameDayExpectedFrontness": 0.749,
+          "sameDayDrawAdjustment": 0.003436,
+          "sameDayStyleAdjustment": 0.007144,
+          "sameDayShadowAdjustment": 0.01058,
+          "sameDayShadowScore": 15.301192,
           "sameDayShadowRank": 2
         },
         {
@@ -3444,8 +4082,11 @@
           "aiTop3Probability": 26.586,
           "aiMarketRatio": 1.1315,
           "expectedIndex": 90.037,
-          "sameDayShadowAdjustment": -0.007362,
-          "sameDayShadowScore": 10.640085,
+          "sameDayExpectedFrontness": 0.5055,
+          "sameDayDrawAdjustment": -0.007362,
+          "sameDayStyleAdjustment": 0.000157,
+          "sameDayShadowAdjustment": -0.007205,
+          "sameDayShadowScore": 10.641771,
           "sameDayShadowRank": 3
         },
         {
@@ -3467,8 +4108,11 @@
           "aiTop3Probability": 26.852,
           "aiMarketRatio": 1.0035,
           "expectedIndex": 79.846,
-          "sameDayShadowAdjustment": -0.005399,
-          "sameDayShadowScore": 8.922566,
+          "sameDayExpectedFrontness": 0.429,
+          "sameDayDrawAdjustment": -0.005399,
+          "sameDayStyleAdjustment": -0.002036,
+          "sameDayShadowAdjustment": -0.007435,
+          "sameDayShadowScore": 8.904301,
           "sameDayShadowRank": 4
         },
         {
@@ -3490,8 +4134,11 @@
           "aiTop3Probability": 23.601,
           "aiMarketRatio": 0.9468,
           "expectedIndex": 75.34,
-          "sameDayShadowAdjustment": 0.008344,
-          "sameDayShadowScore": 8.53563,
+          "sameDayExpectedFrontness": 0.5774,
+          "sameDayDrawAdjustment": 0.008344,
+          "sameDayStyleAdjustment": 0.00222,
+          "sameDayShadowAdjustment": 0.010564,
+          "sameDayShadowScore": 8.554426,
           "sameDayShadowRank": 5
         },
         {
@@ -3513,8 +4160,11 @@
           "aiTop3Probability": 20.868,
           "aiMarketRatio": 0.9166,
           "expectedIndex": 72.932,
-          "sameDayShadowAdjustment": 0.001472,
-          "sameDayShadowScore": 5.331839,
+          "sameDayExpectedFrontness": 0.3926,
+          "sameDayDrawAdjustment": 0.001472,
+          "sameDayStyleAdjustment": -0.003081,
+          "sameDayShadowAdjustment": -0.001609,
+          "sameDayShadowScore": 5.315433,
           "sameDayShadowRank": 6
         },
         {
@@ -3536,8 +4186,11 @@
           "aiTop3Probability": 12.316,
           "aiMarketRatio": 1.2291,
           "expectedIndex": 97.797,
-          "sameDayShadowAdjustment": -0.002454,
-          "sameDayShadowScore": 4.82912,
+          "sameDayExpectedFrontness": 0.7273,
+          "sameDayDrawAdjustment": -0.002454,
+          "sameDayStyleAdjustment": 0.006521,
+          "sameDayShadowAdjustment": 0.004067,
+          "sameDayShadowScore": 4.860689,
           "sameDayShadowRank": 7
         },
         {
@@ -3559,8 +4212,11 @@
           "aiTop3Probability": 16.512,
           "aiMarketRatio": 1.0361,
           "expectedIndex": 82.44,
-          "sameDayShadowAdjustment": -0.001472,
-          "sameDayShadowScore": 4.573256,
+          "sameDayExpectedFrontness": 0.6258,
+          "sameDayDrawAdjustment": -0.001472,
+          "sameDayStyleAdjustment": 0.00361,
+          "sameDayShadowAdjustment": 0.002138,
+          "sameDayShadowScore": 4.58979,
           "sameDayShadowRank": 8
         },
         {
@@ -3582,8 +4238,11 @@
           "aiTop3Probability": 15.183,
           "aiMarketRatio": 1.0844,
           "expectedIndex": 86.282,
-          "sameDayShadowAdjustment": 0.006381,
-          "sameDayShadowScore": 4.174466,
+          "sameDayExpectedFrontness": 0.559,
+          "sameDayDrawAdjustment": 0.006381,
+          "sameDayStyleAdjustment": 0.001692,
+          "sameDayShadowAdjustment": 0.008073,
+          "sameDayShadowScore": 4.181485,
           "sameDayShadowRank": 9
         },
         {
@@ -3605,8 +4264,11 @@
           "aiTop3Probability": 13.678,
           "aiMarketRatio": 1.0579,
           "expectedIndex": 84.178,
-          "sameDayShadowAdjustment": 0.000491,
-          "sameDayShadowScore": 3.693812,
+          "sameDayExpectedFrontness": 0.6996,
+          "sameDayDrawAdjustment": 0.000491,
+          "sameDayStyleAdjustment": 0.005727,
+          "sameDayShadowAdjustment": 0.006218,
+          "sameDayShadowScore": 3.714958,
           "sameDayShadowRank": 10
         },
         {
@@ -3628,8 +4290,11 @@
           "aiTop3Probability": 11.915,
           "aiMarketRatio": 1.0409,
           "expectedIndex": 82.826,
-          "sameDayShadowAdjustment": -0.008344,
-          "sameDayShadowScore": 3.134625,
+          "sameDayExpectedFrontness": 0.545,
+          "sameDayDrawAdjustment": -0.008344,
+          "sameDayStyleAdjustment": 0.001291,
+          "sameDayShadowAdjustment": -0.007053,
+          "sameDayShadowScore": 3.138704,
           "sameDayShadowRank": 11
         },
         {
@@ -3651,8 +4316,11 @@
           "aiTop3Probability": 12.393,
           "aiMarketRatio": 1.084,
           "expectedIndex": 86.254,
-          "sameDayShadowAdjustment": 0.005399,
-          "sameDayShadowScore": 3.042337,
+          "sameDayExpectedFrontness": 0.5747,
+          "sameDayDrawAdjustment": 0.005399,
+          "sameDayStyleAdjustment": 0.002143,
+          "sameDayShadowAdjustment": 0.007542,
+          "sameDayShadowScore": 3.048823,
           "sameDayShadowRank": 12
         },
         {
@@ -3674,8 +4342,11 @@
           "aiTop3Probability": 8.096,
           "aiMarketRatio": 1.0771,
           "expectedIndex": 85.704,
-          "sameDayShadowAdjustment": -0.006381,
-          "sameDayShadowScore": 2.102499,
+          "sameDayExpectedFrontness": 0.4857,
+          "sameDayDrawAdjustment": -0.006381,
+          "sameDayStyleAdjustment": -0.00041,
+          "sameDayShadowAdjustment": -0.006791,
+          "sameDayShadowScore": 2.10163,
           "sameDayShadowRank": 13
         },
         {
@@ -3697,8 +4368,11 @@
           "aiTop3Probability": 6.889,
           "aiMarketRatio": 0.8703,
           "expectedIndex": 69.251,
-          "sameDayShadowAdjustment": -0.000491,
-          "sameDayShadowScore": 1.876079,
+          "sameDayExpectedFrontness": 0.4146,
+          "sameDayDrawAdjustment": -0.000491,
+          "sameDayStyleAdjustment": -0.002451,
+          "sameDayShadowAdjustment": -0.002942,
+          "sameDayShadowScore": 1.871477,
           "sameDayShadowRank": 14
         },
         {
@@ -3720,8 +4394,11 @@
           "aiTop3Probability": 6.995,
           "aiMarketRatio": 1.023,
           "expectedIndex": 81.402,
-          "sameDayShadowAdjustment": -0.004417,
-          "sameDayShadowScore": 1.526228,
+          "sameDayExpectedFrontness": 0.2951,
+          "sameDayDrawAdjustment": -0.004417,
+          "sameDayStyleAdjustment": -0.00588,
+          "sameDayShadowAdjustment": -0.010297,
+          "sameDayShadowScore": 1.517215,
           "sameDayShadowRank": 15
         },
         {
@@ -3743,8 +4420,11 @@
           "aiTop3Probability": 5.452,
           "aiMarketRatio": 0.8375,
           "expectedIndex": 66.642,
-          "sameDayShadowAdjustment": 0.002454,
-          "sameDayShadowScore": 1.165854,
+          "sameDayExpectedFrontness": 0.5751,
+          "sameDayDrawAdjustment": 0.002454,
+          "sameDayStyleAdjustment": 0.002156,
+          "sameDayShadowAdjustment": 0.00461,
+          "sameDayShadowScore": 1.168361,
           "sameDayShadowRank": 16
         },
         {
@@ -3766,8 +4446,11 @@
           "aiTop3Probability": 2.512,
           "aiMarketRatio": 0.9958,
           "expectedIndex": 79.235,
-          "sameDayShadowAdjustment": 0.004417,
-          "sameDayShadowScore": 0.798512,
+          "sameDayExpectedFrontness": 0.3925,
+          "sameDayDrawAdjustment": 0.004417,
+          "sameDayStyleAdjustment": -0.003085,
+          "sameDayShadowAdjustment": 0.001332,
+          "sameDayShadowScore": 0.796059,
           "sameDayShadowRank": 17
         },
         {
@@ -3789,8 +4472,11 @@
           "aiTop3Probability": 3.058,
           "aiMarketRatio": 0.6646,
           "expectedIndex": 52.881,
-          "sameDayShadowAdjustment": -0.003436,
-          "sameDayShadowScore": 0.467389,
+          "sameDayExpectedFrontness": 0.3555,
+          "sameDayDrawAdjustment": -0.003436,
+          "sameDayStyleAdjustment": -0.004147,
+          "sameDayShadowAdjustment": -0.007583,
+          "sameDayShadowScore": 0.465444,
           "sameDayShadowRank": 18
         }
       ]
@@ -3807,7 +4493,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -3825,14 +4511,34 @@
       "confidence": 0.0,
       "sourceRaceNumbers": [],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 0,
+      "detailSourceRaceNumbers": [],
+      "frontGroupTop3Rate": null,
+      "backGroupTop3Rate": null,
+      "top3AverageFinalCornerPct": null,
+      "top3AverageLatePositionGain": null,
+      "runningStyleBiasScore": null,
+      "runningStyleBiasLabel": "insufficient",
+      "runningStyleConfidence": 0.0,
+      "sectionalRaceCount": 0,
+      "fastLast3Top3Rate": null,
+      "slowLast3Top3Rate": null,
+      "closingSpeedBiasScore": null,
+      "closingSpeedBiasLabel": "insufficient",
+      "closingSpeedConfidence": 0.0,
+      "lapRaceCount": 0,
+      "first600MinusLast600AvgSeconds": null,
+      "paceShapeLabel": "insufficient"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 11,
@@ -3853,6 +4559,9 @@
           "aiTop3Probability": 86.017,
           "aiMarketRatio": 1.0011,
           "expectedIndex": 79.005,
+          "sameDayExpectedFrontness": 0.7333,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 56.432,
           "sameDayShadowRank": 1
@@ -3876,6 +4585,9 @@
           "aiTop3Probability": 41.994,
           "aiMarketRatio": 0.9864,
           "expectedIndex": 77.847,
+          "sameDayExpectedFrontness": 0.1958,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 9.379,
           "sameDayShadowRank": 2
@@ -3899,6 +4611,9 @@
           "aiTop3Probability": 34.331,
           "aiMarketRatio": 1.032,
           "expectedIndex": 81.445,
+          "sameDayExpectedFrontness": 0.8,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 8.853,
           "sameDayShadowRank": 3
@@ -3922,7 +4637,10 @@
           "aiTop3Probability": 24.53,
           "aiMarketRatio": 1.0745,
           "expectedIndex": 84.797,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.4118,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 5.542,
           "sameDayShadowRank": 4
         },
@@ -3945,7 +4663,10 @@
           "aiTop3Probability": 23.456,
           "aiMarketRatio": 0.99,
           "expectedIndex": 78.127,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.7692,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 4.414,
           "sameDayShadowRank": 5
         },
@@ -3968,7 +4689,10 @@
           "aiTop3Probability": 17.009,
           "aiMarketRatio": 1.054,
           "expectedIndex": 83.179,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.7455,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.555,
           "sameDayShadowRank": 6
         },
@@ -3991,6 +4715,9 @@
           "aiTop3Probability": 18.378,
           "aiMarketRatio": 0.9195,
           "expectedIndex": 72.561,
+          "sameDayExpectedFrontness": 0.2286,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.974,
           "sameDayShadowRank": 7
@@ -4014,6 +4741,9 @@
           "aiTop3Probability": 12.971,
           "aiMarketRatio": 1.031,
           "expectedIndex": 81.36,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.642,
           "sameDayShadowRank": 8
@@ -4037,7 +4767,10 @@
           "aiTop3Probability": 6.721,
           "aiMarketRatio": 1.1201,
           "expectedIndex": 88.393,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.214,
           "sameDayShadowRank": 9
         },
@@ -4060,7 +4793,10 @@
           "aiTop3Probability": 7.121,
           "aiMarketRatio": 1.1202,
           "expectedIndex": 88.401,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.5455,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.191,
           "sameDayShadowRank": 10
         },
@@ -4083,7 +4819,10 @@
           "aiTop3Probability": 7.074,
           "aiMarketRatio": 1.0096,
           "expectedIndex": 79.677,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.7017,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.068,
           "sameDayShadowRank": 11
         },
@@ -4106,7 +4845,10 @@
           "aiTop3Probability": 7.171,
           "aiMarketRatio": 0.8986,
           "expectedIndex": 70.915,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.1538,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.974,
           "sameDayShadowRank": 12
         },
@@ -4129,6 +4871,9 @@
           "aiTop3Probability": 5.862,
           "aiMarketRatio": 0.8079,
           "expectedIndex": 63.759,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.714,
           "sameDayShadowRank": 13
@@ -4152,6 +4897,9 @@
           "aiTop3Probability": 4.009,
           "aiMarketRatio": 0.8015,
           "expectedIndex": 63.256,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.647,
           "sameDayShadowRank": 14
@@ -4175,7 +4923,10 @@
           "aiTop3Probability": 1.47,
           "aiMarketRatio": 0.5419,
           "expectedIndex": 42.768,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.207,
           "sameDayShadowRank": 15
         },
@@ -4198,6 +4949,9 @@
           "aiTop3Probability": 1.887,
           "aiMarketRatio": 0.4899,
           "expectedIndex": 38.658,
+          "sameDayExpectedFrontness": 0.2165,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.195,
           "sameDayShadowRank": 16
@@ -4216,7 +4970,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -4234,14 +4988,34 @@
       "confidence": 0.0,
       "sourceRaceNumbers": [],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 0,
+      "detailSourceRaceNumbers": [],
+      "frontGroupTop3Rate": null,
+      "backGroupTop3Rate": null,
+      "top3AverageFinalCornerPct": null,
+      "top3AverageLatePositionGain": null,
+      "runningStyleBiasScore": null,
+      "runningStyleBiasLabel": "insufficient",
+      "runningStyleConfidence": 0.0,
+      "sectionalRaceCount": 0,
+      "fastLast3Top3Rate": null,
+      "slowLast3Top3Rate": null,
+      "closingSpeedBiasScore": null,
+      "closingSpeedBiasLabel": "insufficient",
+      "closingSpeedConfidence": 0.0,
+      "lapRaceCount": 0,
+      "first600MinusLast600AvgSeconds": null,
+      "paceShapeLabel": "insufficient"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 9,
@@ -4262,6 +5036,9 @@
           "aiTop3Probability": 92.683,
           "aiMarketRatio": 1.0192,
           "expectedIndex": 80.878,
+          "sameDayExpectedFrontness": 0.7143,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 67.399,
           "sameDayShadowRank": 1
@@ -4285,7 +5062,10 @@
           "aiTop3Probability": 53.257,
           "aiMarketRatio": 0.9023,
           "expectedIndex": 71.606,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.7727,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 9.676,
           "sameDayShadowRank": 2
         },
@@ -4308,7 +5088,10 @@
           "aiTop3Probability": 38.724,
           "aiMarketRatio": 1.005,
           "expectedIndex": 79.749,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 6.591,
           "sameDayShadowRank": 3
         },
@@ -4331,6 +5114,9 @@
           "aiTop3Probability": 27.868,
           "aiMarketRatio": 0.9558,
           "expectedIndex": 75.85,
+          "sameDayExpectedFrontness": 0.5667,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.91,
           "sameDayShadowRank": 4
@@ -4354,6 +5140,9 @@
           "aiTop3Probability": 27.547,
           "aiMarketRatio": 0.9939,
           "expectedIndex": 78.872,
+          "sameDayExpectedFrontness": 0.5389,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.792,
           "sameDayShadowRank": 5
@@ -4377,7 +5166,10 @@
           "aiTop3Probability": 21.998,
           "aiMarketRatio": 0.9993,
           "expectedIndex": 79.298,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.0,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 3.403,
           "sameDayShadowRank": 6
         },
@@ -4400,6 +5192,9 @@
           "aiTop3Probability": 16.11,
           "aiMarketRatio": 1.0916,
           "expectedIndex": 86.624,
+          "sameDayExpectedFrontness": 0.7143,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 2.4,
           "sameDayShadowRank": 7
@@ -4423,6 +5218,9 @@
           "aiTop3Probability": 12.814,
           "aiMarketRatio": 0.9993,
           "expectedIndex": 79.297,
+          "sameDayExpectedFrontness": 0.5029,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 1.659,
           "sameDayShadowRank": 8
@@ -4446,7 +5244,10 @@
           "aiTop3Probability": 5.614,
           "aiMarketRatio": 0.8637,
           "expectedIndex": 68.541,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.2455,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.724,
           "sameDayShadowRank": 9
         },
@@ -4469,7 +5270,10 @@
           "aiTop3Probability": 3.385,
           "aiMarketRatio": 0.7688,
           "expectedIndex": 61.009,
-          "sameDayShadowAdjustment": -0.0,
+          "sameDayExpectedFrontness": 0.3701,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 0.447,
           "sameDayShadowRank": 10
         }
@@ -4487,7 +5291,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -4507,14 +5311,36 @@
         2
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 1,
+      "detailSourceRaceNumbers": [
+        2
+      ],
+      "frontGroupTop3Rate": 0.75,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2167,
+      "top3AverageLatePositionGain": 0.0741,
+      "runningStyleBiasScore": -0.5154,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.17,
+      "sectionalRaceCount": 1,
+      "fastLast3Top3Rate": 0.25,
+      "slowLast3Top3Rate": 0.25,
+      "closingSpeedBiasScore": 0.0,
+      "closingSpeedBiasLabel": "neutral",
+      "closingSpeedConfidence": 0.15,
+      "lapRaceCount": 1,
+      "first600MinusLast600AvgSeconds": 2.1,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 8,
@@ -4535,8 +5361,11 @@
           "aiTop3Probability": 86.399,
           "aiMarketRatio": 1.0158,
           "expectedIndex": 79.364,
-          "sameDayShadowAdjustment": 0.0525,
-          "sameDayShadowScore": 59.665172,
+          "sameDayExpectedFrontness": 0.4545,
+          "sameDayDrawAdjustment": 0.04375,
+          "sameDayStyleAdjustment": -0.000478,
+          "sameDayShadowAdjustment": 0.043272,
+          "sameDayShadowScore": 59.142051,
           "sameDayShadowRank": 1
         },
         {
@@ -4558,8 +5387,11 @@
           "aiTop3Probability": 49.976,
           "aiMarketRatio": 0.8947,
           "expectedIndex": 69.902,
-          "sameDayShadowAdjustment": -0.0375,
-          "sameDayShadowScore": 11.029288,
+          "sameDayExpectedFrontness": 0.7,
+          "sameDayDrawAdjustment": -0.03125,
+          "sameDayStyleAdjustment": 0.002103,
+          "sameDayShadowAdjustment": -0.029147,
+          "sameDayShadowScore": 11.125003,
           "sameDayShadowRank": 2
         },
         {
@@ -4581,8 +5413,11 @@
           "aiTop3Probability": 40.267,
           "aiMarketRatio": 1.1117,
           "expectedIndex": 86.854,
-          "sameDayShadowAdjustment": 0.0075,
-          "sameDayShadowScore": 10.174743,
+          "sameDayExpectedFrontness": 0.8667,
+          "sameDayDrawAdjustment": 0.00625,
+          "sameDayStyleAdjustment": 0.003855,
+          "sameDayShadowAdjustment": 0.010105,
+          "sameDayShadowScore": 10.201052,
           "sameDayShadowRank": 3
         },
         {
@@ -4604,8 +5439,11 @@
           "aiTop3Probability": 34.982,
           "aiMarketRatio": 1.1043,
           "expectedIndex": 86.277,
-          "sameDayShadowAdjustment": 0.0225,
-          "sameDayShadowScore": 7.605355,
+          "sameDayExpectedFrontness": 0.3056,
+          "sameDayDrawAdjustment": 0.01875,
+          "sameDayStyleAdjustment": -0.002044,
+          "sameDayShadowAdjustment": 0.016706,
+          "sameDayShadowScore": 7.562256,
           "sameDayShadowRank": 4
         },
         {
@@ -4627,8 +5465,11 @@
           "aiTop3Probability": 31.785,
           "aiMarketRatio": 0.9156,
           "expectedIndex": 71.535,
-          "sameDayShadowAdjustment": 0.0375,
-          "sameDayShadowScore": 5.709363,
+          "sameDayExpectedFrontness": 0.4,
+          "sameDayDrawAdjustment": 0.03125,
+          "sameDayStyleAdjustment": -0.001051,
+          "sameDayShadowAdjustment": 0.030199,
+          "sameDayShadowScore": 5.669183,
           "sameDayShadowRank": 5
         },
         {
@@ -4650,8 +5491,11 @@
           "aiTop3Probability": 26.434,
           "aiMarketRatio": 0.9804,
           "expectedIndex": 76.594,
-          "sameDayShadowAdjustment": -0.0075,
-          "sameDayShadowScore": 4.579395,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.00625,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": -0.00625,
+          "sameDayShadowScore": 4.585163,
           "sameDayShadowRank": 6
         },
         {
@@ -4673,8 +5517,11 @@
           "aiTop3Probability": 15.575,
           "aiMarketRatio": 0.8619,
           "expectedIndex": 67.34,
-          "sameDayShadowAdjustment": -0.0525,
-          "sameDayShadowScore": 2.27021,
+          "sameDayExpectedFrontness": 0.2857,
+          "sameDayDrawAdjustment": -0.04375,
+          "sameDayStyleAdjustment": -0.002253,
+          "sameDayShadowAdjustment": -0.046003,
+          "sameDayShadowScore": 2.285777,
           "sameDayShadowRank": 7
         },
         {
@@ -4696,8 +5543,11 @@
           "aiTop3Probability": 14.582,
           "aiMarketRatio": 0.8694,
           "expectedIndex": 67.923,
-          "sameDayShadowAdjustment": -0.0225,
-          "sameDayShadowScore": 1.761455,
+          "sameDayExpectedFrontness": 0.45,
+          "sameDayDrawAdjustment": -0.01875,
+          "sameDayStyleAdjustment": -0.000526,
+          "sameDayShadowAdjustment": -0.019276,
+          "sameDayShadowScore": 1.767265,
           "sameDayShadowRank": 8
         }
       ]
@@ -4714,7 +5564,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -4734,14 +5584,36 @@
         1
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 1,
+      "detailSourceRaceNumbers": [
+        1
+      ],
+      "frontGroupTop3Rate": 0.3333,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.1771,
+      "top3AverageLatePositionGain": 0.0889,
+      "runningStyleBiasScore": -0.3249,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.17,
+      "sectionalRaceCount": 1,
+      "fastLast3Top3Rate": 0.3333,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.3333,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.15,
+      "lapRaceCount": 1,
+      "first600MinusLast600AvgSeconds": -2.7,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 14,
@@ -4762,8 +5634,11 @@
           "aiTop3Probability": 40.837,
           "aiMarketRatio": 1.0178,
           "expectedIndex": 80.852,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.009281,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.009281,
-          "sameDayShadowScore": 17.000333,
+          "sameDayShadowScore": 17.000329,
           "sameDayShadowRank": 1
         },
         {
@@ -4785,8 +5660,11 @@
           "aiTop3Probability": 39.663,
           "aiMarketRatio": 1.0126,
           "expectedIndex": 80.441,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.004219,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.004219,
-          "sameDayShadowScore": 15.40374,
+          "sameDayShadowScore": 15.403736,
           "sameDayShadowRank": 2
         },
         {
@@ -4808,8 +5686,11 @@
           "aiTop3Probability": 35.773,
           "aiMarketRatio": 1.016,
           "expectedIndex": 80.709,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.000844,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.000844,
-          "sameDayShadowScore": 14.170947,
+          "sameDayShadowScore": 14.17095,
           "sameDayShadowRank": 3
         },
         {
@@ -4831,8 +5712,11 @@
           "aiTop3Probability": 25.35,
           "aiMarketRatio": 0.944,
           "expectedIndex": 74.991,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.009281,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.009281,
-          "sameDayShadowScore": 8.845137,
+          "sameDayShadowScore": 8.845139,
           "sameDayShadowRank": 4
         },
         {
@@ -4854,8 +5738,11 @@
           "aiTop3Probability": 22.43,
           "aiMarketRatio": 0.96,
           "expectedIndex": 76.263,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.002531,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.002531,
-          "sameDayShadowScore": 7.881901,
+          "sameDayShadowScore": 7.881899,
           "sameDayShadowRank": 5
         },
         {
@@ -4877,8 +5764,11 @@
           "aiTop3Probability": 24.571,
           "aiMarketRatio": 1.0169,
           "expectedIndex": 80.781,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.007594,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.007594,
-          "sameDayShadowScore": 7.288232,
+          "sameDayShadowScore": 7.28823,
           "sameDayShadowRank": 6
         },
         {
@@ -4900,8 +5790,11 @@
           "aiTop3Probability": 20.727,
           "aiMarketRatio": 1.0193,
           "expectedIndex": 80.977,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.007594,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.007594,
-          "sameDayShadowScore": 6.134231,
+          "sameDayShadowScore": 6.134232,
           "sameDayShadowRank": 7
         },
         {
@@ -4923,8 +5816,11 @@
           "aiTop3Probability": 19.134,
           "aiMarketRatio": 1.0151,
           "expectedIndex": 80.644,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.005906,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.005906,
-          "sameDayShadowScore": 5.633075,
+          "sameDayShadowScore": 5.633074,
           "sameDayShadowRank": 8
         },
         {
@@ -4946,8 +5842,11 @@
           "aiTop3Probability": 14.873,
           "aiMarketRatio": 1.0184,
           "expectedIndex": 80.905,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.010969,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.010969,
-          "sameDayShadowScore": 3.883926,
+          "sameDayShadowScore": 3.883925,
           "sameDayShadowRank": 9
         },
         {
@@ -4969,6 +5868,9 @@
           "aiTop3Probability": 13.822,
           "aiMarketRatio": 1.0371,
           "expectedIndex": 82.392,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.002531,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.002531,
           "sameDayShadowScore": 3.718564,
           "sameDayShadowRank": 10
@@ -4992,8 +5894,11 @@
           "aiTop3Probability": 9.498,
           "aiMarketRatio": 0.9931,
           "expectedIndex": 78.894,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.010969,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.010969,
-          "sameDayShadowScore": 2.318151,
+          "sameDayShadowScore": 2.318152,
           "sameDayShadowRank": 11
         },
         {
@@ -5015,6 +5920,9 @@
           "aiTop3Probability": 8.251,
           "aiMarketRatio": 0.9747,
           "expectedIndex": 77.432,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.012656,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.012656,
           "sameDayShadowScore": 1.955439,
           "sameDayShadowRank": 12
@@ -5038,6 +5946,9 @@
           "aiTop3Probability": 6.901,
           "aiMarketRatio": 0.9799,
           "expectedIndex": 77.841,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.012656,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.012656,
           "sameDayShadowScore": 1.614307,
           "sameDayShadowRank": 13
@@ -5061,8 +5972,11 @@
           "aiTop3Probability": 7.155,
           "aiMarketRatio": 0.9201,
           "expectedIndex": 73.095,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.004219,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.004219,
-          "sameDayShadowScore": 1.612775,
+          "sameDayShadowScore": 1.612776,
           "sameDayShadowRank": 14
         },
         {
@@ -5084,8 +5998,11 @@
           "aiTop3Probability": 6.0,
           "aiMarketRatio": 0.9613,
           "expectedIndex": 76.369,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.000844,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.000844,
-          "sameDayShadowScore": 1.404814,
+          "sameDayShadowScore": 1.404813,
           "sameDayShadowRank": 15
         },
         {
@@ -5107,8 +6024,11 @@
           "aiTop3Probability": 5.014,
           "aiMarketRatio": 0.9362,
           "expectedIndex": 74.37,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.005906,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.005906,
-          "sameDayShadowScore": 1.170048,
+          "sameDayShadowScore": 1.170049,
           "sameDayShadowRank": 16
         }
       ]
@@ -5125,7 +6045,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -5146,14 +6066,37 @@
         3
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 2,
+      "detailSourceRaceNumbers": [
+        2,
+        3
+      ],
+      "frontGroupTop3Rate": 0.7143,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2437,
+      "top3AverageLatePositionGain": 0.0847,
+      "runningStyleBiasScore": -0.477,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.34,
+      "sectionalRaceCount": 2,
+      "fastLast3Top3Rate": 0.4286,
+      "slowLast3Top3Rate": 0.1429,
+      "closingSpeedBiasScore": 0.2857,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.3,
+      "lapRaceCount": 2,
+      "first600MinusLast600AvgSeconds": 3.0,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 8,
@@ -5174,8 +6117,11 @@
           "aiTop3Probability": 89.003,
           "aiMarketRatio": 1.008,
           "expectedIndex": 79.916,
-          "sameDayShadowAdjustment": 0.04,
-          "sameDayShadowScore": 63.93192,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.033333,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.033333,
+          "sameDayShadowScore": 63.52208,
           "sameDayShadowRank": 1
         },
         {
@@ -5197,8 +6143,11 @@
           "aiTop3Probability": 41.61,
           "aiMarketRatio": 0.9449,
           "expectedIndex": 74.915,
-          "sameDayShadowAdjustment": -0.04,
-          "sameDayShadowScore": 8.87904,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.033333,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": -0.033333,
+          "sameDayShadowScore": 8.940703,
           "sameDayShadowRank": 2
         },
         {
@@ -5220,6 +6169,9 @@
           "aiTop3Probability": 38.226,
           "aiMarketRatio": 1.0155,
           "expectedIndex": 80.506,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": 0.0,
           "sameDayShadowScore": 7.124,
           "sameDayShadowRank": 3
@@ -5243,8 +6195,11 @@
           "aiTop3Probability": 31.772,
           "aiMarketRatio": 1.0015,
           "expectedIndex": 79.398,
-          "sameDayShadowAdjustment": -0.026667,
-          "sameDayShadowScore": 5.55968,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.022222,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": -0.022222,
+          "sameDayShadowScore": 5.585068,
           "sameDayShadowRank": 4
         },
         {
@@ -5266,8 +6221,11 @@
           "aiTop3Probability": 30.03,
           "aiMarketRatio": 1.0041,
           "expectedIndex": 79.607,
-          "sameDayShadowAdjustment": 0.013333,
-          "sameDayShadowScore": 5.525707,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.011111,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.011111,
+          "sameDayShadowScore": 5.513588,
           "sameDayShadowRank": 5
         },
         {
@@ -5289,8 +6247,11 @@
           "aiTop3Probability": 20.908,
           "aiMarketRatio": 1.0088,
           "expectedIndex": 79.98,
-          "sameDayShadowAdjustment": 0.053333,
-          "sameDayShadowScore": 3.64664,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.044444,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.044444,
+          "sameDayShadowScore": 3.615865,
           "sameDayShadowRank": 6
         },
         {
@@ -5312,8 +6273,11 @@
           "aiTop3Probability": 20.445,
           "aiMarketRatio": 1.018,
           "expectedIndex": 80.707,
-          "sameDayShadowAdjustment": 0.026667,
-          "sameDayShadowScore": 3.438307,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": 0.022222,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": 0.022222,
+          "sameDayShadowScore": 3.423421,
           "sameDayShadowRank": 7
         },
         {
@@ -5335,8 +6299,11 @@
           "aiTop3Probability": 16.094,
           "aiMarketRatio": 1.0071,
           "expectedIndex": 79.843,
-          "sameDayShadowAdjustment": -0.013333,
-          "sameDayShadowScore": 2.43904,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.011111,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": -0.011111,
+          "sameDayShadowScore": 2.444534,
           "sameDayShadowRank": 8
         },
         {
@@ -5358,8 +6325,11 @@
           "aiTop3Probability": 11.91,
           "aiMarketRatio": 0.8972,
           "expectedIndex": 71.128,
-          "sameDayShadowAdjustment": -0.053333,
-          "sameDayShadowScore": 1.615013,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.044444,
+          "sameDayStyleAdjustment": 0.0,
+          "sameDayShadowAdjustment": -0.044444,
+          "sameDayShadowScore": 1.630179,
           "sameDayShadowRank": 9
         }
       ]
@@ -5376,7 +6346,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -5397,14 +6367,37 @@
         4
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 2,
+      "detailSourceRaceNumbers": [
+        1,
+        4
+      ],
+      "frontGroupTop3Rate": 0.4167,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.1354,
+      "top3AverageLatePositionGain": 0.0444,
+      "runningStyleBiasScore": -0.4093,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.34,
+      "sectionalRaceCount": 2,
+      "fastLast3Top3Rate": 0.4167,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.4167,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.3,
+      "lapRaceCount": 2,
+      "first600MinusLast600AvgSeconds": -1.25,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 10,
@@ -5425,8 +6418,11 @@
           "aiTop3Probability": 58.031,
           "aiMarketRatio": 1.098,
           "expectedIndex": 87.06,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 26.382,
+          "sameDayExpectedFrontness": 0.3781,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.002036,
+          "sameDayShadowAdjustment": -0.002036,
+          "sameDayShadowScore": 26.328293,
           "sameDayShadowRank": 1
         },
         {
@@ -5448,8 +6444,11 @@
           "aiTop3Probability": 39.797,
           "aiMarketRatio": 1.0467,
           "expectedIndex": 82.991,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 17.29,
+          "sameDayExpectedFrontness": 0.5438,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.000732,
+          "sameDayShadowAdjustment": 0.000732,
+          "sameDayShadowScore": 17.302649,
           "sameDayShadowRank": 2
         },
         {
@@ -5471,8 +6470,11 @@
           "aiTop3Probability": 36.771,
           "aiMarketRatio": 0.9386,
           "expectedIndex": 74.419,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 12.831,
+          "sameDayExpectedFrontness": 0.4517,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.000807,
+          "sameDayShadowAdjustment": -0.000807,
+          "sameDayShadowScore": 12.820645,
           "sameDayShadowRank": 3
         },
         {
@@ -5494,8 +6496,11 @@
           "aiTop3Probability": 26.202,
           "aiMarketRatio": 1.0063,
           "expectedIndex": 79.793,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 8.673,
+          "sameDayExpectedFrontness": 0.6077,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.001798,
+          "sameDayShadowAdjustment": 0.001798,
+          "sameDayShadowScore": 8.688596,
           "sameDayShadowRank": 4
         },
         {
@@ -5517,8 +6522,11 @@
           "aiTop3Probability": 23.704,
           "aiMarketRatio": 0.9783,
           "expectedIndex": 77.568,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 7.249,
+          "sameDayExpectedFrontness": 0.23,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.004509,
+          "sameDayShadowAdjustment": -0.004509,
+          "sameDayShadowScore": 7.216315,
           "sameDayShadowRank": 5
         },
         {
@@ -5540,8 +6548,11 @@
           "aiTop3Probability": 20.015,
           "aiMarketRatio": 0.8313,
           "expectedIndex": 65.915,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 5.448,
+          "sameDayExpectedFrontness": 0.4604,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.000661,
+          "sameDayShadowAdjustment": -0.000661,
+          "sameDayShadowScore": 5.444397,
           "sameDayShadowRank": 6
         },
         {
@@ -5563,8 +6574,11 @@
           "aiTop3Probability": 20.997,
           "aiMarketRatio": 0.9425,
           "expectedIndex": 74.733,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 5.415,
+          "sameDayExpectedFrontness": 0.7105,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.003515,
+          "sameDayShadowAdjustment": 0.003515,
+          "sameDayShadowScore": 5.434033,
           "sameDayShadowRank": 7
         },
         {
@@ -5586,8 +6600,11 @@
           "aiTop3Probability": 17.874,
           "aiMarketRatio": 0.9322,
           "expectedIndex": 73.916,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 4.649,
+          "sameDayExpectedFrontness": 0.2315,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.004484,
+          "sameDayShadowAdjustment": -0.004484,
+          "sameDayShadowScore": 4.628155,
           "sameDayShadowRank": 8
         },
         {
@@ -5609,8 +6626,11 @@
           "aiTop3Probability": 15.276,
           "aiMarketRatio": 0.937,
           "expectedIndex": 74.297,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 3.424,
+          "sameDayExpectedFrontness": 0.2897,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.003511,
+          "sameDayShadowAdjustment": -0.003511,
+          "sameDayShadowScore": 3.411978,
           "sameDayShadowRank": 9
         },
         {
@@ -5632,8 +6652,11 @@
           "aiTop3Probability": 12.73,
           "aiMarketRatio": 1.1055,
           "expectedIndex": 87.655,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 3.211,
+          "sameDayExpectedFrontness": 0.7467,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.004119,
+          "sameDayShadowAdjustment": 0.004119,
+          "sameDayShadowScore": 3.224227,
           "sameDayShadowRank": 10
         },
         {
@@ -5655,8 +6678,11 @@
           "aiTop3Probability": 10.33,
           "aiMarketRatio": 0.8662,
           "expectedIndex": 68.682,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 1.77,
+          "sameDayExpectedFrontness": 0.0876,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.006887,
+          "sameDayShadowAdjustment": -0.006887,
+          "sameDayShadowScore": 1.757811,
           "sameDayShadowRank": 11
         },
         {
@@ -5678,8 +6704,11 @@
           "aiTop3Probability": 4.603,
           "aiMarketRatio": 1.1636,
           "expectedIndex": 92.264,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 1.371,
+          "sameDayExpectedFrontness": 0.7224,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.003714,
+          "sameDayShadowAdjustment": 0.003714,
+          "sameDayShadowScore": 1.376092,
           "sameDayShadowRank": 12
         },
         {
@@ -5701,8 +6730,11 @@
           "aiTop3Probability": 5.806,
           "aiMarketRatio": 0.777,
           "expectedIndex": 61.606,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 0.889,
+          "sameDayExpectedFrontness": 0.4322,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.001132,
+          "sameDayShadowAdjustment": -0.001132,
+          "sameDayShadowScore": 0.887994,
           "sameDayShadowRank": 13
         },
         {
@@ -5724,8 +6756,11 @@
           "aiTop3Probability": 4.674,
           "aiMarketRatio": 0.8629,
           "expectedIndex": 68.417,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 0.725,
+          "sameDayExpectedFrontness": 0.3423,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.002633,
+          "sameDayShadowAdjustment": -0.002633,
+          "sameDayShadowScore": 0.723091,
           "sameDayShadowRank": 14
         },
         {
@@ -5747,8 +6782,11 @@
           "aiTop3Probability": 3.19,
           "aiMarketRatio": 0.957,
           "expectedIndex": 75.878,
-          "sameDayShadowAdjustment": -0.0,
-          "sameDayShadowScore": 0.674,
+          "sameDayExpectedFrontness": 0.1867,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": -0.005232,
+          "sameDayShadowAdjustment": -0.005232,
+          "sameDayShadowScore": 0.670473,
           "sameDayShadowRank": 15
         }
       ]
@@ -5765,7 +6803,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -5787,14 +6825,38 @@
         5
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 3,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5
+      ],
+      "frontGroupTop3Rate": 0.6364,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.2427,
+      "top3AverageLatePositionGain": 0.0842,
+      "runningStyleBiasScore": -0.4388,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.51,
+      "sectionalRaceCount": 3,
+      "fastLast3Top3Rate": 0.4,
+      "slowLast3Top3Rate": 0.2,
+      "closingSpeedBiasScore": 0.2,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.45,
+      "lapRaceCount": 3,
+      "first600MinusLast600AvgSeconds": 3.133,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 5,
@@ -5815,8 +6877,11 @@
           "aiTop3Probability": 53.158,
           "aiMarketRatio": 0.9793,
           "expectedIndex": 77.804,
-          "sameDayShadowAdjustment": -0.010909,
-          "sameDayShadowScore": 22.633367,
+          "sameDayExpectedFrontness": 0.2262,
+          "sameDayDrawAdjustment": -0.009091,
+          "sameDayStyleAdjustment": -0.007353,
+          "sameDayShadowAdjustment": -0.016444,
+          "sameDayShadowScore": 22.506711,
           "sameDayShadowRank": 1
         },
         {
@@ -5838,8 +6903,11 @@
           "aiTop3Probability": 54.709,
           "aiMarketRatio": 1.067,
           "expectedIndex": 84.771,
-          "sameDayShadowAdjustment": 0.043636,
-          "sameDayShadowScore": 21.578225,
+          "sameDayExpectedFrontness": 0.6368,
+          "sameDayDrawAdjustment": 0.036364,
+          "sameDayStyleAdjustment": 0.003673,
+          "sameDayShadowAdjustment": 0.040037,
+          "sameDayShadowScore": 21.503804,
           "sameDayShadowRank": 2
         },
         {
@@ -5861,32 +6929,12 @@
           "aiTop3Probability": 46.593,
           "aiMarketRatio": 1.0083,
           "expectedIndex": 80.112,
-          "sameDayShadowAdjustment": -0.032727,
-          "sameDayShadowScore": 18.899542,
+          "sameDayExpectedFrontness": 0.7952,
+          "sameDayDrawAdjustment": -0.027273,
+          "sameDayStyleAdjustment": 0.007926,
+          "sameDayShadowAdjustment": -0.019347,
+          "sameDayShadowScore": 19.160982,
           "sameDayShadowRank": 3
-        },
-        {
-          "number": 6,
-          "name": "ジーティーメティオ",
-          "age": 3,
-          "horseKey": "ジーティーメティオ_2023",
-          "jockey": "吉田隼人",
-          "carriedWeight": 54.0,
-          "popularity": 5,
-          "bodyWeight": 470,
-          "bodyWeightChange": -12,
-          "odds": 9.0,
-          "marketProbability": 8.828,
-          "aiProbability": 8.752,
-          "marketTop2Probability": 18.508,
-          "aiTop2Probability": 19.55,
-          "marketTop3Probability": 29.246,
-          "aiTop3Probability": 30.066,
-          "aiMarketRatio": 0.9914,
-          "expectedIndex": 78.771,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 8.752,
-          "sameDayShadowRank": 4
         },
         {
           "number": 2,
@@ -5907,8 +6955,37 @@
           "aiTop3Probability": 33.418,
           "aiMarketRatio": 0.9137,
           "expectedIndex": 72.596,
-          "sameDayShadowAdjustment": -0.043636,
-          "sameDayShadowScore": 8.679,
+          "sameDayExpectedFrontness": 0.8,
+          "sameDayDrawAdjustment": -0.036364,
+          "sameDayStyleAdjustment": 0.008056,
+          "sameDayShadowAdjustment": -0.028308,
+          "sameDayShadowScore": 8.818108,
+          "sameDayShadowRank": 4
+        },
+        {
+          "number": 6,
+          "name": "ジーティーメティオ",
+          "age": 3,
+          "horseKey": "ジーティーメティオ_2023",
+          "jockey": "吉田隼人",
+          "carriedWeight": 54.0,
+          "popularity": 5,
+          "bodyWeight": 470,
+          "bodyWeightChange": -12,
+          "odds": 9.0,
+          "marketProbability": 8.828,
+          "aiProbability": 8.752,
+          "marketTop2Probability": 18.508,
+          "aiTop2Probability": 19.55,
+          "marketTop3Probability": 29.246,
+          "aiTop3Probability": 30.066,
+          "aiMarketRatio": 0.9914,
+          "expectedIndex": 78.771,
+          "sameDayExpectedFrontness": 0.7692,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.00723,
+          "sameDayShadowAdjustment": 0.00723,
+          "sameDayShadowScore": 8.815277,
           "sameDayShadowRank": 5
         },
         {
@@ -5930,8 +7007,11 @@
           "aiTop3Probability": 25.797,
           "aiMarketRatio": 1.0028,
           "expectedIndex": 79.674,
-          "sameDayShadowAdjustment": 0.021818,
-          "sameDayShadowScore": 7.828149,
+          "sameDayExpectedFrontness": 0.5852,
+          "sameDayDrawAdjustment": 0.018182,
+          "sameDayStyleAdjustment": 0.002289,
+          "sameDayShadowAdjustment": 0.020471,
+          "sameDayShadowScore": 7.817826,
           "sameDayShadowRank": 6
         },
         {
@@ -5953,8 +7033,11 @@
           "aiTop3Probability": 13.687,
           "aiMarketRatio": 1.1605,
           "expectedIndex": 92.207,
-          "sameDayShadowAdjustment": 0.054545,
-          "sameDayShadowScore": 3.307055,
+          "sameDayExpectedFrontness": 0.7633,
+          "sameDayDrawAdjustment": 0.045455,
+          "sameDayStyleAdjustment": 0.007072,
+          "sameDayShadowAdjustment": 0.052527,
+          "sameDayShadowScore": 3.300724,
           "sameDayShadowRank": 7
         },
         {
@@ -5976,8 +7059,11 @@
           "aiTop3Probability": 17.032,
           "aiMarketRatio": 0.909,
           "expectedIndex": 72.223,
-          "sameDayShadowAdjustment": -0.021818,
-          "sameDayShadowScore": 3.211371,
+          "sameDayExpectedFrontness": 0.2175,
+          "sameDayDrawAdjustment": -0.018182,
+          "sameDayStyleAdjustment": -0.007586,
+          "sameDayShadowAdjustment": -0.025768,
+          "sameDayShadowScore": 3.198402,
           "sameDayShadowRank": 8
         },
         {
@@ -5999,8 +7085,11 @@
           "aiTop3Probability": 9.39,
           "aiMarketRatio": 0.9946,
           "expectedIndex": 79.021,
-          "sameDayShadowAdjustment": 0.032727,
-          "sameDayShadowScore": 2.14704,
+          "sameDayExpectedFrontness": 0.7829,
+          "sameDayDrawAdjustment": 0.027273,
+          "sameDayStyleAdjustment": 0.007596,
+          "sameDayShadowAdjustment": 0.034869,
+          "sameDayShadowScore": 2.151493,
           "sameDayShadowRank": 9
         },
         {
@@ -6022,8 +7111,11 @@
           "aiTop3Probability": 11.069,
           "aiMarketRatio": 0.9468,
           "expectedIndex": 75.225,
-          "sameDayShadowAdjustment": 0.010909,
-          "sameDayShadowScore": 2.129985,
+          "sameDayExpectedFrontness": 0.4964,
+          "sameDayDrawAdjustment": 0.009091,
+          "sameDayStyleAdjustment": -9.8e-05,
+          "sameDayShadowAdjustment": 0.008993,
+          "sameDayShadowScore": 2.125949,
           "sameDayShadowRank": 10
         },
         {
@@ -6045,8 +7137,11 @@
           "aiTop3Probability": 5.081,
           "aiMarketRatio": 0.9546,
           "expectedIndex": 75.843,
-          "sameDayShadowAdjustment": -0.054545,
-          "sameDayShadowScore": 0.763927,
+          "sameDayExpectedFrontness": 0.6078,
+          "sameDayDrawAdjustment": -0.045455,
+          "sameDayStyleAdjustment": 0.002896,
+          "sameDayShadowAdjustment": -0.042559,
+          "sameDayShadowScore": 0.773612,
           "sameDayShadowRank": 11
         }
       ]
@@ -6063,7 +7158,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -6085,14 +7180,38 @@
         6
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 3,
+      "detailSourceRaceNumbers": [
+        1,
+        4,
+        6
+      ],
+      "frontGroupTop3Rate": 0.4706,
+      "backGroupTop3Rate": 0.0,
+      "top3AverageFinalCornerPct": 0.1606,
+      "top3AverageLatePositionGain": 0.0693,
+      "runningStyleBiasScore": -0.4112,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.51,
+      "sectionalRaceCount": 3,
+      "fastLast3Top3Rate": 0.4706,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.4706,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.45,
+      "lapRaceCount": 2,
+      "first600MinusLast600AvgSeconds": -1.25,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 7,
@@ -6113,8 +7232,11 @@
           "aiTop3Probability": 78.275,
           "aiMarketRatio": 0.9714,
           "expectedIndex": 76.155,
-          "sameDayShadowAdjustment": 0.0,
-          "sameDayShadowScore": 44.797,
+          "sameDayExpectedFrontness": 0.8214,
+          "sameDayDrawAdjustment": 0.0,
+          "sameDayStyleAdjustment": 0.008087,
+          "sameDayShadowAdjustment": 0.008087,
+          "sameDayShadowScore": 45.159272,
           "sameDayShadowRank": 1
         },
         {
@@ -6136,8 +7258,11 @@
           "aiTop3Probability": 52.511,
           "aiMarketRatio": 0.9791,
           "expectedIndex": 76.757,
-          "sameDayShadowAdjustment": -0.01014,
-          "sameDayShadowScore": 14.897393,
+          "sameDayExpectedFrontness": 0.3697,
+          "sameDayDrawAdjustment": -0.01014,
+          "sameDayStyleAdjustment": -0.003279,
+          "sameDayShadowAdjustment": -0.013419,
+          "sameDayShadowScore": 14.848042,
           "sameDayShadowRank": 2
         },
         {
@@ -6159,8 +7284,11 @@
           "aiTop3Probability": 27.423,
           "aiMarketRatio": 1.1819,
           "expectedIndex": 92.655,
-          "sameDayShadowAdjustment": 0.01521,
-          "sameDayShadowScore": 9.313537,
+          "sameDayExpectedFrontness": 0.9714,
+          "sameDayDrawAdjustment": 0.01521,
+          "sameDayStyleAdjustment": 0.011864,
+          "sameDayShadowAdjustment": 0.027074,
+          "sameDayShadowScore": 9.422374,
           "sameDayShadowRank": 3
         },
         {
@@ -6182,8 +7310,11 @@
           "aiTop3Probability": 29.283,
           "aiMarketRatio": 0.9326,
           "expectedIndex": 73.116,
-          "sameDayShadowAdjustment": 0.01014,
-          "sameDayShadowScore": 7.941721,
+          "sameDayExpectedFrontness": 0.1367,
+          "sameDayDrawAdjustment": 0.01014,
+          "sameDayStyleAdjustment": -0.009143,
+          "sameDayShadowAdjustment": 0.000997,
+          "sameDayShadowScore": 7.869835,
           "sameDayShadowRank": 4
         },
         {
@@ -6205,8 +7336,11 @@
           "aiTop3Probability": 21.586,
           "aiMarketRatio": 1.1477,
           "expectedIndex": 89.977,
-          "sameDayShadowAdjustment": 0.007605,
-          "sameDayShadowScore": 5.333253,
+          "sameDayExpectedFrontness": 0.3595,
+          "sameDayDrawAdjustment": 0.007605,
+          "sameDayStyleAdjustment": -0.003535,
+          "sameDayShadowAdjustment": 0.00407,
+          "sameDayShadowScore": 5.314542,
           "sameDayShadowRank": 5
         },
         {
@@ -6228,8 +7362,11 @@
           "aiTop3Probability": 16.289,
           "aiMarketRatio": 1.1821,
           "expectedIndex": 92.671,
-          "sameDayShadowAdjustment": -0.012675,
-          "sameDayShadowScore": 3.630394,
+          "sameDayExpectedFrontness": 0.6,
+          "sameDayDrawAdjustment": -0.012675,
+          "sameDayStyleAdjustment": 0.002517,
+          "sameDayShadowAdjustment": -0.010158,
+          "sameDayShadowScore": 3.639647,
           "sameDayShadowRank": 6
         },
         {
@@ -6251,8 +7388,11 @@
           "aiTop3Probability": 17.413,
           "aiMarketRatio": 0.9379,
           "expectedIndex": 73.529,
-          "sameDayShadowAdjustment": -0.002535,
-          "sameDayShadowScore": 3.443249,
+          "sameDayExpectedFrontness": 0.4239,
+          "sameDayDrawAdjustment": -0.002535,
+          "sameDayStyleAdjustment": -0.001915,
+          "sameDayShadowAdjustment": -0.00445,
+          "sameDayShadowScore": 3.43664,
           "sameDayShadowRank": 7
         },
         {
@@ -6274,8 +7414,11 @@
           "aiTop3Probability": 13.314,
           "aiMarketRatio": 0.9352,
           "expectedIndex": 73.317,
-          "sameDayShadowAdjustment": -0.007605,
-          "sameDayShadowScore": 2.725117,
+          "sameDayExpectedFrontness": 0.5467,
+          "sameDayDrawAdjustment": -0.007605,
+          "sameDayStyleAdjustment": 0.001174,
+          "sameDayShadowAdjustment": -0.006431,
+          "sameDayShadowScore": 2.728342,
           "sameDayShadowRank": 8
         },
         {
@@ -6297,32 +7440,12 @@
           "aiTop3Probability": 12.263,
           "aiMarketRatio": 1.1507,
           "expectedIndex": 90.209,
-          "sameDayShadowAdjustment": -0.00507,
-          "sameDayShadowScore": 2.647509,
+          "sameDayExpectedFrontness": 0.4181,
+          "sameDayDrawAdjustment": -0.00507,
+          "sameDayStyleAdjustment": -0.002061,
+          "sameDayShadowAdjustment": -0.007131,
+          "sameDayShadowScore": 2.642024,
           "sameDayShadowRank": 9
-        },
-        {
-          "number": 9,
-          "name": "トーホウキザン",
-          "age": 6,
-          "horseKey": "トーホウキザン_2020",
-          "jockey": "長浜鴻",
-          "carriedWeight": 57.0,
-          "popularity": 10,
-          "bodyWeight": 474,
-          "bodyWeightChange": 0,
-          "odds": 45.3,
-          "marketProbability": 1.731,
-          "aiProbability": 1.465,
-          "marketTop2Probability": 4.199,
-          "aiTop2Probability": 5.01,
-          "marketTop3Probability": 7.445,
-          "aiTop3Probability": 11.231,
-          "aiMarketRatio": 0.8467,
-          "expectedIndex": 66.376,
-          "sameDayShadowAdjustment": 0.00507,
-          "sameDayShadowScore": 1.472428,
-          "sameDayShadowRank": 10
         },
         {
           "number": 12,
@@ -6343,8 +7466,37 @@
           "aiTop3Probability": 6.043,
           "aiMarketRatio": 1.0711,
           "expectedIndex": 83.967,
-          "sameDayShadowAdjustment": 0.012675,
-          "sameDayShadowScore": 1.463315,
+          "sameDayExpectedFrontness": 0.7933,
+          "sameDayDrawAdjustment": 0.012675,
+          "sameDayStyleAdjustment": 0.007382,
+          "sameDayShadowAdjustment": 0.020057,
+          "sameDayShadowScore": 1.473982,
+          "sameDayShadowRank": 10
+        },
+        {
+          "number": 9,
+          "name": "トーホウキザン",
+          "age": 6,
+          "horseKey": "トーホウキザン_2020",
+          "jockey": "長浜鴻",
+          "carriedWeight": 57.0,
+          "popularity": 10,
+          "bodyWeight": 474,
+          "bodyWeightChange": 0,
+          "odds": 45.3,
+          "marketProbability": 1.731,
+          "aiProbability": 1.465,
+          "marketTop2Probability": 4.199,
+          "aiTop2Probability": 5.01,
+          "marketTop3Probability": 7.445,
+          "aiTop3Probability": 11.231,
+          "aiMarketRatio": 0.8467,
+          "expectedIndex": 66.376,
+          "sameDayExpectedFrontness": 0.1767,
+          "sameDayDrawAdjustment": 0.00507,
+          "sameDayStyleAdjustment": -0.008137,
+          "sameDayShadowAdjustment": -0.003067,
+          "sameDayShadowScore": 1.460507,
           "sameDayShadowRank": 11
         },
         {
@@ -6366,8 +7518,11 @@
           "aiTop3Probability": 8.311,
           "aiMarketRatio": 0.9554,
           "expectedIndex": 74.897,
-          "sameDayShadowAdjustment": -0.01521,
-          "sameDayShadowScore": 1.429915,
+          "sameDayExpectedFrontness": 0.4635,
+          "sameDayDrawAdjustment": -0.01521,
+          "sameDayStyleAdjustment": -0.000918,
+          "sameDayShadowAdjustment": -0.016128,
+          "sameDayShadowScore": 1.428582,
           "sameDayShadowRank": 12
         },
         {
@@ -6389,8 +7544,11 @@
           "aiTop3Probability": 6.058,
           "aiMarketRatio": 0.8657,
           "expectedIndex": 67.866,
-          "sameDayShadowAdjustment": 0.002535,
-          "sameDayShadowScore": 0.928347,
+          "sameDayExpectedFrontness": 0.3299,
+          "sameDayDrawAdjustment": 0.002535,
+          "sameDayStyleAdjustment": -0.004281,
+          "sameDayShadowAdjustment": -0.001746,
+          "sameDayShadowScore": 0.924383,
           "sameDayShadowRank": 13
         }
       ]
@@ -6407,7 +7565,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -6430,14 +7588,39 @@
         8
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 4,
+      "detailSourceRaceNumbers": [
+        1,
+        4,
+        6,
+        8
+      ],
+      "frontGroupTop3Rate": 0.3913,
+      "backGroupTop3Rate": 0.125,
+      "top3AverageFinalCornerPct": 0.2839,
+      "top3AverageLatePositionGain": 0.1978,
+      "runningStyleBiasScore": -0.1837,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.68,
+      "sectionalRaceCount": 4,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.5,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.6,
+      "lapRaceCount": 3,
+      "first600MinusLast600AvgSeconds": -0.833,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 4,
@@ -6458,8 +7641,11 @@
           "aiTop3Probability": 66.407,
           "aiMarketRatio": 1.0265,
           "expectedIndex": 81.379,
-          "sameDayShadowAdjustment": -0.002879,
-          "sameDayShadowScore": 38.640416,
+          "sameDayExpectedFrontness": 0.6154,
+          "sameDayDrawAdjustment": -0.002879,
+          "sameDayStyleAdjustment": 0.00173,
+          "sameDayShadowAdjustment": -0.001149,
+          "sameDayShadowScore": 38.707459,
           "sameDayShadowRank": 1
         },
         {
@@ -6481,8 +7667,11 @@
           "aiTop3Probability": 47.221,
           "aiMarketRatio": 0.9484,
           "expectedIndex": 75.187,
-          "sameDayShadowAdjustment": 0.004525,
-          "sameDayShadowScore": 16.069384,
+          "sameDayExpectedFrontness": 0.522,
+          "sameDayDrawAdjustment": 0.004525,
+          "sameDayStyleAdjustment": 0.000329,
+          "sameDayShadowAdjustment": 0.004854,
+          "sameDayShadowScore": 16.074657,
           "sameDayShadowRank": 2
         },
         {
@@ -6504,8 +7693,11 @@
           "aiTop3Probability": 35.604,
           "aiMarketRatio": 0.9201,
           "expectedIndex": 72.945,
-          "sameDayShadowAdjustment": -0.000411,
-          "sameDayShadowScore": 9.852945,
+          "sameDayExpectedFrontness": 0.8879,
+          "sameDayDrawAdjustment": -0.000411,
+          "sameDayStyleAdjustment": 0.005814,
+          "sameDayShadowAdjustment": 0.005403,
+          "sameDayShadowScore": 9.91026,
           "sameDayShadowRank": 3
         },
         {
@@ -6527,8 +7719,11 @@
           "aiTop3Probability": 28.081,
           "aiMarketRatio": 1.0075,
           "expectedIndex": 79.868,
-          "sameDayShadowAdjustment": -0.003702,
-          "sameDayShadowScore": 7.878723,
+          "sameDayExpectedFrontness": 0.8264,
+          "sameDayDrawAdjustment": -0.003702,
+          "sameDayStyleAdjustment": 0.004893,
+          "sameDayShadowAdjustment": 0.001191,
+          "sameDayShadowScore": 7.917415,
           "sameDayShadowRank": 4
         },
         {
@@ -6550,8 +7745,11 @@
           "aiTop3Probability": 27.097,
           "aiMarketRatio": 1.099,
           "expectedIndex": 87.123,
+          "sameDayExpectedFrontness": null,
+          "sameDayDrawAdjustment": -0.005348,
+          "sameDayStyleAdjustment": 0.0,
           "sameDayShadowAdjustment": -0.005348,
-          "sameDayShadowScore": 7.281851,
+          "sameDayShadowScore": 7.281847,
           "sameDayShadowRank": 5
         },
         {
@@ -6573,8 +7771,11 @@
           "aiTop3Probability": 19.012,
           "aiMarketRatio": 1.0405,
           "expectedIndex": 82.488,
-          "sameDayShadowAdjustment": 0.000411,
-          "sameDayShadowScore": 4.609896,
+          "sameDayExpectedFrontness": 0.7816,
+          "sameDayDrawAdjustment": 0.000411,
+          "sameDayStyleAdjustment": 0.004221,
+          "sameDayShadowAdjustment": 0.004632,
+          "sameDayShadowScore": 4.629342,
           "sameDayShadowRank": 6
         },
         {
@@ -6596,8 +7797,11 @@
           "aiTop3Probability": 17.073,
           "aiMarketRatio": 1.0266,
           "expectedIndex": 81.386,
-          "sameDayShadowAdjustment": 0.001234,
-          "sameDayShadowScore": 3.77265,
+          "sameDayExpectedFrontness": 0.745,
+          "sameDayDrawAdjustment": 0.001234,
+          "sameDayStyleAdjustment": 0.003672,
+          "sameDayShadowAdjustment": 0.004906,
+          "sameDayShadowScore": 3.786486,
           "sameDayShadowRank": 7
         },
         {
@@ -6619,8 +7823,11 @@
           "aiTop3Probability": 11.465,
           "aiMarketRatio": 1.0754,
           "expectedIndex": 85.256,
-          "sameDayShadowAdjustment": -0.002057,
-          "sameDayShadowScore": 2.633572,
+          "sameDayExpectedFrontness": 0.5417,
+          "sameDayDrawAdjustment": -0.002057,
+          "sameDayStyleAdjustment": 0.000625,
+          "sameDayShadowAdjustment": -0.001432,
+          "sameDayShadowScore": 2.63522,
           "sameDayShadowRank": 8
         },
         {
@@ -6642,8 +7849,11 @@
           "aiTop3Probability": 11.252,
           "aiMarketRatio": 0.8708,
           "expectedIndex": 69.034,
-          "sameDayShadowAdjustment": -0.001234,
-          "sameDayShadowScore": 1.873685,
+          "sameDayExpectedFrontness": 0.9153,
+          "sameDayDrawAdjustment": -0.001234,
+          "sameDayStyleAdjustment": 0.006226,
+          "sameDayShadowAdjustment": 0.004992,
+          "sameDayShadowScore": 1.885365,
           "sameDayShadowRank": 9
         },
         {
@@ -6665,8 +7875,11 @@
           "aiTop3Probability": 7.031,
           "aiMarketRatio": 1.1851,
           "expectedIndex": 93.95,
-          "sameDayShadowAdjustment": 0.005348,
-          "sameDayShadowScore": 1.799572,
+          "sameDayExpectedFrontness": 0.625,
+          "sameDayDrawAdjustment": 0.005348,
+          "sameDayStyleAdjustment": 0.001874,
+          "sameDayShadowAdjustment": 0.007222,
+          "sameDayShadowScore": 1.802927,
           "sameDayShadowRank": 10
         },
         {
@@ -6688,8 +7901,11 @@
           "aiTop3Probability": 8.243,
           "aiMarketRatio": 0.9642,
           "expectedIndex": 76.439,
-          "sameDayShadowAdjustment": -0.004525,
-          "sameDayShadowScore": 1.49819,
+          "sameDayExpectedFrontness": 0.3727,
+          "sameDayDrawAdjustment": -0.004525,
+          "sameDayStyleAdjustment": -0.001908,
+          "sameDayShadowAdjustment": -0.006433,
+          "sameDayShadowScore": 1.495319,
           "sameDayShadowRank": 11
         },
         {
@@ -6711,8 +7927,11 @@
           "aiTop3Probability": 7.886,
           "aiMarketRatio": 0.9794,
           "expectedIndex": 77.645,
-          "sameDayShadowAdjustment": 0.002879,
-          "sameDayShadowScore": 1.439132,
+          "sameDayExpectedFrontness": 0.5444,
+          "sameDayDrawAdjustment": 0.002879,
+          "sameDayStyleAdjustment": 0.000666,
+          "sameDayShadowAdjustment": 0.003545,
+          "sameDayShadowScore": 1.440087,
           "sameDayShadowRank": 12
         },
         {
@@ -6734,8 +7953,11 @@
           "aiTop3Probability": 7.306,
           "aiMarketRatio": 0.8509,
           "expectedIndex": 67.453,
-          "sameDayShadowAdjustment": 0.003702,
-          "sameDayShadowScore": 1.384105,
+          "sameDayExpectedFrontness": 0.8667,
+          "sameDayDrawAdjustment": 0.003702,
+          "sameDayStyleAdjustment": 0.005496,
+          "sameDayShadowAdjustment": 0.009198,
+          "sameDayShadowScore": 1.391684,
           "sameDayShadowRank": 13
         },
         {
@@ -6757,8 +7979,11 @@
           "aiTop3Probability": 6.32,
           "aiMarketRatio": 0.9001,
           "expectedIndex": 71.354,
-          "sameDayShadowAdjustment": 0.002057,
-          "sameDayShadowScore": 1.166394,
+          "sameDayExpectedFrontness": 0.3179,
+          "sameDayDrawAdjustment": 0.002057,
+          "sameDayStyleAdjustment": -0.002729,
+          "sameDayShadowAdjustment": -0.000672,
+          "sameDayShadowScore": 1.163218,
           "sameDayShadowRank": 14
         }
       ]
@@ -6775,7 +8000,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -6798,14 +8023,39 @@
         7
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 4,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5,
+        7
+      ],
+      "frontGroupTop3Rate": 0.4667,
+      "backGroupTop3Rate": 0.2727,
+      "top3AverageFinalCornerPct": 0.3752,
+      "top3AverageLatePositionGain": 0.2382,
+      "runningStyleBiasScore": -0.0766,
+      "runningStyleBiasLabel": "neutral",
+      "runningStyleConfidence": 0.68,
+      "sectionalRaceCount": 4,
+      "fastLast3Top3Rate": 0.5,
+      "slowLast3Top3Rate": 0.1429,
+      "closingSpeedBiasScore": 0.3571,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.6,
+      "lapRaceCount": 4,
+      "first600MinusLast600AvgSeconds": 2.775,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 3,
@@ -6826,8 +8076,11 @@
           "aiTop3Probability": 70.979,
           "aiMarketRatio": 0.9793,
           "expectedIndex": 77.295,
-          "sameDayShadowAdjustment": -0.03,
-          "sameDayShadowScore": 31.23982,
+          "sameDayExpectedFrontness": 0.7323,
+          "sameDayDrawAdjustment": -0.025,
+          "sameDayStyleAdjustment": 0.001452,
+          "sameDayShadowAdjustment": -0.023548,
+          "sameDayShadowScore": 31.447607,
           "sameDayShadowRank": 1
         },
         {
@@ -6849,8 +8102,11 @@
           "aiTop3Probability": 68.365,
           "aiMarketRatio": 0.9806,
           "expectedIndex": 77.4,
-          "sameDayShadowAdjustment": 0.018,
-          "sameDayShadowScore": 30.304842,
+          "sameDayExpectedFrontness": 0.5719,
+          "sameDayDrawAdjustment": 0.015,
+          "sameDayStyleAdjustment": 0.00045,
+          "sameDayShadowAdjustment": 0.01545,
+          "sameDayShadowScore": 30.228923,
           "sameDayShadowRank": 2
         },
         {
@@ -6872,8 +8128,11 @@
           "aiTop3Probability": 35.433,
           "aiMarketRatio": 1.0736,
           "expectedIndex": 84.736,
-          "sameDayShadowAdjustment": 0.054,
-          "sameDayShadowScore": 10.26596,
+          "sameDayExpectedFrontness": 0.5883,
+          "sameDayDrawAdjustment": 0.045,
+          "sameDayStyleAdjustment": 0.000552,
+          "sameDayShadowAdjustment": 0.045552,
+          "sameDayShadowScore": 10.183676,
           "sameDayShadowRank": 3
         },
         {
@@ -6895,8 +8154,11 @@
           "aiTop3Probability": 37.092,
           "aiMarketRatio": 1.0472,
           "expectedIndex": 82.656,
-          "sameDayShadowAdjustment": -0.018,
-          "sameDayShadowScore": 9.89856,
+          "sameDayExpectedFrontness": 0.7022,
+          "sameDayDrawAdjustment": -0.015,
+          "sameDayStyleAdjustment": 0.001264,
+          "sameDayShadowAdjustment": -0.013736,
+          "sameDayShadowScore": 9.941541,
           "sameDayShadowRank": 4
         },
         {
@@ -6918,8 +8180,11 @@
           "aiTop3Probability": 23.698,
           "aiMarketRatio": 0.9953,
           "expectedIndex": 78.559,
-          "sameDayShadowAdjustment": 0.03,
-          "sameDayShadowScore": 5.28905,
+          "sameDayExpectedFrontness": 0.7494,
+          "sameDayDrawAdjustment": 0.025,
+          "sameDayStyleAdjustment": 0.001559,
+          "sameDayShadowAdjustment": 0.026559,
+          "sameDayShadowScore": 5.27138,
           "sameDayShadowRank": 5
         },
         {
@@ -6941,8 +8206,11 @@
           "aiTop3Probability": 21.679,
           "aiMarketRatio": 0.9831,
           "expectedIndex": 77.597,
-          "sameDayShadowAdjustment": -0.006,
-          "sameDayShadowScore": 4.483934,
+          "sameDayExpectedFrontness": 0.4259,
+          "sameDayDrawAdjustment": -0.005,
+          "sameDayStyleAdjustment": -0.000463,
+          "sameDayShadowAdjustment": -0.005463,
+          "sameDayShadowScore": 4.486354,
           "sameDayShadowRank": 6
         },
         {
@@ -6964,8 +8232,11 @@
           "aiTop3Probability": 19.206,
           "aiMarketRatio": 1.1082,
           "expectedIndex": 87.469,
-          "sameDayShadowAdjustment": -0.054,
-          "sameDayShadowScore": 3.95901,
+          "sameDayExpectedFrontness": 0.4566,
+          "sameDayDrawAdjustment": -0.045,
+          "sameDayStyleAdjustment": -0.000271,
+          "sameDayShadowAdjustment": -0.045271,
+          "sameDayShadowScore": 3.99554,
           "sameDayShadowRank": 7
         },
         {
@@ -6987,8 +8258,11 @@
           "aiTop3Probability": 12.67,
           "aiMarketRatio": 0.93,
           "expectedIndex": 73.4,
-          "sameDayShadowAdjustment": 0.006,
-          "sameDayShadowScore": 2.25847,
+          "sameDayExpectedFrontness": 0.6179,
+          "sameDayDrawAdjustment": 0.005,
+          "sameDayStyleAdjustment": 0.000737,
+          "sameDayShadowAdjustment": 0.005737,
+          "sameDayShadowScore": 2.257879,
           "sameDayShadowRank": 8
         },
         {
@@ -7010,8 +8284,11 @@
           "aiTop3Probability": 8.682,
           "aiMarketRatio": 1.1893,
           "expectedIndex": 93.87,
-          "sameDayShadowAdjustment": -0.042,
-          "sameDayShadowScore": 1.531842,
+          "sameDayExpectedFrontness": 0.2933,
+          "sameDayDrawAdjustment": -0.035,
+          "sameDayStyleAdjustment": -0.001292,
+          "sameDayShadowAdjustment": -0.036292,
+          "sameDayShadowScore": 1.540969,
           "sameDayShadowRank": 9
         },
         {
@@ -7033,8 +8310,11 @@
           "aiTop3Probability": 2.197,
           "aiMarketRatio": 0.6823,
           "expectedIndex": 53.849,
-          "sameDayShadowAdjustment": 0.042,
-          "sameDayShadowScore": 0.55226,
+          "sameDayExpectedFrontness": 0.4541,
+          "sameDayDrawAdjustment": 0.035,
+          "sameDayStyleAdjustment": -0.000287,
+          "sameDayShadowAdjustment": 0.034713,
+          "sameDayShadowScore": 0.548398,
           "sameDayShadowRank": 10
         }
       ]
@@ -7051,7 +8331,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "ダート",
@@ -7075,14 +8355,40 @@
         9
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 5,
+      "detailSourceRaceNumbers": [
+        1,
+        4,
+        6,
+        8,
+        9
+      ],
+      "frontGroupTop3Rate": 0.4286,
+      "backGroupTop3Rate": 0.0952,
+      "top3AverageFinalCornerPct": 0.2533,
+      "top3AverageLatePositionGain": 0.1634,
+      "runningStyleBiasScore": -0.2493,
+      "runningStyleBiasLabel": "front_positive",
+      "runningStyleConfidence": 0.85,
+      "sectionalRaceCount": 5,
+      "fastLast3Top3Rate": 0.4815,
+      "slowLast3Top3Rate": 0.0,
+      "closingSpeedBiasScore": 0.4815,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.75,
+      "lapRaceCount": 4,
+      "first600MinusLast600AvgSeconds": -0.975,
+      "paceShapeLabel": "early_faster_than_late"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 16,
@@ -7103,8 +8409,11 @@
           "aiTop3Probability": 46.899,
           "aiMarketRatio": 0.9881,
           "expectedIndex": 78.364,
-          "sameDayShadowAdjustment": -0.008181,
-          "sameDayShadowScore": 18.95664,
+          "sameDayExpectedFrontness": 0.6181,
+          "sameDayDrawAdjustment": -0.008181,
+          "sameDayStyleAdjustment": 0.003003,
+          "sameDayShadowAdjustment": -0.005178,
+          "sameDayShadowScore": 19.014033,
           "sameDayShadowRank": 1
         },
         {
@@ -7126,8 +8435,11 @@
           "aiTop3Probability": 36.532,
           "aiMarketRatio": 1.003,
           "expectedIndex": 79.543,
-          "sameDayShadowAdjustment": -0.003818,
-          "sameDayShadowScore": 16.507737,
+          "sameDayExpectedFrontness": 0.4627,
+          "sameDayDrawAdjustment": -0.003818,
+          "sameDayStyleAdjustment": -0.000949,
+          "sameDayShadowAdjustment": -0.004767,
+          "sameDayShadowScore": 16.492014,
           "sameDayShadowRank": 2
         },
         {
@@ -7149,8 +8461,11 @@
           "aiTop3Probability": 29.963,
           "aiMarketRatio": 0.97,
           "expectedIndex": 76.929,
-          "sameDayShadowAdjustment": 0.002727,
-          "sameDayShadowScore": 10.424349,
+          "sameDayExpectedFrontness": 0.4133,
+          "sameDayDrawAdjustment": 0.002727,
+          "sameDayStyleAdjustment": -0.002204,
+          "sameDayShadowAdjustment": 0.000523,
+          "sameDayShadowScore": 10.401439,
           "sameDayShadowRank": 3
         },
         {
@@ -7172,8 +8487,11 @@
           "aiTop3Probability": 24.529,
           "aiMarketRatio": 0.9498,
           "expectedIndex": 75.33,
-          "sameDayShadowAdjustment": 0.001636,
-          "sameDayShadowScore": 6.798105,
+          "sameDayExpectedFrontness": 0.4969,
+          "sameDayDrawAdjustment": 0.001636,
+          "sameDayStyleAdjustment": -7.8e-05,
+          "sameDayShadowAdjustment": 0.001558,
+          "sameDayShadowScore": 6.797573,
           "sameDayShadowRank": 4
         },
         {
@@ -7195,8 +8513,11 @@
           "aiTop3Probability": 22.479,
           "aiMarketRatio": 0.8975,
           "expectedIndex": 71.178,
-          "sameDayShadowAdjustment": -0.004908,
-          "sameDayShadowScore": 6.558648,
+          "sameDayExpectedFrontness": 0.4419,
+          "sameDayDrawAdjustment": -0.004908,
+          "sameDayStyleAdjustment": -0.001477,
+          "sameDayShadowAdjustment": -0.006385,
+          "sameDayShadowScore": 6.548915,
           "sameDayShadowRank": 5
         },
         {
@@ -7218,8 +8539,11 @@
           "aiTop3Probability": 21.051,
           "aiMarketRatio": 1.0192,
           "expectedIndex": 80.832,
-          "sameDayShadowAdjustment": 0.003818,
-          "sameDayShadowScore": 6.491689,
+          "sameDayExpectedFrontness": 0.7824,
+          "sameDayDrawAdjustment": 0.003818,
+          "sameDayStyleAdjustment": 0.007181,
+          "sameDayShadowAdjustment": 0.010999,
+          "sameDayShadowScore": 6.538134,
           "sameDayShadowRank": 6
         },
         {
@@ -7241,8 +8565,11 @@
           "aiTop3Probability": 21.488,
           "aiMarketRatio": 0.8296,
           "expectedIndex": 65.791,
-          "sameDayShadowAdjustment": -0.005999,
-          "sameDayShadowScore": 6.474921,
+          "sameDayExpectedFrontness": 0.1552,
+          "sameDayDrawAdjustment": -0.005999,
+          "sameDayStyleAdjustment": -0.008767,
+          "sameDayShadowAdjustment": -0.014766,
+          "sameDayShadowScore": 6.417815,
           "sameDayShadowRank": 7
         },
         {
@@ -7264,8 +8591,11 @@
           "aiTop3Probability": 20.816,
           "aiMarketRatio": 0.9685,
           "expectedIndex": 76.811,
-          "sameDayShadowAdjustment": -0.000545,
-          "sameDayShadowScore": 6.190622,
+          "sameDayExpectedFrontness": 0.44,
+          "sameDayDrawAdjustment": -0.000545,
+          "sameDayStyleAdjustment": -0.001526,
+          "sameDayShadowAdjustment": -0.002071,
+          "sameDayShadowScore": 6.181174,
           "sameDayShadowRank": 8
         },
         {
@@ -7287,8 +8617,11 @@
           "aiTop3Probability": 15.307,
           "aiMarketRatio": 1.256,
           "expectedIndex": 99.611,
-          "sameDayShadowAdjustment": -0.001636,
-          "sameDayShadowScore": 5.206467,
+          "sameDayExpectedFrontness": 0.7048,
+          "sameDayDrawAdjustment": -0.001636,
+          "sameDayStyleAdjustment": 0.005207,
+          "sameDayShadowAdjustment": 0.003571,
+          "sameDayShadowScore": 5.233622,
           "sameDayShadowRank": 9
         },
         {
@@ -7310,8 +8643,11 @@
           "aiTop3Probability": 11.791,
           "aiMarketRatio": 1.3095,
           "expectedIndex": 103.857,
-          "sameDayShadowAdjustment": 0.000545,
-          "sameDayShadowScore": 4.224303,
+          "sameDayExpectedFrontness": 0.7323,
+          "sameDayDrawAdjustment": 0.000545,
+          "sameDayStyleAdjustment": 0.005907,
+          "sameDayShadowAdjustment": 0.006452,
+          "sameDayShadowScore": 4.249241,
           "sameDayShadowRank": 10
         },
         {
@@ -7333,8 +8669,11 @@
           "aiTop3Probability": 10.899,
           "aiMarketRatio": 1.1572,
           "expectedIndex": 91.779,
-          "sameDayShadowAdjustment": 0.005999,
-          "sameDayShadowScore": 3.037112,
+          "sameDayExpectedFrontness": 0.6076,
+          "sameDayDrawAdjustment": 0.005999,
+          "sameDayStyleAdjustment": 0.002737,
+          "sameDayShadowAdjustment": 0.008736,
+          "sameDayShadowScore": 3.045373,
           "sameDayShadowRank": 11
         },
         {
@@ -7356,8 +8695,11 @@
           "aiTop3Probability": 5.52,
           "aiMarketRatio": 1.2954,
           "expectedIndex": 102.739,
-          "sameDayShadowAdjustment": 0.00709,
-          "sameDayShadowScore": 2.429101,
+          "sameDayExpectedFrontness": 0.551,
+          "sameDayDrawAdjustment": 0.00709,
+          "sameDayStyleAdjustment": 0.001298,
+          "sameDayShadowAdjustment": 0.008388,
+          "sameDayShadowScore": 2.432231,
           "sameDayShadowRank": 12
         },
         {
@@ -7379,8 +8721,11 @@
           "aiTop3Probability": 10.285,
           "aiMarketRatio": 0.8897,
           "expectedIndex": 70.557,
-          "sameDayShadowAdjustment": 0.008181,
-          "sameDayShadowScore": 1.774398,
+          "sameDayExpectedFrontness": 0.181,
+          "sameDayDrawAdjustment": 0.008181,
+          "sameDayStyleAdjustment": -0.008113,
+          "sameDayShadowAdjustment": 6.8e-05,
+          "sameDayShadowScore": 1.76012,
           "sameDayShadowRank": 13
         },
         {
@@ -7402,8 +8747,11 @@
           "aiTop3Probability": 7.178,
           "aiMarketRatio": 1.0821,
           "expectedIndex": 85.821,
-          "sameDayShadowAdjustment": 0.004908,
-          "sameDayShadowScore": 1.668148,
+          "sameDayExpectedFrontness": 0.4457,
+          "sameDayDrawAdjustment": 0.004908,
+          "sameDayStyleAdjustment": -0.00138,
+          "sameDayShadowAdjustment": 0.003528,
+          "sameDayShadowScore": 1.665856,
           "sameDayShadowRank": 14
         },
         {
@@ -7425,8 +8773,11 @@
           "aiTop3Probability": 7.283,
           "aiMarketRatio": 1.0912,
           "expectedIndex": 86.539,
-          "sameDayShadowAdjustment": -0.002727,
-          "sameDayShadowScore": 1.592645,
+          "sameDayExpectedFrontness": 0.2091,
+          "sameDayDrawAdjustment": -0.002727,
+          "sameDayStyleAdjustment": -0.007397,
+          "sameDayShadowAdjustment": -0.010124,
+          "sameDayShadowScore": 1.580831,
           "sameDayShadowRank": 15
         },
         {
@@ -7448,8 +8799,11 @@
           "aiTop3Probability": 7.98,
           "aiMarketRatio": 0.9802,
           "expectedIndex": 77.736,
-          "sameDayShadowAdjustment": -0.00709,
-          "sameDayShadowScore": 1.473478,
+          "sameDayExpectedFrontness": 0.4105,
+          "sameDayDrawAdjustment": -0.00709,
+          "sameDayStyleAdjustment": -0.002275,
+          "sameDayShadowAdjustment": -0.009365,
+          "sameDayShadowScore": 1.470103,
           "sameDayShadowRank": 16
         }
       ]
@@ -7466,7 +8820,7 @@
     "formalPredictionTiming": "live_10min",
     "formalCaptureQuality": "formal_10min",
     "sameDayBias": {
-      "version": "same_day_track_bias_v1",
+      "version": "same_day_track_bias_v2",
       "raceDate": "2026-10-31",
       "venue": "東京",
       "surface": "芝",
@@ -7490,14 +8844,40 @@
         10
       ],
       "limitations": [
-        "V1 measures draw-number outcome tendency, not actual inside/outside racing path.",
-        "Passing positions and sectional times are not present in ResultData.json V1.",
-        "Do not feed this summary into the fixed production LightGBM until forward validation supports it."
-      ]
+        "V2 uses official result-table passing order and last-3F when available.",
+        "Draw number remains a proxy for gate position, not the actual rail/path taken in the stretch.",
+        "Pace shape compares first and last 600m within completed races; it is not yet course-normalized.",
+        "Shadow-only: do not replace the fixed production A model without prospective validation."
+      ],
+      "detailRaceCount": 5,
+      "detailSourceRaceNumbers": [
+        2,
+        3,
+        5,
+        7,
+        10
+      ],
+      "frontGroupTop3Rate": 0.45,
+      "backGroupTop3Rate": 0.2857,
+      "top3AverageFinalCornerPct": 0.3835,
+      "top3AverageLatePositionGain": 0.2498,
+      "runningStyleBiasScore": -0.0521,
+      "runningStyleBiasLabel": "neutral",
+      "runningStyleConfidence": 0.85,
+      "sectionalRaceCount": 5,
+      "fastLast3Top3Rate": 0.5556,
+      "slowLast3Top3Rate": 0.1111,
+      "closingSpeedBiasScore": 0.4444,
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "closingSpeedConfidence": 0.75,
+      "lapRaceCount": 5,
+      "first600MinusLast600AvgSeconds": 2.38,
+      "paceShapeLabel": "late_faster_than_early"
     },
     "challenger": {
       "status": "shadow_only",
-      "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+      "version": "same_day_track_bias_v2",
+      "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
       "horses": [
         {
           "number": 7,
@@ -7518,8 +8898,11 @@
           "aiTop3Probability": 81.967,
           "aiMarketRatio": 1.0131,
           "expectedIndex": 79.966,
-          "sameDayShadowAdjustment": 0.005,
-          "sameDayShadowScore": 50.228895,
+          "sameDayExpectedFrontness": 0.5611,
+          "sameDayDrawAdjustment": 0.004167,
+          "sameDayStyleAdjustment": 0.000325,
+          "sameDayShadowAdjustment": 0.004492,
+          "sameDayShadowScore": 50.203494,
           "sameDayShadowRank": 1
         },
         {
@@ -7541,8 +8924,11 @@
           "aiTop3Probability": 53.98,
           "aiMarketRatio": 0.9396,
           "expectedIndex": 74.164,
-          "sameDayShadowAdjustment": 0.035,
-          "sameDayShadowScore": 15.352155,
+          "sameDayExpectedFrontness": 0.4947,
+          "sameDayDrawAdjustment": 0.029167,
+          "sameDayStyleAdjustment": -2.8e-05,
+          "sameDayShadowAdjustment": 0.029139,
+          "sameDayShadowScore": 15.265218,
           "sameDayShadowRank": 2
         },
         {
@@ -7564,8 +8950,11 @@
           "aiTop3Probability": 35.764,
           "aiMarketRatio": 1.1656,
           "expectedIndex": 92.006,
-          "sameDayShadowAdjustment": 0.015,
-          "sameDayShadowScore": 10.041395,
+          "sameDayExpectedFrontness": 0.6437,
+          "sameDayDrawAdjustment": 0.0125,
+          "sameDayStyleAdjustment": 0.000764,
+          "sameDayShadowAdjustment": 0.013264,
+          "sameDayShadowScore": 10.024217,
           "sameDayShadowRank": 3
         },
         {
@@ -7587,8 +8976,11 @@
           "aiTop3Probability": 28.879,
           "aiMarketRatio": 1.0469,
           "expectedIndex": 82.637,
-          "sameDayShadowAdjustment": 0.055,
-          "sameDayShadowScore": 7.647695,
+          "sameDayExpectedFrontness": 0.5,
+          "sameDayDrawAdjustment": 0.045833,
+          "sameDayStyleAdjustment": -0.0,
+          "sameDayShadowAdjustment": 0.045833,
+          "sameDayShadowScore": 7.581243,
           "sameDayShadowRank": 4
         },
         {
@@ -7610,8 +9002,11 @@
           "aiTop3Probability": 21.367,
           "aiMarketRatio": 0.9271,
           "expectedIndex": 73.182,
-          "sameDayShadowAdjustment": -0.005,
-          "sameDayShadowScore": 3.979005,
+          "sameDayExpectedFrontness": 0.1935,
+          "sameDayDrawAdjustment": -0.004167,
+          "sameDayStyleAdjustment": -0.001629,
+          "sameDayShadowAdjustment": -0.005796,
+          "sameDayShadowScore": 3.975823,
           "sameDayShadowRank": 5
         },
         {
@@ -7633,8 +9028,11 @@
           "aiTop3Probability": 16.236,
           "aiMarketRatio": 0.877,
           "expectedIndex": 69.225,
-          "sameDayShadowAdjustment": -0.015,
-          "sameDayShadowScore": 3.326345,
+          "sameDayExpectedFrontness": 0.7676,
+          "sameDayDrawAdjustment": -0.0125,
+          "sameDayStyleAdjustment": 0.001422,
+          "sameDayShadowAdjustment": -0.011078,
+          "sameDayShadowScore": 3.339591,
           "sameDayShadowRank": 6
         },
         {
@@ -7656,8 +9054,11 @@
           "aiTop3Probability": 14.204,
           "aiMarketRatio": 1.1122,
           "expectedIndex": 87.79,
-          "sameDayShadowAdjustment": -0.035,
-          "sameDayShadowScore": 2.982815,
+          "sameDayExpectedFrontness": 0.5998,
+          "sameDayDrawAdjustment": -0.029167,
+          "sameDayStyleAdjustment": 0.00053,
+          "sameDayShadowAdjustment": -0.028637,
+          "sameDayShadowScore": 3.002484,
           "sameDayShadowRank": 7
         },
         {
@@ -7679,8 +9080,11 @@
           "aiTop3Probability": 17.937,
           "aiMarketRatio": 0.9899,
           "expectedIndex": 78.138,
-          "sameDayShadowAdjustment": -0.045,
-          "sameDayShadowScore": 2.91466,
+          "sameDayExpectedFrontness": 0.2706,
+          "sameDayDrawAdjustment": -0.0375,
+          "sameDayStyleAdjustment": -0.001219,
+          "sameDayShadowAdjustment": -0.038719,
+          "sameDayShadowScore": 2.933829,
           "sameDayShadowRank": 8
         },
         {
@@ -7702,8 +9106,11 @@
           "aiTop3Probability": 9.623,
           "aiMarketRatio": 0.7276,
           "expectedIndex": 57.431,
-          "sameDayShadowAdjustment": -0.025,
-          "sameDayShadowScore": 1.3299,
+          "sameDayExpectedFrontness": 0.6333,
+          "sameDayDrawAdjustment": -0.020833,
+          "sameDayStyleAdjustment": 0.000709,
+          "sameDayShadowAdjustment": -0.020124,
+          "sameDayShadowScore": 1.33655,
           "sameDayShadowRank": 9
         },
         {
@@ -7725,8 +9132,11 @@
           "aiTop3Probability": 8.251,
           "aiMarketRatio": 0.8106,
           "expectedIndex": 63.982,
-          "sameDayShadowAdjustment": 0.025,
-          "sameDayShadowScore": 1.181825,
+          "sameDayExpectedFrontness": 0.7155,
+          "sameDayDrawAdjustment": 0.020833,
+          "sameDayStyleAdjustment": 0.001145,
+          "sameDayShadowAdjustment": 0.021978,
+          "sameDayShadowScore": 1.178341,
           "sameDayShadowRank": 10
         },
         {
@@ -7748,8 +9158,11 @@
           "aiTop3Probability": 7.192,
           "aiMarketRatio": 0.885,
           "expectedIndex": 69.861,
-          "sameDayShadowAdjustment": 0.045,
-          "sameDayShadowScore": 1.07635,
+          "sameDayExpectedFrontness": 0.5123,
+          "sameDayDrawAdjustment": 0.0375,
+          "sameDayStyleAdjustment": 6.5e-05,
+          "sameDayShadowAdjustment": 0.037565,
+          "sameDayShadowScore": 1.068692,
           "sameDayShadowRank": 11
         },
         {
@@ -7771,8 +9184,11 @@
           "aiTop3Probability": 4.6,
           "aiMarketRatio": 1.0017,
           "expectedIndex": 79.068,
-          "sameDayShadowAdjustment": -0.055,
-          "sameDayShadowScore": 0.9261,
+          "sameDayExpectedFrontness": 0.8642,
+          "sameDayDrawAdjustment": -0.045833,
+          "sameDayStyleAdjustment": 0.001935,
+          "sameDayShadowAdjustment": -0.043898,
+          "sameDayShadowScore": 0.93698,
           "sameDayShadowRank": 12
         }
       ]
