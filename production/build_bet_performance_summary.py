@@ -6,9 +6,9 @@ rewritten only when material metrics change; source-generation timestamps alone 
 create repository churn.
 
 The legacy/reference aggregate remains available as ``betTypes``. A separate
-``formalT10`` cohort includes only races with immutable live_10min evidence captured
-inside the same strict 8-12 minute window used by PortfolioReview100.json, so reference
-and formal-forward performance are never conflated.
+``formalT10`` cohort uses the same prospective start, immutable live_10min evidence,
+8-12 minute capture window, chronological ordering and first-100 lock as
+PortfolioReview100.json, so reference and formal-forward performance are never conflated.
 """
 from copy import deepcopy
 import json
@@ -20,6 +20,7 @@ from formal_10min_evidence import (
     MIN_MINUTES_TO_POST,
     inspect_formal_10min_evidence,
 )
+from portfolio_review_100 import PROSPECTIVE_START, TARGET_RACES
 
 BET_LABELS = {
     'win':'単勝','place':'複勝','frame_quinella':'枠連','quinella':'馬連','wide':'ワイド',
@@ -50,34 +51,52 @@ def race_key(row):
     return day, rid
 
 
+def formal_order_key(row):
+    key = race_key(row)
+    if key is None:
+        return ('', '', '')
+    return key[0], str(row.get('startTime') or ''), key[1]
+
+
 def formal_t10_rows(root, rows):
-    """Filter all bet rows by the strict immutable win-sidecar evidence per race."""
+    """Return the preregistered prospective first-100 strict formal T-10 cohort."""
     root = Path(root)
     evidence = {}
-    eligible = set()
-    observed = set()
+    representatives = {}
+    prospective_observed = set()
+    verified = set()
     reason_counts = {}
 
     for row in rows:
         key = race_key(row)
-        if key is None:
+        if key is None or key[0] < PROSPECTIVE_START:
             continue
-        observed.add(key)
+        prospective_observed.add(key)
+        representatives.setdefault(key, row)
         if key not in evidence:
             result = inspect_formal_10min_evidence(root, row)
             evidence[key] = result
             reason = str(result.get('reason') or 'unknown')
             reason_counts[reason] = reason_counts.get(reason, 0) + 1
             if result.get('eligible') is True:
-                eligible.add(key)
+                verified.add(key)
 
-    filtered = [row for row in rows if race_key(row) in eligible]
+    ordered_verified = sorted(verified, key=lambda key: formal_order_key(representatives[key]))
+    cohort_keys = set(ordered_verified[:TARGET_RACES])
+    filtered = [row for row in rows if race_key(row) in cohort_keys]
+
     return filtered, {
+        'prospectiveStartDate': PROSPECTIVE_START,
+        'targetRaces': TARGET_RACES,
         'requiredTiming': FORMAL_TIMING,
         'formalWindowMinutesToPost': [MIN_MINUTES_TO_POST, MAX_MINUTES_TO_POST],
-        'observedRaces': len(observed),
-        'eligibleRaces': len(eligible),
-        'excludedRaces': len(observed - eligible),
+        'prospectiveRacesObserved': len(prospective_observed),
+        'verifiedFormalRacesObserved': len(ordered_verified),
+        'eligibleRaces': len(cohort_keys),
+        'remainingTo100': max(0, TARGET_RACES - len(cohort_keys)),
+        'excludedRaces': len(prospective_observed - verified),
+        'laterFormalRacesExcludedAfterFirst100': max(0, len(ordered_verified) - TARGET_RACES),
+        'first100CohortLockedByRule': True,
         'evidenceReasons': dict(sorted(reason_counts.items())),
     }
 
@@ -121,7 +140,7 @@ def build(root):
         'betTypes': metrics,
         'formalT10': {
             **formal_meta,
-            'definition': 'PortfolioReview100と同じ厳格なlive_10min証拠を持つレースだけの券種別集計。結果判明後の後付け復元はしない。',
+            'definition': 'PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホートだけの券種別集計。結果判明後の後付け復元はしない。',
             'betTypes': formal_metrics,
         },
     }
