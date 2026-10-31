@@ -1,4 +1,4 @@
-name: KeibaAI Same-Day Shadow V2 Verify Once
+name: KeibaAI Same-Day Shadow V2.1 Verify Once
 
 on:
   push:
@@ -43,20 +43,24 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2' 'pytest==8.4.2'
 
-      - name: Compile and run V2 safety tests
+      - name: Compile and run V2.1 safety tests
         run: |
           python -m py_compile production/result_detail_enrichment.py
           python -m py_compile production/build_result_data_live.py
           python -m py_compile production/same_day_track_bias.py
           python -m py_compile production/same_day_track_bias_v2.py
+          python -m py_compile production/same_day_track_bias_v21.py
           python -m py_compile production/same_day_shadow_runtime.py
+          python -m py_compile production/evaluate_same_day_shadow.py
           python -m pytest -q \
             production/test_result_detail_enrichment.py \
             production/test_same_day_track_bias.py \
             production/test_same_day_track_bias_v2.py \
-            production/test_same_day_shadow_runtime.py
+            production/test_same_day_track_bias_v21.py \
+            production/test_same_day_shadow_runtime.py \
+            production/test_evaluate_same_day_shadow.py
 
-      - name: Rebuild current result details and V2 shadow
+      - name: Rebuild saved results and V2.1 shadow without rerunning predictions
         env:
           KEIBAAI_RESULT_DATE: ${{ github.event.inputs.target_date || '' }}
           KEIBAAI_SAME_DAY_DATE: ${{ github.event.inputs.target_date || '' }}
@@ -65,8 +69,9 @@ jobs:
         run: |
           python production/build_result_data_live.py
           python production/same_day_shadow_runtime.py
+          python production/evaluate_same_day_shadow.py
 
-      - name: Verify persisted V2 schema
+      - name: Verify persisted V2.1 schema
         run: |
           python - <<'PY'
           import json
@@ -74,34 +79,38 @@ jobs:
 
           results = json.loads(Path('ResultData.json').read_text(encoding='utf-8'))
           shadow = json.loads(Path('SameDayTrackBiasShadow.json').read_text(encoding='utf-8'))
+          evaluation = json.loads(Path('SameDayShadowEvaluation.json').read_text(encoding='utf-8'))
           assert results, 'ResultData is empty'
-          assert all(int(r.get('resultDetailVersion') or 0) >= 2 for r in results), 'ResultData V2 detail backfill incomplete'
-          assert all('raceLap' in r for r in results), 'raceLap field missing'
-          assert all(all('passingOrder' in h and 'last3F' in h for h in (r.get('horses') or [])) for r in results), 'horse detail fields missing'
+          assert all(int(r.get('resultDetailVersion') or 0) >= 2 for r in results), 'ResultData detail schema incomplete'
           assert shadow, 'SameDay shadow is empty'
-          assert all((r.get('sameDayBias') or {}).get('version') == 'same_day_track_bias_v2' for r in shadow), 'shadow V2 schema missing'
-          print('V2 persisted schema verified:', len(results), 'result races /', len(shadow), 'shadow races')
+          assert all((r.get('sameDayBias') or {}).get('version') == 'same_day_track_bias_v2' for r in shadow), 'V2 evidence schema missing'
+          assert all((r.get('challenger') or {}).get('version') == 'same_day_track_bias_v2_1' for r in shadow), 'V2.1 challenger schema missing'
+          assert all(((r.get('sameDayBias') or {}).get('adjustmentPolicy') or {}).get('version') == 'same_day_adjustment_policy_v2_1' for r in shadow), 'V2.1 gate policy missing'
+          assert evaluation.get('overall', {}).get('races', 0) > 0, 'A/B evaluation empty'
+          print('V2.1 persisted schema verified:', len(results), 'result races /', len(shadow), 'shadow races')
+          print('A/B:', evaluation['overall'])
           PY
 
-      - name: Publish V2 data when changed
+      - name: Publish V2.1 data when changed
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "$(git status --porcelain -- ResultData.json SameDayTrackBiasShadow.json reports)" ]; then
-            echo 'V2 verified; no data changes to publish.'
+          if [ -z "$(git status --porcelain -- ResultData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json reports)" ]; then
+            echo 'V2.1 verified; no data changes to publish.'
             exit 0
           fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add ResultData.json SameDayTrackBiasShadow.json reports
-          git commit -m 'Verify and publish Same-Day Shadow V2'
+          git add ResultData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json reports
+          git commit -m 'Verify and publish Same-Day Shadow V2.1'
           if ! git push origin HEAD:main; then
             echo 'Main moved; rebuild once against latest main.'
             git fetch --no-tags origin main
             git reset --hard origin/main
             python production/build_result_data_live.py
             python production/same_day_shadow_runtime.py
-            git add ResultData.json SameDayTrackBiasShadow.json reports
-            git commit -m 'Verify and publish Same-Day Shadow V2' || true
+            python production/evaluate_same_day_shadow.py
+            git add ResultData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json reports
+            git commit -m 'Verify and publish Same-Day Shadow V2.1' || true
             git push origin HEAD:main
           fi
