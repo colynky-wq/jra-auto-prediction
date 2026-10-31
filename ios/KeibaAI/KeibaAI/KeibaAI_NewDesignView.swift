@@ -33,10 +33,12 @@ private enum KeibaAIMainTab: String, CaseIterable, Identifiable {
     case today = "今日"
     case focus = "注目レース"
     case longshot = "大穴"
-    case ticket = "馬券プラン"
-    case research = "券種別研究"
+    case ticket = "馬券"
+    case research = "研究"
     case performance = "成績"
     case guide = "凡例"
+
+    static let primaryCases: [KeibaAIMainTab] = [.today, .ticket, .research, .performance]
 
     var id: String { rawValue }
 
@@ -65,6 +67,14 @@ private enum KeibaAIDetailTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+
+private enum KeibaAITodayMode: String, CaseIterable, Identifiable {
+    case recommended = "おすすめ"
+    case all = "全レース"
+    case longshot = "穴狙い"
+
+    var id: String { rawValue }
+}
 
 private enum KeibaAISortOption: String, CaseIterable, Identifiable {
     case startTime = "発走時刻"
@@ -1150,6 +1160,7 @@ struct KeibaAINewDesignView: View {
     @State private var referenceProfile = KeibaAIReferenceProfile.wideAxis
 
     @State private var mainTab: KeibaAIMainTab = .today
+    @State private var todayMode: KeibaAITodayMode = .recommended
     @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
     @State private var selectedRaceID: String?
     @State private var detailTab: KeibaAIDetailTab = .prediction
@@ -1463,10 +1474,14 @@ struct KeibaAINewDesignView: View {
 
             Divider()
 
-            if mainTab != .guide && mainTab != .performance && mainTab != .ticket {
+            if mainTab == .today {
                 snapshotBar
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
+
+                todayModeControl
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
 
                 venueAndSortControls
                     .padding(.horizontal, 12)
@@ -1482,6 +1497,8 @@ struct KeibaAINewDesignView: View {
                     performanceSidebar
                 } else if mainTab == .ticket {
                     ticketSidebar
+                } else if mainTab == .research {
+                    sidebarContent
                 } else if (store.isLoading || scheduleStore.isLoading) && allScheduleItems.isEmpty {
                     loadingState
                 } else if allScheduleItems.isEmpty {
@@ -1541,6 +1558,19 @@ struct KeibaAINewDesignView: View {
             .disabled(store.isLoading || scheduleStore.isLoading)
             .accessibilityLabel("更新")
 
+
+            Button {
+                mainTab = .guide
+                preferredCompactColumn = .detail
+            } label: {
+                Image(systemName: "questionmark.circle")
+                    .font(.headline)
+                    .frame(width: 36, height: 36)
+                    .background(.thinMaterial, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("見方・凡例")
+
             Button {
                 showSettings = true
             } label: {
@@ -1555,33 +1585,36 @@ struct KeibaAINewDesignView: View {
     }
 
     private var mainTabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(KeibaAIMainTab.allCases) { tab in
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.18)) {
-                            mainTab = tab
-                            switch tab {
-                            case .guide, .performance, .ticket, .research:
-                                preferredCompactColumn = .detail
-                            default:
-                                preferredCompactColumn = .sidebar
-                            }
+        HStack(spacing: 8) {
+            ForEach(KeibaAIMainTab.primaryCases) { tab in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        mainTab = tab
+                        switch tab {
+                        case .ticket, .research, .performance:
+                            preferredCompactColumn = .detail
+                        default:
+                            preferredCompactColumn = .sidebar
                         }
-                    } label: {
-                        Label(tab.rawValue, systemImage: tab.icon)
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 8)
-                            .foregroundStyle(mainTab == tab ? .white : .primary)
-                            .background {
-                                Capsule(style: .continuous)
-                                    .fill(mainTab == tab ? Color.blue : Color(uiColor: .secondarySystemGroupedBackground))
-                            }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("main-tab-\(tab.rawValue)")
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: tab.icon)
+                            .font(.subheadline.weight(.semibold))
+                        Text(tab.rawValue)
+                            .font(.caption2.weight(.bold))
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .foregroundStyle(mainTab == tab ? .white : .primary)
+                    .background {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(mainTab == tab ? Color.blue : Color(uiColor: .secondarySystemGroupedBackground))
+                    }
                 }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("main-tab-\(tab.rawValue)")
             }
         }
         .accessibilityIdentifier("main-tabs")
@@ -1731,14 +1764,41 @@ struct KeibaAINewDesignView: View {
         }
     }
 
+    private var todayModeControl: some View {
+        Picker("今日の表示", selection: $todayMode) {
+            ForEach(KeibaAITodayMode.allCases) { mode in
+                Text(mode.rawValue).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier("today-mode")
+    }
+
+    private var todayListItems: [KeibaAIScheduleItem] {
+        switch todayMode {
+        case .all:
+            return displayedTodayItems
+        case .longshot:
+            return displayedTodayItems.filter { item in
+                !(signalStore.signal(for: item.raceID)?.longshotCandidates ?? []).isEmpty
+                || item.prediction.flatMap { appResearchStore.race(for: $0) }?.longshotCandidates.isEmpty == false
+            }
+        case .recommended:
+            return displayedTodayItems.filter { item in
+                guard let grade = signalStore.signal(for: item.raceID)?.battle?.grade else { return false }
+                return grade == "S" || grade == "A" || grade == "B"
+            }
+        }
+    }
+
     private var todayList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 sectionHeader(
-                    title: selectedVenue == "全場"
-                        ? "\(Self.displayDate(selectedDate8))の全レース"
-                        : "\(Self.displayDate(selectedDate8)) \(selectedVenue)のレース",
-                    subtitle: "未予測を含む予定表 / \(displayedTodayItems.count)レース"
+                    title: todayMode == .recommended ? "今日のおすすめ" : (todayMode == .longshot ? "穴狙い候補" : "今日の全レース"),
+                    subtitle: todayMode == .recommended
+                        ? "AI評価B以上だけ表示。候補がなければ無理に選びません"
+                        : (todayMode == .longshot ? "人気薄の候補があるレースだけ表示" : "未予測を含む予定表 / \(todayListItems.count)レース")
                 )
 
                 if let scheduleError = scheduleStore.errorMessage {
@@ -1748,17 +1808,27 @@ struct KeibaAINewDesignView: View {
                         .padding(.horizontal, 4)
                 }
 
-                ForEach(displayedTodayItems) { item in
-                    KeibaAIRaceCard(
-                        item: item,
-                        status: status(for: item),
-                        signal: signalStore.signal(for: item.raceID),
-                        isSelected: selectedRaceID == item.raceID
+                if todayListItems.isEmpty {
+                    KeibaAIInfoCard(
+                        icon: todayMode == .longshot ? "sparkles" : "hand.raised.fill",
+                        title: todayMode == .recommended ? "今は強く見るレースなし" : (todayMode == .longshot ? "穴狙い候補なし" : "レースデータ待ち"),
+                        message: todayMode == .recommended
+                            ? "AI評価B以上だけをおすすめとして表示します。条件に届かない日は、無理にレースを選びません。"
+                            : (todayMode == .longshot ? "高オッズだけでは候補にしません。AIと市場の評価差が条件に合うまで待ちます。" : "更新ボタンで最新データを確認してください。")
                     )
-                    .contentShape(Rectangle())
-                    .accessibilityIdentifier("race-card-\(item.raceID)")
-                    .onTapGesture {
-                        openRace(item.raceID)
+                } else {
+                    ForEach(todayListItems) { item in
+                        KeibaAIRaceCard(
+                            item: item,
+                            status: status(for: item),
+                            signal: signalStore.signal(for: item.raceID),
+                            isSelected: selectedRaceID == item.raceID
+                        )
+                        .contentShape(Rectangle())
+                        .accessibilityIdentifier("race-card-\(item.raceID)")
+                        .onTapGesture {
+                            openRace(item.raceID)
+                        }
                     }
                 }
             }
@@ -2130,14 +2200,26 @@ private struct KeibaAIRaceCard: View {
     let signal: KeibaAIRaceSignal?
     let isSelected: Bool
 
+    private var topHorse: Horse? {
+        item.prediction?.horses.max { $0.aiProbability < $1.aiProbability }
+    }
+
+    private var stars: String {
+        switch signal?.battle?.grade {
+        case "S": return "★★★★★"
+        case "A": return "★★★★☆"
+        case "B": return "★★★☆☆"
+        case "C": return "★★☆☆☆"
+        default: return "—"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("\(item.venue) \(item.raceNumber)R")
                     .font(.headline)
-
                 Spacer()
-
                 Text(item.startTime)
                     .font(.headline.monospacedDigit())
             }
@@ -2146,47 +2228,47 @@ private struct KeibaAIRaceCard: View {
                 .font(.subheadline.weight(.semibold))
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 8) {
-                Text(item.course)
-                if let fieldSize = item.fieldSize {
-                    Text("・")
-                    Text("\(fieldSize)頭")
+            if let horse = topHorse {
+                HStack(spacing: 8) {
+                    Text("本命")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(.blue, in: Capsule())
+                    Text("#\(horse.number) \(horse.name)")
+                        .font(.subheadline.weight(.bold))
+                        .lineLimit(1)
+                    Spacer()
+                    Text(String(format: "AI %.1f%%", horse.aiProbability))
+                        .font(.caption.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(.blue)
                 }
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+
+            if let hole = signal?.longshotCandidates?.first {
+                HStack(spacing: 7) {
+                    Label("穴候補", systemImage: "sparkles")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.pink)
+                    Text("#\(hole.number) \(hole.name)")
+                        .font(.caption.weight(.semibold))
+                        .lineLimit(1)
+                    Spacer()
+                }
+            }
 
             HStack(spacing: 8) {
-                if item.prediction != nil, let signal, signal.eligible {
-                    KeibaAIPill(title: "荒れ度", value: signal.chaos?.stars ?? "--", tint: .orange)
-                    KeibaAIPill(title: "勝負度", value: signal.battle?.grade ?? "--", tint: .blue)
-                } else {
-                    KeibaAIPill(title: "荒れ度", value: "--", tint: .orange)
-                    KeibaAIPill(title: "勝負度", value: "--", tint: .blue)
-                }
-
+                Label("評価 \(signal?.battle?.grade ?? "—")", systemImage: "star.fill")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.orange)
+                Text(stars)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.orange)
                 Spacer()
-
                 Label(status.rawValue, systemImage: status.icon)
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(status.tint)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(status.tint.opacity(0.10), in: Capsule())
-            }
-
-            if item.prediction != nil {
-                Text(signal?.eligible == true ? "荒れ度・勝負度 v2" : "分析v2 データ待ち")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-            } else {
-                Text(
-                    status == .excluded
-                    ? "障害レースは現在のAI予測対象外です"
-                    : (status == .finished ? "このレースの10分前AI予測データは未保存です" : "発走約10分前にAI予測を追加予定")
-                )
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
             }
         }
         .padding(14)
@@ -2409,6 +2491,8 @@ private struct KeibaAIRaceDetailNew: View {
     let onOpenTicketPlan: () -> Void
     @Binding var selectedTab: KeibaAIDetailTab
     @State private var selectedHorseForProfile: Horse?
+    @State private var showReason = false
+    @State private var showResearch = false
     @ScaledMetric(relativeTo: .caption) private var summaryMinimumWidth: CGFloat = 140
 
     private var sortedHorses: [Horse] {
@@ -2417,29 +2501,49 @@ private struct KeibaAIRaceDetailNew: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                headerCard
-                detailTabBar
+            VStack(alignment: .leading, spacing: 16) {
+                conclusionCard
 
-                switch selectedTab {
-                case .prediction:
+                DisclosureGroup(isExpanded: $showReason) {
                     predictionSection
-                case .longshot:
-                    practicalLongshotSection
-                case .result:
-                    resultSection
-                case .wide:
-                    wideSection
-                case .pace:
-                    paceSection
-                case .course:
-                    courseSection
-                case .history:
-                    historySection
+                        .padding(.top, 12)
+                } label: {
+                    Label("理由を見る", systemImage: "list.bullet.rectangle")
+                        .font(.headline)
                 }
+                .padding(16)
+                .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+
+                DisclosureGroup(isExpanded: $showResearch) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        detailTabBar
+                        switch selectedTab {
+                        case .prediction:
+                            predictionSection
+                        case .longshot:
+                            practicalLongshotSection
+                        case .result:
+                            resultSection
+                        case .wide:
+                            wideSection
+                        case .pace:
+                            paceSection
+                        case .course:
+                            courseSection
+                        case .history:
+                            historySection
+                        }
+                    }
+                    .padding(.top, 12)
+                } label: {
+                    Label("研究データを見る", systemImage: "flask")
+                        .font(.headline)
+                }
+                .padding(16)
+                .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
             }
-            .padding(22)
-            .frame(maxWidth: 1050, alignment: .leading)
+            .padding(18)
+            .frame(maxWidth: 900, alignment: .leading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .accessibilityIdentifier("race-detail")
@@ -2452,6 +2556,118 @@ private struct KeibaAIRaceDetailNew: View {
                 identity: profileIdentity(for: horse),
                 store: horseProfileStore
             )
+        }
+    }
+
+    private var conclusionCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.blue)
+                    Text(race.raceName)
+                        .font(.title2.weight(.heavy))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(race.course)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text("AI評価 \(signal?.battle?.grade ?? "—")")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(.orange.opacity(0.10), in: Capsule())
+            }
+
+            Label("AIの結論", systemImage: "sparkles")
+                .font(.headline)
+
+            if let top = sortedHorses.first {
+                conclusionHorseRow(label: "本命", horse: top, tint: .blue)
+            }
+            if sortedHorses.count > 1 {
+                conclusionHorseRow(label: "対抗", horse: sortedHorses[1], tint: .indigo)
+            }
+
+            if let hole = signal?.longshotCandidates?.first {
+                HStack(spacing: 10) {
+                    Text("穴")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 42)
+                        .padding(.vertical, 6)
+                        .background(.pink, in: Capsule())
+                    Text("#\(hole.number) \(hole.name)")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text(String(format: "%.1f倍", hole.odds))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            } else if let hole = research?.longshotCandidates.first {
+                HStack(spacing: 10) {
+                    Text("穴")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 42)
+                        .padding(.vertical, 6)
+                        .background(.pink, in: Capsule())
+                    Text("#\(hole.number) \(hole.name)")
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    Text(String(format: "%.1f倍", hole.odds))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 6) {
+                Label("参考馬券（研究中）", systemImage: "ticket")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.secondary)
+                if let pair = rankedSignalWidePairs.first, pair.wideOddsLow != nil {
+                    Text("ワイド  \(pair.number1)-\(pair.number2)  \(pair.name1) × \(pair.name2)")
+                        .font(.headline)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(String(format: "AI同時3着内 %.1f%%", pair.aiWideProbability))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("条件が揃ったときだけ候補を表示します。今は見送り・データ待ちです。")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("普段はこの画面だけ見ればOKです。詳しい数字は下の『理由を見る』『研究データを見る』から確認できます。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(18)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 22))
+        .accessibilityIdentifier("race-conclusion")
+    }
+
+    private func conclusionHorseRow(label: String, horse: Horse, tint: Color) -> some View {
+        HStack(spacing: 10) {
+            Text(label)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 42)
+                .padding(.vertical, 6)
+                .background(tint, in: Capsule())
+            Text("#\(horse.number) \(horse.name)")
+                .font(.headline)
+                .lineLimit(1)
+            Spacer()
+            Text(String(format: "%.1f%%", horse.aiProbability))
+                .font(.headline.monospacedDigit())
+                .foregroundStyle(tint)
         }
     }
 

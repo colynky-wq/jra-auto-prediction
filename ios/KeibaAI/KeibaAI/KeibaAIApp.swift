@@ -12,53 +12,8 @@ struct KeibaAIApp: App {
 }
 
 private struct KeibaAIRootView: View {
-    @StateObject private var portfolioStore = KeibaAIPortfolioQuickStore()
-    @State private var showPortfolio = false
-
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            KeibaAINewDesignView()
-
-            if portfolioStore.displayRaces != nil {
-                Button {
-                    showPortfolio = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "ticket.fill")
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("研究プラン")
-                                .font(.subheadline.weight(.bold))
-                            Text(portfolioStore.shortStatus)
-                                .font(.caption2)
-                        }
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .foregroundStyle(.white)
-                    .background(.blue.gradient, in: Capsule())
-                    .shadow(radius: 5, y: 2)
-                }
-                .buttonStyle(.plain)
-                .padding(.trailing, 18)
-                .padding(.bottom, 18)
-                .accessibilityIdentifier("portfolio-research-plan-button")
-            }
-        }
-        .task {
-            while !Task.isCancelled {
-                await portfolioStore.load(force: true)
-                do {
-                    try await Task.sleep(for: .seconds(60))
-                } catch {
-                    return
-                }
-            }
-        }
-        .sheet(isPresented: $showPortfolio) {
-            NavigationStack {
-                KeibaAIPortfolioQuickView(store: portfolioStore)
-            }
-        }
+        KeibaAINewDesignView()
     }
 }
 
