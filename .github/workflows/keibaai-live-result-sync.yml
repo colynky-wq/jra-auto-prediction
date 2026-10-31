@@ -30,8 +30,6 @@ on:
         required: false
         default: '120'
   schedule:
-    # Keep one runner alive instead of relying on GitHub's best-effort 5-minute cron.
-    # 08:45 JST through roughly 14:15 JST, then a late session through roughly 17:15 JST.
     - cron: '45 23 * * *'
     - cron: '15 5 * * *'
 
@@ -40,8 +38,6 @@ permissions:
 
 concurrency:
   group: keibaai-live-result-sync
-  # A newer code generation must replace an older long-running monitor; otherwise
-  # a V1 runner can block a V2 verification run for hours.
   cancel-in-progress: true
 
 jobs:
@@ -68,7 +64,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
-          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2' 'pytest==8.4.2'
 
       - name: Compile result and validation publishers
         run: |
@@ -90,10 +86,11 @@ jobs:
           python -m py_compile production/same_day_shadow_runtime.py
           python production/test_bet_research_data.py
           python production/test_all_bet_recommendation_shadow.py
-          python production/test_result_detail_enrichment.py
-          python production/test_same_day_track_bias.py
-          python production/test_same_day_track_bias_v2.py
-          python production/test_same_day_shadow_runtime.py
+          python -m pytest -q \
+            production/test_result_detail_enrichment.py \
+            production/test_same_day_track_bias.py \
+            production/test_same_day_track_bias_v2.py \
+            production/test_same_day_shadow_runtime.py
 
       - name: Choose continuous session runtime
         id: runtime
@@ -117,7 +114,6 @@ jobs:
             exit 2
           fi
           echo "minutes=$minutes" >> "$GITHUB_OUTPUT"
-          echo "continuous result sync runtime: $minutes minutes"
 
       - name: Continuously publish results and validation
         env:
@@ -131,10 +127,8 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-
           max_seconds=$((KEIBAAI_RESULT_MAX_MINUTES * 60))
           end_epoch=$(($(date +%s) + max_seconds))
           cycle=0
@@ -142,7 +136,6 @@ jobs:
           while [ "$(date +%s)" -lt "$end_epoch" ]; do
             cycle=$((cycle + 1))
             echo "===== result sync cycle $cycle: $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST') ====="
-
             if ! git fetch --no-tags origin main; then
               echo '::warning::Could not fetch latest main; retrying next cycle.'
             else
@@ -161,12 +154,8 @@ jobs:
               python production/evaluate_triple_forward.py || echo '::warning::Triple research evaluation failed for this cycle.'
               python production/evaluate_all_bet_forward.py || echo '::warning::All-bet research evaluation failed for this cycle.'
               python production/build_bet_research_data.py || echo '::warning::Bet research display build failed for this cycle.'
-              if [ -f BetResearchData.json ]; then
-                python production/portfolio_shadow.py || echo '::warning::Portfolio research build failed for this cycle.'
-              fi
-              if [ -f RaceData.json ]; then
-                python production/all_bet_recommendation_shadow.py || echo '::warning::All-bet recommendation build failed for this cycle.'
-              fi
+              if [ -f BetResearchData.json ]; then python production/portfolio_shadow.py || echo '::warning::Portfolio research build failed for this cycle.'; fi
+              if [ -f RaceData.json ]; then python production/all_bet_recommendation_shadow.py || echo '::warning::All-bet recommendation build failed for this cycle.'; fi
 
               if [ "$cycle_failed" -ne 0 ]; then
                 echo '::warning::Core result/validation build failed; retrying next cycle.'
@@ -178,7 +167,6 @@ jobs:
                 if [ -f PortfolioResearchData.json ]; then git add PortfolioResearchData.json; fi
                 if [ -f AllBetRecommendationData.json ]; then git add AllBetRecommendationData.json; fi
                 git commit -m "Update KeibaAI results and forward validation" || true
-
                 if ! git push origin HEAD:main; then
                   echo '::warning::Main moved while publishing; latest results will be rebuilt next cycle.'
                   git fetch --no-tags origin main || true
@@ -190,12 +178,8 @@ jobs:
 
             now=$(date +%s)
             remaining=$((end_epoch - now))
-            if [ "$remaining" -le 0 ]; then
-              break
-            fi
+            if [ "$remaining" -le 0 ]; then break; fi
             sleep_for="$KEIBAAI_RESULT_POLL_SECONDS"
             if [ "$remaining" -lt "$sleep_for" ]; then sleep_for="$remaining"; fi
             sleep "$sleep_for"
           done
-
-          echo "Continuous result sync finished at $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M:%S JST')."
