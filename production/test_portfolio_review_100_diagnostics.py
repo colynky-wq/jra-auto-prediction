@@ -53,6 +53,7 @@ with TemporaryDirectory() as td:
  # generate() must not write final reports while results are incomplete.
  (root/'PortfolioReview100.json').write_text(json.dumps(review),encoding='utf-8')
  (root/'PortfolioResearchData.json').write_text(json.dumps({'races':cohort},ensure_ascii=False),encoding='utf-8')
+ d.first100=lambda _root: cohort
  changed,status=d.generate(root)
  assert (changed,status)==(False,'results_pending')
  assert not (root/d.JSON_NAME).exists() and not (root/d.MD_NAME).exists()
