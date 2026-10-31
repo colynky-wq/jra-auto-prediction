@@ -1,7 +1,8 @@
-"""Build Same-Day Track Bias Shadow V2 reports from RaceData + ResultData.
+"""Build Same-Day Track Bias Shadow V2.1 reports from RaceData + ResultData.
 
 Shadow-only: formal 10-minute predictions and the fixed production model remain
-unchanged. V2 adds passing-position, last-3F and race-lap context when available.
+unchanged. Evidence comes from V2; V2.1 adds conservative confidence gates before
+that evidence may move challenger rankings.
 """
 from __future__ import annotations
 
@@ -10,11 +11,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from same_day_track_bias_v2 import (
-    build_same_day_bias_v2,
-    build_style_map_from_history,
-    apply_same_day_v2_adjustment,
-)
+from same_day_track_bias_v2 import build_same_day_bias_v2, build_style_map_from_history
+from same_day_track_bias_v21 import apply_same_day_v21_adjustment, adjustment_gate_summary
 
 JST = timezone(timedelta(hours=9))
 HERE = Path(__file__).resolve().parent
@@ -85,8 +83,10 @@ def build_reports(
         except ValueError:
             continue
 
+        gates = adjustment_gate_summary(bias)
+        bias["adjustmentPolicy"] = gates
         horses = target.get("horses") or []
-        challenger = apply_same_day_v2_adjustment(horses, bias, style_map)
+        challenger = apply_same_day_v21_adjustment(horses, bias, style_map)
         output.append(
             {
                 "raceDate": race_date,
@@ -101,8 +101,8 @@ def build_reports(
                 "sameDayBias": bias,
                 "challenger": {
                     "status": "shadow_only",
-                    "version": "same_day_track_bias_v2",
-                    "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
+                    "version": "same_day_track_bias_v2_1",
+                    "meaning": "Formal A preserved; V2.1 gates weak draw/style evidence before applying bounded challenger adjustments.",
                     "horses": challenger,
                 },
             }
@@ -124,10 +124,11 @@ def main() -> None:
     _write_json(latest_path, report)
 
     usable = sum(1 for r in report if (r.get("sameDayBias") or {}).get("completedRaceCount", 0) > 0)
-    v2_usable = sum(1 for r in report if (r.get("sameDayBias") or {}).get("detailRaceCount", 0) > 0)
+    gated_draw = sum(1 for r in report if ((r.get("sameDayBias") or {}).get("adjustmentPolicy") or {}).get("drawEnabled"))
+    gated_style = sum(1 for r in report if ((r.get("sameDayBias") or {}).get("adjustmentPolicy") or {}).get("styleEnabled"))
     print(
-        f"same-day shadow v2: date={race_date} races={len(report)} "
-        f"prior_results={usable} detailed_prior_results={v2_usable} "
+        f"same-day shadow v2.1: date={race_date} races={len(report)} "
+        f"prior_results={usable} draw_enabled={gated_draw} style_enabled={gated_style} "
         f"style_profiles={len(style_map)} path={day_path}"
     )
 
