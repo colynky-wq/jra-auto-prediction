@@ -17,11 +17,13 @@ from typing import Any
 import win5_payouts as payouts
 import win5_research as win5
 
-
 VERSION = "win5-formal-review-v1-20261031"
 SOURCE_VERSION = "win5-factorized-win-v1-20261015"
 PROSPECTIVE_START = "2026-10-18"
 VOLATILE_TOP_LEVEL_FIELDS = {"generatedAtJST"}
+OUTCOME_EXCLUDED_STATUSES = {"entrant_changed", "dead_heat_excluded"}
+PENDING_STATUSES = {"results_pending", "awaiting_results", "payout_pending"}
+ATTENTION_STATUSES = {"result_validation_failed", "payout_validation_failed"}
 
 
 def read_json(path: Path) -> Any:
@@ -84,67 +86,35 @@ def session_row(root: Path, journal_path: Path) -> dict[str, Any]:
 
     frozen_path = journal_path.parent / "win5_v1" / "session.json"
     if not frozen_path.exists():
-        return {
-            "raceDate": day,
-            "status": "missing_frozen_session",
-            "eligible": False,
-            "reason": str(journal.get("status") or "missing_frozen_session"),
-        }
-
+        return {"raceDate": day, "status": "missing_frozen_session", "eligible": False,
+                "reason": str(journal.get("status") or "missing_frozen_session")}
     try:
         record = win5.validate(read_json(frozen_path))
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
-        return {
-            "raceDate": day,
-            "status": "invalid_frozen_session",
-            "eligible": False,
-            "reason": type(error).__name__,
-        }
-
+        return {"raceDate": day, "status": "invalid_frozen_session", "eligible": False,
+                "reason": type(error).__name__}
     if record.get("status") != "ready":
-        return {
-            "raceDate": day,
-            "status": "held_frozen_session",
-            "eligible": False,
-            "reason": str(record.get("reason") or "held"),
-            "recordedAtJST": record.get("recordedAtJST"),
-        }
+        return {"raceDate": day, "status": "held_frozen_session", "eligible": False,
+                "reason": str(record.get("reason") or "held"), "recordedAtJST": record.get("recordedAtJST")}
 
     result_path = journal_path.parent / "ResultData.json"
     if not result_path.exists():
-        return {
-            "raceDate": day,
-            "status": "results_pending",
-            "eligible": True,
-            "recordedAtJST": record.get("recordedAtJST"),
-            "deadlineJST": record.get("plan", {}).get("deadlineJST"),
-        }
-
+        return {"raceDate": day, "status": "results_pending", "eligible": True,
+                "recordedAtJST": record.get("recordedAtJST"),
+                "deadlineJST": record.get("plan", {}).get("deadlineJST")}
     try:
         results = win5.index_unique(win5.load_rows(result_path))
         score = win5.probability_score(record, results)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
-        return {
-            "raceDate": day,
-            "status": "result_validation_failed",
-            "eligible": True,
-            "recordedAtJST": record.get("recordedAtJST"),
-            "reason": type(error).__name__,
-        }
-
+        return {"raceDate": day, "status": "result_validation_failed", "eligible": True,
+                "recordedAtJST": record.get("recordedAtJST"), "reason": type(error).__name__}
     if score.get("status") != "probability_matched":
-        return {
-            "raceDate": day,
-            "status": str(score.get("status") or "results_pending"),
-            "eligible": True,
-            "recordedAtJST": record.get("recordedAtJST"),
-            "deadlineJST": record.get("plan", {}).get("deadlineJST"),
-        }
+        return {"raceDate": day, "status": str(score.get("status") or "results_pending"), "eligible": True,
+                "recordedAtJST": record.get("recordedAtJST"),
+                "deadlineJST": record.get("plan", {}).get("deadlineJST")}
 
     row = {
-        "raceDate": day,
-        "status": "probability_matched",
-        "eligible": True,
+        "raceDate": day, "status": "probability_matched", "eligible": True,
         "recordedAtJST": record.get("recordedAtJST"),
         "deadlineJST": record.get("plan", {}).get("deadlineJST"),
         "winningOutcome": score.get("winningOutcome"),
@@ -165,13 +135,9 @@ def session_row(root: Path, journal_path: Path) -> dict[str, Any]:
         if payout is None:
             row.update(status="payout_pending", payoutVerified=False)
         else:
-            row.update(
-                status="payout_verified",
-                payoutVerified=True,
-                publishedPayoutPer100Yen=payout.get("payoutPer100Yen"),
-                winningTicketCount=payout.get("winningTicketCount"),
-                payoutStatus=payout.get("payoutStatus"),
-            )
+            row.update(status="payout_verified", payoutVerified=True,
+                       publishedPayoutPer100Yen=payout.get("payoutPer100Yen"),
+                       winningTicketCount=payout.get("winningTicketCount"), payoutStatus=payout.get("payoutStatus"))
     return row
 
 
@@ -202,7 +168,9 @@ def build(root: Path, now: datetime | None = None) -> dict[str, Any]:
     matched = [row for row in eligible if row.get("aiNegativeLogProbability") is not None]
     payout_verified = [row for row in matched if row.get("payoutVerified") is True]
     excluded = [row for row in rows if row.get("eligible") is not True]
-    pending = [row for row in eligible if row.get("status") not in {"payout_verified"}]
+    outcome_excluded = [row for row in eligible if row.get("status") in OUTCOME_EXCLUDED_STATUSES]
+    pending = [row for row in eligible if row.get("status") in PENDING_STATUSES]
+    attention = [row for row in eligible if row.get("status") in ATTENTION_STATUSES]
 
     ai_nll = [float(row["aiNegativeLogProbability"]) for row in matched]
     market_nll = [float(row["marketNegativeLogProbability"]) for row in matched]
@@ -224,26 +192,23 @@ def build(root: Path, now: datetime | None = None) -> dict[str, Any]:
         "sessionsResultMatched": len(matched),
         "sessionsPayoutVerified": len(payout_verified),
         "sessionsPending": len(pending),
+        "sessionsOutcomeExcluded": len(outcome_excluded),
+        "sessionsAttentionRequired": len(attention),
         "sessionsExcluded": len(excluded),
         "probabilityEvaluation": {
-            "sessionsEvaluated": len(matched),
-            "totalLegsEvaluated": total_legs,
+            "sessionsEvaluated": len(matched), "totalLegsEvaluated": total_legs,
             "aiTopOneAllFiveHits": sum(row.get("aiTopOneAllFiveHit") is True for row in matched),
             "marketTopOneAllFiveHits": sum(row.get("marketTopOneAllFiveHit") is True for row in matched),
-            "aiTopOneLegHits": ai_leg_hits,
-            "marketTopOneLegHits": market_leg_hits,
+            "aiTopOneLegHits": ai_leg_hits, "marketTopOneLegHits": market_leg_hits,
             "aiTopOneLegHitRatePct": pct(ai_leg_hits, total_legs),
             "marketTopOneLegHitRatePct": pct(market_leg_hits, total_legs),
-            "meanAINegativeLogProbability": mean(ai_nll),
-            "meanMarketNegativeLogProbability": mean(market_nll),
+            "meanAINegativeLogProbability": mean(ai_nll), "meanMarketNegativeLogProbability": mean(market_nll),
             "aiLowerNLLSessions": sum(float(row["aiNegativeLogProbability"]) < float(row["marketNegativeLogProbability"]) for row in matched),
             "marketLowerNLLSessions": sum(float(row["marketNegativeLogProbability"]) < float(row["aiNegativeLogProbability"]) for row in matched),
         },
         "bettingEvaluation": {
-            "status": "not_started_no_frozen_selection_rule",
-            "formalROIAvailable": False,
-            "historicalReferenceBacktestExcluded": True,
-            "selectionRuleFrozenForTheseSessions": False,
+            "status": "not_started_no_frozen_selection_rule", "formalROIAvailable": False,
+            "historicalReferenceBacktestExcluded": True, "selectionRuleFrozenForTheseSessions": False,
             "note": "既存の凍結セッションは5レースの確率予測を事前固定しているが、購入点・予算ルールは固定していない。結果を見た後に買い目を復元せず、正式ROIは将来の購入ルール凍結後から別コホートで評価する。",
         },
         "sessions": rows,
@@ -277,14 +242,9 @@ def write_if_material_changed(root: Path) -> tuple[bool, dict[str, Any]]:
 def main() -> None:
     root = Path(__file__).resolve().parent.parent
     changed, review = write_if_material_changed(root)
-    print(
-        "WIN5_FORMAL_REVIEW",
-        "changed" if changed else "unchanged",
-        "observed", review.get("sessionsObserved"),
-        "eligible", review.get("sessionsEligible"),
-        "matched", review.get("sessionsResultMatched"),
-        "payouts", review.get("sessionsPayoutVerified"),
-    )
+    print("WIN5_FORMAL_REVIEW", "changed" if changed else "unchanged",
+          "observed", review.get("sessionsObserved"), "eligible", review.get("sessionsEligible"),
+          "matched", review.get("sessionsResultMatched"), "payouts", review.get("sessionsPayoutVerified"))
 
 
 if __name__ == "__main__":
