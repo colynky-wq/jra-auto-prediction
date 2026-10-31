@@ -1,0 +1,85 @@
+name: KeibaAI Ticket Shadow Comparison
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'production/ticket_shadow_comparison.py'
+      - 'production/test_ticket_shadow_comparison.py'
+      - '.github/workflows/keibaai-ticket-shadow-comparison.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+
+      - name: Test comparison logic
+        run: |
+          python -m py_compile production/ticket_shadow_comparison.py production/test_ticket_shadow_comparison.py
+          PYTHONPATH=production python production/test_ticket_shadow_comparison.py
+
+      - name: Select latest prospective shadow date
+        id: date
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest="$(find reports -type d -path 'reports/*/ticket_shadow_v1/prediction' | sort | tail -1)"
+          test -n "$latest"
+          date8="$(echo "$latest" | cut -d/ -f2)"
+          echo "date8=$date8" >> "$GITHUB_OUTPUT"
+          echo "Comparing $date8"
+
+      - name: Verify immutable shadow records
+        env:
+          DATE8: ${{ steps.date.outputs.date8 }}
+        run: |
+          PYTHONPATH=production python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from ticket_shadow_forward import validate_prediction
+          folder = Path('reports') / os.environ['DATE8'] / 'ticket_shadow_v1' / 'prediction'
+          paths = sorted(folder.glob('*.json'))
+          if not paths:
+              raise SystemExit('no shadow records')
+          for path in paths:
+              validate_prediction(json.loads(path.read_text(encoding='utf-8')))
+          print('IMMUTABLE_SHADOW_RECORDS_OK', len(paths))
+          PY
+
+      - name: Compare current A and shadow
+        env:
+          DATE8: ${{ steps.date.outputs.date8 }}
+        run: |
+          PYTHONPATH=production python production/ticket_shadow_comparison.py \
+            --date "$DATE8" --output TicketShadowComparison.json > ticket-shadow-comparison.log
+          python - <<'PY'
+          import json
+          r=json.load(open('TicketShadowComparison.json',encoding='utf-8'))
+          print('TICKET_SHADOW_COMPARISON', 'date',r['raceDate'],'observed',r['shadowRecordsObserved'],'status',r['statusCounts'])
+          print('HORSE_WINNER',r['horseWinnerComparison'])
+          for kind,row in r['betTypeComparison'].items():
+              print('BET',kind,row)
+          PY
+
+      - name: Upload comparison report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ticket-shadow-comparison
+          path: TicketShadowComparison.json
+          if-no-files-found: error
