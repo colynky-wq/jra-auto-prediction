@@ -1,0 +1,60 @@
+name: KeibaAI Full Xcode Package 20261101
+
+on:
+  push:
+    branches:
+      - packaging/keibaai-full-20261101
+    paths:
+      - '.github/workflows/keibaai-package-full-20261101.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Verify canonical iOS app features
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/KeibaAIBetResearchView.swift
+          test -f ios/KeibaAI/KeibaAI/KeibaAIBetResearchModels.swift
+          grep -F 'case research = "券種別研究"' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          grep -F 'preferredCompactColumn = .detail' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          grep -F 'openRace(item.raceID)' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+          grep -F 'KeibaAIBetResearchView(date8:' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
+
+      - name: Build full Xcode source package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -R ios/KeibaAI KeibaAI_FULL_FIXED_20261101
+          cat > KeibaAI_FULL_FIXED_20261101/README_最初に読む.txt <<'EOF'
+KeibaAI 完全版 Xcode プロジェクト
+
+1. このZIPを新しいフォルダに展開してください。
+2. KeibaAI.xcodeproj をダブルクリックしてXcodeで開きます。
+3. Signing & Capabilities の Team を自分のApple IDに設定します。
+4. iPhone / iPad を実行先に選び、▶︎ Run を押します。
+
+この版はGitHub mainの canonical ios/KeibaAI を元にしています。
+・レースカードをタップするとiPhoneでも詳細へ移動する compact navigation 対応
+・券種別研究（flask）画面を含む
+・馬プロフィール、研究記録状況、馬券プラン等の既存ファイルを含む
+
+以前渡した簡易版フォルダへ上書きせず、必ず別フォルダへ展開してください。
+EOF
+          zip -qr KeibaAI_FULL_FIXED_20261101.zip KeibaAI_FULL_FIXED_20261101
+          unzip -l KeibaAI_FULL_FIXED_20261101.zip
+
+      - name: Upload complete Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI_FULL_FIXED_20261101
+          path: KeibaAI_FULL_FIXED_20261101.zip
+          if-no-files-found: error
+          retention-days: 7
