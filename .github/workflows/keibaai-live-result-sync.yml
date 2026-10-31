@@ -10,9 +10,14 @@ on:
       - 'production/test_all_bet_recommendation_shadow.py'
       - 'production/build_bet_research_data.py'
       - 'production/test_bet_research_data.py'
+      - 'production/build_result_data_live.py'
+      - 'production/result_detail_enrichment.py'
+      - 'production/test_result_detail_enrichment.py'
       - 'production/same_day_track_bias.py'
+      - 'production/same_day_track_bias_v2.py'
       - 'production/same_day_shadow_runtime.py'
       - 'production/test_same_day_track_bias.py'
+      - 'production/test_same_day_track_bias_v2.py'
       - 'production/test_same_day_shadow_runtime.py'
   workflow_dispatch:
     inputs:
@@ -66,6 +71,7 @@ jobs:
       - name: Compile result and validation publishers
         run: |
           python -m py_compile production/build_result_data_live.py
+          python -m py_compile production/result_detail_enrichment.py
           python -m py_compile production/build_performance_data.py
           python -m py_compile production/wide_forward_validation.py
           python -m py_compile production/wide_validation_summary.py
@@ -78,10 +84,13 @@ jobs:
           python -m py_compile production/portfolio_shadow.py
           python -m py_compile production/all_bet_recommendation_shadow.py
           python -m py_compile production/same_day_track_bias.py
+          python -m py_compile production/same_day_track_bias_v2.py
           python -m py_compile production/same_day_shadow_runtime.py
           python production/test_bet_research_data.py
           python production/test_all_bet_recommendation_shadow.py
+          python production/test_result_detail_enrichment.py
           python production/test_same_day_track_bias.py
+          python production/test_same_day_track_bias_v2.py
           python production/test_same_day_shadow_runtime.py
 
       - name: Choose continuous session runtime
