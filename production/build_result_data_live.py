@@ -9,6 +9,8 @@ import numpy as np
 
 # Importing v2 installs the strengthened JRA result fetcher into agg.
 import run_forward_aggregate_v2  # noqa: F401
+# Install research-only detail enrichment after the v2 fetch hook is in place.
+import result_detail_enrichment  # noqa: F401
 import aggregate_forward_results as agg
 
 
@@ -118,6 +120,9 @@ def build_result_for_race(race: dict) -> dict | None:
         print("RESULT NOT READY:", rid, repr(exc))
         return None
 
+    race_lap = d.attrs.get("raceLap") if hasattr(d, "attrs") else None
+    detail_version = int(d.attrs.get("resultDetailVersion", 1)) if hasattr(d, "attrs") else 1
+
     d = d.loc[d["number"].astype(int).isin(predicted_numbers)].copy()
     if len(d) != len(predicted_numbers):
         print(
@@ -129,6 +134,11 @@ def build_result_for_race(race: dict) -> dict | None:
 
     horses = []
     for _, row in d.sort_values("number").iterrows():
+        passing = row.get("passingOrder")
+        if passing is not None:
+            passing = str(passing).strip()
+            if not passing or passing.lower() == "nan":
+                passing = None
         horses.append(
             {
                 "number": int(row["number"]),
@@ -137,6 +147,8 @@ def build_result_for_race(race: dict) -> dict | None:
                 "resultStatus": str(row.get("resultStatus", "")) or None,
                 "finalOdds": finite_or_none(row.get("finalOdds")),
                 "popularity": int_or_none(row.get("finalPopularity")),
+                "passingOrder": passing,
+                "last3F": finite_or_none(row.get("last3F")),
             }
         )
 
@@ -153,6 +165,8 @@ def build_result_for_race(race: dict) -> dict | None:
         "raceName": race.get("raceName"),
         "course": race.get("course"),
         "fieldSize": len(predicted_numbers),
+        "resultDetailVersion": max(2, detail_version),
+        "raceLap": race_lap,
         "resultUpdatedAtJST": datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S"),
         "horses": horses,
     }
@@ -200,10 +214,14 @@ def main() -> None:
             continue
         eligible += 1
 
-        # Already-complete rows are stable. Preserve them instead of repeatedly
-        # hitting JRA every five minutes.
+        # V2 rows are stable. Older complete rows are refreshed once so the
+        # passing-position/last-3F research fields can be backfilled safely.
         old = by_race.get(rid)
-        if old and race_complete(old.get("horses") or []):
+        if (
+            old
+            and race_complete(old.get("horses") or [])
+            and int(old.get("resultDetailVersion") or 0) >= 2
+        ):
             continue
 
         built = build_result_for_race(race)
