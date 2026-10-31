@@ -9,6 +9,7 @@
     {
       "id": "win",
       "label": "単勝",
+      "recordedRaces": 163,
       "settledRaces": 129,
       "hitRaces": 77,
       "raceHitRatePct": 59.69,
@@ -23,6 +24,7 @@
     {
       "id": "place",
       "label": "複勝",
+      "recordedRaces": 163,
       "settledRaces": 128,
       "hitRaces": 117,
       "raceHitRatePct": 91.41,
@@ -37,6 +39,7 @@
     {
       "id": "frame_quinella",
       "label": "枠連",
+      "recordedRaces": 163,
       "settledRaces": 117,
       "hitRaces": 53,
       "raceHitRatePct": 45.3,
@@ -51,6 +54,7 @@
     {
       "id": "quinella",
       "label": "馬連",
+      "recordedRaces": 163,
       "settledRaces": 129,
       "hitRaces": 38,
       "raceHitRatePct": 29.46,
@@ -65,6 +69,7 @@
     {
       "id": "wide",
       "label": "ワイド",
+      "recordedRaces": 163,
       "settledRaces": 120,
       "hitRaces": 4,
       "raceHitRatePct": 3.33,
@@ -79,6 +84,7 @@
     {
       "id": "exacta",
       "label": "馬単",
+      "recordedRaces": 163,
       "settledRaces": 129,
       "hitRaces": 25,
       "raceHitRatePct": 19.38,
@@ -93,6 +99,7 @@
     {
       "id": "trio",
       "label": "3連複",
+      "recordedRaces": 163,
       "settledRaces": 129,
       "hitRaces": 34,
       "raceHitRatePct": 26.36,
@@ -107,6 +114,7 @@
     {
       "id": "trifecta",
       "label": "3連単",
+      "recordedRaces": 163,
       "settledRaces": 129,
       "hitRaces": 8,
       "raceHitRatePct": 6.2,
@@ -121,6 +129,7 @@
     {
       "id": "support",
       "label": "応援馬券",
+      "recordedRaces": 163,
       "settledRaces": 128,
       "hitRaces": 117,
       "raceHitRatePct": 91.41,
@@ -135,6 +144,7 @@
     {
       "id": "win5",
       "label": "WIN5",
+      "recordedRaces": 15,
       "settledRaces": 3,
       "hitRaces": 0,
       "raceHitRatePct": 0.0,
@@ -148,24 +158,30 @@
     }
   ],
   "formalT10": {
+    "prospectiveStartDate": "2026-10-24",
+    "targetRaces": 100,
     "requiredTiming": "live_10min",
     "formalWindowMinutesToPost": [
       8.0,
       12.0
     ],
-    "observedRaces": 178,
+    "prospectiveRacesObserved": 93,
+    "verifiedFormalRacesObserved": 68,
     "eligibleRaces": 68,
-    "excludedRaces": 110,
+    "remainingTo100": 32,
+    "excludedRaces": 25,
+    "laterFormalRacesExcludedAfterFirst100": 0,
+    "first100CohortLockedByRule": true,
     "evidenceReasons": {
       "formal_10min_verified": 68,
-      "formal_win_sidecar_missing": 41,
-      "prediction_not_formal_10min": 69
+      "formal_win_sidecar_missing": 25
     },
-    "definition": "PortfolioReview100と同じ厳格なlive_10min証拠を持つレースだけの券種別集計。結果判明後の後付け復元はしない。",
+    "definition": "PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。",
     "betTypes": [
       {
         "id": "win",
         "label": "単勝",
+        "recordedRaces": 68,
         "settledRaces": 63,
         "hitRaces": 41,
         "raceHitRatePct": 65.08,
@@ -175,11 +191,16 @@
         "stakeYen": 18900,
         "returnYen": 14110,
         "profitYen": -4790,
-        "returnRatePct": 74.66
+        "returnRatePct": 74.66,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 92.65,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 5
       },
       {
         "id": "place",
         "label": "複勝",
+        "recordedRaces": 68,
         "settledRaces": 62,
         "hitRaces": 56,
         "raceHitRatePct": 90.32,
@@ -189,11 +210,16 @@
         "stakeYen": 18600,
         "returnYen": 14450,
         "profitYen": -4150,
-        "returnRatePct": 77.69
+        "returnRatePct": 77.69,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 91.18,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 6
       },
       {
         "id": "frame_quinella",
         "label": "枠連",
+        "recordedRaces": 68,
         "settledRaces": 58,
         "hitRaces": 24,
         "raceHitRatePct": 41.38,
@@ -203,11 +229,16 @@
         "stakeYen": 17400,
         "returnYen": 13310,
         "profitYen": -4090,
-        "returnRatePct": 76.49
+        "returnRatePct": 76.49,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 85.29,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 10
       },
       {
         "id": "quinella",
         "label": "馬連",
+        "recordedRaces": 68,
         "settledRaces": 63,
         "hitRaces": 17,
         "raceHitRatePct": 26.98,
@@ -217,11 +248,16 @@
         "stakeYen": 18900,
         "returnYen": 11280,
         "profitYen": -7620,
-        "returnRatePct": 59.68
+        "returnRatePct": 59.68,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 92.65,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 5
       },
       {
         "id": "wide",
         "label": "ワイド",
+        "recordedRaces": 68,
         "settledRaces": 61,
         "hitRaces": 4,
         "raceHitRatePct": 6.56,
@@ -231,11 +267,16 @@
         "stakeYen": 13000,
         "returnYen": 9100,
         "profitYen": -3900,
-        "returnRatePct": 70.0
+        "returnRatePct": 70.0,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 89.71,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 7
       },
       {
         "id": "exacta",
         "label": "馬単",
+        "recordedRaces": 68,
         "settledRaces": 63,
         "hitRaces": 8,
         "raceHitRatePct": 12.7,
@@ -245,11 +286,16 @@
         "stakeYen": 18900,
         "returnYen": 7960,
         "profitYen": -10940,
-        "returnRatePct": 42.12
+        "returnRatePct": 42.12,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 92.65,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 5
       },
       {
         "id": "trio",
         "label": "3連複",
+        "recordedRaces": 68,
         "settledRaces": 63,
         "hitRaces": 8,
         "raceHitRatePct": 12.7,
@@ -259,11 +305,16 @@
         "stakeYen": 18900,
         "returnYen": 6430,
         "profitYen": -12470,
-        "returnRatePct": 34.02
+        "returnRatePct": 34.02,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 92.65,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 5
       },
       {
         "id": "trifecta",
         "label": "3連単",
+        "recordedRaces": 68,
         "settledRaces": 63,
         "hitRaces": 2,
         "raceHitRatePct": 3.17,
@@ -273,11 +324,16 @@
         "stakeYen": 18900,
         "returnYen": 6640,
         "profitYen": -12260,
-        "returnRatePct": 35.13
+        "returnRatePct": 35.13,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 92.65,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 5
       },
       {
         "id": "support",
         "label": "応援馬券",
+        "recordedRaces": 68,
         "settledRaces": 62,
         "hitRaces": 56,
         "raceHitRatePct": 90.32,
@@ -287,11 +343,16 @@
         "stakeYen": 37200,
         "returnYen": 28420,
         "profitYen": -8780,
-        "returnRatePct": 76.4
+        "returnRatePct": 76.4,
+        "recordingCoveragePct": 100.0,
+        "settledCoveragePct": 91.18,
+        "missingRecordRaces": 0,
+        "unsettledOrUnmatchedRaces": 6
       },
       {
         "id": "win5",
         "label": "WIN5",
+        "recordedRaces": 0,
         "settledRaces": 0,
         "hitRaces": 0,
         "raceHitRatePct": null,
@@ -301,7 +362,11 @@
         "stakeYen": 0,
         "returnYen": 0,
         "profitYen": 0,
-        "returnRatePct": null
+        "returnRatePct": null,
+        "recordingCoveragePct": 0.0,
+        "settledCoveragePct": 0.0,
+        "missingRecordRaces": 68,
+        "unsettledOrUnmatchedRaces": 0
       }
     ]
   }
