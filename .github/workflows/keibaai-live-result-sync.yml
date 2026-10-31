@@ -15,10 +15,12 @@ on:
       - 'production/test_result_detail_enrichment.py'
       - 'production/same_day_track_bias.py'
       - 'production/same_day_track_bias_v2.py'
+      - 'production/same_day_track_bias_v21.py'
       - 'production/same_day_shadow_runtime.py'
       - 'production/evaluate_same_day_shadow.py'
       - 'production/test_same_day_track_bias.py'
       - 'production/test_same_day_track_bias_v2.py'
+      - 'production/test_same_day_track_bias_v21.py'
       - 'production/test_same_day_shadow_runtime.py'
       - 'production/test_evaluate_same_day_shadow.py'
   workflow_dispatch:
@@ -85,6 +87,7 @@ jobs:
           python -m py_compile production/all_bet_recommendation_shadow.py
           python -m py_compile production/same_day_track_bias.py
           python -m py_compile production/same_day_track_bias_v2.py
+          python -m py_compile production/same_day_track_bias_v21.py
           python -m py_compile production/same_day_shadow_runtime.py
           python -m py_compile production/evaluate_same_day_shadow.py
           python production/test_bet_research_data.py
@@ -93,6 +96,7 @@ jobs:
             production/test_result_detail_enrichment.py \
             production/test_same_day_track_bias.py \
             production/test_same_day_track_bias_v2.py \
+            production/test_same_day_track_bias_v21.py \
             production/test_same_day_shadow_runtime.py \
             production/test_evaluate_same_day_shadow.py
 
