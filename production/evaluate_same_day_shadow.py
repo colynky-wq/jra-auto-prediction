@@ -1,4 +1,4 @@
-"""Evaluate formal A ranking versus Same-Day Shadow V2 on completed races.
+"""Evaluate formal A ranking versus a Same-Day Shadow challenger on completed races.
 
 The report is research-only. Each shadow row was built with strictly earlier
 same-day races, so evaluating it against the target race's later result does not
@@ -177,8 +177,10 @@ def evaluate(races: list[dict], results: list[dict], shadows: list[dict], race_d
             continue
         bias = shadow.get("sameDayBias") or {}
         if str(bias.get("version") or "") != "same_day_track_bias_v2":
-            skipped["not_v2"] += 1
+            skipped["not_v2_evidence"] += 1
             continue
+        challenger = shadow.get("challenger") or {}
+        challenger_version = str(challenger.get("version") or "unknown")
         prior = int(bias.get("completedRaceCount") or 0)
         if prior <= 0:
             skipped["no_prior_same_surface_race"] += 1
@@ -191,7 +193,7 @@ def evaluate(races: list[dict], results: list[dict], shadows: list[dict], race_d
             skipped["winner_missing"] += 1
             continue
         formal_ranks = _rank_by_probability(race.get("horses") or [])
-        shadow_ranks = _shadow_rank((shadow.get("challenger") or {}).get("horses") or [])
+        shadow_ranks = _shadow_rank(challenger.get("horses") or [])
         if winner not in formal_ranks or winner not in shadow_ranks:
             skipped["winner_rank_missing"] += 1
             continue
@@ -207,12 +209,15 @@ def evaluate(races: list[dict], results: list[dict], shadows: list[dict], race_d
                 "raceName": race.get("raceName"),
                 "course": race.get("course"),
                 "surface": _surface(race.get("course")),
+                "challengerVersion": challenger_version,
                 "winnerNumber": winner,
                 "formalWinnerRank": fr,
                 "shadowWinnerRank": sr,
                 "winnerRankDeltaShadowMinusFormal": sr - fr,
                 "completedPriorSameSurfaceRaces": prior,
                 "detailPriorRaceCount": int(bias.get("detailRaceCount") or 0),
+                "drawGateEnabled": ((bias.get("adjustmentPolicy") or {}).get("drawEnabled")),
+                "styleGateEnabled": ((bias.get("adjustmentPolicy") or {}).get("styleEnabled")),
                 "runningStyleBiasLabel": bias.get("runningStyleBiasLabel"),
                 "closingSpeedBiasLabel": bias.get("closingSpeedBiasLabel"),
                 "paceShapeLabel": bias.get("paceShapeLabel"),
@@ -226,13 +231,15 @@ def evaluate(races: list[dict], results: list[dict], shadows: list[dict], race_d
     groups = defaultdict(list)
     for row in details:
         groups[f"{row['venue']}|{row['surface']}"] .append(row)
+    challenger_versions = sorted({row["challengerVersion"] for row in details})
 
     return {
-        "version": "same_day_shadow_evaluation_v1",
+        "version": "same_day_shadow_evaluation_v2",
         "raceDate": race_date,
         "status": "research_only",
-        "interpretation": "One-day or small-sample results are descriptive only; do not promote Shadow V2 into Formal A from this report alone.",
-        "eligibility": "Formal live_10min target races with >=1 strictly earlier completed same-day, same-venue, same-surface race in Same-Day V2.",
+        "challengerVersions": challenger_versions,
+        "interpretation": "One-day or small-sample results are descriptive only; do not promote a Same-Day Shadow challenger into Formal A from this report alone.",
+        "eligibility": "Formal live_10min target races with >=1 strictly earlier completed same-day, same-venue, same-surface race using V2 evidence.",
         "overall": _summarize(details),
         "byVenueSurface": {key: _summarize(value) for key, value in sorted(groups.items())},
         "skipped": dict(sorted(skipped.items())),
