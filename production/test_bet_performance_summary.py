@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import build_bet_performance_summary as summary
 
@@ -38,6 +39,47 @@ def formal_sidecar(captured='2026-10-25T09:50:00+09:00', timing='live_10min'):
     }
 
 
+def direct_row(day, rid, minute=0):
+    return {
+        'id': f'win:{day}:{rid}',
+        'betType': 'win',
+        'raceDate': day,
+        'raceID': rid,
+        'startTime': f'10:{minute:02d}',
+        'status': 'matched',
+        'candidates': [{'id': '01', 'unitYen': 100, 'hit': False, 'payoutYen': 0}],
+    }
+
+
+def portfolio_row(row):
+    return {
+        'raceDate': row['raceDate'],
+        'raceID': row['raceID'],
+        'startTime': row.get('startTime', '10:00'),
+        'scope': 'prospective',
+        'ruleVersion': 'portfolio-shadow-v1-20261019',
+        'planType': 'skip',
+        'planLabel': '見送り',
+        'reason': 'test',
+        'legs': [],
+        'totalStakeYen': 0,
+        'settled': False,
+    }
+
+
+def portfolio_payload(rows):
+    return {
+        'schemaVersion': 1,
+        'version': 'portfolio-shadow-v1-20261019',
+        'status': 'research_display_only',
+        'formalRecommendationsEnabled': False,
+        'autoBetEnabled': False,
+        'stakeSizingEnabled': False,
+        'prospectiveStartDate': '2026-10-24',
+        'races': [portfolio_row(row) for row in rows],
+    }
+
+
 class TestBetPerformanceSummary(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -48,8 +90,21 @@ class TestBetPerformanceSummary(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def write_source(self, value):
+    def write_bet_source(self, value):
         self.report.write_text(json.dumps(value, ensure_ascii=False), encoding='utf-8')
+
+    def write_portfolio(self, rows):
+        (self.root / 'PortfolioResearchData.json').write_text(
+            json.dumps(portfolio_payload(rows), ensure_ascii=False), encoding='utf-8'
+        )
+
+    def write_source(self, value):
+        self.write_bet_source(value)
+        prospective = [
+            row for row in value.get('races', [])
+            if isinstance(row, dict) and str(row.get('raceDate') or '') >= '2026-10-24'
+        ]
+        self.write_portfolio(prospective)
 
     def write_sidecar(self, value):
         path = self.root / 'reports' / '20261025' / 'all_bet_v1' / 'win' / 'race1.json'
@@ -80,10 +135,15 @@ class TestBetPerformanceSummary(unittest.TestCase):
 
         self.write_sidecar(formal_sidecar())
         with_formal = summary.build(self.root)
+        self.assertEqual(with_formal['formalT10']['prospectiveStartDate'], '2026-10-24')
+        self.assertEqual(with_formal['formalT10']['targetRaces'], 100)
         self.assertEqual(with_formal['formalT10']['eligibleRaces'], 1)
         self.assertEqual(with_formal['formalT10']['excludedRaces'], 0)
         formal_win = next(row for row in with_formal['formalT10']['betTypes'] if row['id'] == 'win')
+        self.assertEqual(formal_win['recordedRaces'], 1)
+        self.assertEqual(formal_win['recordingCoveragePct'], 100.0)
         self.assertEqual(formal_win['settledRaces'], 1)
+        self.assertEqual(formal_win['settledCoveragePct'], 100.0)
         self.assertEqual(formal_win['stakeYen'], 200)
         self.assertEqual(formal_win['returnYen'], 250)
         self.assertEqual(formal_win['returnRatePct'], 125.0)
@@ -101,6 +161,42 @@ class TestBetPerformanceSummary(unittest.TestCase):
         built = summary.build(self.root)
         self.assertEqual(built['formalT10']['eligibleRaces'], 0)
         self.assertEqual(built['formalT10']['evidenceReasons']['captured_outside_formal_window'], 1)
+
+    @patch.object(summary, 'inspect_formal_10min_evidence', return_value={'eligible': True, 'reason': 'formal_10min_verified'})
+    def test_formal_cohort_ignores_prestart_and_locks_first_100(self, inspect_mock):
+        rows = [direct_row('2026-10-23', 'prestart', 0)]
+        prospective = [direct_row('2026-10-24', f'race{i:03d}', i % 60) for i in range(101)]
+        rows += prospective
+        self.write_portfolio(prospective)
+
+        filtered, meta = summary.formal_t10_rows(self.root, rows)
+
+        self.assertEqual(inspect_mock.call_count, 101)
+        self.assertEqual(meta['prospectiveRacesObserved'], 101)
+        self.assertEqual(meta['verifiedFormalRacesObserved'], 101)
+        self.assertEqual(meta['eligibleRaces'], 100)
+        self.assertEqual(meta['remainingTo100'], 0)
+        self.assertEqual(meta['laterFormalRacesExcludedAfterFirst100'], 1)
+        self.assertTrue(meta['first100CohortLockedByRule'])
+        self.assertEqual(len(filtered), 100)
+        self.assertNotIn('prestart', {row['raceID'] for row in filtered})
+
+    @patch.object(summary, 'inspect_formal_10min_evidence', return_value={'eligible': True, 'reason': 'formal_10min_verified'})
+    def test_missing_bet_record_is_coverage_gap_not_smaller_formal_denominator(self, _inspect_mock):
+        race1 = direct_row('2026-10-25', 'race1', 0)
+        race2 = direct_row('2026-10-25', 'race2', 5)
+        self.write_portfolio([race1, race2])
+        self.write_bet_source({'generatedAtJST': '2026-10-25T17:00:00+09:00', 'races': [race1]})
+
+        built = summary.build(self.root)
+
+        self.assertEqual(built['formalT10']['eligibleRaces'], 2)
+        win = next(row for row in built['formalT10']['betTypes'] if row['id'] == 'win')
+        self.assertEqual(win['recordedRaces'], 1)
+        self.assertEqual(win['recordingCoveragePct'], 50.0)
+        self.assertEqual(win['missingRecordRaces'], 1)
+        self.assertEqual(win['settledRaces'], 1)
+        self.assertEqual(win['settledCoveragePct'], 50.0)
 
     def test_source_timestamp_only_does_not_rewrite(self):
         self.write_source(source('2026-10-25T17:00:00+09:00'))
