@@ -1,8 +1,7 @@
-"""Build same-day track-bias challenger reports from RaceData + ResultData.
+"""Build Same-Day Track Bias Shadow V2 reports from RaceData + ResultData.
 
-This runtime is shadow-only and does not modify RaceData.json, formal 10-minute
-predictions, or the fixed production model. It writes a separate report that can
-be compared prospectively against the formal A model.
+Shadow-only: formal 10-minute predictions and the fixed production model remain
+unchanged. V2 adds passing-position, last-3F and race-lap context when available.
 """
 from __future__ import annotations
 
@@ -11,13 +10,18 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from same_day_track_bias import build_same_day_bias, apply_draw_shadow_adjustment
+from same_day_track_bias_v2 import (
+    build_same_day_bias_v2,
+    build_style_map_from_history,
+    apply_same_day_v2_adjustment,
+)
 
 JST = timezone(timedelta(hours=9))
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 RACEDATA_PATH = REPO / "RaceData.json"
 RESULTDATA_PATH = REPO / "ResultData.json"
+HISTORY_PATH = HERE / "production_history.parquet"
 REPORTS_DIR = REPO / "reports"
 
 TARGET_DATE8 = (
@@ -51,8 +55,14 @@ def _write_json(path: Path, value) -> None:
     tmp.replace(path)
 
 
-def build_reports(races: list[dict], results: list[dict], race_date: str) -> list[dict]:
+def build_reports(
+    races: list[dict],
+    results: list[dict],
+    race_date: str,
+    style_map: dict[str, float] | None = None,
+) -> list[dict]:
     day_races = [r for r in races if str(r.get("raceDate") or "") == race_date]
+    style_map = style_map or {}
     output: list[dict] = []
 
     for target in sorted(
@@ -63,7 +73,7 @@ def build_reports(races: list[dict], results: list[dict], race_date: str) -> lis
         if not (course.startswith("芝") or course.startswith("ダ")):
             continue
         try:
-            bias = build_same_day_bias(
+            bias = build_same_day_bias_v2(
                 day_races,
                 results,
                 race_date=race_date,
@@ -76,7 +86,7 @@ def build_reports(races: list[dict], results: list[dict], race_date: str) -> lis
             continue
 
         horses = target.get("horses") or []
-        challenger = apply_draw_shadow_adjustment(horses, bias)
+        challenger = apply_same_day_v2_adjustment(horses, bias, style_map)
         output.append(
             {
                 "raceDate": race_date,
@@ -91,7 +101,8 @@ def build_reports(races: list[dict], results: list[dict], race_date: str) -> lis
                 "sameDayBias": bias,
                 "challenger": {
                     "status": "shadow_only",
-                    "meaning": "Formal A prediction preserved; Same-Day V1 is a bounded draw-outcome challenger score only.",
+                    "version": "same_day_track_bias_v2",
+                    "meaning": "Formal A preserved; V2 combines bounded draw and historical-style alignment with same-day completed-race evidence.",
                     "horses": challenger,
                 },
             }
@@ -103,7 +114,8 @@ def main() -> None:
     race_date = _date_text(TARGET_DATE8)
     races = _load_list(RACEDATA_PATH)
     results = _load_list(RESULTDATA_PATH)
-    report = build_reports(races, results, race_date)
+    style_map = build_style_map_from_history(HISTORY_PATH, race_date)
+    report = build_reports(races, results, race_date, style_map)
 
     day_dir = REPORTS_DIR / TARGET_DATE8
     day_path = day_dir / "SameDayTrackBiasShadow.json"
@@ -112,9 +124,11 @@ def main() -> None:
     _write_json(latest_path, report)
 
     usable = sum(1 for r in report if (r.get("sameDayBias") or {}).get("completedRaceCount", 0) > 0)
+    v2_usable = sum(1 for r in report if (r.get("sameDayBias") or {}).get("detailRaceCount", 0) > 0)
     print(
-        f"same-day shadow report: date={race_date} races={len(report)} "
-        f"with_prior_same_surface_results={usable} path={day_path}"
+        f"same-day shadow v2: date={race_date} races={len(report)} "
+        f"prior_results={usable} detailed_prior_results={v2_usable} "
+        f"style_profiles={len(style_map)} path={day_path}"
     )
 
 
