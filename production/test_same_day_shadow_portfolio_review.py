@@ -34,19 +34,19 @@ def _row(rid, *, version="same_day_track_bias_v2_1", venue="東京", surface="�
 
 
 def test_excludes_development_day_and_wrong_challenger(tmp_path):
-    _write_day(tmp_path, "20261031", "2026-10-31", [_row("dev")])
+    _write_day(tmp_path, "20261031", "2026-10-31", [_row("202605041011")])
     _write_day(
         tmp_path,
         "20261101",
         "2026-11-01",
         [
-            _row("good"),
-            _row("old", version="same_day_track_bias_v2"),
+            _row("202605050111"),
+            _row("202605050112", version="same_day_track_bias_v2"),
         ],
     )
     rows, meta = collect_daily_rows(tmp_path)
     assert len(rows) == 1
-    assert rows[0]["raceID"].endswith("good") is False  # nonnumeric ids zfill but remain unique
+    assert rows[0]["raceID"] == "202605050111"
     assert rows[0]["challengerVersion"] == "same_day_track_bias_v2_1"
     assert meta["excluded"]["pre_prospective_development_date"] == 1
     assert meta["excluded"]["wrong_challenger_version"] == 1
