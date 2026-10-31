@@ -125,6 +125,48 @@ struct KeibaAIBetResearchData: Codable {
     }
 }
 
+struct KeibaAIBetPerformanceSummary: Decodable {
+    let schemaVersion: Int
+    let version: String
+    let status: String
+    let sourceGeneratedAtJST: String?
+    let formalT10: KeibaAIFormalT10Performance
+}
+
+struct KeibaAIFormalT10Performance: Decodable {
+    let prospectiveStartDate: String
+    let targetRaces: Int
+    let verifiedFormalRacesObserved: Int
+    let eligibleRaces: Int
+    let remainingTo100: Int
+    let first100CohortLockedByRule: Bool
+    let nonPerRaceBetTypes: [String]?
+    let definition: String
+    let betTypes: [KeibaAIFormalBetTypePerformance]
+}
+
+struct KeibaAIFormalBetTypePerformance: Decodable, Identifiable {
+    let id: String
+    let label: String
+    let recordedRaces: Int
+    let settledRaces: Int
+    let hitRaces: Int
+    let raceHitRatePct: Double?
+    let candidateTickets: Int
+    let hitTickets: Int
+    let ticketHitRatePct: Double?
+    let stakeYen: Int
+    let returnYen: Int
+    let profitYen: Int
+    let returnRatePct: Double?
+    let recordingCoveragePct: Double?
+    let settledCoveragePct: Double?
+    let missingRecordRaces: Int?
+    let unsettledOrUnmatchedRaces: Int?
+    let formalCohortApplicable: Bool?
+    let formalEvaluationStatus: String?
+}
+
 #if canImport(Combine)
 @MainActor
 final class KeibaAIBetResearchStore: ObservableObject {
@@ -170,6 +212,46 @@ final class KeibaAIBetResearchStore: ObservableObject {
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw URLError(.badServerResponse) }
         let result = try JSONDecoder().decode(KeibaAIBetResearchData.self,from:bytes)
         try result.validate(); return result
+    }
+}
+
+@MainActor
+final class KeibaAIBetPerformanceStore: ObservableObject {
+    @Published private(set) var data: KeibaAIBetPerformanceSummary?
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
+    private let session: URLSession
+
+    init(session: URLSession = .shared) { self.session = session }
+
+    func load(force: Bool = false) async {
+        if isLoading { return }
+        if data != nil && !force { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            var components = URLComponents(string:"https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/BetPerformanceSummary.json")!
+            components.queryItems = [URLQueryItem(name:"t",value:String(Date().timeIntervalSince1970))]
+            var request = URLRequest(url:components.url!)
+            request.timeoutInterval = 20
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.setValue("KeibaAI-iOS/1.0", forHTTPHeaderField: "User-Agent")
+            let (bytes,response) = try await session.data(for:request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw URLError(.badServerResponse) }
+            let decoded = try JSONDecoder().decode(KeibaAIBetPerformanceSummary.self,from:bytes)
+            guard decoded.schemaVersion == 2,
+                  decoded.version == "bet-performance-summary-v2",
+                  decoded.status == "research_evaluation_only",
+                  decoded.formalT10.first100CohortLockedByRule,
+                  decoded.formalT10.eligibleRaces <= decoded.formalT10.targetRaces,
+                  decoded.formalT10.remainingTo100 == max(0, decoded.formalT10.targetRaces - decoded.formalT10.eligibleRaces)
+            else { throw URLError(.cannotParseResponse) }
+            data = decoded
+        } catch {
+            errorMessage = data == nil ? "正式T-10成績を取得できませんでした。" : "正式T-10成績を更新できませんでした。"
+        }
     }
 }
 #endif

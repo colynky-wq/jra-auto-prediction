@@ -10,7 +10,8 @@ The legacy/reference aggregate remains available as ``betTypes``. A separate
 immutable live_10min evidence, 8-12 minute capture window, chronological ordering and
 first-100 lock as PortfolioReview100.json. Per-bet recording and settlement coverage is
 measured against that independent formal race cohort so missing bet records cannot
-silently shrink the denominator.
+silently shrink the denominator. WIN5 is not a one-race wager, so it is explicitly
+excluded from per-race formal coverage until a dedicated five-leg formal protocol exists.
 """
 from collections import Counter
 from copy import deepcopy
@@ -36,6 +37,7 @@ BET_LABELS = {
     'win':'単勝','place':'複勝','frame_quinella':'枠連','quinella':'馬連','wide':'ワイド',
     'exacta':'馬単','trio':'3連複','trifecta':'3連単','support':'応援馬券','win5':'WIN5'
 }
+NON_PER_RACE_FORMAL_TYPES = {'win5'}
 VOLATILE_TOP_LEVEL_FIELDS = {'sourceGeneratedAtJST'}
 
 
@@ -155,12 +157,31 @@ def summarize(kind, rows, cohort_size=None):
     return result
 
 
+def formal_metric(kind, rows, cohort_size):
+    if kind in NON_PER_RACE_FORMAL_TYPES:
+        result = summarize(kind, [])
+        result.update({
+            'formalCohortApplicable': False,
+            'formalEvaluationStatus': 'dedicated_multi_race_protocol_required',
+            'recordingCoveragePct': None,
+            'settledCoveragePct': None,
+            'missingRecordRaces': None,
+            'unsettledOrUnmatchedRaces': None,
+        })
+        return result
+
+    result = summarize(kind, rows, cohort_size)
+    result['formalCohortApplicable'] = True
+    result['formalEvaluationStatus'] = 'active'
+    return result
+
+
 def build(root):
     root = Path(root)
     rows, generated = load_rows(root)
     metrics = [summarize(k, rows) for k in BET_LABELS]
     formal_rows, formal_meta = formal_t10_rows(root, rows)
-    formal_metrics = [summarize(k, formal_rows, formal_meta['eligibleRaces']) for k in BET_LABELS]
+    formal_metrics = [formal_metric(k, formal_rows, formal_meta['eligibleRaces']) for k in BET_LABELS]
     return {
         'schemaVersion': 2,
         'version': 'bet-performance-summary-v2',
@@ -171,7 +192,8 @@ def build(root):
         'betTypes': metrics,
         'formalT10': {
             **formal_meta,
-            'definition': 'PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。',
+            'nonPerRaceBetTypes': sorted(NON_PER_RACE_FORMAL_TYPES),
+            'definition': 'PortfolioReview100と同じ10/24開始・厳格live_10min証拠・最初の100R固定コホート。券種ごとの欠測は母数から除外せずcoverageとして明示する。WIN5は5レース1組のため、この単一レース母集団では正式評価せず専用プロトコル待ちとする。',
             'betTypes': formal_metrics,
         },
     }

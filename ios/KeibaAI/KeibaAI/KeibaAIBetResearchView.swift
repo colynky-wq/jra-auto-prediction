@@ -6,6 +6,7 @@ struct KeibaAIBetResearchView: View {
     let refreshID: UUID
     @StateObject private var store = KeibaAIBetResearchStore()
     @StateObject private var earlyStore = KeibaAIEarlyPredictionStore()
+    @StateObject private var performanceStore = KeibaAIBetPerformanceStore()
     @State private var selectedType = "win"
     @State private var selectedDay = ""
     @State private var showEarlyPredictions = false
@@ -16,6 +17,9 @@ struct KeibaAIBetResearchView: View {
     }
     private var selected: KeibaAIBetResearchType? { store.data?.catalog.first { $0.id == selectedType } }
     private var rows: [KeibaAIBetResearchRow] { store.data?.races.filter { $0.betType == selectedType && $0.raceDate == chosenDay } ?? [] }
+    private var formalPerformance: KeibaAIFormalBetTypePerformance? {
+        performanceStore.data?.formalT10.betTypes.first { $0.id == selectedType }
+    }
     private var dateOptions: [String] {
         let available = store.data?.availableDates.map { $0.replacingOccurrences(of: "-", with: "") } ?? []
         return Array(Set(available + [date8])).sorted(by: >)
@@ -66,6 +70,7 @@ struct KeibaAIBetResearchView: View {
                             Text("記録開始：\(item.recordingStartDate)").font(.caption).foregroundStyle(.secondary)
                         }.padding(16).frame(maxWidth:.infinity,alignment:.leading)
                             .background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:16))
+                        formalPerformanceSection
                         KeibaAIResearchPolicyCard(betType:selectedType)
                         Text("表示日 \(chosenDay) / \(rows.count)件").font(.headline)
                         if rows.isEmpty {
@@ -90,24 +95,91 @@ struct KeibaAIBetResearchView: View {
                     Task {
                         await store.load(date8:chosenDate8)
                         await earlyStore.load(date8:chosenDate8, force:true)
+                        await performanceStore.load(force:true)
                     }
                 } label:{Image(systemName:"arrow.clockwise")}
-                    .accessibilityLabel("券種別研究を更新").disabled(store.isLoading)
+                    .accessibilityLabel("券種別研究を更新").disabled(store.isLoading || performanceStore.isLoading)
             }
         }
         .refreshable {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8, force:true)
+            await performanceStore.load(force:true)
         }
         .task(id:chosenDate8) {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8)
+            await performanceStore.load()
         }
         .task(id:refreshID) {
             await store.load(date8:chosenDate8)
             await earlyStore.load(date8:chosenDate8, force:true)
+            await performanceStore.load(force:true)
         }
         .onChange(of:date8) { _,_ in selectedDay = "" }
+    }
+
+    @ViewBuilder
+    private var formalPerformanceSection: some View {
+        if let formal = performanceStore.data?.formalT10, let performance = formalPerformance {
+            VStack(alignment:.leading, spacing:10) {
+                HStack {
+                    Label("正式T-10 前向き評価", systemImage:"checkmark.seal.fill")
+                        .font(.headline)
+                    Spacer()
+                    Text("\(formal.eligibleRaces)/\(formal.targetRaces)R")
+                        .font(.headline.monospacedDigit())
+                }
+                if performance.formalCohortApplicable == false {
+                    Text("WIN5は5レース1組の馬券なので、1レース単位の正式\(formal.targetRaces)R母集団では評価しません。専用の5レース組プロトコルで別評価します。")
+                        .font(.subheadline).fixedSize(horizontal:false,vertical:true)
+                    Label("通常券種の正式R数に対して『未記録』とは数えません。", systemImage:"info.circle")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    LazyVGrid(columns:[GridItem(.adaptive(minimum:140),alignment:.leading)],alignment:.leading,spacing:10) {
+                        formalMetric("記録率", percentText(performance.recordingCoveragePct))
+                        formalMetric("結果照合率", percentText(performance.settledCoveragePct))
+                        formalMetric("レース的中率", percentText(performance.raceHitRatePct))
+                        formalMetric("回収率", percentText(performance.returnRatePct))
+                    }
+                    Text("記録 \(performance.recordedRaces)/\(formal.eligibleRaces)R・結果照合 \(performance.settledRaces)/\(formal.eligibleRaces)R・的中 \(performance.hitRaces)R")
+                        .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                    Text("投資 \(performance.stakeYen)円 → 払戻 \(performance.returnYen)円 / 損益 \(signedYen(performance.profitYen))")
+                        .font(.subheadline.monospacedDigit()).fixedSize(horizontal:false,vertical:true)
+                    if let missing = performance.missingRecordRaces, let pending = performance.unsettledOrUnmatchedRaces {
+                        Text("未記録 \(missing)R・未照合/未確定 \(pending)R")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Text("10/24以降の厳格な発走8〜12分前記録だけを使い、最初の100Rで固定します。結果を見て後から母集団を差し替えません。")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                }
+            }
+            .padding(16)
+            .frame(maxWidth:.infinity,alignment:.leading)
+            .background(Color.green.opacity(0.08),in:RoundedRectangle(cornerRadius:16))
+            .accessibilityIdentifier("formal-t10-performance")
+        } else if performanceStore.isLoading {
+            ProgressView("正式T-10成績を取得中…")
+                .frame(maxWidth:.infinity,alignment:.leading)
+        } else if let error = performanceStore.errorMessage {
+            Label(error,systemImage:"exclamationmark.triangle")
+                .font(.caption).foregroundStyle(.orange)
+        }
+    }
+
+    private func formalMetric(_ label:String,_ value:String) -> some View {
+        VStack(alignment:.leading,spacing:3) {
+            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(value).font(.title3.bold().monospacedDigit())
+        }
+    }
+
+    private func percentText(_ value:Double?) -> String {
+        value.map { String(format:"%.2f%%",$0) } ?? "—"
+    }
+
+    private func signedYen(_ value:Int) -> String {
+        value >= 0 ? "+\(value)円" : "\(value)円"
     }
 
     @ViewBuilder
