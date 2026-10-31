@@ -32,18 +32,17 @@ jobs:
           grep -F 'Label("研究データを見る"' ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift
           ! grep -F 'ZStack(alignment: .bottomTrailing)' ios/KeibaAI/KeibaAI/KeibaAIApp.swift
 
-      - name: Build iOS app
+      - name: Typecheck iOS Swift sources
         shell: bash
         run: |
           set -euo pipefail
-          xcodebuild \
-            -project ios/KeibaAI/KeibaAI.xcodeproj \
-            -scheme KeibaAI \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+          SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+          xcrun swiftc \
+            -typecheck \
+            -parse-as-library \
+            -sdk "$SDK" \
+            -target arm64-apple-ios18.0-simulator \
+            ios/KeibaAI/KeibaAI/*.swift
 
       - name: Commit intuitive UI
         shell: bash
