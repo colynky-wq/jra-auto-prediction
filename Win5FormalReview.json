@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "version": "win5-formal-review-v1-20261031",
+  "status": "research_evaluation_only",
+  "generatedAtJST": "2026-10-31T12:35:37+09:00",
+  "sourceVersion": "win5-factorized-win-v1-20261015",
+  "prospectiveStartDate": "2026-10-18",
+  "observationUnit": "one_frozen_five_race_win5_session",
+  "sessionsObserved": 4,
+  "sessionsEligible": 4,
+  "sessionsResultMatched": 2,
+  "sessionsPayoutVerified": 2,
+  "sessionsPending": 2,
+  "sessionsExcluded": 0,
+  "probabilityEvaluation": {
+    "sessionsEvaluated": 2,
+    "totalLegsEvaluated": 10,
+    "aiTopOneAllFiveHits": 0,
+    "marketTopOneAllFiveHits": 0,
+    "aiTopOneLegHits": 2,
+    "marketTopOneLegHits": 3,
+    "aiTopOneLegHitRatePct": 20.0,
+    "marketTopOneLegHitRatePct": 30.0,
+    "meanAINegativeLogProbability": 8.80744209,
+    "meanMarketNegativeLogProbability": 8.87638404,
+    "aiLowerNLLSessions": 1,
+    "marketLowerNLLSessions": 1
+  },
+  "bettingEvaluation": {
+    "status": "not_started_no_frozen_selection_rule",
+    "formalROIAvailable": false,
+    "historicalReferenceBacktestExcluded": true,
+    "selectionRuleFrozenForTheseSessions": false,
+    "note": "既存の凍結セッションは5レースの確率予測を事前固定しているが、購入点・予算ルールは固定していない。結果を見た後に買い目を復元せず、正式ROIは将来の購入ルール凍結後から別コホートで評価する。"
+  },
+  "sessions": [
+    {
+      "raceDate": "2026-10-18",
+      "status": "payout_verified",
+      "eligible": true,
+      "recordedAtJST": "2026-10-18T12:15:24.088346+09:00",
+      "deadlineJST": "2026-10-18T14:40:00+09:00",
+      "winningOutcome": [
+        "07",
+        "08",
+        "03",
+        "09",
+        "08"
+      ],
+      "aiActualOutcomeProbability": 0.0004283523471091238,
+      "marketActualOutcomeProbability": 0.0004704502636464789,
+      "aiNegativeLogProbability": 7.755564460150245,
+      "marketNegativeLogProbability": 7.661820314098267,
+      "aiTopOneAllFiveHit": false,
+      "marketTopOneAllFiveHit": false,
+      "aiTopOneLegHits": 1,
+      "marketTopOneLegHits": 2,
+      "payoutVerified": true,
+      "publishedPayoutPer100Yen": 59940,
+      "winningTicketCount": 8794,
+      "payoutStatus": "paid"
+    },
+    {
+      "raceDate": "2026-10-24",
+      "status": "payout_verified",
+      "eligible": true,
+      "recordedAtJST": "2026-10-24T12:17:42.506766+09:00",
+      "deadlineJST": "2026-10-24T14:45:00+09:00",
+      "winningOutcome": [
+        "02",
+        "12",
+        "05",
+        "12",
+        "09"
+      ],
+      "aiActualOutcomeProbability": 5.22578872904847e-05,
+      "marketActualOutcomeProbability": 4.145310547974258e-05,
+      "aiNegativeLogProbability": 9.859319725583664,
+      "marketNegativeLogProbability": 10.090947758085855,
+      "aiTopOneAllFiveHit": false,
+      "marketTopOneAllFiveHit": false,
+      "aiTopOneLegHits": 1,
+      "marketTopOneLegHits": 1,
+      "payoutVerified": true,
+      "publishedPayoutPer100Yen": 636240,
+      "winningTicketCount": 451,
+      "payoutStatus": "paid"
+    },
+    {
+      "raceDate": "2026-10-25",
+      "status": "dead_heat_excluded",
+      "eligible": true,
+      "recordedAtJST": "2026-10-25T12:18:07.353535+09:00",
+      "deadlineJST": "2026-10-25T14:40:00+09:00"
+    },
+    {
+      "raceDate": "2026-10-31",
+      "status": "awaiting_results",
+      "eligible": true,
+      "recordedAtJST": "2026-10-31T12:31:23.374894+09:00",
+      "deadlineJST": "2026-10-31T14:30:00+09:00"
+    }
+  ]
+}
