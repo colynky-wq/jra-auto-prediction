@@ -18,11 +18,13 @@ on:
       - 'production/same_day_track_bias_v21.py'
       - 'production/same_day_shadow_runtime.py'
       - 'production/evaluate_same_day_shadow.py'
+      - 'production/same_day_shadow_portfolio_review.py'
       - 'production/test_same_day_track_bias.py'
       - 'production/test_same_day_track_bias_v2.py'
       - 'production/test_same_day_track_bias_v21.py'
       - 'production/test_same_day_shadow_runtime.py'
       - 'production/test_evaluate_same_day_shadow.py'
+      - 'production/test_same_day_shadow_portfolio_review.py'
   workflow_dispatch:
     inputs:
       target_date:
@@ -90,6 +92,7 @@ jobs:
           python -m py_compile production/same_day_track_bias_v21.py
           python -m py_compile production/same_day_shadow_runtime.py
           python -m py_compile production/evaluate_same_day_shadow.py
+          python -m py_compile production/same_day_shadow_portfolio_review.py
           python production/test_bet_research_data.py
           python production/test_all_bet_recommendation_shadow.py
           python -m pytest -q \
@@ -98,7 +101,8 @@ jobs:
             production/test_same_day_track_bias_v2.py \
             production/test_same_day_track_bias_v21.py \
             production/test_same_day_shadow_runtime.py \
-            production/test_evaluate_same_day_shadow.py
+            production/test_evaluate_same_day_shadow.py \
+            production/test_same_day_shadow_portfolio_review.py
 
       - name: Choose continuous session runtime
         id: runtime
@@ -148,12 +152,13 @@ jobs:
               echo '::warning::Could not fetch latest main; retrying next cycle.'
             else
               git reset --hard origin/main
-              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json >/dev/null 2>&1 || true
+              git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json >/dev/null 2>&1 || true
 
               cycle_failed=0
               python production/build_result_data_live.py || cycle_failed=1
               if [ "$cycle_failed" -eq 0 ]; then python production/same_day_shadow_runtime.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/evaluate_same_day_shadow.py || cycle_failed=1; fi
+              if [ "$cycle_failed" -eq 0 ]; then python production/same_day_shadow_portfolio_review.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/build_performance_data.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/wide_forward_validation.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/wide_validation_summary.py || cycle_failed=1; fi
@@ -168,10 +173,10 @@ jobs:
 
               if [ "$cycle_failed" -ne 0 ]; then
                 echo '::warning::Core result/validation build failed; retrying next cycle.'
-              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json reports)" ]; then
+              elif [ -z "$(git status --porcelain -- ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json reports)" ]; then
                 echo 'No result/performance/validation changes to publish.'
               else
-                git add ResultData.json PerformanceData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json reports
+                git add ResultData.json PerformanceData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json reports
                 if [ -f BetResearchData.json ]; then git add BetResearchData.json; fi
                 if [ -f PortfolioResearchData.json ]; then git add PortfolioResearchData.json; fi
                 if [ -f AllBetRecommendationData.json ]; then git add AllBetRecommendationData.json; fi
@@ -180,7 +185,7 @@ jobs:
                   echo '::warning::Main moved while publishing; latest results will be rebuilt next cycle.'
                   git fetch --no-tags origin main || true
                   git reset --hard origin/main || true
-                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json >/dev/null 2>&1 || true
+                  git clean -fd -- reports ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json >/dev/null 2>&1 || true
                 fi
               fi
             fi
