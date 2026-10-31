@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/keibaai-same-day-shadow-evaluate.yml'
+      - 'production/evaluate_same_day_shadow.py'
+      - 'production/test_evaluate_same_day_shadow.py'
+      - 'SameDayTrackBiasShadow.json'
   workflow_dispatch:
     inputs:
       target_date:
@@ -41,7 +44,7 @@ jobs:
           python -m pip install 'pytest==8.4.2'
           python -m pytest -q production/test_evaluate_same_day_shadow.py
 
-      - name: Evaluate saved formal A versus Same-Day V2
+      - name: Evaluate saved formal A versus current Same-Day Shadow
         env:
           KEIBAAI_SAME_DAY_DATE: ${{ github.event.inputs.target_date || '' }}
         run: python production/evaluate_same_day_shadow.py
