@@ -27,6 +27,7 @@ PROSPECTIVE_START = "2026-11-02"
 UNIT_YEN = 100
 
 CHALLENGERS = ("battle_a_only", "top3_coverage", "combined")
+VARIANTS = CHALLENGERS
 ALLOWED_BATTLE = {"S", "A", "B"}
 STRONG_BATTLE = {"S", "A"}
 
