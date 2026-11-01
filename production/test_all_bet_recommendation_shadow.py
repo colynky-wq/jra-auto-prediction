@@ -112,6 +112,79 @@ class RecommendationTests(unittest.TestCase):
         self.assertEqual(race["recommendationStatus"], "signal_pending")
         self.assertEqual(race["betRecommendations"], [])
 
+    def test_high_chaos_scans_all_live_wide_pairs_after_revision(self):
+        race = {
+            **RACE,
+            "raceDate": "2026-11-01",
+            "capturedAtJST": "2026-11-01T13:25:00+09:00",
+        }
+        bets = {(RACE["raceID"], "wide"): {"status": "ready", "candidates": []}}
+        signal = {
+            "eligible": True,
+            "battle": {"grade": "A"},
+            "chaos": {"level": 5},
+            "wideEvaluation": {
+                "oddsConnected": True,
+                "validationPairs": [
+                    {"number1": 1, "name1": "A", "number2": 2, "name2": "B",
+                     "aiWideProbability": 10.0, "wideOddsLow": 11.0, "wideOddsHigh": 12.0},
+                ],
+            },
+        }
+        result = target.build_race(race, bets, signal)
+        self.assertTrue(result["wideChaosPriorityApplied"])
+        self.assertEqual(result["wideChaosPairsScanned"], 1)
+        self.assertEqual(result["recommendationStatus"], "candidate")
+        self.assertEqual(result["bestBet"]["betType"], "wide")
+        self.assertEqual(result["bestBet"]["sourceScope"], "chaos_priority_all_live_wide_pairs")
+
+    def test_chaos_priority_never_rewrites_older_snapshot(self):
+        race = {
+            **RACE,
+            "raceDate": "2026-11-01",
+            "capturedAtJST": "2026-11-01T13:08:29+09:00",
+        }
+        bets = {(RACE["raceID"], "wide"): {"status": "ready", "candidates": []}}
+        signal = {
+            "eligible": True,
+            "battle": {"grade": "A"},
+            "chaos": {"level": 5},
+            "wideEvaluation": {
+                "oddsConnected": True,
+                "validationPairs": [
+                    {"number1": 1, "name1": "A", "number2": 2, "name2": "B",
+                     "aiWideProbability": 10.0, "wideOddsLow": 11.0, "wideOddsHigh": 12.0},
+                ],
+            },
+        }
+        result = target.build_race(race, bets, signal)
+        self.assertFalse(result["wideChaosPriorityApplied"])
+        self.assertIsNone(result["bestBet"])
+
+    def test_chaos_priority_does_not_override_battle_c_gate(self):
+        race = {
+            **RACE,
+            "raceDate": "2026-11-01",
+            "capturedAtJST": "2026-11-01T13:25:00+09:00",
+        }
+        bets = {(RACE["raceID"], "wide"): {"status": "ready", "candidates": []}}
+        signal = {
+            "eligible": True,
+            "battle": {"grade": "C"},
+            "chaos": {"level": 5},
+            "wideEvaluation": {
+                "oddsConnected": True,
+                "validationPairs": [
+                    {"number1": 1, "name1": "A", "number2": 2, "name2": "B",
+                     "aiWideProbability": 10.0, "wideOddsLow": 11.0, "wideOddsHigh": 12.0},
+                ],
+            },
+        }
+        result = target.build_race(race, bets, signal)
+        self.assertTrue(result["wideChaosPriorityApplied"])
+        self.assertEqual(result["recommendationStatus"], "skip")
+        self.assertIsNone(result["bestBet"])
+
 
 if __name__ == "__main__":
     unittest.main()
