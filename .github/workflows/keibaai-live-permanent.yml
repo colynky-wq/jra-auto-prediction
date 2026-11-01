@@ -1,4 +1,4 @@
-# 2026-10-25 preflight: resilient formal T-10 capture with bounded late recovery.
+# 2026-11-01: start the afternoon session early enough to absorb GitHub schedule delay.
 name: KeibaAI Live Permanent
 
 on:
@@ -22,7 +22,7 @@ on:
       - 'production/test_live_capture_recovery.py'
   schedule:
     - cron: '45 22 * * *'  # 07:45 JST
-    - cron: '45 3 * * *'   # 12:45 JST; queues behind the morning production session
+    - cron: '0 3 * * *'    # 12:00 JST; queue early so cron delay cannot miss afternoon T-10 windows
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -32,9 +32,6 @@ on:
 permissions:
   contents: write
 concurrency:
-  # Every production run shares one group so two independent checkouts never
-  # publish RaceData/research JSON concurrently. Push runs are CI-only and use
-  # their own commit-specific group, so code validation cannot block production.
   group: keibaai-live-${{ github.event_name == 'push' && github.sha || 'production' }}
   cancel-in-progress: false
 jobs:
@@ -116,11 +113,9 @@ jobs:
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
           elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
-            # 5h05m leaves substantial room for setup/teardown inside the 6h job cap.
-            # The 12:45 session is already queued and resumes after this job exits.
             minutes='305'
           else
-            minutes='285'
+            minutes='330'
           fi
           echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
 
