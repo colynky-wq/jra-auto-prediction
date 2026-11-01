@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "all-bet-forward-v1-20261015",
   "scope": "JRA domestic flat races",
-  "generatedAtJST": "2026-11-01T15:54:57.761390+09:00",
+  "generatedAtJST": "2026-11-01T15:57:02.297705+09:00",
   "evaluationStartJST": "2026-10-15T17:47:37+09:00",
   "betTypes": {
     "win": "単勝",
@@ -21,72 +21,72 @@
       "records": 181,
       "ready": 174,
       "held": 7,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 167,
+      "matched": 168,
       "missingRecords": 5
     },
     "place": {
       "records": 181,
       "ready": 173,
       "held": 8,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 166,
+      "matched": 167,
       "missingRecords": 5
     },
     "frame_quinella": {
       "records": 181,
       "ready": 157,
       "held": 24,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 1,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 151,
+      "matched": 152,
       "missingRecords": 5
     },
     "quinella": {
       "records": 181,
       "ready": 174,
       "held": 7,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 167,
+      "matched": 168,
       "missingRecords": 5
     },
     "exacta": {
       "records": 181,
       "ready": 174,
       "held": 7,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 167,
+      "matched": 168,
       "missingRecords": 5
     },
     "support": {
       "records": 181,
       "ready": 173,
       "held": 8,
-      "awaiting_results": 2,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 166,
+      "matched": 167,
       "missingRecords": 5
     }
   },
@@ -99,12 +99,12 @@
       "counts": {
         "recordedRaces": 180,
         "held": 22,
-        "awaitingResults": 2,
+        "awaitingResults": 1,
         "matched": 62,
         "entrantChanged": 2,
         "deadHeatExcluded": 4,
         "noCandidate": 18,
-        "invalid": 92,
+        "invalid": 93,
         "selectedBets": 140,
         "missingRecords": 6
       }
@@ -118,12 +118,12 @@
         "records": 181,
         "ready": 174,
         "held": 7,
-        "awaiting_results": 2,
+        "awaiting_results": 1,
         "payouts_pending": 0,
         "entrant_changed": 2,
         "dead_heat_excluded": 3,
         "invalid": 0,
-        "matched": 167,
+        "matched": 168,
         "missingRecords": 5
       }
     },
@@ -136,12 +136,12 @@
         "records": 181,
         "ready": 174,
         "held": 7,
-        "awaiting_results": 2,
+        "awaiting_results": 1,
         "payouts_pending": 0,
         "entrant_changed": 2,
         "dead_heat_excluded": 3,
         "invalid": 0,
-        "matched": 167,
+        "matched": 168,
         "missingRecords": 5
       }
     }
@@ -152,12 +152,12 @@
       "records": 6,
       "ready": 6,
       "held": 0,
-      "awaiting_results": 1,
+      "awaiting_results": 0,
       "entrant_changed": 0,
       "dead_heat_excluded": 1,
       "invalid": 0,
-      "probability_matched": 4,
-      "matched": 4,
+      "probability_matched": 5,
+      "matched": 5,
       "payouts_pending": 0,
       "missingRecords": 0,
       "failedSessions": 0
@@ -393,7 +393,59 @@
       },
       {
         "raceDate": "2026-11-01",
-        "status": "awaiting_results"
+        "status": "matched",
+        "winningOutcome": [
+          "01",
+          "01",
+          "12",
+          "07",
+          "17"
+        ],
+        "combinationCount": 445536,
+        "aiActualOutcomeProbability": 2.8641782551053423e-05,
+        "marketActualOutcomeProbability": 3.6833501642517684e-05,
+        "aiNegativeLogProbability": 10.460643977897568,
+        "marketNegativeLogProbability": 10.209102756204897,
+        "aiTopOneAllFiveHit": false,
+        "marketTopOneAllFiveHit": false,
+        "aiTopOneLegHits": 1,
+        "marketTopOneLegHits": 2,
+        "assumption": "レース間の条件付き独立を仮定した勝率の積。全組は積の形で保持し、点数分を購入する意味ではない。",
+        "payout": {
+          "raceDate": "2026-11-01",
+          "raceIDs": [
+            "202605041109",
+            "202608041110",
+            "202605041110",
+            "202608041111",
+            "202605041111"
+          ],
+          "winners": [
+            {
+              "number": 1,
+              "name": "ミッキーソルジャー"
+            },
+            {
+              "number": 1,
+              "name": "ファームツエンティ"
+            },
+            {
+              "number": 12,
+              "name": "クインズデネブ"
+            },
+            {
+              "number": 7,
+              "name": "レザベーション"
+            },
+            {
+              "number": 17,
+              "name": "ダノンデサイル"
+            }
+          ],
+          "winningTicketCount": 320,
+          "payoutPer100Yen": 1602790,
+          "payoutStatus": "paid"
+        }
       }
     ],
     "sessions": [
@@ -9222,7 +9274,12 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "exacta",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 272,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.0038601894884878287,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.0038373004528920182
     },
     {
       "raceDate": "2026-11-01",
@@ -9423,7 +9480,12 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "frame_quinella",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 36,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.0306851766146586,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.030371243568848533
     },
     {
       "raceDate": "2026-11-01",
@@ -9632,7 +9694,12 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "place",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 17,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.18454569650890443,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.17970974156809646
     },
     {
       "raceDate": "2026-11-01",
@@ -9841,7 +9908,12 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "quinella",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 136,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.00808466375646494,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.007993878763607583
     },
     {
       "raceDate": "2026-11-01",
@@ -10050,7 +10122,12 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "win",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 17,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.062422081305072874,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.061330052129411755
     },
     {
       "raceDate": "2026-11-01",
@@ -43732,10 +43809,273 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041111",
       "betType": "support",
-      "status": "awaiting_results",
+      "status": "matched",
       "sourceRecordFingerprints": [
         "ce98be147d20e2232fb76122e3b4ce784de4173c2ef0e331a08f04eb3c7b7316",
         "74301bf9ae5bd7c4c89ed8ec5e80ab07c02e728f8ab0769e35408933f3919dd4"
+      ],
+      "evaluatedOutcomes": 17,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.18454569650890443,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.17970974156809646,
+      "costPerPackageYen": 200,
+      "candidates": [
+        {
+          "outcome": "01",
+          "costYen": 200,
+          "winProbability": 0.30391696083039166,
+          "placeProbability": 0.7581258655987486,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.7581258655987486,
+          "aiExpectedMultiplierLow": 0.8499675684387583,
+          "aiExpectedMultiplierHigh": 0.9636864482785705,
+          "marketProbability": 0.749993564116233,
+          "marketExpectedMultiplierLow": 0.8462881384697398,
+          "marketExpectedMultiplierHigh": 0.9587871730871749,
+          "profitYen": -200
+        },
+        {
+          "outcome": "02",
+          "costYen": 200,
+          "winProbability": 0.0023599764002359973,
+          "placeProbability": 0.009687364598463113,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.009687364598463113,
+          "aiExpectedMultiplierLow": 0.4146978675698989,
+          "aiExpectedMultiplierHigh": 0.5222276146128394,
+          "marketProbability": 0.012815660643140584,
+          "marketExpectedMultiplierLow": 0.5582773241035714,
+          "marketExpectedMultiplierHigh": 0.7005311572424319,
+          "profitYen": -200
+        },
+        {
+          "outcome": "03",
+          "costYen": 200,
+          "winProbability": 0.08625913740862591,
+          "placeProbability": 0.32191136935793935,
+          "hit": true,
+          "payoutYen": 370,
+          "aiProbability": 0.32191136935793935,
+          "aiExpectedMultiplierLow": 0.7336427108916873,
+          "aiExpectedMultiplierHigh": 0.9911718063780387,
+          "marketProbability": 0.3265272678294285,
+          "marketExpectedMultiplierLow": 0.7554879946123714,
+          "marketExpectedMultiplierHigh": 1.0167098088759141,
+          "profitYen": 170
+        },
+        {
+          "outcome": "04",
+          "costYen": 200,
+          "winProbability": 0.009789902100978989,
+          "placeProbability": 0.039889042916626705,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.039889042916626705,
+          "aiExpectedMultiplierLow": 0.46867713864978106,
+          "aiExpectedMultiplierHigh": 0.5664052937955165,
+          "marketProbability": 0.04418077595676288,
+          "marketExpectedMultiplierLow": 0.5289703278702886,
+          "marketExpectedMultiplierHigh": 0.6372132289643577,
+          "profitYen": -200
+        },
+        {
+          "outcome": "05",
+          "costYen": 200,
+          "winProbability": 0.0032599674003259966,
+          "placeProbability": 0.013369799634651713,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.013369799634651713,
+          "aiExpectedMultiplierLow": 0.4132197711294888,
+          "aiExpectedMultiplierHigh": 0.5188411882432373,
+          "marketProbability": 0.017600482075482822,
+          "marketExpectedMultiplierLow": 0.5537443145755713,
+          "marketExpectedMultiplierHigh": 0.6927881229718855,
+          "profitYen": -200
+        },
+        {
+          "outcome": "06",
+          "costYen": 200,
+          "winProbability": 0.031869681303186966,
+          "placeProbability": 0.12688505841053782,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.12688505841053782,
+          "aiExpectedMultiplierLow": 0.6156097329726897,
+          "aiExpectedMultiplierHigh": 0.7932488147474427,
+          "marketProbability": 0.12669677837845894,
+          "marketExpectedMultiplierLow": 0.6243872010812261,
+          "marketExpectedMultiplierHigh": 0.8017626908110687,
+          "profitYen": -200
+        },
+        {
+          "outcome": "07",
+          "costYen": 200,
+          "winProbability": 0.3157568424315757,
+          "placeProbability": 0.7699405101141317,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.7699405101141317,
+          "aiExpectedMultiplierLow": 0.8882360433511063,
+          "aiExpectedMultiplierHigh": 1.0422241453739325,
+          "marketProbability": 0.7378380572359047,
+          "marketExpectedMultiplierLow": 0.8389953343415428,
+          "marketExpectedMultiplierHigh": 0.9865629457887237,
+          "profitYen": -200
+        },
+        {
+          "outcome": "08",
+          "costYen": 200,
+          "winProbability": 0.0021299787002129976,
+          "placeProbability": 0.008745241399383078,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.008745241399383078,
+          "aiExpectedMultiplierLow": 0.3290646985432157,
+          "aiExpectedMultiplierHigh": 0.40471103664787933,
+          "marketProbability": 0.013893250271369456,
+          "marketExpectedMultiplierLow": 0.5326020151729891,
+          "marketExpectedMultiplierHigh": 0.6527786300203349,
+          "profitYen": -200
+        },
+        {
+          "outcome": "09",
+          "costYen": 200,
+          "winProbability": 0.011369886301136988,
+          "placeProbability": 0.04625260589482187,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.04625260589482187,
+          "aiExpectedMultiplierLow": 0.5230599746628958,
+          "aiExpectedMultiplierHigh": 0.6386914893999505,
+          "marketProbability": 0.04653613856240143,
+          "marketExpectedMultiplierLow": 0.5357444156872042,
+          "marketExpectedMultiplierHigh": 0.6520847620932078,
+          "profitYen": -200
+        },
+        {
+          "outcome": "10",
+          "costYen": 200,
+          "winProbability": 0.014849851501484986,
+          "placeProbability": 0.060194748574362154,
+          "hit": true,
+          "payoutYen": 880,
+          "aiProbability": 0.060194748574362154,
+          "aiExpectedMultiplierLow": 0.4994583817208026,
+          "aiExpectedMultiplierHigh": 0.622857616298245,
+          "marketProbability": 0.06659206085340093,
+          "marketExpectedMultiplierLow": 0.5626901521335024,
+          "marketExpectedMultiplierHigh": 0.6992038768829743,
+          "profitYen": 680
+        },
+        {
+          "outcome": "11",
+          "costYen": 200,
+          "winProbability": 0.06373936260637393,
+          "placeProbability": 0.24468154482438437,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.24468154482438437,
+          "aiExpectedMultiplierLow": 0.6128284621011864,
+          "aiExpectedMultiplierHigh": 0.8085736979606939,
+          "marketProbability": 0.2812569964570307,
+          "marketExpectedMultiplierLow": 0.7197375459255853,
+          "marketExpectedMultiplierHigh": 0.9447431430912099,
+          "profitYen": -200
+        },
+        {
+          "outcome": "12",
+          "costYen": 200,
+          "winProbability": 0.007219927800721992,
+          "placeProbability": 0.02949384879267945,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.02949384879267945,
+          "aiExpectedMultiplierLow": 0.5238349443736012,
+          "aiExpectedMultiplierHigh": 0.644759724423587,
+          "marketProbability": 0.029749392789432283,
+          "marketExpectedMultiplierLow": 0.5378086157498033,
+          "marketExpectedMultiplierHigh": 0.6597811261864757,
+          "profitYen": -200
+        },
+        {
+          "outcome": "13",
+          "costYen": 200,
+          "winProbability": 0.047809521904780945,
+          "placeProbability": 0.1869970171254803,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.1869970171254803,
+          "aiExpectedMultiplierLow": 0.85553999701742,
+          "aiExpectedMultiplierHigh": 1.1173358209930924,
+          "marketProbability": 0.13878694597682545,
+          "marketExpectedMultiplierLow": 0.6391301554594445,
+          "marketExpectedMultiplierHigh": 0.8334318798270002,
+          "profitYen": -200
+        },
+        {
+          "outcome": "14",
+          "costYen": 200,
+          "winProbability": 0.0058399416005839935,
+          "placeProbability": 0.02388946984476793,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.02388946984476793,
+          "aiExpectedMultiplierLow": 0.4520856539080329,
+          "aiExpectedMultiplierHigh": 0.5440601128103895,
+          "marketProbability": 0.026897621322601054,
+          "marketExpectedMultiplierLow": 0.5186961770178348,
+          "marketExpectedMultiplierHigh": 0.6222520191098488,
+          "profitYen": -200
+        },
+        {
+          "outcome": "15",
+          "costYen": 200,
+          "winProbability": 0.005779942200577993,
+          "placeProbability": 0.023645445737170874,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.023645445737170874,
+          "aiExpectedMultiplierLow": 0.4167348342948213,
+          "aiExpectedMultiplierHigh": 0.505405255809212,
+          "marketProbability": 0.02923479994061477,
+          "marketExpectedMultiplierLow": 0.525186119738705,
+          "marketExpectedMultiplierHigh": 0.6348166195160103,
+          "profitYen": -200
+        },
+        {
+          "outcome": "16",
+          "costYen": 200,
+          "winProbability": 0.011939880601193987,
+          "placeProbability": 0.04854320125267442,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.04854320125267442,
+          "aiExpectedMultiplierLow": 0.45762237782487647,
+          "aiExpectedMultiplierHigh": 0.5644174205807602,
+          "marketProbability": 0.0573716581724519,
+          "marketExpectedMultiplierLow": 0.5512049770656202,
+          "marketExpectedMultiplierHigh": 0.6774226250450144,
+          "profitYen": -200
+        },
+        {
+          "outcome": "17",
+          "costYen": 200,
+          "winProbability": 0.07610923890761091,
+          "placeProbability": 0.28774786592317464,
+          "hit": true,
+          "payoutYen": 1400,
+          "aiProbability": 0.28774786592317464,
+          "aiExpectedMultiplierLow": 0.65010120521969,
+          "aiExpectedMultiplierHigh": 0.8515247113659121,
+          "marketProbability": 0.2940285494184601,
+          "marketExpectedMultiplierLow": 0.6756241219475372,
+          "marketExpectedMultiplierHigh": 0.8814441065404592,
+          "profitYen": 1200
+        }
       ]
     },
     {
