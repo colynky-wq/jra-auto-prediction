@@ -39,15 +39,16 @@ Only for chaos levels 4-5:
 - keep v1 conservative expected-multiplier gate `>= 1.10`;
 - keep maximum two Wide tickets;
 - obtain the formal horse Top3 from the frozen `live_10min` Win sidecar;
-- among all Wide pairs that already pass the frozen v1 gates, choose the two-ticket set that covers the largest number of distinct formal Top3 horses;
+- require **every selected Wide ticket to contain at least one formal T-10 Top3 horse**;
+- among the Wide pairs that satisfy that membership rule and the frozen v1 gates, choose the two-ticket set that covers the largest number of distinct formal Top3 horses;
 - after Top3 coverage, break ties using the existing practical-rank / practical-score / probability information;
 - keep the v1 Trio gate unchanged.
 
-If valid formal T-10 Top3 evidence is missing, fail closed and hold the Top3 challenger.
+If valid formal T-10 Top3 evidence is missing, or no qualifying Wide pair contains a formal Top3 horse, fail closed and hold the Top3 challenger.
 
 ### `combined`
 
-Apply both high-chaos changes at once: grade A only + Top3-coverage Wide selection.
+Apply both high-chaos changes at once: grade A only + strict Top3-membership/coverage Wide selection.
 
 ## Evidence / leakage policy
 
