@@ -10,6 +10,9 @@ on:
       - 'production/test_early_all_bet_recommendation.py'
       - 'production/wide_axis_shadow.py'
       - 'production/test_wide_axis_rules.py'
+      - 'production/portfolio_shadow_v2.py'
+      - 'production/test_portfolio_shadow_v2.py'
+      - 'production/PORTFOLIO_SHADOW_V2.md'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -31,6 +34,9 @@ on:
       - 'production/test_early_all_bet_recommendation.py'
       - 'production/wide_axis_shadow.py'
       - 'production/test_wide_axis_rules.py'
+      - 'production/portfolio_shadow_v2.py'
+      - 'production/test_portfolio_shadow_v2.py'
+      - 'production/PORTFOLIO_SHADOW_V2.md'
       - 'production/*win5*.py'
       - 'production/jra_entry_source.py'
       - 'production/live_monitor_topk.py'
@@ -58,6 +64,7 @@ jobs:
           python production/test_bet_research_data.py
           python -m unittest discover -s production -p 'test_cross_bet_recommendation.py'
           python -m unittest discover -s production -p 'test_early_all_bet_recommendation.py'
+          python production/test_portfolio_shadow_v2.py
           python -m unittest discover -s production -p 'test_win5*.py'
           python -m unittest discover -s production -p test_live_bundle_publisher.py
       - name: Check existing Triple and entry observations still pass
