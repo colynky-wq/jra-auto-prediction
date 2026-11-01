@@ -8,21 +8,21 @@
   "interpretation": "One-day or small-sample results are descriptive only; do not promote a Same-Day Shadow challenger into Formal A from this report alone.",
   "eligibility": "Formal live_10min target races with >=1 strictly earlier completed same-day, same-venue, same-surface race using V2 evidence.",
   "overall": {
-    "races": 12,
+    "races": 13,
     "formalTop1Hits": 3,
     "shadowTop1Hits": 3,
-    "formalTop3Hits": 11,
-    "shadowTop3Hits": 11,
-    "formalTop1Rate": 0.25,
-    "shadowTop1Rate": 0.25,
-    "formalTop3Rate": 0.9167,
-    "shadowTop3Rate": 0.9167,
-    "formalMeanWinnerRank": 2.25,
-    "shadowMeanWinnerRank": 2.25,
+    "formalTop3Hits": 12,
+    "shadowTop3Hits": 12,
+    "formalTop1Rate": 0.2308,
+    "shadowTop1Rate": 0.2308,
+    "formalTop3Rate": 0.9231,
+    "shadowTop3Rate": 0.9231,
+    "formalMeanWinnerRank": 2.3077,
+    "shadowMeanWinnerRank": 2.3077,
     "meanWinnerRankDeltaShadowMinusFormal": 0.0,
     "shadowImprovedWinnerRank": 0,
     "shadowWorsenedWinnerRank": 0,
-    "shadowUnchangedWinnerRank": 12
+    "shadowUnchangedWinnerRank": 13
   },
   "byVenueSurface": {
     "京都|ダート": {
@@ -43,21 +43,21 @@
       "shadowUnchangedWinnerRank": 4
     },
     "京都|芝": {
-      "races": 1,
+      "races": 2,
       "formalTop1Hits": 1,
       "shadowTop1Hits": 1,
-      "formalTop3Hits": 1,
-      "shadowTop3Hits": 1,
-      "formalTop1Rate": 1.0,
-      "shadowTop1Rate": 1.0,
+      "formalTop3Hits": 2,
+      "shadowTop3Hits": 2,
+      "formalTop1Rate": 0.5,
+      "shadowTop1Rate": 0.5,
       "formalTop3Rate": 1.0,
       "shadowTop3Rate": 1.0,
-      "formalMeanWinnerRank": 1.0,
-      "shadowMeanWinnerRank": 1.0,
+      "formalMeanWinnerRank": 2.0,
+      "shadowMeanWinnerRank": 2.0,
       "meanWinnerRankDeltaShadowMinusFormal": 0.0,
       "shadowImprovedWinnerRank": 0,
       "shadowWorsenedWinnerRank": 0,
-      "shadowUnchangedWinnerRank": 1
+      "shadowUnchangedWinnerRank": 2
     },
     "東京|ダート": {
       "races": 2,
@@ -95,7 +95,7 @@
     }
   },
   "skipped": {
-    "missing_race_or_result": 2,
+    "missing_race_or_result": 1,
     "no_prior_same_surface_race": 4
   },
   "races": [
@@ -219,6 +219,31 @@
       "runningStyleBiasLabel": "front_positive",
       "closingSpeedBiasLabel": "fast_last3_rewarded",
       "paceShapeLabel": "early_faster_than_late",
+      "formalTop1Hit": false,
+      "shadowTop1Hit": false,
+      "formalTop3Hit": true,
+      "shadowTop3Hit": true
+    },
+    {
+      "raceID": "202608041110",
+      "venue": "京都",
+      "raceNumber": 10,
+      "startTime": "14:45",
+      "raceName": "古都S",
+      "course": "芝3000m",
+      "surface": "芝",
+      "challengerVersion": "same_day_track_bias_v2_1",
+      "winnerNumber": 1,
+      "formalWinnerRank": 3,
+      "shadowWinnerRank": 3,
+      "winnerRankDeltaShadowMinusFormal": 0,
+      "completedPriorSameSurfaceRaces": 2,
+      "detailPriorRaceCount": 2,
+      "drawGateEnabled": false,
+      "styleGateEnabled": false,
+      "runningStyleBiasLabel": "front_positive",
+      "closingSpeedBiasLabel": "fast_last3_rewarded",
+      "paceShapeLabel": "late_faster_than_early",
       "formalTop1Hit": false,
       "shadowTop1Hit": false,
       "formalTop3Hit": true,
