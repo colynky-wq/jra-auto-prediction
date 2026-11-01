@@ -21,6 +21,7 @@ on:
       - 'production/portfolio_early_review.py'
       - 'production/test_portfolio_early_review.py'
       - 'production/PORTFOLIO_SHADOW_V1.md'
+      - 'production/PORTFOLIO_SHADOW_V2.md'
       - '.github/workflows/keibaai-portfolio-research.yml'
   schedule:
     # 08:25 JST on Sat/Sun/Mon = 23:25 UTC on Fri/Sat/Sun.
@@ -29,6 +30,9 @@ on:
     - cron: '25 23 * * 0,5,6'
     # 17:45 JST. Result sync normally finishes by about 17:15 JST.
     - cron: '45 8 * * *'
+    # 18:15 JST. Bounded late-result reconciliation after the final race so that
+    # delayed ResultData/payout writes are reflected in v1/v2 research outputs.
+    - cron: '15 9 * * *'
 
 permissions:
   contents: write
