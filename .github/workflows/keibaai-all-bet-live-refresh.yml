@@ -1,0 +1,87 @@
+name: KeibaAI All Bet Live Recommendation Refresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'RaceData.json'
+      - 'SignalData.json'
+      - 'reports/**/all_bet_v1/**'
+      - 'reports/**/triple_v1/**'
+      - 'reports/**/wide_odds/**'
+      - 'production/all_bet_recommendation_shadow.py'
+      - 'production/cross_bet_recommendation.py'
+      - 'production/test_all_bet_recommendation_shadow.py'
+      - '.github/workflows/keibaai-all-bet-live-refresh.yml'
+  schedule:
+    - cron: '*/5 0-8 * * 0,1,6'  # 09:00-17:59 JST on Sat/Sun/Mon
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-all-bet-live-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Verify recommendation selector
+        run: |
+          python -m py_compile production/all_bet_recommendation_shadow.py production/cross_bet_recommendation.py
+          python production/test_all_bet_recommendation_shadow.py
+
+      - name: Refresh live recommendation display and publish when changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+
+            python production/all_bet_recommendation_shadow.py
+
+            day=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          value=json.loads(Path('AllBetRecommendationData.json').read_text(encoding='utf-8'))
+          print(str(value['raceDate']).replace('-',''))
+          PY
+            )
+            dated="reports/${day}/AllBetRecommendationData.json"
+
+            if [ -z "$(git status --porcelain -- AllBetRecommendationData.json "$dated")" ]; then
+              echo 'No live all-bet recommendation change.'
+              exit 0
+            fi
+
+            git add -f AllBetRecommendationData.json "$dated"
+            git commit -m 'Refresh KeibaAI live all-bet recommendations'
+
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+
+            echo "Concurrent main update detected; rebuilding from latest main (attempt ${attempt}/4)."
+            sleep $((attempt * 2))
+          done
+
+          echo 'Unable to publish live all-bet recommendations after bounded retries.' >&2
+          exit 1
