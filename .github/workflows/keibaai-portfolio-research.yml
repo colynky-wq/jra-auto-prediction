@@ -10,6 +10,8 @@ on:
       - 'production/test_bet_research_data.py'
       - 'production/portfolio_shadow.py'
       - 'production/test_portfolio_shadow.py'
+      - 'production/portfolio_shadow_v2.py'
+      - 'production/test_portfolio_shadow_v2.py'
       - 'production/all_bet_recommendation_shadow.py'
       - 'production/test_all_bet_recommendation_shadow.py'
       - 'production/formal_10min_evidence.py'
@@ -58,9 +60,10 @@ jobs:
 
       - name: Verify fixed shadow rules and review contracts
         run: |
-          python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
+          python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/portfolio_shadow_v2.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
           python production/test_bet_research_data.py
           python production/test_portfolio_shadow.py
+          python production/test_portfolio_shadow_v2.py
           python production/test_all_bet_recommendation_shadow.py
           python production/test_formal_10min_evidence.py
           python production/test_portfolio_review_100.py
@@ -72,6 +75,7 @@ jobs:
       - name: Build portfolio research projection
         run: |
           python production/portfolio_shadow.py
+          python production/portfolio_shadow_v2.py
           python production/all_bet_recommendation_shadow.py
 
       - name: Build formal prospective 100-race review projection
@@ -87,7 +91,7 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
-          git add BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json reports/*/BetResearchData.json reports/*/PortfolioResearchData.json reports/*/AllBetRecommendationData.json 2>/dev/null || true
+          git add BetResearchData.json PortfolioResearchData.json PortfolioShadowV2.json AllBetRecommendationData.json reports/*/BetResearchData.json reports/*/PortfolioResearchData.json reports/*/PortfolioShadowV2.json reports/*/AllBetRecommendationData.json 2>/dev/null || true
           git add -f PortfolioReview100.json PortfolioEarlyReview100.json 2>/dev/null || true
           for path in reports/*/PortfolioReview100.json; do
             [ -e "$path" ] || continue
