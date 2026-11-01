@@ -2,13 +2,15 @@
 
 This module never changes predictions, sizes stakes, or enables a formal
 recommendation. It compares saved real-odds research across nine ordinary pool
-families.  When immutable source records exist, the selector inspects ALL saved
+families. When immutable source records exist, the selector inspects ALL saved
 outcomes through cross_bet_recommendation instead of only the three candidates
-shown in the app reference list.  Wide remains the frozen Wide-rule candidate
-set. WIN5 stays separate because it has a common five-race deadline.
+shown in the app reference list. For prospective formal snapshots captured from
+the chaos-priority revision onward, high-chaos races expand Wide exploration to
+all live-odds-connected horse pairs in SignalData. WIN5 stays separate because
+it has a common five-race deadline.
 
-The rules are frozen before the prospective start date. Any later tuning must
-use a new VERSION so forward results are not used to rewrite the rules.
+The probability/EV gates remain preregistered. The chaos-priority revision is
+prospective only: older formal snapshots are never reclassified by this module.
 """
 from __future__ import annotations
 
@@ -22,8 +24,10 @@ from typing import Any
 import cross_bet_recommendation as cross
 
 JST = timezone(timedelta(hours=9))
-VERSION = "all-bet-recommendation-shadow-v2-20261023"
+VERSION = "all-bet-recommendation-shadow-v3-20261101"
 PROSPECTIVE_START = "2026-10-24"
+WIDE_CHAOS_PRIORITY_EFFECTIVE_AT = "2026-11-01T13:20:00+09:00"
+WIDE_CHAOS_MIN_LEVEL = 4
 BET_TYPES = cross.BET_TYPES
 LABELS = cross.BET_LABELS
 # Preregistered research gates. These are conservative display gates, not claims
@@ -181,17 +185,90 @@ def best_for_pool(kind: str, row: dict[str, Any] | None) -> dict[str, Any] | Non
     return _best(kind, list(row.get("candidates") or []))
 
 
+def _captured_at(race: dict[str, Any]) -> datetime | None:
+    value = race.get("capturedAtJST")
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=JST)
+    return parsed.astimezone(JST)
+
+
+def _wide_chaos_priority_applies(race: dict[str, Any], signal: dict[str, Any] | None) -> bool:
+    chaos = (signal or {}).get("chaos") or {}
+    level = chaos.get("level")
+    if not isinstance(level, int) or level < WIDE_CHAOS_MIN_LEVEL:
+        return False
+    captured = _captured_at(race)
+    if captured is None:
+        # Missing capture time must never backfill the new rule into historical
+        # snapshots. It can still use the previously frozen Wide candidates.
+        return False
+    effective = datetime.fromisoformat(WIDE_CHAOS_PRIORITY_EFFECTIVE_AT)
+    return captured >= effective
+
+
+def _wide_candidates_from_signal(signal: dict[str, Any] | None) -> list[dict[str, Any]]:
+    evaluation = (signal or {}).get("wideEvaluation") or {}
+    if evaluation.get("oddsConnected") is not True:
+        return []
+    out = []
+    seen = set()
+    for pair in evaluation.get("validationPairs") or []:
+        p = finite(pair.get("aiWideProbability"))
+        low = finite(pair.get("wideOddsLow"))
+        high = finite(pair.get("wideOddsHigh"))
+        if p is None or low is None or high is None or not (0 < p <= 100 and 1 <= low <= high):
+            continue
+        try:
+            n1, n2 = sorted((int(pair["number1"]), int(pair["number2"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+        key = f"{n1:02}{n2:02}"
+        if key in seen:
+            raise ValueError("duplicate Wide pair in SignalData validationPairs")
+        seen.add(key)
+        names = {
+            int(pair.get("number1") or 0): str(pair.get("name1") or ""),
+            int(pair.get("number2") or 0): str(pair.get("name2") or ""),
+        }
+        label = f"{n1}番 {names.get(n1, '')} − {n2}番 {names.get(n2, '')}"
+        out.append(cross._row(
+            "wide", key, label, p / 100.0, None, low, high,
+            sourceScope="chaos_priority_all_live_wide_pairs",
+        ))
+    return out
+
+
+def _apply_wide_chaos_priority(race: dict[str, Any], signal: dict[str, Any] | None,
+                               candidates: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], bool, int]:
+    if not _wide_chaos_priority_applies(race, signal):
+        return candidates, False, 0
+    expanded = _wide_candidates_from_signal(signal)
+    if not expanded:
+        return candidates, False, 0
+    # Replace only the Wide pool. Other immutable bet-type records are unchanged.
+    kept = [c for c in candidates if c.get("betType") != "wide"]
+    return kept + expanded, True, len(expanded)
+
+
 def build_race(race: dict[str, Any], bets: dict[tuple[str, str], dict[str, Any]],
                signal: dict[str, Any] | None, full_candidates: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     rid = str(race.get("raceID") or "")
     if not rid:
         raise ValueError("raceID is required")
+    source_candidates = list(full_candidates or [])
+    source_candidates, wide_priority, wide_pairs_scanned = _apply_wide_chaos_priority(
+        race, signal, source_candidates)
     by_kind: dict[str, list[dict[str, Any]]] = {kind: [] for kind in BET_TYPES}
-    if full_candidates is not None:
-        for candidate in full_candidates:
-            kind = candidate.get("betType")
-            if kind in by_kind:
-                by_kind[kind].append(candidate)
+    for candidate in source_candidates:
+        kind = candidate.get("betType")
+        if kind in by_kind:
+            by_kind[kind].append(candidate)
 
     coverage = []
     candidates = []
@@ -202,13 +279,17 @@ def build_race(race: dict[str, Any], bets: dict[tuple[str, str], dict[str, Any]]
         pool = by_kind[kind]
         best = _best(kind, pool) if pool else best_for_pool(kind, row)
         has_real_odds = bool(pool) or bool(row and row.get("status") in READY_STATUSES and row.get("candidates"))
+        if kind == "wide" and wide_priority:
+            scope = "chaos_priority_all_live_wide_pairs"
+        else:
+            scope = "all_saved_outcomes" if pool else "display_candidates_or_none"
         coverage.append({
             "betType": kind,
             "label": LABELS[kind],
             "sourceStatus": state,
             "realOddsAvailable": has_real_odds,
             "qualifyingCandidate": best is not None,
-            "candidateScope": "all_saved_outcomes" if pool else "display_candidates_or_none",
+            "candidateScope": scope,
         })
         if state in PENDING_STATUSES or row is None:
             pending.append(kind)
@@ -250,6 +331,8 @@ def build_race(race: dict[str, Any], bets: dict[tuple[str, str], dict[str, Any]]
         "reason": reason,
         "battleGrade": grade,
         "chaosLevel": chaos.get("level") if isinstance(chaos.get("level"), int) else None,
+        "wideChaosPriorityApplied": wide_priority,
+        "wideChaosPairsScanned": wide_pairs_scanned,
         "bestBet": top[0] if status == "candidate" and top else None,
         "betRecommendations": top if status == "candidate" else [],
         "qualifyingPoolCount": len(candidates),
@@ -298,12 +381,26 @@ def build(root: Path) -> dict[str, Any]:
         "generatedAtJST": datetime.now(JST).isoformat(timespec="seconds"),
         "prospectiveStartDate": PROSPECTIVE_START,
         "rulesFrozenAtJST": "2026-10-23",
+        "wideChaosPriority": {
+            "enabled": True,
+            "effectiveAtJST": WIDE_CHAOS_PRIORITY_EFFECTIVE_AT,
+            "minChaosLevel": WIDE_CHAOS_MIN_LEVEL,
+            "scanScope": "all live-odds-connected SignalData wideEvaluation.validationPairs",
+            "minProbabilityPct": RULES["wide"]["minProbabilityPct"],
+            "minExpectedMultiplier": RULES["wide"]["minExpectedMultiplier"],
+            "battleGradeGateUnchanged": True,
+            "historicalBackfill": False,
+        },
         "formalRecommendationsEnabled": False,
         "autoBetEnabled": False,
         "stakeSizingEnabled": False,
         "ordinaryBetTypes": [{"id": k, "label": LABELS[k], **RULES[k]} for k in BET_TYPES],
         "win5Policy": "WIN5は5対象レース共通締切の別研究として扱い、1レース単位の9券種横断順位には混ぜない。",
-        "candidateScope": "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。ワイドは事前固定したワイド研究候補を使用。",
+        "candidateScope": (
+            "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。"
+            "ワイドは通常は事前固定候補を使い、改定後の正式スナップショットで荒れ度4以上なら"
+            "SignalDataの実オッズ接続済み全ペアを優先探索する。"
+        ),
         "scoreMeaning": "researchScore = 表示確率 × 保守的期待値超過分 ÷ 券種リスク係数。研究上の並び順であり利益予測ではない。",
         "counts": counts,
         "races": built,
