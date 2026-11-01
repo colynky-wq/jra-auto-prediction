@@ -1,10 +1,11 @@
 """KeibaAI portfolio shadow V2 challengers (research only).
 
-V1 remains frozen.  V2 starts prospective scoring on 2026-11-02 and keeps
+V1 remains frozen. V2 starts prospective scoring on 2026-11-02 and keeps
 three independent high-chaos challengers:
 - battle_a_only: grade A only, frozen V1 ticket ranking
-- top3_coverage: grades A/S, Wide set maximizes formal T-10 Top3 coverage
-- combined: grade A only + Top3 coverage
+- top3_coverage: grades A/S, every Wide leg contains formal T-10 Top3 and the
+  selected set maximizes distinct Top3 coverage
+- combined: grade A only + strict Top3 membership/coverage
 
 Selection is based only on saved pre-race probability/odds/signal evidence.
 Settlement fields are attached after the ticket set has been selected.
@@ -197,11 +198,17 @@ def choose_wides_top3(
     min_ev: float,
     limit: int = 2,
 ) -> list[dict[str, Any]]:
-    items = eligible_wides(signal, min_probability, min_ev)
+    """Choose only Wide legs containing formal Top3, then maximize distinct coverage."""
+    top = set(top3)
+    if not top or limit <= 0:
+        return []
+    items = [
+        item for item in eligible_wides(signal, min_probability, min_ev)
+        if set(item[1].get("numbers") or []) & top
+    ]
     if not items:
         return []
     size = min(limit, len(items))
-    top = set(top3)
     best_key: tuple[Any, ...] | None = None
     best: list[dict[str, Any]] | None = None
     for combo in combinations(items, size):
@@ -442,6 +449,8 @@ def build_challenger_plan(
             signal, HIGH_CHAOS_WIDE_MIN_PROB_PCT, HIGH_CHAOS_WIDE_MIN_EV, limit=2
         )
     if not wides:
+        if needs_top3:
+            return skipped("V2 challenger: 正式Top3を含み、確率・期待値条件も満たすワイドがないため保留します")
         return skipped("混戦向けワイドの確率・期待値条件を満たしません")
 
     trio = choose_candidate_pre(trio_row, TRIO_MIN_PROB_PCT, TRIO_MIN_EV)
@@ -451,13 +460,15 @@ def build_challenger_plan(
         return finalize(
             "wide_plus_trio",
             "ワイド＋3連複",
-            "V2高混戦比較：ワイド2点以内＋v1据え置き3連複ゲート",
+            "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内＋v1据え置き3連複ゲート" if needs_top3
+            else "V2高混戦比較：ワイド2点以内＋v1据え置き3連複ゲート",
             pre_legs,
         )
     return finalize(
         "wide_focus",
         "ワイド中心",
-        "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+        "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達" if needs_top3
+        else "V2高混戦比較：ワイド2点以内。3連複条件は未達",
         pre_legs,
     )
 
@@ -566,8 +577,8 @@ def build(root: Path) -> dict[str, Any]:
         ),
         "variantDefinitions": {
             "battle_a_only": "高混戦だけSを保留しAのみ。券種選択はv1据え置き。",
-            "top3_coverage": "高混戦A/Sで正式10分前Top3の被覆数を最大化するワイド2点以内。",
-            "combined": "高混戦Aのみ＋正式10分前Top3被覆ワイド。",
+            "top3_coverage": "高混戦A/Sで各ワイドに正式10分前Top3を最低1頭必須化し、2点以内でTop3被覆数を最大化。",
+            "combined": "高混戦Aのみ＋各ワイドに正式10分前Top3必須の被覆ワイド。",
         },
         "unchangedThresholds": {
             "highChaosWideMinProbabilityPct": HIGH_CHAOS_WIDE_MIN_PROB_PCT,
@@ -577,7 +588,7 @@ def build(root: Path) -> dict[str, Any]:
         },
         "variants": variants,
         "warnings": warnings,
-        "meaning": "v1を変更せず、S分離とTop3ワイド被覆を独立に前向き比較するV2 shadow。",
+        "meaning": "v1を変更せず、S分離と厳格Top3ワイド被覆を独立に前向き比較するV2 shadow。",
     }
 
 

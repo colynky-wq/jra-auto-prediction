@@ -39,15 +39,18 @@ Only for chaos levels 4-5:
 - keep v1 conservative expected-multiplier gate `>= 1.10`;
 - keep maximum two Wide tickets;
 - obtain the formal horse Top3 from the frozen `live_10min` Win sidecar;
-- among all Wide pairs that already pass the frozen v1 gates, choose the two-ticket set that covers the largest number of distinct formal Top3 horses;
+- **every selected Wide ticket must contain at least one horse from that formal Top3**;
+- discard any Wide pair that passes probability/EV gates but contains no formal-Top3 horse;
+- among the remaining eligible pairs, choose up to two tickets that cover the largest number of distinct formal Top3 horses;
+- if only one eligible Top3-containing Wide pair exists, select only that one rather than padding with an off-Top3 pair;
 - after Top3 coverage, break ties using the existing practical-rank / practical-score / probability information;
 - keep the v1 Trio gate unchanged.
 
-If valid formal T-10 Top3 evidence is missing, fail closed and hold the Top3 challenger.
+If valid formal T-10 Top3 evidence is missing, or no Wide pair both contains a formal-Top3 horse and passes the frozen v1 probability/EV gates, fail closed and hold the Top3 challenger.
 
 ### `combined`
 
-Apply both high-chaos changes at once: grade A only + Top3-coverage Wide selection.
+Apply both high-chaos changes at once: grade A only + strict Top3-membership/coverage Wide selection.
 
 ## Evidence / leakage policy
 
@@ -57,7 +60,7 @@ Selection may read only pre-race saved inputs:
 - `BetResearchData.json`;
 - `reports/YYYYMMDD/all_bet_v1/win/<raceID>.json` formal T-10 sidecar.
 
-Finish position, hit flags, payout, return and profit are forbidden from ticket selection. They may be attached only afterward for evaluation.
+Finish position, hit flags, payout, return and profit are forbidden from ticket selection. They may be attached only afterward for evaluation. The implementation keeps pre-race ticket objects separate from settlement fields until selection is complete.
 
 The 2026-11-01 replay is diagnostic only because V2 was defined after those races completed. No replay result can be counted toward V2 forward performance.
 
@@ -70,6 +73,7 @@ Keep all three challengers running in parallel. Do not promote a challenger from
 - hit and profitable-race counts;
 - stake, return and return index;
 - high-chaos A vs S behavior;
-- formal-Top3 coverage of selected Wide sets.
+- formal-Top3 coverage of selected Wide sets;
+- how often strict Top3 membership causes a hold or reduces two Wide tickets to one.
 
 The existing v1 remains the control and continues its original forward cohort. Threshold changes, if later justified, require another version rather than editing v1 or v2 in place.

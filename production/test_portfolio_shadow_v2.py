@@ -86,8 +86,8 @@ with TemporaryDirectory() as td:
     }, ensure_ascii=False), encoding="utf-8")
     assert m.formal_top3(p, "R") == [2, 3, 1]
 
-# Practical ordering would take 1-2 and 4-5; Top3 coverage must instead take
-# 1-2 and 1-3 to cover all of formal Top3 {1,2,3}.
+# Practical ordering would take 1-2 and 4-5; strict Top3 membership removes
+# 4-5, then coverage chooses 1-2 and 1-3 to cover all Top3 {1,2,3}.
 pairs = [
     wp(1, 2, rank=1, score=9),
     wp(4, 5, rank=2, score=8),
@@ -95,6 +95,24 @@ pairs = [
 ]
 chosen = m.choose_wides_top3(sig(pairs=pairs), [1, 2, 3], 5.0, 1.10, 2)
 assert {x["candidateID"] for x in chosen} == {"0102", "0103"}
+assert all(set(x["numbers"]) & {1, 2, 3} for x in chosen)
+
+# Strict membership is fail-closed: even excellent Wide candidates are rejected
+# when neither horse belongs to the frozen formal Top3.
+off_top3 = [
+    wp(4, 5, p=20.0, ev=2.0, rank=1, score=99),
+    wp(6, 7, p=18.0, ev=1.8, rank=2, score=90),
+]
+assert m.choose_wides_top3(sig(pairs=off_top3), [1, 2, 3], 5.0, 1.10, 2) == []
+
+# If only one qualifying Top3-containing pair exists, keep one ticket rather than
+# padding the set with an off-Top3 ticket just to reach the two-ticket limit.
+mixed = [
+    wp(1, 4, rank=5, score=3),
+    wp(5, 6, p=30.0, ev=3.0, rank=1, score=100),
+]
+chosen = m.choose_wides_top3(sig(pairs=mixed), [1, 2, 3], 5.0, 1.10, 2)
+assert [x["candidateID"] for x in chosen] == ["0104"]
 
 # Regression: horse 10 must never be inferred from string "0104".
 metrics = m.top3_metrics([
@@ -118,6 +136,13 @@ assert combined["planType"] == "skip"
 missing = m.build_challenger_plan("top3_coverage", "R", "2026-11-02", rows, sig(5, "A", pairs), wide_results, None)
 assert missing["planType"] == "skip"
 assert "fail-closed" in missing["reason"]
+
+# If all value-qualified Wide pairs are off Top3, the whole Top3 challenger holds.
+strict_hold = m.build_challenger_plan(
+    "top3_coverage", "R", "2026-11-02", rows, sig(5, "A", off_top3), wide_results, [1, 2, 3]
+)
+assert strict_hold["planType"] == "skip"
+assert "正式Top3を含み" in strict_hold["reason"]
 
 # Dates through 2026-11-01 are replay-only; 11/02 starts prospective evidence.
 pre_day = m.build_challenger_plan("battle_a_only", "R", "2026-11-01", rows, sig(5, "A", pairs), wide_results, [1, 2, 3])
