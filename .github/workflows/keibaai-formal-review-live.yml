@@ -10,6 +10,9 @@ on:
       - 'production/portfolio_review_100.py'
       - 'production/portfolio_review_100_diagnostics.py'
       - 'production/refresh_portfolio_review_live.py'
+      - 'production/portfolio_shadow_v2.py'
+      - 'production/test_portfolio_shadow_v2.py'
+      - 'production/PORTFOLIO_SHADOW_V2.md'
       - 'production/test_formal_10min_evidence.py'
       - 'production/test_portfolio_review_100.py'
       - 'production/test_portfolio_review_100_diagnostics.py'
@@ -43,15 +46,17 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Verify strict formal review refresh and frozen 100R diagnostics
+      - name: Verify strict formal review refresh, v2 shadow, and frozen 100R diagnostics
         run: |
-          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_review_100_diagnostics.py production/refresh_portfolio_review_live.py
+          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_review_100_diagnostics.py production/refresh_portfolio_review_live.py production/portfolio_shadow.py production/portfolio_shadow_v2.py
           python production/test_formal_10min_evidence.py
           python production/test_portfolio_review_100.py
           python production/test_portfolio_review_100_diagnostics.py
           python production/test_refresh_portfolio_review_live.py
+          python production/test_portfolio_shadow.py
+          python production/test_portfolio_shadow_v2.py
 
-      - name: Refresh review and publish material 100R diagnostics
+      - name: Refresh review, freeze v2 shadow, and publish material diagnostics
         shell: bash
         run: |
           set -euo pipefail
@@ -64,20 +69,25 @@ jobs:
 
             python production/refresh_portfolio_review_live.py
             python production/portfolio_review_100_diagnostics.py
+            python production/portfolio_shadow_v2.py
 
-            if [ -z "$(git status --porcelain -- PortfolioReview100.json PortfolioReview100Diagnostics.json PortfolioReview100Diagnostics.md)" ]; then
-              echo 'No material formal T-10 review or frozen 100R diagnostic change.'
+            if [ -z "$(git status --porcelain -- PortfolioReview100.json PortfolioReview100Diagnostics.json PortfolioReview100Diagnostics.md PortfolioShadowV2.json reports/*/PortfolioShadowV2.json)" ]; then
+              echo 'No material formal T-10 review, V2 shadow, or frozen 100R diagnostic change.'
               exit 0
             fi
 
-            git add -f PortfolioReview100.json
+            git add -f PortfolioReview100.json PortfolioShadowV2.json
             if [ -f PortfolioReview100Diagnostics.json ]; then
               git add -f PortfolioReview100Diagnostics.json
             fi
             if [ -f PortfolioReview100Diagnostics.md ]; then
               git add -f PortfolioReview100Diagnostics.md
             fi
-            git commit -m 'Refresh KeibaAI formal T-10 review and diagnostics'
+            for path in reports/*/PortfolioShadowV2.json; do
+              [ -e "$path" ] || continue
+              git add -f "$path"
+            done
+            git commit -m 'Refresh KeibaAI formal T-10 review, V2 shadow, and diagnostics'
 
             if git push origin HEAD:main; then
               exit 0
