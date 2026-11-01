@@ -18,6 +18,8 @@ The first frozen v1 review showed two separate questions that should not be mixe
 
 V1 must remain unchanged. V2 therefore records independent challengers so future races can identify which hypothesis, if either, is useful.
 
+The strict Top3-membership wording below was finalized on 2026-11-01, before the V2 prospective cohort begins. No 2026-11-02-or-later result was available when this rule was fixed.
+
 ## Frozen challengers
 
 ### `battle_a_only`
