@@ -5,15 +5,15 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-11-01T18:15:48+09:00",
+  "generatedAtJST": "2026-11-01T18:28:24+09:00",
   "baselineRuleVersion": "portfolio-shadow-v1-20261019",
   "prospectiveStartDate": "2026-11-02",
   "evidencePolicy": "2026-11-01以前はV2定義後の再生であり、V2前向き成績には数えない。",
   "selectionPolicy": "選択は保存済み事前情報だけで行い、hit/payout/return/profitは選択完了後に評価用として付与する。",
   "variantDefinitions": {
     "battle_a_only": "高混戦だけSを保留しAのみ。券種選択はv1据え置き。",
-    "top3_coverage": "高混戦A/Sで正式10分前Top3の被覆数を最大化するワイド2点以内。",
-    "combined": "高混戦Aのみ＋正式10分前Top3被覆ワイド。"
+    "top3_coverage": "高混戦A/Sで各ワイドに正式10分前Top3を最低1頭必須化し、2点以内でTop3被覆数を最大化。",
+    "combined": "高混戦Aのみ＋各ワイドに正式10分前Top3必須の被覆ワイド。"
   },
   "unchangedThresholds": {
     "highChaosWideMinProbabilityPct": 5.0,
@@ -5969,10 +5969,10 @@
         "hitAnyRaces": 3,
         "profitableRaces": 3,
         "torigamiRaces": 0,
-        "stakeYen": 2000,
+        "stakeYen": 1800,
         "returnYen": 3490,
-        "profitYen": 1490,
-        "returnIndex": 1.745
+        "profitYen": 1690,
+        "returnIndex": 1.938889
       },
       "prospective": {
         "racesSeen": 0,
@@ -5994,9 +5994,9 @@
             "settledSelectedRaces": 4,
             "hitAnyRaces": 3,
             "profitableRaces": 3,
-            "stakeYen": 800,
+            "stakeYen": 700,
             "returnYen": 3490,
-            "returnIndex": 4.3625,
+            "returnIndex": 4.985714,
             "meanSelectedWideFormalTop3Coverage": 1.75
           },
           "S": {
@@ -6005,7 +6005,7 @@
             "settledSelectedRaces": 6,
             "hitAnyRaces": 0,
             "profitableRaces": 0,
-            "stakeYen": 1200,
+            "stakeYen": 1100,
             "returnYen": 0,
             "returnIndex": 0.0,
             "meanSelectedWideFormalTop3Coverage": 2.0
@@ -10392,24 +10392,8 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
-            {
-              "betType": "wide",
-              "candidateID": "0110",
-              "label": "1番 ミサビスケッツ − 10番 バッハアルプゼー",
-              "numbers": [
-                1,
-                10
-              ],
-              "probabilityPct": 6.466,
-              "oddsLow": 24.1,
-              "oddsHigh": 25.7,
-              "expectedMultiplierLow": 1.558,
-              "unitYen": 100,
-              "hit": false,
-              "payoutYen": 0
-            },
             {
               "betType": "wide",
               "candidateID": "0113",
@@ -10427,10 +10411,10 @@
               "payoutYen": 0
             }
           ],
-          "totalStakeYen": 200,
+          "totalStakeYen": 100,
           "settled": true,
           "returnYen": 0,
-          "profitYen": -200,
+          "profitYen": -100,
           "hitAny": false,
           "profitable": false,
           "torigami": false,
@@ -10491,7 +10475,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -10591,7 +10575,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -10659,7 +10643,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -10790,7 +10774,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -10922,7 +10906,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -10990,7 +10974,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -11283,7 +11267,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -11507,24 +11491,8 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
-            {
-              "betType": "wide",
-              "candidateID": "0208",
-              "label": "2番 アスクデッドヒート − 8番 ウィープディライト",
-              "numbers": [
-                2,
-                8
-              ],
-              "probabilityPct": 7.404,
-              "oddsLow": 15.4,
-              "oddsHigh": 16.4,
-              "expectedMultiplierLow": 1.14,
-              "unitYen": 100,
-              "hit": false,
-              "payoutYen": 0
-            },
             {
               "betType": "wide",
               "candidateID": "0507",
@@ -11542,10 +11510,10 @@
               "payoutYen": 0
             }
           ],
-          "totalStakeYen": 200,
+          "totalStakeYen": 100,
           "settled": true,
           "returnYen": 0,
-          "profitYen": -200,
+          "profitYen": -100,
           "hitAny": false,
           "profitable": false,
           "torigami": false,
@@ -11607,7 +11575,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_plus_trio",
           "planLabel": "ワイド＋3連複",
-          "reason": "V2高混戦比較：ワイド2点以内＋v1据え置き3連複ゲート",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内＋v1据え置き3連複ゲート",
           "legs": [
             {
               "betType": "wide",
@@ -11671,7 +11639,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦向けワイドの確率・期待値条件を満たしません",
+          "reason": "V2 challenger: 正式Top3を含み、確率・期待値条件も満たすワイドがないため保留します",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -11762,10 +11730,10 @@
         "hitAnyRaces": 3,
         "profitableRaces": 3,
         "torigamiRaces": 0,
-        "stakeYen": 800,
+        "stakeYen": 700,
         "returnYen": 3490,
-        "profitYen": 2690,
-        "returnIndex": 4.3625
+        "profitYen": 2790,
+        "returnIndex": 4.985714
       },
       "prospective": {
         "racesSeen": 0,
@@ -11787,9 +11755,9 @@
             "settledSelectedRaces": 4,
             "hitAnyRaces": 3,
             "profitableRaces": 3,
-            "stakeYen": 800,
+            "stakeYen": 700,
             "returnYen": 3490,
-            "returnIndex": 4.3625,
+            "returnIndex": 4.985714,
             "meanSelectedWideFormalTop3Coverage": 1.75
           },
           "S": {
@@ -16185,24 +16153,8 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
-            {
-              "betType": "wide",
-              "candidateID": "0110",
-              "label": "1番 ミサビスケッツ − 10番 バッハアルプゼー",
-              "numbers": [
-                1,
-                10
-              ],
-              "probabilityPct": 6.466,
-              "oddsLow": 24.1,
-              "oddsHigh": 25.7,
-              "expectedMultiplierLow": 1.558,
-              "unitYen": 100,
-              "hit": false,
-              "payoutYen": 0
-            },
             {
               "betType": "wide",
               "candidateID": "0113",
@@ -16220,10 +16172,10 @@
               "payoutYen": 0
             }
           ],
-          "totalStakeYen": 200,
+          "totalStakeYen": 100,
           "settled": true,
           "returnYen": 0,
-          "profitYen": -200,
+          "profitYen": -100,
           "hitAny": false,
           "profitable": false,
           "torigami": false,
@@ -16284,7 +16236,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -16512,7 +16464,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_focus",
           "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
           "legs": [
             {
               "betType": "wide",
@@ -17184,7 +17136,7 @@
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "wide_plus_trio",
           "planLabel": "ワイド＋3連複",
-          "reason": "V2高混戦比較：ワイド2点以内＋v1据え置き3連複ゲート",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内＋v1据え置き3連複ゲート",
           "legs": [
             {
               "betType": "wide",
@@ -17333,5 +17285,5 @@
     }
   },
   "warnings": [],
-  "meaning": "v1を変更せず、S分離とTop3ワイド被覆を独立に前向き比較するV2 shadow。"
+  "meaning": "v1を変更せず、S分離と厳格Top3ワイド被覆を独立に前向き比較するV2 shadow。"
 }
