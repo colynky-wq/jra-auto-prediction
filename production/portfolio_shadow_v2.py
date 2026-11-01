@@ -1,13 +1,15 @@
 """KeibaAI portfolio v2 challengers (research shadow only).
 
-The frozen v1 portfolio remains untouched.  V2 was defined only after the
+The frozen v1 portfolio remains untouched. V2 was defined only after the
 2026-11-01 race day finished, therefore every date before PROSPECTIVE_START is
 post-hoc replay and can never be used as forward evidence for V2.
 
 V2 isolates two hypotheses instead of tuning thresholds to the observed result:
 1. high-chaos battle-grade S holdout (A-only), and
-2. high-chaos Wide set selection that maximizes coverage of the frozen formal
-   T-10 Top3 ranking while preserving the existing v1 probability/EV gates.
+2. high-chaos Wide set selection where every selected Wide leg contains at
+   least one horse from the frozen formal T-10 Top3, while the two-leg set
+   maximizes distinct Top3 coverage and preserves the existing v1 probability/
+   EV gates.
 A combined challenger is also recorded so interaction can be measured later.
 """
 from __future__ import annotations
@@ -70,6 +72,17 @@ def _pair_numbers(pair: dict[str, Any]) -> tuple[int, int] | None:
     return (a, b) if a != b else None
 
 
+def _wide_leg_numbers(leg: dict[str, Any]) -> tuple[int, int] | None:
+    """Decode the fixed-width Wide candidate id without substring ambiguity."""
+    candidate_id = str(leg.get("candidateID") or "")
+    if len(candidate_id) != 4 or not candidate_id.isdigit():
+        return None
+    a, b = int(candidate_id[:2]), int(candidate_id[2:])
+    if a <= 0 or b <= 0 or a == b:
+        return None
+    return tuple(sorted((a, b)))
+
+
 def choose_wides_top3_coverage(
     rid: str,
     signal: dict[str, Any],
@@ -79,10 +92,11 @@ def choose_wides_top3_coverage(
     min_ev: float,
     limit: int = 2,
 ) -> list[dict[str, Any]]:
-    """Choose up to ``limit`` Wide legs while maximizing distinct formal-Top3 coverage.
+    """Choose Wide legs with strict formal-Top3 membership and maximum coverage.
 
-    Only pre-race fields are used for selection.  Probability/EV gates are identical
-    to frozen v1.  Practical rank remains the tie-breaker after Top3 coverage, rather
+    Every selected leg must contain at least one frozen formal T-10 Top3 horse.
+    Only pre-race fields are used for selection. Probability/EV gates are identical
+    to frozen v1. Practical rank remains the tie-breaker after Top3 coverage rather
     than being the primary objective.
     """
     if not top3 or limit <= 0:
@@ -91,10 +105,11 @@ def choose_wides_top3_coverage(
     if evaluation.get("status") != "live_odds_connected":
         return []
 
+    top3_set = set(top3)
     candidates: list[dict[str, Any]] = []
     for pair in evaluation.get("pairs", []):
         nums = _pair_numbers(pair)
-        if nums is None:
+        if nums is None or not (set(nums) & top3_set):
             continue
         leg = v1.wide_leg(rid, pair, payouts)
         if not leg or leg["probabilityPct"] < min_probability or leg["expectedMultiplierLow"] < min_ev:
@@ -106,7 +121,6 @@ def choose_wides_top3_coverage(
     if not candidates:
         return []
     take = min(limit, len(candidates))
-    top3_set = set(top3)
 
     def key(group: tuple[dict[str, Any], ...]):
         covered = set()
@@ -167,7 +181,7 @@ def build_variant_plan(
     level = base["chaosLevel"]
     grade = base["battleGrade"]
 
-    # The v2 hypotheses concern only high-chaos conversion.  Keep v1 exactly as-is
+    # The v2 hypotheses concern only high-chaos conversion. Keep v1 exactly as-is
     # elsewhere so any future difference is attributable to the declared change.
     if level not in {4, 5}:
         return _relabel_v1(v1.build_race_plan(rid, day, rows, signal, payouts), day, variant)
@@ -196,7 +210,7 @@ def build_variant_plan(
         limit=2,
     )
     if not wides:
-        return _skip(base, "v2検証: Top3整合を含むワイド候補が既存の確率・期待値条件を満たしません")
+        return _skip(base, "v2検証: 正式Top3を含むワイド候補が既存の確率・期待値条件を満たしません")
 
     trio = v1.choose_candidate(rows.get((rid, "trio")), v1.TRIO_MIN_PROB_PCT, v1.TRIO_MIN_EV)
     legs = list(wides)
@@ -205,14 +219,20 @@ def build_variant_plan(
         plan_type, label = "wide_plus_trio", "ワイド＋3連複"
     else:
         plan_type, label = "wide_focus", "ワイド中心"
-    covered = sorted({n for leg in wides for n in top3 if f"{n:02d}" in leg["candidateID"]})
+
+    top3_set = set(top3)
+    covered: set[int] = set()
+    for leg in wides:
+        nums = _wide_leg_numbers(leg)
+        if nums is not None:
+            covered.update(set(nums) & top3_set)
     return {
         **base,
         "formalTop3Numbers": list(top3),
-        "wideTop3CoveredNumbers": covered,
+        "wideTop3CoveredNumbers": sorted(covered),
         "planType": plan_type,
         "planLabel": label,
-        "reason": "v2検証: v1の確率・期待値ゲートを維持し、2点全体で正式Top3の被覆を優先します",
+        "reason": "v2検証: v1の確率・期待値ゲートを維持し、各ワイドに正式Top3を必須化した上で2点全体のTop3被覆を優先します",
         "legs": legs,
         **v1.evaluate_plan(legs),
     }
@@ -286,8 +306,8 @@ def build(root: Path) -> dict[str, Any]:
         "baselineRuleVersion": v1.VERSION,
         "variantDefinitions": {
             "battle_a_only": "高混戦のみSをホールドしAだけを選択。券種・閾値・ワイド順位はv1のまま。",
-            "top3_coverage": "高混戦のA/Sを維持し、v1と同じ確率・期待値ゲート通過後に2点全体の正式T-10 Top3被覆を最大化。",
-            "combined": "高混戦のA-onlyとTop3被覆を同時適用。",
+            "top3_coverage": "高混戦のA/Sを維持し、v1と同じ確率・期待値ゲート通過後、各ワイドに正式T-10 Top3を最低1頭必須化し、2点全体のTop3被覆を最大化。",
+            "combined": "高混戦のA-onlyと厳格Top3被覆を同時適用。",
         },
         "evidencePolicy": "2026-11-01以前はルール作成前のpost-hoc replay。V2の性能証拠に数えない。2026-11-02以降だけprospectiveとして扱う。",
         "selectionPolicy": "選択は保存済み発走前SignalData・BetResearchData・formal T-10 win sidecarのみを使用。着順・的中・払戻は選択後の評価にだけ使用。",

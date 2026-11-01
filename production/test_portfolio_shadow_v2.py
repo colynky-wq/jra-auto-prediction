@@ -80,8 +80,9 @@ assert m._formal_top3_from_record(record, "R", "2026-11-02") == (2, 3, 1)
 record["prediction"]["predictionTiming"] = "morning"
 assert m._formal_top3_from_record(record, "R", "2026-11-02") == ()
 
-# V1 practical-rank ordering would take 1-2 and 4-5. V2 instead takes 1-2
-# and 1-3 because the two-ticket set covers all three formal Top3 horses.
+# V1 practical-rank ordering would take 1-2 and 4-5. V2 excludes 4-5 because
+# every selected Wide must contain a formal Top3 horse, then takes 1-2 and 1-3
+# so that the two-ticket set covers all three formal Top3 horses.
 pairs = [
     wp(1, 2, rank=1, score=9),
     wp(4, 5, rank=2, score=8),
@@ -89,6 +90,18 @@ pairs = [
 ]
 chosen = m.choose_wides_top3_coverage("R", sig(5, "A", pairs), {}, (1, 2, 3), 5.0, 1.10, 2)
 assert {x["candidateID"] for x in chosen} == {"0102", "0103"}
+assert all(set(m._wide_leg_numbers(x) or ()) & {1, 2, 3} for x in chosen)
+
+# Fail closed when all otherwise-qualifying Wide candidates are outside formal Top3.
+non_top3_pairs = [wp(4, 5, rank=1, score=9), wp(6, 7, rank=2, score=8)]
+assert m.choose_wides_top3_coverage("R", sig(5, "A", non_top3_pairs), {}, (1, 2, 3), 5.0, 1.10, 2) == []
+p = m.build_variant_plan("top3_coverage", "R", "2026-11-02", {}, sig(5, "A", non_top3_pairs), {}, (1, 2, 3))
+assert p["planType"] == "skip"
+
+# Fixed-width decoding prevents substring errors such as treating 10-11 as horse 1.
+assert m._wide_leg_numbers({"candidateID": "1011"}) == (10, 11)
+assert m._wide_leg_numbers({"candidateID": "0103"}) == (1, 3)
+assert m._wide_leg_numbers({"candidateID": "bad"}) is None
 
 # High-chaos S is isolated only in the A-only hypothesis; top3_coverage still
 # permits S so the two hypotheses can be measured independently.
@@ -99,11 +112,12 @@ assert p["planType"] == "skip"
 p = m.build_variant_plan("top3_coverage", "R", "2026-11-02", {}, sig(5, "S", pairs), {}, (1, 2, 3))
 assert p["planType"] == "wide_focus" and len(p["legs"]) == 2
 
-# A-grade combined challenger applies Top3 coverage and preserves the v1 trio gate.
+# A-grade combined challenger applies strict Top3 coverage and preserves the v1 trio gate.
 rows = {("R", "trio"): row("trio", [c("010203", 5.0, 1.20, 24.0, False, 0)])}
 p = m.build_variant_plan("combined", "R", "2026-11-02", rows, sig(5, "A", pairs), {}, (1, 2, 3))
 assert p["planType"] == "wide_plus_trio"
 assert {x["candidateID"] for x in p["legs"] if x["betType"] == "wide"} == {"0102", "0103"}
+assert p["wideTop3CoveredNumbers"] == [1, 2, 3]
 
 # Missing formal T-10 evidence fails closed for Top3 variants.
 p = m.build_variant_plan("top3_coverage", "R", "2026-11-02", {}, sig(5, "A", pairs), {}, ())
