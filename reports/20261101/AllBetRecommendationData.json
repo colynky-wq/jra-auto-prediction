@@ -3,7 +3,7 @@
   "version": "all-bet-recommendation-shadow-v3-20261101",
   "status": "research_display_only",
   "raceDate": "2026-11-01",
-  "generatedAtJST": "2026-11-01T16:11:28+09:00",
+  "generatedAtJST": "2026-11-01T16:17:37+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
   "wideChaosPriority": {
@@ -2548,6 +2548,105 @@
         {
           "betType": "win",
           "label": "単勝",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "chaos_priority_all_live_wide_pairs"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "matched",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041112",
+      "venue": "東京",
+      "raceNumber": 12,
+      "raceName": "清里特別",
+      "startTime": "16:25",
+      "recommendationStatus": "odds_pending",
+      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
+      "battleGrade": "見送り",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": true,
+      "wideChaosPairsScanned": 91,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [
+        "place",
+        "frame_quinella",
+        "support"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
           "sourceStatus": "awaiting_results",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
@@ -2556,18 +2655,18 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "awaiting_results",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
+          "sourceStatus": "held",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
         },
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "awaiting_results",
-          "realOddsAvailable": true,
+          "sourceStatus": "held",
+          "realOddsAvailable": false,
           "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
+          "candidateScope": "display_candidates_or_none"
         },
         {
           "betType": "quinella",
@@ -2582,7 +2681,7 @@
           "label": "ワイド",
           "sourceStatus": "awaiting_results",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "chaos_priority_all_live_wide_pairs"
         },
         {
@@ -2612,112 +2711,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "awaiting_results",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041112",
-      "venue": "東京",
-      "raceNumber": 12,
-      "raceName": "清里特別",
-      "startTime": "16:25",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
-      "battleGrade": "B",
-      "chaosLevel": 4,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
-      "pendingBetTypes": [
-        "win",
-        "place",
-        "frame_quinella",
-        "quinella",
-        "wide",
-        "exacta",
-        "trio",
-        "trifecta",
-        "support"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
