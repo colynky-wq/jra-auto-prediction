@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "all-bet-forward-v1-20261015",
   "scope": "JRA domestic flat races",
-  "generatedAtJST": "2026-11-01T12:25:27.492101+09:00",
+  "generatedAtJST": "2026-11-01T12:41:33.560756+09:00",
   "evaluationStartJST": "2026-10-15T17:47:37+09:00",
   "betTypes": {
     "win": "単勝",
@@ -18,76 +18,76 @@
   },
   "counts": {
     "win": {
-      "records": 170,
+      "records": 171,
       "ready": 165,
-      "held": 5,
-      "awaiting_results": 2,
+      "held": 6,
+      "awaiting_results": 1,
+      "payouts_pending": 0,
+      "entrant_changed": 2,
+      "dead_heat_excluded": 3,
+      "invalid": 0,
+      "matched": 159,
+      "missingRecords": 15
+    },
+    "place": {
+      "records": 171,
+      "ready": 164,
+      "held": 7,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
       "matched": 158,
-      "missingRecords": 16
-    },
-    "place": {
-      "records": 170,
-      "ready": 164,
-      "held": 6,
-      "awaiting_results": 2,
-      "payouts_pending": 0,
-      "entrant_changed": 2,
-      "dead_heat_excluded": 3,
-      "invalid": 0,
-      "matched": 157,
-      "missingRecords": 16
+      "missingRecords": 15
     },
     "frame_quinella": {
-      "records": 170,
+      "records": 171,
       "ready": 149,
-      "held": 21,
+      "held": 22,
       "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 1,
       "dead_heat_excluded": 3,
       "invalid": 0,
       "matched": 144,
-      "missingRecords": 16
+      "missingRecords": 15
     },
     "quinella": {
-      "records": 170,
+      "records": 171,
       "ready": 165,
-      "held": 5,
-      "awaiting_results": 2,
+      "held": 6,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
-      "matched": 158,
-      "missingRecords": 16
+      "matched": 159,
+      "missingRecords": 15
     },
     "exacta": {
-      "records": 170,
+      "records": 171,
       "ready": 165,
-      "held": 5,
-      "awaiting_results": 2,
+      "held": 6,
+      "awaiting_results": 1,
+      "payouts_pending": 0,
+      "entrant_changed": 2,
+      "dead_heat_excluded": 3,
+      "invalid": 0,
+      "matched": 159,
+      "missingRecords": 15
+    },
+    "support": {
+      "records": 171,
+      "ready": 164,
+      "held": 7,
+      "awaiting_results": 1,
       "payouts_pending": 0,
       "entrant_changed": 2,
       "dead_heat_excluded": 3,
       "invalid": 0,
       "matched": 158,
-      "missingRecords": 16
-    },
-    "support": {
-      "records": 170,
-      "ready": 164,
-      "held": 6,
-      "awaiting_results": 2,
-      "payouts_pending": 0,
-      "entrant_changed": 2,
-      "dead_heat_excluded": 3,
-      "invalid": 0,
-      "matched": 157,
-      "missingRecords": 16
+      "missingRecords": 15
     }
   },
   "existingResearch": {
@@ -97,16 +97,16 @@
       "collectionMethod": "existing_unchanged",
       "status": "attention_required",
       "counts": {
-        "recordedRaces": 169,
+        "recordedRaces": 170,
         "held": 21,
-        "awaitingResults": 1,
+        "awaitingResults": 2,
         "matched": 62,
         "entrantChanged": 2,
         "deadHeatExcluded": 4,
         "noCandidate": 17,
         "invalid": 83,
         "selectedBets": 140,
-        "missingRecords": 17
+        "missingRecords": 16
       }
     },
     "trio": {
@@ -115,16 +115,16 @@
       "collectionMethod": "existing_unchanged",
       "status": "attention_required",
       "counts": {
-        "records": 170,
+        "records": 171,
         "ready": 165,
-        "held": 5,
-        "awaiting_results": 2,
+        "held": 6,
+        "awaiting_results": 1,
         "payouts_pending": 0,
         "entrant_changed": 2,
         "dead_heat_excluded": 3,
         "invalid": 0,
-        "matched": 158,
-        "missingRecords": 16
+        "matched": 159,
+        "missingRecords": 15
       }
     },
     "trifecta": {
@@ -133,26 +133,26 @@
       "collectionMethod": "existing_unchanged",
       "status": "attention_required",
       "counts": {
-        "records": 170,
+        "records": 171,
         "ready": 165,
-        "held": 5,
-        "awaiting_results": 2,
+        "held": 6,
+        "awaiting_results": 1,
         "payouts_pending": 0,
         "entrant_changed": 2,
         "dead_heat_excluded": 3,
         "invalid": 0,
-        "matched": 158,
-        "missingRecords": 16
+        "matched": 159,
+        "missingRecords": 15
       }
     }
   },
   "win5": {
     "version": "win5-factorized-win-v1-20261015",
     "counts": {
-      "records": 5,
-      "ready": 5,
+      "records": 6,
+      "ready": 6,
       "held": 0,
-      "awaiting_results": 0,
+      "awaiting_results": 1,
       "entrant_changed": 0,
       "dead_heat_excluded": 1,
       "invalid": 0,
@@ -390,6 +390,10 @@
           "payoutPer100Yen": 278220,
           "payoutStatus": "paid"
         }
+      },
+      {
+        "raceDate": "2026-11-01",
+        "status": "awaiting_results"
       }
     ],
     "sessions": [
@@ -557,6 +561,17 @@
         "officialSourceFingerprint": "ca9ae79886f22f5c73c08570f53ab6d607756aa8503eae838feb68562b47b931",
         "deadlineJST": "2026-10-31T14:30:00+09:00",
         "finishedAtJST": "2026-10-31T12:31:23.379367+09:00"
+      },
+      {
+        "version": "win5-factorized-win-v1-20261015",
+        "raceDate": "2026-11-01",
+        "startedAtJST": "2026-11-01T12:34:54.286005+09:00",
+        "hasTarget": true,
+        "status": "ready",
+        "officialSourceURL": "https://www.jra.go.jp/kouza/win5/info/racelist.html",
+        "officialSourceFingerprint": "ca9ae79886f22f5c73c08570f53ab6d607756aa8503eae838feb68562b47b931",
+        "deadlineJST": "2026-11-01T14:20:00+09:00",
+        "finishedAtJST": "2026-11-01T12:36:51.897561+09:00"
       }
     ],
     "warnings": [],
@@ -9149,7 +9164,19 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041105",
       "betType": "exacta",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 56,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.01701930271919292,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.01707954699908567
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "exacta",
+      "status": "held",
+      "reason": "odds_unavailable"
     },
     {
       "raceDate": "2026-11-01",
@@ -9250,6 +9277,13 @@
     },
     {
       "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "frame_quinella",
+      "status": "held",
+      "reason": "odds_unavailable"
+    },
+    {
+      "raceDate": "2026-11-01",
       "raceID": "202608041101",
       "betType": "frame_quinella",
       "status": "matched",
@@ -9342,7 +9376,19 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041105",
       "betType": "place",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 8,
+      "aiTopOneHit": true,
+      "aiMeanBrier": 0.16922222688848537,
+      "marketTopOneHit": true,
+      "marketMeanBrier": 0.17011067159141666
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "place",
+      "status": "held",
+      "reason": "entry_terms_unconfirmed"
     },
     {
       "raceDate": "2026-11-01",
@@ -9438,7 +9484,19 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041105",
       "betType": "quinella",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 28,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.031197009601363516,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.031460563400506465
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "quinella",
+      "status": "held",
+      "reason": "odds_unavailable"
     },
     {
       "raceDate": "2026-11-01",
@@ -9534,7 +9592,19 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041105",
       "betType": "win",
-      "status": "awaiting_results"
+      "status": "matched",
+      "evaluatedOutcomes": 8,
+      "aiTopOneHit": false,
+      "aiMeanBrier": 0.12108263323522703,
+      "marketTopOneHit": false,
+      "marketMeanBrier": 0.12192478725
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "win",
+      "status": "held",
+      "reason": "odds_unavailable"
     },
     {
       "raceDate": "2026-11-01",
@@ -42379,10 +42449,148 @@
       "raceDate": "2026-11-01",
       "raceID": "202605041105",
       "betType": "support",
-      "status": "awaiting_results",
+      "status": "matched",
       "sourceRecordFingerprints": [
         "c5035da2d0d66af0e65259f81a7444732d7b6e4271928018eee3c5ebfc894d05",
         "c116c12a1e50658b8fe9cda7d29ca45a84c3e21a2d7a9b66b7ba7dd7f913551e"
+      ],
+      "evaluatedOutcomes": 8,
+      "aiTopOneHit": true,
+      "aiMeanBrier": 0.16922222688848537,
+      "marketTopOneHit": true,
+      "marketMeanBrier": 0.17011067159141666,
+      "costPerPackageYen": 200,
+      "candidates": [
+        {
+          "outcome": "01",
+          "costYen": 200,
+          "winProbability": 0.042689573104268956,
+          "placeProbability": 0.16224880154186985,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.16224880154186985,
+          "aiExpectedMultiplierLow": 0.6023839849960124,
+          "aiExpectedMultiplierHigh": 0.7484079063836953,
+          "marketProbability": 0.15756563299139184,
+          "marketExpectedMultiplierLow": 0.5834937595896702,
+          "marketExpectedMultiplierHigh": 0.7253028292819229,
+          "profitYen": -200
+        },
+        {
+          "outcome": "02",
+          "costYen": 200,
+          "winProbability": 0.2090079099209008,
+          "placeProbability": 0.6162544830789396,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.6162544830789396,
+          "aiExpectedMultiplierLow": 0.7256045990470832,
+          "aiExpectedMultiplierHigh": 0.8180427715089242,
+          "marketProbability": 0.6248932442334788,
+          "marketExpectedMultiplierLow": 0.7381297843284134,
+          "marketExpectedMultiplierHigh": 0.8318637709634351,
+          "profitYen": -200
+        },
+        {
+          "outcome": "03",
+          "costYen": 200,
+          "winProbability": 0.11719882801171988,
+          "placeProbability": 0.40449591507147625,
+          "hit": true,
+          "payoutYen": 1010,
+          "aiProbability": 0.40449591507147625,
+          "aiExpectedMultiplierLow": 0.7279326886976146,
+          "aiExpectedMultiplierHigh": 0.9504054419869266,
+          "marketProbability": 0.39715941675277433,
+          "marketExpectedMultiplierLow": 0.7121660334022195,
+          "marketExpectedMultiplierHigh": 0.9306037126162454,
+          "profitYen": 810
+        },
+        {
+          "outcome": "04",
+          "costYen": 200,
+          "winProbability": 0.014569854301456986,
+          "placeProbability": 0.05709811010232544,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.05709811010232544,
+          "aiExpectedMultiplierLow": 0.5790730546822465,
+          "aiExpectedMultiplierHigh": 0.7246732354431764,
+          "marketProbability": 0.056566503559810036,
+          "marketExpectedMultiplierLow": 0.5727444862134016,
+          "marketExpectedMultiplierHigh": 0.7169890702909172,
+          "profitYen": -200
+        },
+        {
+          "outcome": "05",
+          "costYen": 200,
+          "winProbability": 0.0880891191088089,
+          "placeProbability": 0.3166157677654691,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.3166157677654691,
+          "aiExpectedMultiplierLow": 0.7358694686207753,
+          "aiExpectedMultiplierHigh": 0.9891620828331505,
+          "marketProbability": 0.3222583479167431,
+          "marketExpectedMultiplierLow": 0.7489001827084175,
+          "marketExpectedMultiplierHigh": 1.006706861041812,
+          "profitYen": -200
+        },
+        {
+          "outcome": "06",
+          "costYen": 200,
+          "winProbability": 0.34346656533434666,
+          "placeProbability": 0.7863585457840251,
+          "hit": true,
+          "payoutYen": 130,
+          "aiProbability": 0.7863585457840251,
+          "aiExpectedMultiplierLow": 0.8274837503157124,
+          "aiExpectedMultiplierHigh": 0.9454375321833162,
+          "marketProbability": 0.7869355031628394,
+          "marketExpectedMultiplierLow": 0.8272415267395616,
+          "marketExpectedMultiplierHigh": 0.9452818522139875,
+          "profitYen": -70
+        },
+        {
+          "outcome": "07",
+          "costYen": 200,
+          "winProbability": 0.11206887931120689,
+          "placeProbability": 0.38968123542401467,
+          "hit": true,
+          "payoutYen": 170,
+          "aiProbability": 0.38968123542401467,
+          "aiExpectedMultiplierLow": 0.6983826219628755,
+          "aiExpectedMultiplierHigh": 0.9321913632172842,
+          "marketProbability": 0.39715941675277433,
+          "marketExpectedMultiplierLow": 0.7121660334022195,
+          "marketExpectedMultiplierHigh": 0.950461683453884,
+          "profitYen": -30
+        },
+        {
+          "outcome": "08",
+          "costYen": 200,
+          "winProbability": 0.07290927090729092,
+          "placeProbability": 0.26724714123187954,
+          "hit": false,
+          "payoutYen": 0,
+          "aiProbability": 0.26724714123187954,
+          "aiExpectedMultiplierLow": 0.6658221647964793,
+          "aiExpectedMultiplierHigh": 0.8528951636587949,
+          "marketProbability": 0.25746193463018857,
+          "marketExpectedMultiplierLow": 0.6390153378986791,
+          "marketExpectedMultiplierHigh": 0.8192386921398112,
+          "profitYen": -200
+        }
+      ]
+    },
+    {
+      "raceDate": "2026-11-01",
+      "raceID": "202605041106",
+      "betType": "support",
+      "status": "held",
+      "sourceRecordFingerprints": [
+        "370b0cb946d48abf13d7d7b9b3785195b49f022b6f02fa905b261d42553f5fac",
+        "b2b788ea289261ca0d48a151afb3abf7c403b52bc6fa8f673ccbaf586806f4ca"
       ]
     },
     {
@@ -43387,48 +43595,6 @@
       "betType": "support",
       "status": "missing_record",
       "reason": "予定発走を過ぎましたが、通常予測とこの券種の初回記録が保存されていません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "win",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "place",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "frame_quinella",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "quinella",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "exacta",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "betType": "support",
-      "status": "missing_record",
-      "reason": "予測は保存されていますが、この券種の初回記録はまだ確認できません。"
     },
     {
       "raceDate": "2026-11-01",
