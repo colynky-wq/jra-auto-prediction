@@ -3,7 +3,7 @@
   "version": "all-bet-recommendation-shadow-v2-20261023",
   "status": "research_display_only",
   "raceDate": "2026-11-01",
-  "generatedAtJST": "2026-11-01T11:17:44+09:00",
+  "generatedAtJST": "2026-11-01T11:20:14+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
   "formalRecommendationsEnabled": false,
@@ -764,7 +764,7 @@
       "recommendationStatus": "odds_pending",
       "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
       "battleGrade": "見送り",
-      "chaosLevel": 2,
+      "chaosLevel": 1,
       "bestBet": null,
       "betRecommendations": [],
       "qualifyingPoolCount": 0,
@@ -773,7 +773,6 @@
         "place",
         "frame_quinella",
         "quinella",
-        "wide",
         "exacta",
         "trio",
         "trifecta",
@@ -783,7 +782,7 @@
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -791,7 +790,7 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -799,7 +798,7 @@
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -807,7 +806,7 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -815,15 +814,15 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
+          "sourceStatus": "awaiting_results",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -831,7 +830,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -839,7 +838,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
@@ -847,7 +846,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "missing_record",
+          "sourceStatus": "held",
           "realOddsAvailable": false,
           "qualifyingCandidate": false,
           "candidateScope": "display_candidates_or_none"
