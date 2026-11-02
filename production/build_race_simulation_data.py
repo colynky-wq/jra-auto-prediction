@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Build RaceSimulationData.json for every current KeibaAI race.
+"""Build RaceSimulationData.json from current KeibaAI race data.
 
 The batch publisher wraps the canonical RaceSimulator v0.1 adapter. Motion remains
 independent from prediction AI, market probabilities, odds and popularity. Existing
 AI values are present only in the adapter's post-hoc comparison section.
+
+By default only the latest raceDate is simulated. This keeps the daily app refresh
+fast while preserving --all-dates for explicit backfills/research.
 """
 from __future__ import annotations
 
@@ -51,6 +54,14 @@ def _stable_seed(base_seed: int, race_id: str) -> int:
     return base_seed + (int(digest[:8], 16) % 1_000_000)
 
 
+def _select_target_races(rows: List[Mapping[str, Any]], all_dates: bool) -> tuple[List[Mapping[str, Any]], Optional[str]]:
+    dates = sorted({str(row.get("raceDate")) for row in rows if row.get("raceDate")})
+    if all_dates or not dates:
+        return rows, None if not dates else dates[-1]
+    latest = dates[-1]
+    return [row for row in rows if str(row.get("raceDate")) == latest], latest
+
+
 def build_batch(
     race_data: Any,
     research_data: Any,
@@ -59,8 +70,10 @@ def build_batch(
     runs: int = 400,
     seed: int = 20261103,
     dt: float = 0.5,
+    all_dates: bool = False,
 ) -> Dict[str, Any]:
-    races = _rows(race_data)
+    source_races = _rows(race_data)
+    races, target_date = _select_target_races(source_races, all_dates)
     research_rows = _rows(research_data) if research_data is not None else []
     research_by_id = {str(row.get("raceID", "")): row for row in research_rows if row.get("raceID")}
 
@@ -105,8 +118,15 @@ def build_batch(
         "schemaVersion": SCHEMA_VERSION,
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "status": "ok" if output and not errors else ("partial" if output else "failed"),
-        "settings": {"runsPerRace": runs, "baseSeed": seed, "dtSeconds": dt},
-        "summary": {"inputRaces": len(races), "simulatedRaces": len(output), "skippedRaces": len(skipped), "errorRaces": len(errors)},
+        "targetRaceDate": target_date,
+        "settings": {"runsPerRace": runs, "baseSeed": seed, "dtSeconds": dt, "allDates": all_dates},
+        "summary": {
+            "sourceRaces": len(source_races),
+            "inputRaces": len(races),
+            "simulatedRaces": len(output),
+            "skippedRaces": len(skipped),
+            "errorRaces": len(errors),
+        },
         "races": output,
         "skipped": skipped,
         "errors": errors,
@@ -130,13 +150,14 @@ def _write(path: Path, payload: Any) -> None:
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Build all current KeibaAI RaceSimulator outputs")
+    parser = argparse.ArgumentParser(description="Build current KeibaAI RaceSimulator outputs")
     parser.add_argument("--race-data", type=Path, default=Path("RaceData.json"))
     parser.add_argument("--research-data", type=Path, default=Path("AppResearchData.json"))
     parser.add_argument("--strengths-json", type=Path)
     parser.add_argument("--runs", type=int, default=400)
     parser.add_argument("--seed", type=int, default=20261103)
     parser.add_argument("--dt", type=float, default=0.5)
+    parser.add_argument("--all-dates", action="store_true", help="simulate every raceDate instead of latest only")
     parser.add_argument("--output", type=Path, default=Path("RaceSimulationData.json"))
     args = parser.parse_args(argv)
 
@@ -147,6 +168,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         runs=args.runs,
         seed=args.seed,
         dt=args.dt,
+        all_dates=args.all_dates,
     )
     payload["sourceSHA256"] = {
         "RaceData.json": _file_sha256(args.race_data),
@@ -154,7 +176,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         "strengths": _file_sha256(args.strengths_json),
     }
     _write(args.output, payload)
-    print(json.dumps({"status": payload["status"], **payload["summary"], "output": str(args.output)}, ensure_ascii=False))
+    print(json.dumps({"status": payload["status"], "targetRaceDate": payload["targetRaceDate"], **payload["summary"], "output": str(args.output)}, ensure_ascii=False))
     return 0 if payload["races"] else 2
 
 
