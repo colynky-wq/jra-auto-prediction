@@ -5,573 +5,467 @@ import Combine
 @main
 struct KeibaAIApp: App {
     var body: some Scene {
-        WindowGroup {
-            KeibaAIRootView()
-        }
+        WindowGroup { KeibaAIRootView() }
     }
 }
 
 private struct KeibaAIRootView: View {
     var body: some View {
-        KeibaAINewDesignView()
+        TabView {
+            KeibaAINewDesignView()
+                .tabItem { Label("予測AI", systemImage: "sparkles") }
+            KeibaAIRaceSimulatorScreen()
+                .tabItem { Label("展開シミュ", systemImage: "figure.run") }
+        }
     }
 }
 
-private struct KeibaAIPortfolioQuickEnvelope: Decodable {
-    struct Summary: Decodable {
-        let racesSeen: Int
-        let selectedRaces: Int
-        let settledSelectedRaces: Int
-        let hitAnyRaces: Int
-        let profitableRaces: Int
-        let torigamiRaces: Int
-        let stakeYen: Int
-        let returnYen: Int
-        let returnIndex: Double?
-    }
+// MARK: - Simulator source data
 
-    struct Leg: Decodable, Identifiable {
-        let betType: String
-        let candidateID: String
-        let label: String
-        let probabilityPct: Double
-        let oddsLow: Double
-        let oddsHigh: Double?
-        let expectedMultiplierLow: Double
-        let unitYen: Int
-        var id: String { betType + ":" + candidateID }
-    }
-
-    struct RacePlan: Decodable, Identifiable {
-        let raceDate: String
-        let raceID: String
-        let venue: String?
-        let raceNumber: Int?
-        let raceName: String?
-        let startTime: String?
-        let chaosLevel: Int?
-        let chaosStars: String?
-        let battleGrade: String?
-        let scope: String
-        let ruleVersion: String
-        let planType: String
-        let planLabel: String
-        let reason: String
-        let legs: [Leg]
-        let totalStakeYen: Int
-        var id: String { raceDate + ":" + raceID }
-    }
-
-    let schemaVersion: Int
-    let version: String
-    let status: String
-    let formalRecommendationsEnabled: Bool
-    let autoBetEnabled: Bool
-    let stakeSizingEnabled: Bool
+private struct SimResearchEnvelope: Decodable {
     let generatedAtJST: String
-    let prospectiveStartDate: String
-    let developmentBackfill: Summary
-    let prospective: Summary
-    let races: [RacePlan]
-    let meaning: String
+    let races: [SimResearchRace]
 }
 
-private struct KeibaAIEarlyReviewEnvelope: Decodable {
-    struct Summary: Decodable {
-        let races: Int
-        let selectedRaces: Int
-        let skippedRaces: Int
-        let participationRatePct: Double?
-        let settledSelectedRaces: Int
-        let resultsPendingSelectedRaces: Int
-        let hitAnyRaces: Int
-        let hitRatePct: Double?
-        let profitableRaces: Int
-        let profitableRatePct: Double?
-        let torigamiRaces: Int
-        let torigamiRatePct: Double?
-        let stakeYen: Int
-        let returnYen: Int
-        let profitYen: Int
-        let returnIndex: Double?
-    }
-
-    struct Summaries: Decodable {
-        let development: Summary
-        let prospectiveContribution: Summary
-        let combinedReference: Summary
-    }
-
-    let schemaVersion: Int
-    let version: String
-    let sourceVersion: String
-    let status: String
-    let reviewStatus: String
-    let generatedAtJST: String
-    let prospectiveStartDate: String
-    let referenceTargetRaces: Int
-    let developmentRacesUsed: Int
-    let prospectiveRacesUsed: Int
-    let combinedReferenceRaces: Int
-    let remainingToReference100: Int
-    let progressPct: Double
-    let summaries: Summaries
+private struct SimResearchRace: Decodable {
+    let raceID: String
+    let raceDate: String
+    let horses: [SimResearchHorse]
 }
 
-private struct KeibaAIFormalReviewEnvelope: Decodable {
-    struct Overall: Decodable {
-        let selectedRaces: Int
-        let settledSelectedRaces: Int
-        let hitAnyRaces: Int
-        let profitableRaces: Int
-        let torigamiRaces: Int
-        let returnIndex: Double?
-    }
+private struct SimResearchHorse: Decodable {
+    let number: Int
+    let name: String
+    let styleTendency: SimStyle?
+    let initialPositionHistory: SimPosition?
+}
 
-    struct QualityChecks: Decodable {
-        let formal10minEvidenceRequired: Bool
-        let formal10minVerifiedRaces: Int
-        let nonFormalProspectiveExcluded: Int
-    }
+private struct SimStyle: Decodable {
+    let sampleRaces: Int
+    let confidence: String
+    let distributionPct: [String: Double]
+    let latestHistoryDate: String
+}
 
-    let schemaVersion: Int
-    let version: String
-    let sourceVersion: String
-    let status: String
-    let reviewStatus: String
-    let generatedAtJST: String
-    let prospectiveStartDate: String
-    let targetRaces: Int
-    let racesObserved: Int
-    let remainingTo100: Int
-    let progressPct: Double
-    let overall: Overall
-    let qualityChecks: QualityChecks
+private struct SimPosition: Decodable {
+    let sampleRaces: Int
+    let meanRelativePosition: Double
+    let latestHistoryDate: String
 }
 
 @MainActor
-private final class KeibaAIPortfolioQuickStore: ObservableObject {
-    @Published private(set) var data: KeibaAIPortfolioQuickEnvelope?
-    @Published private(set) var earlyReview: KeibaAIEarlyReviewEnvelope?
-    @Published private(set) var formalReview: KeibaAIFormalReviewEnvelope?
-    @Published private(set) var sourceMessage = "研究プラン 未読み込み"
-    @Published private(set) var earlyReviewMessage = "初期評価 未読み込み"
-    @Published private(set) var formalReviewMessage = "正式評価 未読み込み"
-    @Published private(set) var isLoading = false
+private final class KeibaAIRaceSimulatorStore: ObservableObject {
+    @Published var races: [Race] = []
+    @Published var research: [String: SimResearchRace] = [:]
+    @Published var generatedAtJST: String?
+    @Published var isLoading = false
+    @Published var message = "未読み込み"
 
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    var todayISO: String { Self.dateFormatter.string(from: Date()) }
-
-    var displayDate: String? {
-        guard let data else { return nil }
-        if data.races.contains(where: { $0.raceDate == todayISO }) {
-            return todayISO
-        }
-        return data.races.map(\.raceDate).max()
-    }
-
-    var displayRaces: [KeibaAIPortfolioQuickEnvelope.RacePlan]? {
-        guard let displayDate else { return nil }
-        let rows = (data?.races ?? [])
-            .filter { $0.raceDate == displayDate }
-            .sorted {
-                (($0.startTime ?? ""), ($0.venue ?? ""), ($0.raceNumber ?? 0), $0.raceID)
-                < (($1.startTime ?? ""), ($1.venue ?? ""), ($1.raceNumber ?? 0), $1.raceID)
-            }
-        return rows.isEmpty ? nil : rows
-    }
-
-    var selectedRaces: [KeibaAIPortfolioQuickEnvelope.RacePlan] {
-        (displayRaces ?? []).filter { $0.planType != "skip" }
-    }
-
-    var shortStatus: String {
-        guard let rows = displayRaces else { return "データ待ち" }
-        let selected = rows.filter { $0.planType != "skip" }.count
-        return selected == 0 ? "全見送り" : "参加候補 \(selected)R"
-    }
+    private let base = "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/"
 
     func load(force: Bool = false) async {
-        if isLoading { return }
-        if !force, data != nil, earlyReview != nil, formalReview != nil { return }
+        if isLoading || (!force && !races.isEmpty) { return }
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let decoded: KeibaAIPortfolioQuickEnvelope = try await fetchJSON(
-                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioResearchData.json"
-            )
-            guard decoded.schemaVersion == 1,
-                  decoded.version == "portfolio-shadow-v1-20261019",
-                  decoded.status == "research_display_only",
-                  !decoded.formalRecommendationsEnabled,
-                  !decoded.autoBetEnabled,
-                  !decoded.stakeSizingEnabled else {
-                throw URLError(.cannotParseResponse)
+            let value: [Race] = try await fetch(base + "RaceData.json")
+            races = value.sorted {
+                if $0.raceDate != $1.raceDate { return ($0.raceDate ?? "") > ($1.raceDate ?? "") }
+                if $0.venue != $1.venue { return venueOrder($0.venue) < venueOrder($1.venue) }
+                return $0.raceNumber < $1.raceNumber
             }
-            data = decoded
-            sourceMessage = "研究プラン取得済"
+            message = "レース取得済"
         } catch {
-            sourceMessage = "研究プラン 更新待ち"
+            races = []
+            message = "RaceData取得失敗"
         }
 
         do {
-            let decoded: KeibaAIEarlyReviewEnvelope = try await fetchJSON(
-                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioEarlyReview100.json"
-            )
-            guard decoded.schemaVersion == 1,
-                  decoded.version == "portfolio-early-reference-100-v1-20261020",
-                  decoded.sourceVersion == "portfolio-shadow-v1-20261019",
-                  decoded.status == "development_mixed_reference_only",
-                  decoded.referenceTargetRaces == 100 else {
-                throw URLError(.cannotParseResponse)
-            }
-            earlyReview = decoded
-            earlyReviewMessage = "初期評価取得済"
+            let value: SimResearchEnvelope = try await fetch(base + "AppResearchData.json")
+            research = Dictionary(uniqueKeysWithValues: value.races.map { ($0.raceID, $0) })
+            generatedAtJST = value.generatedAtJST
+            if !races.isEmpty { message = "レース・脚質取得済" }
         } catch {
-            earlyReviewMessage = "初期評価 更新待ち"
-        }
-
-        do {
-            let decoded: KeibaAIFormalReviewEnvelope = try await fetchJSON(
-                "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/PortfolioReview100.json"
-            )
-            guard decoded.schemaVersion == 1,
-                  decoded.version == "portfolio-review-100-v1-20261020",
-                  decoded.sourceVersion == "portfolio-shadow-v1-20261019",
-                  decoded.status == "research_evaluation_only",
-                  decoded.targetRaces == 100,
-                  decoded.qualityChecks.formal10minEvidenceRequired,
-                  decoded.qualityChecks.formal10minVerifiedRaces == decoded.racesObserved else {
-                throw URLError(.cannotParseResponse)
-            }
-            formalReview = decoded
-            formalReviewMessage = "正式T-10評価取得済"
-        } catch {
-            formalReviewMessage = "正式T-10評価 更新待ち"
+            research = [:]
+            if !races.isEmpty { message = "脚質データ更新待ち" }
         }
     }
 
-    private func fetchJSON<T: Decodable>(_ urlString: String) async throws -> T {
-        guard var components = URLComponents(string: urlString) else { throw URLError(.badURL) }
-        components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
-        guard let url = components.url else { throw URLError(.badURL) }
+    func research(for race: Race) -> SimResearchRace? {
+        guard let value = research[race.raceID] else { return nil }
+        guard let date = race.raceDate else { return value }
+        return date.replacingOccurrences(of: "-", with: "") == value.raceDate.replacingOccurrences(of: "-", with: "") ? value : nil
+    }
 
+    private func fetch<T: Decodable>(_ raw: String) async throws -> T {
+        guard var c = URLComponents(string: raw) else { throw URLError(.badURL) }
+        c.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
+        guard let url = c.url else { throw URLError(.badURL) }
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
-        request.timeoutInterval = 10
-        request.setValue("KeibaAI-iOS/2.2", forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 12
+        request.setValue("KeibaAI-RaceSimulator/0.1", forHTTPHeaderField: "User-Agent")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { throw URLError(.badServerResponse) }
+        return try JSONDecoder().decode(T.self, from: data)
+    }
 
-        let (bytes, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-        return try JSONDecoder().decode(T.self, from: bytes)
+    private func venueOrder(_ venue: String) -> Int {
+        ["札幌", "函館", "福島", "新潟", "東京", "中山", "中京", "京都", "阪神", "小倉"].firstIndex(of: venue) ?? 99
     }
 }
 
-private struct KeibaAIPortfolioQuickView: View {
-    @ObservedObject var store: KeibaAIPortfolioQuickStore
-    @Environment(\.dismiss) private var dismiss
+// MARK: - Independent simulation engine
 
-    private var rows: [KeibaAIPortfolioQuickEnvelope.RacePlan] {
-        store.displayRaces ?? []
+private struct SimInput {
+    let number: Int
+    let name: String
+    let escape: Double
+    let front: Double
+    let stalk: Double
+    let close: Double
+    let samples: Int
+    let meanPosition: Double?
+    let hasHistory: Bool
+}
+
+private struct SimStat: Identifiable {
+    var id: Int { number }
+    let number: Int
+    let name: String
+    let winPct: Double
+    let top3Pct: Double
+    let meanRank: Double
+    let samples: Int
+    let hasHistory: Bool
+}
+
+private struct SimResult {
+    let pace: String
+    let reason: String
+    let coverage: Double
+    let confidence: String
+    let phases: [(String, [Int])]
+    let scenarios: [(String, String, [Int])]
+    let stats: [SimStat]
+}
+
+private enum RaceSimulator {
+    private struct Model { let input: SimInput; let base: Double }
+    private struct RNG {
+        var state: UInt64
+        mutating func unit() -> Double {
+            state = state &* 2862933555777941757 &+ 3037000493
+            return Double(state >> 11) / Double(UInt64.max >> 11)
+        }
+        mutating func centered() -> Double { unit() * 2 - 1 }
     }
 
-    private var selected: [KeibaAIPortfolioQuickEnvelope.RacePlan] {
-        rows.filter { $0.planType != "skip" }
+    static func run(race: Race, inputs: [SimInput], trials: Int = 1200) -> SimResult {
+        let count = max(inputs.count, 1)
+        let distance = Int(race.course.filter(\.isNumber))
+        let models = inputs.map { Model(input: $0, base: basePosition($0)) }
+        let coverage = Double(inputs.filter(\.hasHistory).count) / Double(count) * 100
+        let pressure = models.reduce(0.0) { $0 + $1.input.escape + $1.input.front * 0.55 } / Double(count)
+        var paceIndex = pressure + (distance.map { $0 <= 1400 ? 0.035 : ($0 >= 2400 ? -0.025 : 0) } ?? 0)
+        if count >= 16 { paceIndex += 0.015 }
+        paceIndex = clamp(paceIndex, 0.05, 0.55)
+        let pace = paceIndex >= 0.30 ? "ハイ寄り" : (paceIndex <= 0.19 ? "スロー寄り" : "平均寄り")
+
+        let phaseDefs: [(String, Double)] = [("序盤", 0.10), ("向正面", 0.38), ("4角", 0.68), ("直線・ゴール", 1.0)]
+        let phases = phaseDefs.map { title, progress in
+            let order = models.sorted {
+                phaseScore($0, progress, paceIndex, distance, race.raceID) < phaseScore($1, progress, paceIndex, distance, race.raceID)
+            }.map { $0.input.number }
+            return (title, order)
+        }
+
+        var wins: [Int: Int] = [:], top3: [Int: Int] = [:]
+        var rankSum: [Int: Double] = [:]
+        var rng = RNG(state: seed(race.raceID + "|sim-v0.1"))
+        let n = max(200, trials)
+        for _ in 0..<n {
+            let runPace = clamp(paceIndex + rng.centered() * 0.075, 0.05, 0.55)
+            let scored = models.map { model in
+                (model, finishScore(model, runPace, distance) + rng.centered() * uncertainty(model.input))
+            }.sorted {
+                abs($0.1 - $1.1) > 0.000001 ? $0.1 < $1.1 : $0.0.input.number < $1.0.input.number
+            }
+            for (i, row) in scored.enumerated() {
+                let no = row.0.input.number
+                if i == 0 { wins[no, default: 0] += 1 }
+                if i < 3 { top3[no, default: 0] += 1 }
+                rankSum[no, default: 0] += Double(i + 1)
+            }
+        }
+
+        let stats = models.map { model in
+            let no = model.input.number
+            return SimStat(
+                number: no,
+                name: model.input.name,
+                winPct: Double(wins[no, default: 0]) / Double(n) * 100,
+                top3Pct: Double(top3[no, default: 0]) / Double(n) * 100,
+                meanRank: rankSum[no, default: 0] / Double(n),
+                samples: model.input.samples,
+                hasHistory: model.input.hasHistory
+            )
+        }.sorted {
+            $0.top3Pct != $1.top3Pct ? $0.top3Pct > $1.top3Pct : $0.meanRank < $1.meanRank
+        }
+
+        func scenario(_ title: String, _ note: String, _ p: Double) -> (String, String, [Int]) {
+            let order = models.sorted { finishScore($0, p, distance) < finishScore($1, p, distance) }.prefix(3).map { $0.input.number }
+            return (title, note, Array(order))
+        }
+        let scenarios = [
+            scenario("本線", "現在の脚質構成", paceIndex),
+            scenario("前残り", "想定より流れが落ち着く", clamp(paceIndex - 0.10, 0.05, 0.55)),
+            scenario("差し台頭", "想定より前半が速い", clamp(paceIndex + 0.10, 0.05, 0.55))
+        ]
+
+        let frontCount = inputs.filter { $0.escape + $0.front >= 0.60 }.count
+        let closeCount = inputs.filter { $0.stalk + $0.close >= 0.70 }.count
+        let confidence = coverage >= 80 ? "中〜高" : (coverage >= 60 ? "中" : "低")
+        return SimResult(
+            pace: pace,
+            reason: "前寄り\(frontCount)頭、差し・追込寄り\(closeCount)頭。距離と頭数を加味。",
+            coverage: coverage,
+            confidence: confidence,
+            phases: phases,
+            scenarios: scenarios,
+            stats: stats
+        )
     }
+
+    private static func basePosition(_ x: SimInput) -> Double {
+        let style = x.escape * 0.08 + x.front * 0.28 + x.stalk * 0.58 + x.close * 0.84
+        guard let observed = x.meanPosition else { return style }
+        let weight = x.samples >= 5 ? 0.70 : (x.samples >= 3 ? 0.62 : (x.samples == 2 ? 0.50 : 0.35))
+        return observed * weight + style * (1 - weight)
+    }
+
+    private static func phaseScore(_ m: Model, _ progress: Double, _ pace: Double, _ distance: Int?, _ raceID: String) -> Double {
+        let x = m.input, front = x.escape + x.front * 0.65, close = x.close + x.stalk * 0.45
+        let centered = pace - 0.235
+        var score = m.base + progress * centered * front * 0.34 - progress * centered * close * 0.26
+        if let d = distance {
+            if d <= 1400 { score -= progress * front * 0.035; score += progress * x.close * 0.020 }
+            if d >= 2200 { score += progress * x.escape * 0.030; score -= progress * x.close * 0.025 }
+        }
+        let jitter = Double(seed("\(raceID)|\(x.number)|\(Int(progress * 100))") % 10_001) / 10_000 * 2 - 1
+        return score + jitter * (x.hasHistory ? 0.010 : 0.025)
+    }
+
+    private static func finishScore(_ m: Model, _ pace: Double, _ distance: Int?) -> Double {
+        let x = m.input, front = x.escape + x.front * 0.60, close = x.close + x.stalk * 0.45
+        let centered = pace - 0.235
+        var score = m.base + centered * front * 0.42 - centered * close * 0.34
+        if let d = distance {
+            if d <= 1400 { score -= front * 0.045; score += x.close * 0.025 }
+            if d >= 2200 { score += x.escape * 0.040; score -= x.close * 0.035 }
+        }
+        return score
+    }
+
+    private static func uncertainty(_ x: SimInput) -> Double {
+        if !x.hasHistory { return 0.145 }
+        return x.samples >= 5 ? 0.062 : (x.samples >= 3 ? 0.080 : (x.samples == 2 ? 0.095 : 0.115))
+    }
+
+    private static func seed(_ text: String) -> UInt64 {
+        var h: UInt64 = 1469598103934665603
+        for b in text.utf8 { h ^= UInt64(b); h &*= 1099511628211 }
+        return h == 0 ? 1 : h
+    }
+
+    private static func clamp(_ x: Double, _ lo: Double, _ hi: Double) -> Double { min(hi, max(lo, x)) }
+}
+
+// MARK: - Simulator UI
+
+private struct KeibaAIRaceSimulatorScreen: View {
+    @StateObject private var store = KeibaAIRaceSimulatorStore()
+    @State private var selectedID: String?
+
+    private var selected: Race? {
+        store.races.first { $0.raceID == selectedID } ?? store.races.first
+    }
+
+    var body: some View {
+        NavigationSplitView {
+            List {
+                Section {
+                    Text("予測AIと独立: AI勝率・人気・オッズはシミュレーション入力に使いません。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(store.message).font(.caption2).foregroundStyle(.secondary)
+                }
+                Section("レース") {
+                    ForEach(store.races) { race in
+                        Button {
+                            selectedID = race.raceID
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text("\(race.venue) \(race.raceNumber)R").font(.subheadline.bold())
+                                    Text(race.raceName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                }
+                                Spacer()
+                                if selected?.raceID == race.raceID { Image(systemName: "checkmark.circle.fill").foregroundStyle(.blue) }
+                            }
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }
+            .navigationTitle("展開シミュ")
+            .refreshable { await store.load(force: true) }
+        } detail: {
+            if let race = selected {
+                KeibaAIRaceSimulatorDetail(race: race, research: store.research(for: race), generatedAt: store.generatedAtJST)
+            } else if store.isLoading {
+                ProgressView("読み込み中…")
+            } else {
+                ContentUnavailableView("レースデータなし", systemImage: "tray")
+            }
+        }
+        .task {
+            await store.load()
+            if selectedID == nil { selectedID = store.races.first?.raceID }
+        }
+    }
+}
+
+private struct KeibaAIRaceSimulatorDetail: View {
+    let race: Race
+    let research: SimResearchRace?
+    let generatedAt: String?
+
+    private var inputs: [SimInput] {
+        race.horses.map { horse in
+            let h = research?.horses.first { $0.number == horse.number && $0.name == horse.name }
+            let v = styleVector(h)
+            let n = max(h?.styleTendency?.sampleRaces ?? 0, h?.initialPositionHistory?.sampleRaces ?? 0)
+            return SimInput(number: horse.number, name: horse.name, escape: v.0, front: v.1, stalk: v.2, close: v.3,
+                            samples: n, meanPosition: h?.initialPositionHistory?.meanRelativePosition,
+                            hasHistory: h?.styleTendency != nil || h?.initialPositionHistory != nil)
+        }
+    }
+
+    private var sim: SimResult { RaceSimulator.run(race: race, inputs: inputs) }
+    private var names: [Int: String] { Dictionary(uniqueKeysWithValues: race.horses.map { ($0.number, $0.name) }) }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                header
-
-                if let data = store.data, let date = store.displayDate {
-                    summary(data: data, date: date)
-                    evaluationProgress(data: data)
-
-                    if selected.isEmpty {
-                        VStack(alignment: .leading, spacing: 7) {
-                            Label("今回は見送り", systemImage: "hand.raised.fill")
-                                .font(.title3.weight(.bold))
-                            Text("現在の固定条件では参加候補がありません。無理に馬券を作らない設計です。")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
-                    } else {
-                        ForEach(selected) { race in
-                            raceCard(race)
-                        }
-                    }
-
-                    if rows.count > selected.count {
-                        Text("見送り \(rows.count - selected.count)R。条件不足のレースは候補を出しません。")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Text("この画面はshadow研究です。初期評価は既存データを含む参考値、正式forward評価は発走8〜12分前のlive_10min証拠があるレースだけを別集計します。")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 4)
-                } else if store.isLoading {
-                    ProgressView("研究プランを取得中…")
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 50)
-                } else {
-                    ContentUnavailableView(
-                        "研究プランを準備中",
-                        systemImage: "ticket",
-                        description: Text(store.sourceMessage)
-                    )
+                card {
+                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)").font(.caption.bold()).foregroundStyle(.blue)
+                    Text(race.raceName).font(.title2.bold())
+                    Text(race.course).foregroundStyle(.secondary)
+                    Divider()
+                    Label("独立入力", systemImage: "lock.shield").font(.headline)
+                    Text("使用: 過去脚質・初角位置・距離・頭数 / 未使用: AI勝率・市場確率・人気・単勝オッズ")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    if let generatedAt { Text("研究データ更新: \(generatedAt)").font(.caption2).foregroundStyle(.tertiary) }
                 }
-            }
-            .padding(20)
-            .frame(maxWidth: 760, alignment: .leading)
+
+                card {
+                    HStack { Text("展開シミュレーションの答え").font(.title3.bold()); Spacer(); Text(sim.pace).bold().foregroundStyle(.orange) }
+                    Text(sim.reason).font(.subheadline).foregroundStyle(.secondary)
+                    Text(String(format: "履歴カバー %.0f%% ・ 参考度 %@ ・ 1,200試行", sim.coverage, sim.confidence)).font(.caption)
+                    ForEach(Array(sim.stats.prefix(8).enumerated()), id: \.offset) { i, s in
+                        HStack {
+                            Text("\(i + 1). #\(s.number) \(s.name)").font(.subheadline.weight(.semibold)).lineLimit(1)
+                            Spacer()
+                            Text(String(format: "3着内 %.1f%% / 1着 %.1f%%", s.top3Pct, s.winPct)).font(.caption.monospacedDigit())
+                        }
+                        if i < min(7, sim.stats.count - 1) { Divider() }
+                    }
+                    Text("※ 表示率はシミュレーション内の割合で、校正済みの実勝率ではありません。").font(.caption2).foregroundStyle(.secondary)
+                }
+
+                card {
+                    Text("レース中の位置変化").font(.title3.bold())
+                    ForEach(Array(sim.phases.enumerated()), id: \.offset) { _, phase in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(phase.0).font(.headline)
+                            Text(phase.1.prefix(8).map { "#\($0) \(names[$0] ?? "")" }.joined(separator: " → "))
+                                .font(.caption).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+
+                card {
+                    Text("展開がズレた場合").font(.title3.bold())
+                    ForEach(Array(sim.scenarios.enumerated()), id: \.offset) { _, row in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("\(row.0) — \(row.1)").font(.subheadline.bold())
+                            Text(row.2.map { "#\($0) \(names[$0] ?? "")" }.joined(separator: " → ")).font(.caption)
+                        }
+                    }
+                }
+
+                integrationCard
+
+                card {
+                    Label("Simulator v0.1", systemImage: "flask").font(.headline)
+                    Text("学習済み展開AIではなく、過去6走の脚質・初角位置を使うヒューリスティック・モンテカルロ版です。まず独立性を固定し、今後は保存した予測と実着順で重みを検証・学習化します。")
+                        .font(.subheadline)
+                }
+            }.padding(18).frame(maxWidth: 900, alignment: .leading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("研究プラン")
+        .navigationTitle("\(race.venue) \(race.raceNumber)R")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("閉じる") { dismiss() }
-            }
-        }
-        .refreshable { await store.load(force: true) }
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("このレースなら、どの馬券か", systemImage: "ticket.fill")
-                .font(.title2.weight(.heavy))
-            Text("荒れ度と勝負度を増やさず、内部で組み合わせて1つの研究プランにまとめます。")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    @ViewBuilder
-    private func summary(data: KeibaAIPortfolioQuickEnvelope, date: String) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("表示日")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text(date)
-                    .font(.subheadline.weight(.semibold).monospacedDigit())
+    private var integrationCard: some View {
+        let ai = Array(race.horses.sorted { $0.aiProbability > $1.aiProbability }.prefix(3))
+        let flow = Array(sim.stats.prefix(3))
+        let aiSet = Set(ai.map(\.number))
+        let overlap = flow.filter { aiSet.contains($0.number) }
+        let label = overlap.count == 3 ? "高整合" : (overlap.count == 2 ? "整合" : (overlap.count == 1 ? "一部整合" : "乖離大"))
+        return card {
+            HStack { Text("最終統合").font(.title3.bold()); Spacer(); Text(label).font(.caption.bold()).foregroundStyle(overlap.count >= 2 ? .green : .orange) }
+            Text("ここで初めて予測AIと展開シミュを照合します。シミュレーター側の計算にはAI勝率を入れていません。")
+                .font(.subheadline).foregroundStyle(.secondary)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading) {
+                    Text("予測AI").font(.caption.bold()).foregroundStyle(.secondary)
+                    ForEach(ai) { h in Text("#\(h.number) \(h.name)  \(String(format: "%.1f%%", h.aiProbability))").font(.caption) }
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading) {
+                    Text("展開シミュ").font(.caption.bold()).foregroundStyle(.secondary)
+                    ForEach(flow) { s in Text("#\(s.number) \(s.name)  3着内\(String(format: "%.1f%%", s.top3Pct))").font(.caption) }
+                }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("参加候補")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text("\(selected.count) / \(rows.count)R")
-                    .font(.headline.monospacedDigit())
-            }
-        }
-        .padding(14)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    @ViewBuilder
-    private func evaluationProgress(data: KeibaAIPortfolioQuickEnvelope) -> some View {
-        VStack(spacing: 12) {
-            if let early = store.earlyReview {
-                evaluationCard(
-                    title: "初期評価（参考）",
-                    subtitle: "既存69R＋今後のレース。性能証明には使いません",
-                    current: min(early.combinedReferenceRaces, early.referenceTargetRaces),
-                    target: early.referenceTargetRaces,
-                    metrics: [
-                        ("参加率", formatPercent(early.summaries.combinedReference.participationRatePct)),
-                        ("的中率", formatPercent(early.summaries.combinedReference.hitRatePct)),
-                        ("利益R率", formatPercent(early.summaries.combinedReference.profitableRatePct)),
-                        ("トリガミ", formatPercent(early.summaries.combinedReference.torigamiRatePct)),
-                        ("回収指数", formatReturnIndex(early.summaries.combinedReference.returnIndex)),
-                        ("残り", "\(early.remainingToReference100)R")
-                    ],
-                    badge: "参考"
-                )
-            } else {
-                statusCard(title: "初期評価（参考）", message: store.earlyReviewMessage)
-            }
-
-            if let formal = store.formalReview {
-                evaluationCard(
-                    title: "正式forward評価",
-                    subtitle: "10/24以降。発走8〜12分前のlive_10min証拠があるレースだけ",
-                    current: min(formal.racesObserved, formal.targetRaces),
-                    target: formal.targetRaces,
-                    metrics: [
-                        ("参加候補", "\(formal.overall.selectedRaces)R"),
-                        ("結果照合", "\(formal.overall.settledSelectedRaces)R"),
-                        ("的中R", "\(formal.overall.hitAnyRaces)R"),
-                        ("利益R", "\(formal.overall.profitableRaces)R"),
-                        ("除外", "\(formal.qualityChecks.nonFormalProspectiveExcluded)R"),
-                        ("回収指数", formatReturnIndex(formal.overall.returnIndex))
-                    ],
-                    badge: formal.racesObserved == 0 ? "10/24開始" : "正式T-10"
-                )
-            } else {
-                statusCard(title: "正式forward評価", message: store.formalReviewMessage)
-            }
+            Text(overlap.isEmpty ? "共通上位なし。AI本命に展開上の逆風がないか確認。" : "共通上位: " + overlap.map { "#\($0.number) \($0.name)" }.joined(separator: "、"))
+                .font(.subheadline.weight(.semibold))
+            Text("統合層はAI勝率を書き換えず、現段階では研究用の補助判定です。").font(.caption).foregroundStyle(.secondary)
         }
     }
 
     @ViewBuilder
-    private func evaluationCard(
-        title: String,
-        subtitle: String,
-        current: Int,
-        target: Int,
-        metrics: [(String, String)],
-        badge: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .font(.headline)
-                Spacer()
-                Text(badge)
-                    .font(.caption2.weight(.bold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.12), in: Capsule())
-            }
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) { content() }
+            .padding(18)
+            .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
 
-            Text(subtitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            HStack {
-                Text("\(current) / \(target)R")
-                    .font(.title3.weight(.bold).monospacedDigit())
-                Spacer()
-                Text("\(Int((Double(current) / Double(max(target, 1)) * 100).rounded()))%")
-                    .font(.caption.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-            ProgressView(value: min(1, Double(current) / Double(max(target, 1))))
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(Array(metrics.enumerated()), id: \.offset) { _, metric in
-                    VStack(spacing: 2) {
-                        Text(metric.0)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(metric.1)
-                            .font(.subheadline.weight(.semibold).monospacedDigit())
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 7)
-                    .background(Color.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 9))
-                }
-            }
+    private func styleVector(_ h: SimResearchHorse?) -> (Double, Double, Double, Double) {
+        if let d = h?.styleTendency?.distributionPct {
+            let a = max(0, d["逃げ"] ?? 0) / 100, b = max(0, d["先行"] ?? 0) / 100
+            let c = max(0, d["差し"] ?? 0) / 100, e = max(0, d["追込"] ?? 0) / 100
+            let sum = a + b + c + e
+            if sum > 0 { return (a / sum, b / sum, c / sum, e / sum) }
         }
-        .padding(14)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    @ViewBuilder
-    private func statusCard(title: String, message: String) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.headline)
-                Text(message).font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer()
-            if store.isLoading { ProgressView() }
+        if let p = h?.initialPositionHistory?.meanRelativePosition {
+            if p <= 0.18 { return (0.45, 0.40, 0.10, 0.05) }
+            if p <= 0.38 { return (0.10, 0.55, 0.30, 0.05) }
+            if p <= 0.68 { return (0.02, 0.18, 0.60, 0.20) }
+            return (0.01, 0.04, 0.30, 0.65)
         }
-        .padding(14)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
-
-    @ViewBuilder
-    private func raceCard(_ race: KeibaAIPortfolioQuickEnvelope.RacePlan) -> some View {
-        VStack(alignment: .leading, spacing: 11) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(race.venue ?? "") \(race.raceNumber.map { "\($0)R" } ?? "")")
-                    .font(.headline)
-                if let startTime = race.startTime {
-                    Text(startTime)
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Text(race.chaosStars ?? "--")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                Text("勝負度 \(race.battleGrade ?? "--")")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.blue)
-            }
-
-            if let raceName = race.raceName, !raceName.isEmpty {
-                Text(raceName)
-                    .font(.subheadline.weight(.semibold))
-            }
-
-            HStack {
-                Text("研究プラン：\(race.planLabel)")
-                    .font(.title3.weight(.bold))
-                Spacer()
-                Text("合計 \(race.totalStakeYen)円")
-                    .font(.subheadline.weight(.bold).monospacedDigit())
-            }
-
-            ForEach(race.legs) { leg in
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(betLabel(leg.betType))
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.blue, in: Capsule())
-                    Text(leg.label)
-                        .font(.subheadline.weight(.semibold))
-                    Spacer(minLength: 8)
-                    Text("\(leg.unitYen)円")
-                        .font(.subheadline.monospacedDigit())
-                }
-            }
-
-            Text(race.reason)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(16)
-        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
-    }
-
-    private func formatPercent(_ value: Double?) -> String {
-        guard let value else { return "--" }
-        return String(format: "%.1f%%", value)
-    }
-
-    private func formatReturnIndex(_ value: Double?) -> String {
-        guard let value else { return "--" }
-        return String(format: "%.1f%%", value * 100)
-    }
-
-    private func betLabel(_ value: String) -> String {
-        switch value {
-        case "win": return "単勝"
-        case "wide": return "ワイド"
-        case "trio": return "3連複"
-        default: return value
-        }
+        return (0.05, 0.25, 0.45, 0.25)
     }
 }
