@@ -63,6 +63,32 @@ jobs:
           python production/test_portfolio_shadow.py
           python production/test_portfolio_shadow_v2.py
 
+      - name: Publish aligned audit independently of legacy projections
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          for attempt in 1 2 3 4; do
+            git fetch origin main
+            git reset --hard origin/main
+            audit_failed=0
+            python production/aligned_portfolio_review.py || audit_failed=1
+            if [ "$audit_failed" -ne 0 ]; then
+              # A nonzero audit may publish only an explicit blocked projection.
+              python -c 'import json; d=json.load(open("AlignedPortfolioReview.json")); assert d["projectionState"]=="failed" and d["betaDecision"]["eligibleForResearchBeta"] is False'
+              echo '::warning::Aligned audit failed; publishing the blocked state before legacy work.'
+            fi
+            git add -f AlignedPortfolioReview.json AlignedPortfolioReview.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Publish KeibaAI aligned audit state'
+            if git push origin HEAD:main; then exit 0; fi
+            echo 'Main advanced; rebuild the aligned audit from its current inputs.'
+            sleep $((attempt * 2))
+          done
+          echo 'Unable to publish aligned audit state after bounded retries.' >&2
+          exit 1
+
       - name: Refresh review, freeze v2 shadow, and publish material diagnostics
         shell: bash
         run: |
@@ -75,16 +101,15 @@ jobs:
             git reset --hard origin/main
 
             python production/refresh_portfolio_review_live.py
-            python production/aligned_portfolio_review.py
             python production/portfolio_review_100_diagnostics.py
             python production/portfolio_shadow_v2.py
 
-            if [ -z "$(git status --porcelain -- AlignedPortfolioReview.json AlignedPortfolioReview.md PortfolioReview100.json PortfolioReview100Diagnostics.json PortfolioReview100Diagnostics.md PortfolioShadowV2.json reports/*/PortfolioShadowV2.json)" ]; then
+            if [ -z "$(git status --porcelain -- PortfolioReview100.json PortfolioReview100Diagnostics.json PortfolioReview100Diagnostics.md PortfolioShadowV2.json reports/*/PortfolioShadowV2.json)" ]; then
               echo 'No material formal T-10 review, V2 shadow, or frozen 100R diagnostic change.'
               exit 0
             fi
 
-            git add -f AlignedPortfolioReview.json AlignedPortfolioReview.md PortfolioReview100.json PortfolioShadowV2.json
+            git add -f PortfolioReview100.json PortfolioShadowV2.json
             if [ -f PortfolioReview100Diagnostics.json ]; then
               git add -f PortfolioReview100Diagnostics.json
             fi

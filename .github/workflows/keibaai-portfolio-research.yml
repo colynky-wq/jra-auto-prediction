@@ -92,7 +92,7 @@ jobs:
       - name: Build formal prospective 100-race review projection
         run: |
           python production/portfolio_review_100.py
-          python production/aligned_portfolio_review.py
+          python production/aligned_portfolio_review.py || echo '::warning::Aligned audit is blocked; publish its failure report.'
 
       - name: Build accelerated mixed reference review
         run: python production/portfolio_early_review.py
@@ -111,7 +111,7 @@ jobs:
             python production/portfolio_shadow_v2.py
             python production/all_bet_recommendation_shadow.py
             python production/portfolio_review_100.py
-            python production/aligned_portfolio_review.py
+            python production/aligned_portfolio_review.py || echo '::warning::Aligned audit is blocked; publish its failure report.'
             python production/portfolio_early_review.py
           }
 

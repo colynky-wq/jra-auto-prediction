@@ -3,6 +3,9 @@ from copy import deepcopy
 from datetime import timedelta
 from itertools import combinations
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -146,6 +149,79 @@ class ReviewTests(unittest.TestCase):
         windows2,locks2,issues=review.lock_windows(updated,{'cohortLocks':locks})
         self.assertEqual(locks2,locks);self.assertEqual(len(windows2['first100']),99)
         self.assertEqual(len(issues),1)
+
+    def test_cli_audit_failure_revokes_stale_beta_readiness(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);_,prior=review.refresh(root,NOW)
+            # Simulate a previously ready projection, then fail the next audit.
+            prior['betaDecision']['eligibleForResearchBeta']=True
+            prior['aligned']['racesObserved']=300
+            prior['notificationEvents']=[{'event':'beta_research_ready','key':'prior-ready'}]
+            lock=[{'raceDate':'2026-11-07','raceID':'202605040502','inputFingerprint':'prior-frozen'}]
+            prior['cohortLocks']={'first100':lock}
+            (root/review.JSON_NAME).write_text(json.dumps(prior))
+            (root/'PortfolioResearchData.json').write_text('{broken legacy projection')
+            run=subprocess.run([sys.executable,str(Path(review.__file__).resolve())],
+                env={**os.environ,'KEIBAAI_ROOT':str(root)},capture_output=True,text=True)
+            self.assertNotEqual(run.returncode,0)
+            failed=json.loads((root/review.JSON_NAME).read_text())
+            self.assertFalse(failed['betaDecision']['eligibleForResearchBeta'])
+            self.assertEqual(failed['projectionState'],'failed')
+            self.assertFalse(failed['aligned']['countsAreCurrent'])
+            self.assertEqual(failed['cohortLocks']['first100'],lock)
+            self.assertEqual(failed['notificationEvents'],[])
+
+    def test_independent_workflow_publishes_blocked_state_before_legacy_failure(self):
+        from test_live_bundle_publisher import command
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)/'repo';root.mkdir();remote=Path(t)/'remote.git'
+            _,prior=review.refresh(root)
+            prior['betaDecision']['eligibleForResearchBeta']=True
+            (root/review.JSON_NAME).write_text(json.dumps(prior))
+            bad='{broken legacy data'
+            (root/'PortfolioResearchData.json').write_text(bad)
+            command(root,'init','-b','main');command(root,'config','user.name','test')
+            command(root,'config','user.email','test@example.invalid')
+            command(root,'add','.');command(root,'commit','-m','initial')
+            command(root,'clone','--bare',str(root),str(remote));command(root,'remote','add','origin',str(remote))
+            workflow=(Path(review.__file__).parent.parent/'.github/workflows/keibaai-formal-review-live.yml').read_text()
+            section=workflow.split('      - name: Publish aligned audit independently of legacy projections\n',1)[1]
+            section=section.split('      - name: Refresh review, freeze v2 shadow, and publish material diagnostics',1)[0]
+            script=section.split('        run: |\n',1)[1]
+            script='\n'.join(line[10:] for line in script.splitlines())
+            script=script.replace('python production/aligned_portfolio_review.py',
+                                  sys.executable+' '+str(Path(review.__file__).resolve()))
+            run=subprocess.run(['bash','-c',script],cwd=root,
+                               env={**os.environ,'KEIBAAI_ROOT':str(root)},capture_output=True,text=True)
+            self.assertEqual(run.returncode,0,run.stdout+run.stderr)
+            published=json.loads(command(remote,'show','main:'+review.JSON_NAME))
+            self.assertEqual(published['projectionState'],'failed')
+            self.assertFalse(published['betaDecision']['eligibleForResearchBeta'])
+            self.assertEqual(command(remote,'show','main:PortfolioResearchData.json'),bad)
+
+    def test_failed_audit_without_prior_data_uses_unknown_counts_not_zero(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t)
+            changed,failed=review.record_audit_failure(root,ValueError('source unavailable'),NOW)
+            self.assertTrue(changed);self.assertIsNone(failed['aligned']['racesObserved'])
+            self.assertIsNone(failed['betaDecision']['verifiedAlignedRaces'])
+            self.assertFalse(failed['betaDecision']['eligibleForResearchBeta'])
+            before=(root/review.JSON_NAME).read_bytes()
+            changed,_=review.record_audit_failure(root,ValueError('source unavailable'),NOW+timedelta(seconds=1))
+            self.assertFalse(changed);self.assertEqual((root/review.JSON_NAME).read_bytes(),before)
+            changed,recovered=review.refresh(root,NOW+timedelta(seconds=2))
+            self.assertTrue(changed);self.assertEqual(recovered['projectionState'],'verified')
+            self.assertTrue(recovered['aligned']['countsAreCurrent'])
+
+    def test_unreadable_projection_does_not_silently_replace_unknown_cohort_locks(self):
+        for broken in ['{broken','[]','0','{"x":NaN}']:
+            with self.subTest(broken=broken),tempfile.TemporaryDirectory() as t:
+                root=Path(t);(root/review.JSON_NAME).write_text(broken)
+                _,failed=review.record_audit_failure(root,ValueError('unreadable state'),NOW)
+                self.assertTrue(failed['cohortLockRecoveryRequired'])
+                self.assertFalse(failed['betaDecision']['eligibleForResearchBeta'])
+                with self.assertRaisesRegex(ValueError,'cohort locks'):
+                    review.refresh(root,NOW+timedelta(seconds=1))
 
     def test_settled_refresh_is_stable_across_json_finish_number_keys(self):
         with tempfile.TemporaryDirectory() as t:

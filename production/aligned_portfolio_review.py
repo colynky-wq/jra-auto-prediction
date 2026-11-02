@@ -21,8 +21,12 @@ PROTOCOL_NAME='ALIGNED_PORTFOLIO_PROTOCOL.json'
 PROTOCOL_SHA256='55ee84560014f5f4dec94996da103855c0d6a926f386973934922e894a293d79'
 
 
+def reject_nonfinite(token):
+    raise ValueError('non-finite JSON number: '+token)
+
+
 def read(path):
-    return json.loads(path.read_text(encoding='utf-8'))
+    return json.loads(path.read_text(encoding='utf-8'),parse_constant=reject_nonfinite)
 
 
 def protocol():
@@ -265,6 +269,8 @@ def build(root,now=None):
     matched=sum(r['resultState']=='matched' for r in valid)
     total=summary(valid)
     prior=read(root/JSON_NAME) if (root/JSON_NAME).exists() else {}
+    if prior.get('cohortLockRecoveryRequired'):
+        raise ValueError('restore the last verified cohort locks before rebuilding this projection')
     windows,locks,lock_issues=lock_windows(valid,prior);issues+=lock_issues
     first=windows['first100'];confirmation=windows['confirmation101to200']
     complete=captured is not None and completed is not None
@@ -277,12 +283,12 @@ def build(root,now=None):
             events.append({'event':'aligned_capture_milestone','key':p['version']+':milestone:'+str(milestone),'races':milestone})
     if decision['eligibleForResearchBeta']:
         events.append({'event':'beta_research_ready','key':p['version']+':beta_research_ready'})
-    return {'schemaVersion':1,'version':VERSION,'inputPolicy':capture.POLICY,
+    return {'schemaVersion':1,'version':VERSION,'inputPolicy':capture.POLICY,'projectionState':'verified',
             'generatedAtJST':now.astimezone(capture.JST).isoformat(timespec='seconds'),'startDate':capture.START_DATE,
             'protocolVersion':p['version'],'protocolFingerprint':PROTOCOL_SHA256,
             'formalRecommendationsEnabled':False,'autoBetEnabled':False,'stakeSizingEnabled':False,
             'legacy':legacy_review(root),
-            'aligned':{'racesObserved':len(valid),'matchedResultRaces':matched,'overall':total,
+            'aligned':{'countsAreCurrent':True,'racesObserved':len(valid),'matchedResultRaces':matched,'overall':total,
                        'first100':{'raceIDs':[r['raceID'] for r in first],'complete':len(first)==100,**summary(first),'diagnostics':diagnostics(first)},
                        'confirmation101to200':{'raceIDs':[r['raceID'] for r in confirmation],'complete':len(confirmation)==100,**summary(confirmation),'diagnostics':diagnostics(confirmation)}},
             'quality':{'status':'attention_required' if issues else 'collecting' if valid else 'waiting_for_first_capture',
@@ -298,6 +304,14 @@ def build(root,now=None):
 
 
 def render(d):
+    if d.get('projectionState')=='failed':
+        return '\n'.join(['# KeibaAI 入力整合系列：監査失敗・β保留','',
+            '- 最新の件数・成績を確認できません。保持した過去の数値を最新値として扱わないでください。',
+            f"- 最終正常確認：{d.get('lastVerifiedAtJST') or '未確認'}",
+            f"- 原因：{d['projectionFailure']['errorType']} — {d['projectionFailure']['detail']}",
+            '- β開始判定と成功通知を停止しています。復旧後に全入力を再監査します。',
+            '- 凍結入力、買い目、検証対象の構成は上書きしていません。',
+            '- 検証対象の構成を復元する必要があります。' if d.get('cohortLockRecoveryRequired') else '', ''])
     legacy=d['legacy'];a=d['aligned'];o=a['overall'];b=d['betaDecision']
     def roi(x):return '-' if x is None else f'{100*x:.2f}%'
     return '\n'.join(['# KeibaAI 入力整合系列の検証・監視','',
@@ -313,22 +327,80 @@ def render(d):
         '- 次開催の実データ未取得を、正常稼働や検証完了と解釈しません。',''])
 
 
-def refresh(root,now=None):
+def _write_projection(root,data):
     from live_bundle_publisher import atomic
-    root=Path(root);data=build(root,now);target=root/JSON_NAME
+    root=Path(root);target=root/JSON_NAME
     def material(v):return {k:x for k,x in v.items() if k!='generatedAtJST'}
-    if target.exists() and material(read(target))==material(data) and (root/MD_NAME).exists() and (root/MD_NAME).read_text()==render(data):return False,read(target)
+    try:
+        prior=read(target) if target.exists() else None
+        unchanged=(isinstance(prior,dict) and material(prior)==material(data)
+                   and (root/MD_NAME).exists() and (root/MD_NAME).read_text()==render(data))
+        if unchanged:return False,prior
+    except (OSError,ValueError,TypeError):
+        # Only generated projections may be replaced; immutable inputs are untouched.
+        pass
     atomic(target,(json.dumps(data,ensure_ascii=False,indent=2,allow_nan=False)+'\n').encode())
     atomic(root/MD_NAME,render(data).encode())
     return True,data
 
 
+def refresh(root,now=None):
+    return _write_projection(root,build(root,now))
+
+
+def record_audit_failure(root,error,now=None):
+    """Publish an explicit blocked state; never leave stale readiness on failure."""
+    root=Path(root);now=now or datetime.now(capture.JST);target=root/JSON_NAME
+    damaged=False
+    try:
+        prior=read(target) if target.exists() else {}
+        if (not isinstance(prior,dict) or (prior and (prior.get('version')!=VERSION
+                or prior.get('inputPolicy')!=capture.POLICY
+                or not isinstance(prior.get('aligned'),dict) or not isinstance(prior.get('legacy'),dict)
+                or not isinstance(prior.get('cohortLocks',{}),dict)))):
+            raise ValueError('unrecognized previous aligned projection')
+    except (OSError,ValueError,TypeError):
+        prior={};damaged=True
+    last_verified=(prior.get('lastVerifiedAtJST') if prior.get('projectionState')=='failed'
+                   else prior.get('generatedAtJST'))
+    data=deepcopy(prior) if prior else {
+        'schemaVersion':1,'version':VERSION,'inputPolicy':capture.POLICY,'startDate':capture.START_DATE,
+        'protocolVersion':None,'protocolFingerprint':PROTOCOL_SHA256,
+        'legacy':{'status':'unverified','racesObserved':None,'first100':None},
+        'aligned':{'racesObserved':None,'matchedResultRaces':None,'overall':None},
+        'cohortLocks':{},'races':[]}
+    issue={'code':'projection_failure','errorType':type(error).__name__,
+           'detail':str(error).replace('\n',' ')[:240]}
+    data.update(projectionState='failed',lastVerifiedAtJST=last_verified,
+                generatedAtJST=now.astimezone(capture.JST).isoformat(timespec='seconds'),
+                formalRecommendationsEnabled=False,autoBetEnabled=False,stakeSizingEnabled=False,
+                projectionFailure=issue,notificationEvents=[])
+    data['aligned']['countsAreCurrent']=False
+    data['quality']={'status':'attention_required','fullInputEvidenceRequired':True,
+                     'issues':[issue],'invalidCaptureCount':None,'missingCaptureCount':None,'resultExclusions':[]}
+    data['acceptance']={'status':'verification_failed','firstCaptureVerified':False,
+                        'firstSelectedSettlementVerified':False,'restartAndPublicationLiveVerified':False}
+    data['betaDecision']={'minimumRaces':300,'verifiedAlignedRaces':None,'matchedResultRaces':None,
+                          'eligibleForResearchBeta':False,'blockReasons':['projection_failed'],
+                          'automaticEnable':False,'profitabilityProven':False}
+    if damaged or prior.get('cohortLockRecoveryRequired'):
+        data['cohortLockRecoveryRequired']=True
+    return _write_projection(root,data)
+
+
 def main():
     root=Path(os.environ.get('KEIBAAI_ROOT',Path(__file__).resolve().parent.parent))
-    changed,data=refresh(root)
+    failed=False
+    try:
+        changed,data=refresh(root)
+    except Exception as error:
+        # Catch at the CLI boundary only: publish failure facts, then return nonzero.
+        changed,data=record_audit_failure(root,error)
+        failed=True
     print(json.dumps({'changed':changed,'alignedRacesObserved':data['aligned']['racesObserved'],
                       'quality':data['quality']['status'],'acceptance':data['acceptance']['status'],
-                      'betaDecision':data['betaDecision']},ensure_ascii=False))
+                      'projectionState':data['projectionState'],'betaDecision':data['betaDecision']},ensure_ascii=False))
+    if failed:raise SystemExit(1)
 
 
 if __name__=='__main__':main()
