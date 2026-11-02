@@ -1,0 +1,102 @@
+name: RaceSimulator CI and publish
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feature/race-simulator-v0-1
+    paths:
+      - 'RaceData.json'
+      - 'AppResearchData.json'
+      - 'production/race_simulator_v01.py'
+      - 'production/race_simulator_keibaai_adapter.py'
+      - 'production/build_race_simulation_data.py'
+      - 'production/test_race_simulator_v01.py'
+      - 'production/test_race_simulator_keibaai_adapter.py'
+      - 'production/test_build_race_simulation_data.py'
+      - 'ios/KeibaAI/**'
+      - '.github/workflows/race-simulator-ci.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: race-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator-and-ios:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Python version
+        run: python3 --version
+
+      - name: Run RaceSimulator unit tests
+        working-directory: production
+        run: |
+          python3 -m unittest \
+            test_race_simulator_v01.py \
+            test_race_simulator_keibaai_adapter.py \
+            test_build_race_simulation_data.py
+
+      - name: Build RaceSimulationData.json
+        run: |
+          python3 production/build_race_simulation_data.py \
+            --race-data RaceData.json \
+            --research-data AppResearchData.json \
+            --runs 250 \
+            --seed 20261103 \
+            --dt 0.5 \
+            --output RaceSimulationData.json
+
+      - name: Validate published simulation JSON
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('RaceSimulationData.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data['schemaVersion'] == 'race-simulator-v0.1-batch'
+          assert data['summary']['simulatedRaces'] > 0
+          for race in data['races']:
+              independent = race['independence']
+              assert independent['usesPredictionAIForMotion'] is False
+              assert independent['usesMarketProbabilityForMotion'] is False
+              assert independent['usesOddsForMotion'] is False
+              assert len(race['horses']) >= 2
+          print(json.dumps(data['summary'], ensure_ascii=False))
+          PY
+
+      - name: Show Xcode project
+        run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
+
+      - name: Build KeibaAI for iOS Simulator
+        run: |
+          xcodebuild \
+            -project ios/KeibaAI/KeibaAI.xcodeproj \
+            -scheme KeibaAI \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Commit generated simulation data
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- RaceSimulationData.json; then
+            echo 'RaceSimulationData.json unchanged'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add RaceSimulationData.json
+          git commit -m 'Update RaceSimulator output'
+          git push
