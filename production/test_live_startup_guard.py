@@ -9,7 +9,7 @@ SCRIPT = Path(__file__).resolve().parent.parent / '.github/scripts/keibaai-race-
 
 
 class TestLiveStartupGuard(unittest.TestCase):
-    def guard(self, body, exit_code=0, date='20261017'):
+    def guard(self, body, exit_code=0, date='20261017', official_code='200'):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             curl = root/'curl'
@@ -19,12 +19,13 @@ class TestLiveStartupGuard(unittest.TestCase):
                             'args=sys.argv[1:]\n'
                             'body=os.environ["TEST_BODY"]\n'
                             'if "-o" in args: Path(args[args.index("-o")+1]).write_text(body)\n'
-                            'else: sys.stdout.write(body)\n'
+                            'if "-w" in args: sys.stdout.write(os.environ["TEST_OFFICIAL_CODE"])\n'
+                            'elif "-o" not in args: sys.stdout.write(body)\n'
                             'sys.exit(int(os.environ["TEST_EXIT"]))\n')
             curl.chmod(0o755)
             output = root/'output'; output.touch()
             env = {**os.environ, 'PATH': str(root)+os.pathsep+os.environ['PATH'],
-                   'TEST_BODY': body, 'TEST_EXIT': str(exit_code), 'GITHUB_OUTPUT': str(output)}
+                   'TEST_BODY': body, 'TEST_EXIT': str(exit_code), 'TEST_OFFICIAL_CODE': official_code, 'GITHUB_OUTPUT': str(output)}
             result = subprocess.run(['bash', str(SCRIPT), date], env=env, text=True, capture_output=True)
             fields = dict(line.split('=', 1) for line in output.read_text().splitlines())
             return result, fields
@@ -39,9 +40,14 @@ class TestLiveStartupGuard(unittest.TestCase):
         self.assertIn('races=2', result.stdout)
 
     def test_nonempty_no_race_response_keeps_normal_skip(self):
-        result, fields = self.guard('<div>no races</div>')
+        result, fields = self.guard('<div>no races</div>', official_code='404')
         self.assertEqual(result.returncode, 0)
         self.assertEqual(fields['has_races'], 'false')
+
+    def test_zero_primary_ids_and_ambiguous_official_200_remain_unknown(self):
+        result, fields = self.guard('<div>no races</div>', official_code='200')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotEqual(fields.get('has_races'), 'false')
 
     def test_http_failure_is_not_a_successful_no_race_day(self):
         result, fields = self.guard('', 22)

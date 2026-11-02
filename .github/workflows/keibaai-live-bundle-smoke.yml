@@ -91,7 +91,10 @@ jobs:
 
           races = json.load(open('RaceData.json', encoding='utf-8'))
           assert races, 'RaceData empty'
-          race = races[0]
+          # This block exercises the legacy archive contract. Formal T-10
+          # archive selection is tested separately with isolated timestamps.
+          race = dict(races[0])
+          race.pop('predictionTiming', None)
           built = base.build_race_signal(race)
           assert built and built.get('eligible')
 
