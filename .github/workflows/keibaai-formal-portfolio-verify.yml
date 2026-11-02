@@ -9,6 +9,7 @@ on:
     paths:
       - 'production/aligned_portfolio_review.py'
       - 'production/test_aligned_portfolio_review.py'
+      - 'production/test_formal_portfolio_e2e.py'
       - 'production/ALIGNED_PORTFOLIO_PROTOCOL.json'
       - 'production/formal_portfolio_capture.py'
       - 'production/test_formal_portfolio_capture.py'
@@ -32,6 +33,7 @@ jobs:
       - run: |
           python production/test_formal_portfolio_capture.py
           python production/test_aligned_portfolio_review.py
+          python production/test_formal_portfolio_e2e.py
           python production/test_formal_10min_evidence.py
           python production/test_portfolio_shadow.py
           python production/test_portfolio_review_100.py

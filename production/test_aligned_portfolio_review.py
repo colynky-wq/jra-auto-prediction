@@ -147,6 +147,17 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(locks2,locks);self.assertEqual(len(windows2['first100']),99)
         self.assertEqual(len(issues),1)
 
+    def test_settled_refresh_is_stable_across_json_finish_number_keys(self):
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t);r=prepare(root);settle(root,r)
+            changed,first=review.refresh(root,NOW+timedelta(hours=1))
+            self.assertTrue(changed)
+            self.assertEqual(first['races'][0]['actualFinish']['1'],1)
+            before=(root/review.JSON_NAME).read_bytes()
+            again,_=review.refresh(root,NOW+timedelta(hours=1,seconds=1))
+            self.assertFalse(again)
+            self.assertEqual((root/review.JSON_NAME).read_bytes(),before)
+
     def test_refresh_is_read_only_for_inputs_and_does_not_churn_on_timestamp(self):
         with tempfile.TemporaryDirectory() as t:
             root=Path(t);r=prepare(root)

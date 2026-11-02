@@ -129,7 +129,7 @@ def settle(root,record,sources,now,common):
     folder=Path(root)/'reports'/day.replace('-','')
     actual=reference.checked_results(folder/'ResultData.json',day,now).get((day,rid))
     state,finish=model.result_state(race,actual)
-    finishmap={h['number']:h.get('finishPosition') for h in actual['horses']} if actual else {}
+    finishmap={str(h['number']):h.get('finishPosition') for h in actual['horses']} if actual else {}
     if state=='invalid':raise ValueError('invalid final result identity/finish')
     if state=='matched':
         wides=wide_results(root,race,finish) if refs or any(l['betType']=='wide' for l in plan['legs']) else {}

@@ -39,3 +39,7 @@
 `python production/aligned_portfolio_review.py` は保存済み記録を読み、新しいJSON/Markdown投影のみを更新する。ネット再取得、予測、学習、凍結記録の追加・修正はしない。内容が同じなら生成時刻だけでコミットを増やさない。
 
 既存のFormal Review Live、Portfolio Research、Result Syncに組み込む。Result Syncは確定結果の更新後に新系列を再集計する。ChatGPTの既存「競馬予測・結果照合」「ワイドβ開始判定」もこの契約を使う。別の同種定期タスクは追加しない。
+
+## 通しテスト
+
+`python production/test_formal_portfolio_e2e.py` は、実際のlive publisherとバックグラウンド記録処理を使い、T-10保存→送信失敗→永続outboxの再開・公開→発走後の再開→独立結果と払戻の照合まで検証する。外部HTTPは禁止し、合成レース・ローカルの一時Gitリポジトリだけを使用する。再開時にオッズを再取得せず、全凍結入力と買い目が不変で、精算後も内容の同じレポートを再保存しないことを確認する。これは本番実レースを観測した証拠には加算しない。
