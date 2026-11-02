@@ -13,7 +13,13 @@ struct KeibaAIApp: App {
 
 private struct KeibaAIRootView: View {
     var body: some View {
-        KeibaAINewDesignView()
+        TabView {
+            KeibaAINewDesignView()
+                .tabItem { Label("予測AI", systemImage: "sparkles") }
+
+            KeibaAIRaceSimulatorScreen()
+                .tabItem { Label("展開シミュ", systemImage: "figure.run") }
+        }
     }
 }
 

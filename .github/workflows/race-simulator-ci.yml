@@ -1,0 +1,129 @@
+name: RaceSimulator v0.1 CI and publish
+# Validation trigger after safe main integration.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feature/race-simulator-v0-1
+    paths:
+      - 'RaceData.json'
+      - 'AppResearchData.json'
+      - 'production/race_simulator_v01.py'
+      - 'production/race_simulator_keibaai_adapter.py'
+      - 'production/build_race_simulation_data.py'
+      - 'production/race_metadata_overrides.json'
+      - 'production/test_race_simulator_v01.py'
+      - 'production/test_race_simulator_keibaai_adapter.py'
+      - 'production/test_build_race_simulation_data.py'
+      - 'ios/KeibaAI/**'
+      - '.github/workflows/race-simulator-ci.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: race-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout simulator inputs only
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            RaceData.json
+            AppResearchData.json
+            production
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
+      - name: Python version
+        run: python3 --version
+
+      - name: Run RaceSimulator unit tests
+        working-directory: production
+        run: |
+          python3 -m unittest \
+            test_race_simulator_v01.py \
+            test_race_simulator_keibaai_adapter.py \
+            test_build_race_simulation_data.py
+
+      - name: Build RaceSimulationData.json
+        run: |
+          python3 production/build_race_simulation_data.py \
+            --race-data RaceData.json \
+            --research-data AppResearchData.json \
+            --metadata-overrides production/race_metadata_overrides.json \
+            --runs 250 \
+            --seed 20261103 \
+            --dt 0.5 \
+            --output RaceSimulationData.json
+
+      - name: Validate published simulation JSON
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('RaceSimulationData.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          assert data['schemaVersion'] == 'race-simulator-v0.1-batch'
+          assert data['status'] == 'ok', data.get('errors')
+          assert data['summary']['simulatedRaces'] > 0
+          assert data['summary']['errorRaces'] == 0, data.get('errors')
+          assert data['errors'] == [], data['errors']
+          for race in data['races']:
+              independent = race['independence']
+              assert independent['usesPredictionAIForMotion'] is False
+              assert independent['usesMarketProbabilityForMotion'] is False
+              assert independent['usesOddsForMotion'] is False
+              assert len(race['horses']) >= 2
+          print(json.dumps(data['summary'], ensure_ascii=False))
+          PY
+
+      - name: Commit generated simulation data
+        if: github.event_name == 'push'
+        run: |
+          git add --sparse RaceSimulationData.json
+          if git diff --cached --quiet; then
+            echo 'RaceSimulationData.json unchanged'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git commit -m 'Update RaceSimulator output'
+          git push
+
+  ios-build:
+    runs-on: xcode-27
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout iOS project only
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ios
+          fetch-depth: 1
+
+      - name: Show Xcode project
+        run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
+
+      - name: Build KeibaAI for iOS Simulator
+        run: |
+          xcodebuild \
+            -project ios/KeibaAI/KeibaAI.xcodeproj \
+            -scheme KeibaAI \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+# CI revalidation trigger after merging latest main: 2026-11-03 JST
+# Final CI after syncing main ccdf2c977d04d6f0395bb900158257902003c15c
+# Final post-sync CI trigger for merge faf88dbc2c9b6d074c92529460e4fbc29caef8ac
