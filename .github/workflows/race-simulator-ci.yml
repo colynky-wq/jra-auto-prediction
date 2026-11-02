@@ -89,6 +89,7 @@ jobs:
       - name: Commit generated simulation data
         if: github.event_name == 'push'
         run: |
+          set -euo pipefail
           git add --sparse RaceSimulationData.json
           if git diff --cached --quiet; then
             echo 'RaceSimulationData.json unchanged'
@@ -97,7 +98,20 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
           git commit -m 'Update RaceSimulator output'
-          git push
+
+          # main is updated frequently by other KeibaAI workflows. Rebase the
+          # generated-data commit onto the newest main before each push attempt
+          # so a harmless concurrent research update does not fail this CI.
+          for attempt in 1 2 3 4 5; do
+            echo "Publish attempt ${attempt}/5"
+            git fetch origin main --depth=50
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+          done
+          echo 'Failed to publish RaceSimulationData.json after 5 attempts.' >&2
+          exit 1
 
   ios-build:
     runs-on: xcode-27
