@@ -54,6 +54,13 @@ class CurrentKeibaAIAdapterTests(unittest.TestCase):
         self.assertEqual(a["horses"], b["horses"])
         self.assertNotEqual(a["comparisonWithPredictionAI"], b["comparisonWithPredictionAI"])
 
+    def test_legacy_distance_label_does_not_override_course_distance(self):
+        race = copy.deepcopy(self.race)
+        race[0]["distance"] = "前日・朝時点"
+        result = simulate_current_keibaai(race, self.research, "202608041101", runs=20, seed=123)
+        self.assertEqual(result["distanceMeters"], 1400.0)
+        self.assertEqual(result["track"], "ダ1400m")
+
 
 if __name__ == "__main__":
     unittest.main()
