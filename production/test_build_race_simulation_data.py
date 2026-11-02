@@ -70,6 +70,31 @@ class BuildRaceSimulationDataTests(unittest.TestCase):
         self.assertEqual(backfill["summary"]["inputRaces"], 2)
         self.assertEqual({row["raceID"] for row in backfill["races"]}, {"OLD", "NEW"})
 
+    def test_verified_metadata_sidecar_repairs_malformed_course_only(self):
+        malformed = race("202608041108", "2026-11-01", 8)
+        malformed["venue"] = "京都"
+        malformed["raceName"] = "3歳以上1勝クラス"
+        malformed["course"] = "前日・朝時点"
+        overrides = {
+            "races": {
+                "202608041108": {
+                    "course": "芝2200m",
+                    "distanceMeters": 2200,
+                    "source": "JRA official",
+                    "verifiedDate": "2026-11-03",
+                    "reason": "malformed source course",
+                }
+            }
+        }
+        payload = build_batch([malformed], {"races": []}, metadata_overrides=overrides, runs=5, seed=9)
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["summary"]["simulatedRaces"], 1)
+        self.assertEqual(payload["summary"]["errorRaces"], 0)
+        self.assertEqual(payload["summary"]["metadataRepairs"], 1)
+        self.assertEqual(payload["races"][0]["distanceMeters"], 2200.0)
+        self.assertEqual(payload["races"][0]["track"], "芝2200m")
+        self.assertEqual(payload["metadataRepairs"][0]["raceID"], "202608041108")
+
 
 if __name__ == "__main__":
     unittest.main()
