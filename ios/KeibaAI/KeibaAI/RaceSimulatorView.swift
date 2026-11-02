@@ -166,7 +166,7 @@ private final class KeibaAIRaceSimulatorStore: ObservableObject {
         var req = URLRequest(url: url)
         req.cachePolicy = .reloadIgnoringLocalCacheData
         req.timeoutInterval = 15
-        req.setValue("KeibaAI-RaceSimulator/0.1", forHTTPHeaderField: "User-Agent")
+        req.setValue("KeibaAI-RaceSimulator/0.2", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: req)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { throw URLError(.badServerResponse) }
         return try JSONDecoder().decode(T.self, from: data)
@@ -219,6 +219,7 @@ struct KeibaAIRaceSimulatorScreen: View {
         } detail: {
             if let race = selectedRace, let sim = store.simulation(for: race.raceID) {
                 KeibaAIRaceSimulatorDetail(race: race, sim: sim, batch: store.batch)
+                    .id(sim.raceID)
             } else if store.isLoading {
                 ProgressView("シミュレーションを取得中…")
             } else if let race = selectedRace {
@@ -269,13 +270,49 @@ private struct KeibaAIRaceSimulatorDetail: View {
     let sim: SimRace
     let batch: SimBatch?
 
+    @State private var replayProgress = 0.0
+    @State private var isReplayPlaying = false
+    @State private var replaySpeed = 1.0
+
+    private let replayTimer = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
+
     private var simTop3: [SimHorse] { Array(sim.horses.prefix(3)) }
     private var aiTop3: [Horse] { Array(race.horses.sorted { $0.aiProbability > $1.aiProbability }.prefix(3)) }
+
+    private var replayDuration: Double {
+        max(sim.horses.map(\.averageFinishTimeSeconds).max() ?? 90.0, 1.0)
+    }
+
+    private var replayElapsedSeconds: Double {
+        replayProgress * replayDuration
+    }
+
+    private var replayPhase: String {
+        switch replayProgress {
+        case ..<0.03: return "スタート"
+        case ..<0.22: return "序盤"
+        case ..<0.45: return "向正面"
+        case ..<0.68: return "3〜4角"
+        case ..<0.86: return "直線入口"
+        case ..<0.995: return "直線"
+        default: return "ゴール"
+        }
+    }
+
+    private var replayLeaders: [SimHorse] {
+        sim.horses.sorted {
+            let lp = replayCourseProgress(for: $0)
+            let rp = replayCourseProgress(for: $1)
+            if abs(lp - rp) > 0.0001 { return lp > rp }
+            return $0.expectedFinish < $1.expectedFinish
+        }
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 headerCard
+                replayCard
                 resultCard
                 positionCard
                 trafficCard
@@ -288,6 +325,9 @@ private struct KeibaAIRaceSimulatorDetail: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("\(race.venue) \(race.raceNumber)R")
         .navigationBarTitleDisplayMode(.inline)
+        .onReceive(replayTimer) { _ in
+            advanceReplay()
+        }
     }
 
     private var headerCard: some View {
@@ -305,11 +345,16 @@ private struct KeibaAIRaceSimulatorDetail: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("RaceSimulator v0.1")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .padding(7)
-                    .background(.blue.opacity(0.10), in: Capsule())
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("KeibaAI v0.2")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(7)
+                        .background(.blue.opacity(0.10), in: Capsule())
+                    Text("Replay UI")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
             Divider()
             Label("独立性チェック済み", systemImage: "checkmark.shield.fill")
@@ -323,6 +368,156 @@ private struct KeibaAIRaceSimulatorDetail: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+
+    private var replayCard: some View {
+        card {
+            HStack(alignment: .firstTextBaseline) {
+                Label("レース展開を再生", systemImage: "play.circle.fill")
+                    .font(.title3.bold())
+                Spacer()
+                Text(replayPhase)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.orange)
+            }
+
+            Text("各馬の位置取りレンジと平均走破時間から、展開の流れを連続表示します。実映像やGPS軌跡ではなく、RaceSimulatorの代表的な展開を可視化したものです。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            GeometryReader { proxy in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(Color(uiColor: .secondarySystemBackground))
+
+                    Ellipse()
+                        .stroke(Color.brown.opacity(0.28), lineWidth: 42)
+                        .padding(26)
+
+                    Ellipse()
+                        .stroke(Color.green.opacity(0.70), lineWidth: 28)
+                        .padding(26)
+
+                    Ellipse()
+                        .stroke(
+                            Color.white.opacity(0.72),
+                            style: StrokeStyle(lineWidth: 1.5, dash: [7, 6])
+                        )
+                        .padding(26)
+
+                    Path { path in
+                        let x = proxy.size.width / 2
+                        path.move(to: CGPoint(x: x - 15, y: 18))
+                        path.addLine(to: CGPoint(x: x - 15, y: 61))
+                    }
+                    .stroke(
+                        Color.primary.opacity(0.75),
+                        style: StrokeStyle(lineWidth: 3, dash: [4, 3])
+                    )
+
+                    Text("START / GOAL")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .position(x: proxy.size.width / 2 + 29, y: 18)
+
+                    ForEach(sim.horses) { horse in
+                        replayHorseMarker(horse, size: proxy.size)
+                    }
+                }
+            }
+            .frame(height: 320)
+
+            HStack(spacing: 10) {
+                Button {
+                    if replayProgress >= 0.999 {
+                        replayProgress = 0
+                    }
+                    isReplayPlaying.toggle()
+                } label: {
+                    Label(isReplayPlaying ? "一時停止" : "再生", systemImage: isReplayPlaying ? "pause.fill" : "play.fill")
+                        .frame(minWidth: 82)
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    resetReplay()
+                } label: {
+                    Label("最初へ", systemImage: "backward.end.fill")
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(String(format: "%.1f / %.1f秒", replayElapsedSeconds, replayDuration))
+                        .font(.caption.monospacedDigit())
+                    Text("進行目安 \(Int((replayProgress * sim.distanceMeters).rounded())) / \(Int(sim.distanceMeters.rounded()))m")
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Slider(
+                value: $replayProgress,
+                in: 0...1,
+                onEditingChanged: { editing in
+                    if editing { isReplayPlaying = false }
+                }
+            )
+            .accessibilityLabel("レース再生位置")
+
+            Picker("再生速度", selection: $replaySpeed) {
+                Text("0.5×").tag(0.5)
+                Text("1×").tag(1.0)
+                Text("2×").tag(2.0)
+                Text("4×").tag(4.0)
+            }
+            .pickerStyle(.segmented)
+
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("現在の先頭グループ")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                    Text(replayLeaders.prefix(3).map { "#\($0.horseNumber) \($0.horseName)" }.joined(separator: "  /  "))
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(2)
+                }
+                Spacer()
+                Text(paceLabel(sim.pace))
+                    .font(.caption.bold())
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(.orange.opacity(0.12), in: Capsule())
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func replayHorseMarker(_ horse: SimHorse, size: CGSize) -> some View {
+        let point = replayPoint(for: horse, size: size)
+        let rank = interpolatedMedianRank(for: horse, progress: replayProgress)
+
+        VStack(spacing: 2) {
+            ZStack {
+                Circle()
+                    .fill(horseColor(horse.horseNumber))
+                    .frame(width: 30, height: 30)
+                    .shadow(radius: 2, y: 1)
+                Text("\(horse.horseNumber)")
+                    .font(.caption.bold().monospacedDigit())
+                    .foregroundStyle(.white)
+            }
+            Text(String(format: "%.1f位", rank))
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1)
+                .background(.ultraThinMaterial, in: Capsule())
+        }
+        .position(point)
+        .animation(.linear(duration: 0.08), value: replayProgress)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(horse.horseNumber)番 \(horse.horseName)、推定\(String(format: "%.1f", rank))位")
     }
 
     private var resultCard: some View {
@@ -459,6 +654,69 @@ private struct KeibaAIRaceSimulatorDetail: View {
         VStack(alignment: .leading, spacing: 12) { content() }
             .padding(18)
             .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func advanceReplay() {
+        guard isReplayPlaying else { return }
+        let increment = (1.0 / 30.0) * replaySpeed / replayDuration
+        replayProgress = min(1.0, replayProgress + increment)
+        if replayProgress >= 0.9999 {
+            replayProgress = 1.0
+            isReplayPlaying = false
+        }
+    }
+
+    private func resetReplay() {
+        isReplayPlaying = false
+        replayProgress = 0
+    }
+
+    private func replayCourseProgress(for horse: SimHorse) -> Double {
+        let horseDuration = max(horse.averageFinishTimeSeconds, 1.0)
+        let elapsed = replayElapsedSeconds
+        let base = min(1.0, max(0.0, elapsed / horseDuration))
+        guard base > 0, base < 1 else { return base }
+
+        let rank = interpolatedMedianRank(for: horse, progress: base)
+        let field = Double(max(sim.horses.count, 1))
+        let middleRank = (field + 1.0) / 2.0
+        let rankOffset = ((middleRank - rank) / field) * 0.075 * sin(.pi * base)
+        return min(1.0, max(0.0, base + rankOffset))
+    }
+
+    private func replayPoint(for horse: SimHorse, size: CGSize) -> CGPoint {
+        let progress = replayCourseProgress(for: horse)
+        let angle = (-Double.pi / 2.0) + (progress * Double.pi * 2.0)
+        let laneJitter = CGFloat((horse.horseNumber % 5) - 2) * 2.5
+        let radiusX = max(24, size.width / 2 - 52 + laneJitter)
+        let radiusY = max(24, size.height / 2 - 52 + laneJitter * 0.45)
+        return CGPoint(
+            x: size.width / 2 + cos(angle) * radiusX,
+            y: size.height / 2 + sin(angle) * radiusY
+        )
+    }
+
+    private func interpolatedMedianRank(for horse: SimHorse, progress: Double) -> Double {
+        let bands = horse.rankBands.sorted { $0.progress < $1.progress }
+        guard let first = bands.first else { return horse.expectedFinish }
+        if progress <= first.progress { return first.medianRank }
+        guard let last = bands.last else { return first.medianRank }
+        if progress >= last.progress { return last.medianRank }
+
+        for index in 1..<bands.count {
+            let lower = bands[index - 1]
+            let upper = bands[index]
+            guard progress <= upper.progress else { continue }
+            let width = max(upper.progress - lower.progress, 0.0001)
+            let fraction = (progress - lower.progress) / width
+            return lower.medianRank + (upper.medianRank - lower.medianRank) * fraction
+        }
+        return last.medianRank
+    }
+
+    private func horseColor(_ number: Int) -> Color {
+        let hue = Double((number * 47) % 360) / 360.0
+        return Color(hue: hue, saturation: 0.72, brightness: 0.84)
     }
 
     private func paceLabel(_ raw: String) -> String {
