@@ -31,10 +31,15 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Checkout
+      - name: Checkout simulator inputs only
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          sparse-checkout: |
+            RaceData.json
+            AppResearchData.json
+            production
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
 
       - name: Python version
         run: python3 --version
@@ -78,13 +83,13 @@ jobs:
       - name: Commit generated simulation data
         if: github.event_name == 'push'
         run: |
-          if git diff --quiet -- RaceSimulationData.json; then
+          git add --sparse RaceSimulationData.json
+          if git diff --cached --quiet; then
             echo 'RaceSimulationData.json unchanged'
             exit 0
           fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add RaceSimulationData.json
           git commit -m 'Update RaceSimulator output'
           git push
 
@@ -93,8 +98,12 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Checkout
+      - name: Checkout iOS project only
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ios
+          fetch-depth: 1
 
       - name: Show Xcode project
         run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
