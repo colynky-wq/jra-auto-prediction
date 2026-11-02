@@ -302,6 +302,35 @@ def build(root: Path) -> dict[str, Any]:
     warnings: list[str] = []
     for folder in sorted(reports.glob("20??????")):
         day8 = folder.name
+        from formal_portfolio_capture import START_DATE, FOLDER, load, path_for, project
+        day = day_iso(day8)
+        if day >= START_DATE:
+            try:
+                bets = read_json(folder / "BetResearchData.json") if (folder / "BetResearchData.json").exists() else {"races": []}
+                rows = race_rows(bets)
+                validation = read_json(folder / "WideValidation.json") if (folder / "WideValidation.json").exists() else None
+                payouts = wide_payout_index(validation)
+                signals = read_json(folder / "SignalData.json") if (folder / "SignalData.json").exists() else {"races": []}
+                index = signal_rows(signals)
+                # The immutable capture is authoritative even if display publication
+                # failed, was overwritten, or no longer contains this race.
+                for capture in sorted((folder / FOLDER).glob("*.json")):
+                    saved = load(root, day, capture.stem)
+                    index[capture.stem] = saved["signal"]
+                for rid, signal in sorted(index.items(), key=lambda x:(str(x[1].get("startTime", "")), x[0])):
+                    if signal.get("raceDate") != day:
+                        continue
+                    if path_for(root, day, rid).exists():
+                        races.append(project(root, day, rid, rows, payouts))
+                    else:
+                        pending = build_race_plan(rid, day, {}, {**signal, "eligible": False}, {})
+                        pending["reason"] = "正式T-10の入力・買い目一体記録がありません"
+                        pending["inputPolicy"] = "formal_input_missing"
+                        races.append(pending)
+                        warnings.append(f"{day}:{rid}:formal_portfolio_inputs_missing")
+            except Exception as exc:
+                warnings.append(f"{day8}: {type(exc).__name__}: {exc}")
+            continue
         bet_path = folder / "BetResearchData.json"
         signal_path = folder / "SignalData.json"
         if not bet_path.exists() or not signal_path.exists():

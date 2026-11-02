@@ -26,6 +26,12 @@ def research_sidecars_complete(root,date8,rid):
     required.append(day/'wide_axis_v1'/(rid+'.json'))
     if not all(p.is_file() and p.stat().st_size>0 for p in required):
         return False
+    from formal_portfolio_capture import START_DATE, load
+    if str(date8) >= START_DATE.replace('-', ''):
+        try:
+            load(root, datetime.strptime(date8, '%Y%m%d').date().isoformat(), rid)
+        except (OSError, ValueError, KeyError, TypeError):
+            return False
     # Ticket-specific prospective capture starts on 2026-10-31. Older formal
     # races remain valid historical evidence and must not become incomplete just
     # because the new shadow sidecars did not exist yet.

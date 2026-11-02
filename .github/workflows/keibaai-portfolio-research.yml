@@ -14,6 +14,8 @@ on:
       - 'production/test_portfolio_shadow_v2.py'
       - 'production/all_bet_recommendation_shadow.py'
       - 'production/test_all_bet_recommendation_shadow.py'
+      - 'production/formal_portfolio_capture.py'
+      - 'production/test_formal_portfolio_capture.py'
       - 'production/formal_10min_evidence.py'
       - 'production/test_formal_10min_evidence.py'
       - 'production/portfolio_review_100.py'
@@ -66,6 +68,7 @@ jobs:
         run: |
           python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/portfolio_shadow_v2.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
           python production/test_bet_research_data.py
+          python production/test_formal_portfolio_capture.py
           python production/test_portfolio_shadow.py
           python production/test_portfolio_shadow_v2.py
           python production/test_all_bet_recommendation_shadow.py

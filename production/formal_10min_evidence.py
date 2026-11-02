@@ -48,7 +48,7 @@ def _result(eligible: bool, reason: str, **extra: Any) -> dict[str, Any]:
     }
 
 
-def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, Any]:
+def inspect_formal_10min_evidence(root: Path, row: dict[str, Any], *, require_portfolio: bool = True) -> dict[str, Any]:
     """Return fail-closed evidence for one portfolio race.
 
     The immutable prediction snapshot's own startTime is the schedule used when
@@ -144,6 +144,22 @@ def inspect_formal_10min_evidence(root: Path, row: dict[str, Any]) -> dict[str, 
             )
         if entry_captured is not None:
             extra["entryCapturedAtJST"] = entry_captured.isoformat()
+
+    from formal_portfolio_capture import START_DATE, load
+    if day >= START_DATE and require_portfolio:
+        try:
+            bundle = load(root, day, rid)
+            if bundle["prediction"] != prediction:
+                return _result(False, "formal_portfolio_prediction_mismatch", source=rel)
+            extra["portfolioInputsVerified"] = True
+            extra["portfolioInputFingerprint"] = bundle["fingerprint"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return _result(False, "formal_portfolio_inputs_missing_or_invalid", source=rel)
+    else:
+        # Preserve the locked legacy cohort, without claiming it had complete
+        # time-aligned portfolio inputs. The old contract verified win only.
+        extra["portfolioInputsVerified"] = False
+        extra["portfolioInputPolicy"] = "legacy_win_only_evidence"
 
     return _result(
         True,

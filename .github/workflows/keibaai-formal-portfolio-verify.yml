@@ -1,0 +1,36 @@
+name: Verify formal portfolio input capture
+on:
+  pull_request:
+    paths:
+      - 'production/**'
+      - '.github/workflows/keibaai-formal-portfolio-verify.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/formal_portfolio_capture.py'
+      - 'production/test_formal_portfolio_capture.py'
+      - 'production/formal_10min_evidence.py'
+      - 'production/build_signal_data_v2.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/live_recording_resume.py'
+      - 'production/portfolio_shadow.py'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - run: |
+          python production/test_formal_portfolio_capture.py
+          python production/test_formal_10min_evidence.py
+          python production/test_portfolio_shadow.py
+          python production/test_portfolio_review_100.py
+          python production/test_portfolio_review_100_diagnostics.py
+          python production/test_live_recording_resume.py
+          python production/test_live_bundle_publisher.py
