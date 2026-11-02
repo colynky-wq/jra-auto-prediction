@@ -12,6 +12,7 @@ on:
       - 'production/race_simulator_v01.py'
       - 'production/race_simulator_keibaai_adapter.py'
       - 'production/build_race_simulation_data.py'
+      - 'production/race_metadata_overrides.json'
       - 'production/test_race_simulator_v01.py'
       - 'production/test_race_simulator_keibaai_adapter.py'
       - 'production/test_build_race_simulation_data.py'
@@ -57,6 +58,7 @@ jobs:
           python3 production/build_race_simulation_data.py \
             --race-data RaceData.json \
             --research-data AppResearchData.json \
+            --metadata-overrides production/race_metadata_overrides.json \
             --runs 250 \
             --seed 20261103 \
             --dt 0.5 \
@@ -70,7 +72,10 @@ jobs:
           p = Path('RaceSimulationData.json')
           data = json.loads(p.read_text(encoding='utf-8'))
           assert data['schemaVersion'] == 'race-simulator-v0.1-batch'
+          assert data['status'] == 'ok', data.get('errors')
           assert data['summary']['simulatedRaces'] > 0
+          assert data['summary']['errorRaces'] == 0, data.get('errors')
+          assert data['errors'] == [], data['errors']
           for race in data['races']:
               independent = race['independence']
               assert independent['usesPredictionAIForMotion'] is False
