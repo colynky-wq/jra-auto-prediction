@@ -1,7 +1,7 @@
 {
   "schemaVersion": "race-simulator-v0.1-batch",
-  "generatedAt": "2026-11-02T16:33:28.854312Z",
-  "status": "partial",
+  "generatedAt": "2026-11-02T16:40:35.945515Z",
+  "status": "ok",
   "targetRaceDate": "2026-11-01",
   "settings": {
     "runsPerRace": 250,
@@ -12,14 +12,25 @@
   "summary": {
     "sourceRaces": 23,
     "inputRaces": 23,
-    "simulatedRaces": 22,
+    "simulatedRaces": 23,
     "skippedRaces": 0,
-    "errorRaces": 1
+    "errorRaces": 0,
+    "metadataRepairs": 1
   },
+  "metadataRepairs": [
+    {
+      "raceID": "202608041108",
+      "course": "芝2200m",
+      "distanceMeters": 2200.0,
+      "source": "JRA official race card/result: 2026-11-01 Kyoto 8R",
+      "verifiedDate": "2026-11-03",
+      "reason": "RaceData course was overwritten with the timing label 前日・朝時点"
+    }
+  ],
   "races": [
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:20.611411Z",
+      "generatedAt": "2026-11-02T16:38:04.521836Z",
       "raceID": "202608041101",
       "raceName": "2歳未勝利",
       "racecourse": "京都",
@@ -666,7 +677,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:34.355693Z",
+      "generatedAt": "2026-11-02T16:38:19.605553Z",
       "raceID": "202608041102",
       "raceName": "2歳未勝利",
       "racecourse": "京都",
@@ -1423,7 +1434,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:48.198376Z",
+      "generatedAt": "2026-11-02T16:38:34.887773Z",
       "raceID": "202608041103",
       "raceName": "2歳未勝利",
       "racecourse": "京都",
@@ -2125,7 +2136,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:01.076113Z",
+      "generatedAt": "2026-11-02T16:38:48.963184Z",
       "raceID": "202608041105",
       "raceName": "2歳新馬",
       "racecourse": "京都",
@@ -3102,7 +3113,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:09.077990Z",
+      "generatedAt": "2026-11-02T16:38:57.620667Z",
       "raceID": "202608041106",
       "raceName": "2歳新馬",
       "racecourse": "京都",
@@ -4024,7 +4035,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:22.068388Z",
+      "generatedAt": "2026-11-02T16:39:11.959099Z",
       "raceID": "202608041107",
       "raceName": "3歳以上1勝クラス",
       "racecourse": "京都",
@@ -4946,7 +4957,819 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:39.254030Z",
+      "generatedAt": "2026-11-02T16:39:30.132623Z",
+      "raceID": "202608041108",
+      "raceName": "3歳以上1勝クラス",
+      "racecourse": "京都",
+      "track": "芝2200m",
+      "distanceMeters": 2200.0,
+      "pace": "MID",
+      "paceSource": "neutral-mid-fallback",
+      "inputQuality": {
+        "formationStatus": "reference_order",
+        "formationCoveragePct": 92.9,
+        "paceForecastStatus": "unavailable",
+        "styleKnownHorses": 14,
+        "styleTotalHorses": 14,
+        "styleCoveragePct": 100.0
+      },
+      "independence": {
+        "usesPredictionAIForMotion": false,
+        "usesMarketProbabilityForMotion": false,
+        "usesOddsForMotion": false,
+        "strengthSource": "neutral-equal-strength"
+      },
+      "settings": {
+        "runs": 250,
+        "seed": 20577210,
+        "dtSeconds": 0.5
+      },
+      "horses": [
+        {
+          "horseNumber": 10,
+          "horseName": "マイコンプリート",
+          "style": "先行",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.272,
+          "simulationTop2Probability": 0.356,
+          "simulationTop3Probability": 0.432,
+          "expectedFinish": 6.532,
+          "earlyLeadProbability": 0.288,
+          "top3At75Probability": 0.748,
+          "averageFinishTimeSeconds": 134.774,
+          "averageBlockedSeconds": 23.084,
+          "averageLaneChanges": 8.516,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 7.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 1.0,
+              "medianRank": 5.0,
+              "p80Rank": 13.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 3,
+          "horseName": "オープンザパンドラ",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.144,
+          "simulationTop2Probability": 0.272,
+          "simulationTop3Probability": 0.428,
+          "expectedFinish": 5.328,
+          "earlyLeadProbability": 0.008,
+          "top3At75Probability": 0.08,
+          "averageFinishTimeSeconds": 134.531,
+          "averageBlockedSeconds": 16.206,
+          "averageLaneChanges": 11.828,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 5.0,
+              "medianRank": 7.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 5.8,
+              "medianRank": 7.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 5.0,
+              "medianRank": 7.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 3.0,
+              "medianRank": 6.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 2.0,
+              "medianRank": 4.0,
+              "p80Rank": 9.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 1,
+          "horseName": "クラウディアイ",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.128,
+          "simulationTop2Probability": 0.276,
+          "simulationTop3Probability": 0.4,
+          "expectedFinish": 5.428,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.048,
+          "averageFinishTimeSeconds": 134.535,
+          "averageBlockedSeconds": 14.244,
+          "averageLaneChanges": 10.016,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 6.0,
+              "medianRank": 8.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 7.0,
+              "medianRank": 8.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 5.0,
+              "medianRank": 8.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 2.0,
+              "medianRank": 5.0,
+              "p80Rank": 9.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 4,
+          "horseName": "ニホンピロロジャー",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.124,
+          "simulationTop2Probability": 0.24,
+          "simulationTop3Probability": 0.324,
+          "expectedFinish": 5.916,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.104,
+          "averageFinishTimeSeconds": 134.545,
+          "averageBlockedSeconds": 16.858,
+          "averageLaneChanges": 12.04,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 3.0,
+              "medianRank": 5.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 2.0,
+              "medianRank": 5.0,
+              "p80Rank": 10.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 6,
+          "horseName": "フララナキラ",
+          "style": "先行",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.1,
+          "simulationTop2Probability": 0.256,
+          "simulationTop3Probability": 0.344,
+          "expectedFinish": 7.092,
+          "earlyLeadProbability": 0.172,
+          "top3At75Probability": 0.796,
+          "averageFinishTimeSeconds": 134.792,
+          "averageBlockedSeconds": 18.848,
+          "averageLaneChanges": 7.008,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 2.0,
+              "medianRank": 2.0,
+              "p80Rank": 6.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 2.0,
+              "medianRank": 3.0,
+              "p80Rank": 4.4
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 2.0,
+              "medianRank": 3.0,
+              "p80Rank": 5.2
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 11.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 2.0,
+              "medianRank": 7.0,
+              "p80Rank": 13.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 5,
+          "horseName": "プレデスティナーレ",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.04,
+          "simulationTop2Probability": 0.116,
+          "simulationTop3Probability": 0.2,
+          "expectedFinish": 6.192,
+          "earlyLeadProbability": 0.008,
+          "top3At75Probability": 0.104,
+          "averageFinishTimeSeconds": 134.567,
+          "averageBlockedSeconds": 7.856,
+          "averageLaneChanges": 4.336,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 4.0,
+              "medianRank": 5.0,
+              "p80Rank": 6.2
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 4.0,
+              "medianRank": 5.0,
+              "p80Rank": 7.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 7.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 3.8,
+              "medianRank": 6.0,
+              "p80Rank": 9.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 7,
+          "horseName": "サトノビダーヤ",
+          "style": "逃げ",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.04,
+          "simulationTop2Probability": 0.072,
+          "simulationTop3Probability": 0.128,
+          "expectedFinish": 10.184,
+          "earlyLeadProbability": 0.508,
+          "top3At75Probability": 0.82,
+          "averageFinishTimeSeconds": 135.152,
+          "averageBlockedSeconds": 19.382,
+          "averageLaneChanges": 7.252,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 1.0,
+              "medianRank": 1.0,
+              "p80Rank": 6.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 1.0,
+              "medianRank": 1.5,
+              "p80Rank": 3.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 1.0,
+              "medianRank": 2.0,
+              "p80Rank": 3.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 2.0,
+              "medianRank": 3.0,
+              "p80Rank": 12.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 6.0,
+              "medianRank": 12.0,
+              "p80Rank": 14.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 2,
+          "horseName": "ムスクレスト",
+          "style": "追込",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.036,
+          "simulationTop2Probability": 0.104,
+          "simulationTop3Probability": 0.164,
+          "expectedFinish": 6.908,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.0,
+          "averageFinishTimeSeconds": 134.58,
+          "averageBlockedSeconds": 13.014,
+          "averageLaneChanges": 5.924,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 9.0,
+              "medianRank": 11.0,
+              "p80Rank": 11.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 10.0,
+              "medianRank": 11.0,
+              "p80Rank": 11.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 10.0,
+              "medianRank": 11.0,
+              "p80Rank": 11.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 8.0,
+              "medianRank": 9.0,
+              "p80Rank": 11.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 4.0,
+              "medianRank": 7.0,
+              "p80Rank": 10.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 11,
+          "horseName": "リトルスカーレット",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.028,
+          "simulationTop2Probability": 0.08,
+          "simulationTop3Probability": 0.144,
+          "expectedFinish": 7.78,
+          "earlyLeadProbability": 0.016,
+          "top3At75Probability": 0.136,
+          "averageFinishTimeSeconds": 134.732,
+          "averageBlockedSeconds": 21.468,
+          "averageLaneChanges": 8.484,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 3.0,
+              "medianRank": 6.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 3.0,
+              "medianRank": 5.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 4.0,
+              "medianRank": 7.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 4.0,
+              "medianRank": 8.0,
+              "p80Rank": 12.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 13,
+          "horseName": "ゴールドアクセス",
+          "style": "追込",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.024,
+          "simulationTop2Probability": 0.04,
+          "simulationTop3Probability": 0.048,
+          "expectedFinish": 9.448,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.0,
+          "averageFinishTimeSeconds": 134.767,
+          "averageBlockedSeconds": 24.652,
+          "averageLaneChanges": 15.34,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 10.0,
+              "medianRank": 12.0,
+              "p80Rank": 14.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 11.0,
+              "medianRank": 12.0,
+              "p80Rank": 12.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 11.0,
+              "medianRank": 12.0,
+              "p80Rank": 12.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 10.0,
+              "medianRank": 11.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 7.0,
+              "medianRank": 10.0,
+              "p80Rank": 12.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 9,
+          "horseName": "ダノンミッドナイト",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.02,
+          "simulationTop2Probability": 0.064,
+          "simulationTop3Probability": 0.156,
+          "expectedFinish": 7.404,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.112,
+          "averageFinishTimeSeconds": 134.665,
+          "averageBlockedSeconds": 18.41,
+          "averageLaneChanges": 9.336,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 4.0,
+              "medianRank": 5.0,
+              "p80Rank": 7.2
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 4.0,
+              "medianRank": 5.0,
+              "p80Rank": 8.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 4.0,
+              "medianRank": 6.0,
+              "p80Rank": 9.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 4.0,
+              "medianRank": 7.0,
+              "p80Rank": 11.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 12,
+          "horseName": "ピエナオルフェ",
+          "style": "追込",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.02,
+          "simulationTop2Probability": 0.032,
+          "simulationTop3Probability": 0.052,
+          "expectedFinish": 9.72,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.0,
+          "averageFinishTimeSeconds": 134.771,
+          "averageBlockedSeconds": 13.23,
+          "averageLaneChanges": 5.192,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 12.0,
+              "medianRank": 13.0,
+              "p80Rank": 14.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 13.0,
+              "medianRank": 14.0,
+              "p80Rank": 14.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 13.0,
+              "medianRank": 14.0,
+              "p80Rank": 14.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 11.0,
+              "medianRank": 12.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 8.0,
+              "medianRank": 11.0,
+              "p80Rank": 12.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 14,
+          "horseName": "ガウディ",
+          "style": "差し",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.012,
+          "simulationTop2Probability": 0.06,
+          "simulationTop3Probability": 0.136,
+          "expectedFinish": 8.4,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.052,
+          "averageFinishTimeSeconds": 134.764,
+          "averageBlockedSeconds": 20.348,
+          "averageLaneChanges": 9.348,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 5.0,
+              "medianRank": 7.0,
+              "p80Rank": 11.2
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 6.0,
+              "medianRank": 8.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 5.0,
+              "medianRank": 8.0,
+              "p80Rank": 10.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 5.0,
+              "medianRank": 8.0,
+              "p80Rank": 12.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 4.0,
+              "medianRank": 8.0,
+              "p80Rank": 13.0
+            }
+          ]
+        },
+        {
+          "horseNumber": 8,
+          "horseName": "パーヴォ",
+          "style": "追込",
+          "independentStrength": 1.0,
+          "simulationWinProbability": 0.012,
+          "simulationTop2Probability": 0.032,
+          "simulationTop3Probability": 0.044,
+          "expectedFinish": 8.668,
+          "earlyLeadProbability": 0.0,
+          "top3At75Probability": 0.0,
+          "averageFinishTimeSeconds": 134.676,
+          "averageBlockedSeconds": 11.794,
+          "averageLaneChanges": 5.412,
+          "rankBands": [
+            {
+              "progress": 0.25,
+              "p20Rank": 12.0,
+              "medianRank": 13.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 0.5,
+              "p20Rank": 13.0,
+              "medianRank": 13.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 0.75,
+              "p20Rank": 12.0,
+              "medianRank": 13.0,
+              "p80Rank": 14.0
+            },
+            {
+              "progress": 0.9,
+              "p20Rank": 10.0,
+              "medianRank": 11.0,
+              "p80Rank": 13.0
+            },
+            {
+              "progress": 1.0,
+              "p20Rank": 6.0,
+              "medianRank": 9.0,
+              "p80Rank": 11.0
+            }
+          ]
+        }
+      ],
+      "comparisonWithPredictionAI": {
+        "available": true,
+        "note": "Post-hoc only; prediction AI never enters race motion.",
+        "horses": [
+          {
+            "horseNumber": 12,
+            "horseName": "ピエナオルフェ",
+            "predictionAIWinProbabilityNormalized": 0.244165,
+            "simulationWinProbability": 0.02,
+            "delta": -0.224165,
+            "label": "PREDICTOR_HIGHER"
+          },
+          {
+            "horseNumber": 3,
+            "horseName": "オープンザパンドラ",
+            "predictionAIWinProbabilityNormalized": 0.048257,
+            "simulationWinProbability": 0.144,
+            "delta": 0.095743,
+            "label": "SIMULATOR_HIGHER"
+          },
+          {
+            "horseNumber": 1,
+            "horseName": "クラウディアイ",
+            "predictionAIWinProbabilityNormalized": 0.035366,
+            "simulationWinProbability": 0.128,
+            "delta": 0.092634,
+            "label": "SIMULATOR_HIGHER"
+          },
+          {
+            "horseNumber": 6,
+            "horseName": "フララナキラ",
+            "predictionAIWinProbabilityNormalized": 0.011541,
+            "simulationWinProbability": 0.1,
+            "delta": 0.088459,
+            "label": "SIMULATOR_HIGHER"
+          },
+          {
+            "horseNumber": 4,
+            "horseName": "ニホンピロロジャー",
+            "predictionAIWinProbabilityNormalized": 0.075327,
+            "simulationWinProbability": 0.124,
+            "delta": 0.048673,
+            "label": "SIMULATOR_HIGHER"
+          },
+          {
+            "horseNumber": 9,
+            "horseName": "ダノンミッドナイト",
+            "predictionAIWinProbabilityNormalized": 0.06048,
+            "simulationWinProbability": 0.02,
+            "delta": -0.04048,
+            "label": "PREDICTOR_HIGHER"
+          },
+          {
+            "horseNumber": 10,
+            "horseName": "マイコンプリート",
+            "predictionAIWinProbabilityNormalized": 0.231608,
+            "simulationWinProbability": 0.272,
+            "delta": 0.040392,
+            "label": "SIMULATOR_HIGHER"
+          },
+          {
+            "horseNumber": 13,
+            "horseName": "ゴールドアクセス",
+            "predictionAIWinProbabilityNormalized": 0.064309,
+            "simulationWinProbability": 0.024,
+            "delta": -0.040309,
+            "label": "PREDICTOR_HIGHER"
+          },
+          {
+            "horseNumber": 5,
+            "horseName": "プレデスティナーレ",
+            "predictionAIWinProbabilityNormalized": 0.074956,
+            "simulationWinProbability": 0.04,
+            "delta": -0.034956,
+            "label": "PREDICTOR_HIGHER"
+          },
+          {
+            "horseNumber": 8,
+            "horseName": "パーヴォ",
+            "predictionAIWinProbabilityNormalized": 0.042153,
+            "simulationWinProbability": 0.012,
+            "delta": -0.030153,
+            "label": "PREDICTOR_HIGHER"
+          },
+          {
+            "horseNumber": 7,
+            "horseName": "サトノビダーヤ",
+            "predictionAIWinProbabilityNormalized": 0.016584,
+            "simulationWinProbability": 0.04,
+            "delta": 0.023416,
+            "label": "AGREE"
+          },
+          {
+            "horseNumber": 14,
+            "horseName": "ガウディ",
+            "predictionAIWinProbabilityNormalized": 0.030915,
+            "simulationWinProbability": 0.012,
+            "delta": -0.018915,
+            "label": "AGREE"
+          },
+          {
+            "horseNumber": 2,
+            "horseName": "ムスクレスト",
+            "predictionAIWinProbabilityNormalized": 0.048029,
+            "simulationWinProbability": 0.036,
+            "delta": -0.012029,
+            "label": "AGREE"
+          },
+          {
+            "horseNumber": 11,
+            "horseName": "リトルスカーレット",
+            "predictionAIWinProbabilityNormalized": 0.016311,
+            "simulationWinProbability": 0.028,
+            "delta": 0.011689,
+            "label": "AGREE"
+          }
+        ]
+      },
+      "raceDate": "2026-11-01",
+      "raceNumber": 8,
+      "startTime": "13:35",
+      "venue": "京都"
+    },
+    {
+      "schemaVersion": "race-simulator-v0.1-current-keibaai",
+      "generatedAt": "2026-11-02T16:39:41.319925Z",
       "raceID": "202608041109",
       "raceName": "愛宕特別",
       "racecourse": "京都",
@@ -5538,7 +6361,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:53.330666Z",
+      "generatedAt": "2026-11-02T16:39:56.735011Z",
       "raceID": "202608041110",
       "raceName": "古都S",
       "racecourse": "京都",
@@ -6075,7 +6898,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:33:05.900413Z",
+      "generatedAt": "2026-11-02T16:40:10.582038Z",
       "raceID": "202608041111",
       "raceName": "まほろばS",
       "racecourse": "京都",
@@ -6832,7 +7655,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:33:22.004095Z",
+      "generatedAt": "2026-11-02T16:40:28.356131Z",
       "raceID": "202608041112",
       "raceName": "3歳以上2勝クラス",
       "racecourse": "京都",
@@ -7589,7 +8412,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:27.087144Z",
+      "generatedAt": "2026-11-02T16:38:11.614523Z",
       "raceID": "202605041101",
       "raceName": "2歳未勝利",
       "racecourse": "東京",
@@ -8456,7 +9279,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:41.276966Z",
+      "generatedAt": "2026-11-02T16:38:27.275803Z",
       "raceID": "202605041102",
       "raceName": "2歳未勝利",
       "racecourse": "東京",
@@ -9378,7 +10201,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:52.299755Z",
+      "generatedAt": "2026-11-02T16:38:39.386369Z",
       "raceID": "202605041103",
       "raceName": "2歳未勝利",
       "racecourse": "東京",
@@ -9915,7 +10738,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:31:55.998956Z",
+      "generatedAt": "2026-11-02T16:38:43.392988Z",
       "raceID": "202605041104",
       "raceName": "2歳新馬",
       "racecourse": "東京",
@@ -10672,7 +11495,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:03.627362Z",
+      "generatedAt": "2026-11-02T16:38:51.710097Z",
       "raceID": "202605041105",
       "raceName": "2歳新馬",
       "racecourse": "東京",
@@ -11154,7 +11977,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:14.964127Z",
+      "generatedAt": "2026-11-02T16:39:04.134534Z",
       "raceID": "202605041106",
       "raceName": "3歳以上1勝クラス",
       "racecourse": "東京",
@@ -11966,7 +12789,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:29.118958Z",
+      "generatedAt": "2026-11-02T16:39:19.567962Z",
       "raceID": "202605041107",
       "raceName": "3歳以上1勝クラス",
       "racecourse": "東京",
@@ -12778,7 +13601,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:34.246841Z",
+      "generatedAt": "2026-11-02T16:39:35.732080Z",
       "raceID": "202605041108",
       "raceName": "本栖湖特別",
       "racecourse": "東京",
@@ -13260,7 +14083,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:45.936684Z",
+      "generatedAt": "2026-11-02T16:39:48.725230Z",
       "raceID": "202605041109",
       "raceName": "紅葉S",
       "racecourse": "東京",
@@ -14072,7 +14895,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:32:59.812866Z",
+      "generatedAt": "2026-11-02T16:40:03.859640Z",
       "raceID": "202605041110",
       "raceName": "秋嶺S",
       "racecourse": "東京",
@@ -14994,7 +15817,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:33:16.704731Z",
+      "generatedAt": "2026-11-02T16:40:22.531345Z",
       "raceID": "202605041111",
       "raceName": "天皇賞(秋)",
       "racecourse": "東京",
@@ -15971,7 +16794,7 @@
     },
     {
       "schemaVersion": "race-simulator-v0.1-current-keibaai",
-      "generatedAt": "2026-11-02T16:33:28.854223Z",
+      "generatedAt": "2026-11-02T16:40:35.945427Z",
       "raceID": "202605041112",
       "raceName": "清里特別",
       "racecourse": "東京",
@@ -16783,15 +17606,11 @@
     }
   ],
   "skipped": [],
-  "errors": [
-    {
-      "raceID": "202608041108",
-      "reason": "ValueError: cannot parse distance from distanceMeters/course/distance/track: (None, '前日・朝時点', None, None)"
-    }
-  ],
+  "errors": [],
   "sourceSHA256": {
     "RaceData.json": "da80063d74cde953e8c861425c97584e4e8ecf99bdfa13b2df1be7019996b9e8",
     "AppResearchData.json": "4604234e9d21685b3cd51c42209f0cb19996f11234b865ba4331f51dc0efe749",
-    "strengths": null
+    "strengths": null,
+    "metadataOverrides": "1c98a589776fcb956271ad79e9962f033adc36347ec43354b055e1de39bb01d1"
   }
 }
