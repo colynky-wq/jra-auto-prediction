@@ -26,9 +26,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  simulator-and-ios:
-    runs-on: macos-latest
-    timeout-minutes: 30
+  simulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -75,19 +75,6 @@ jobs:
           print(json.dumps(data['summary'], ensure_ascii=False))
           PY
 
-      - name: Show Xcode project
-        run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
-
-      - name: Build KeibaAI for iOS Simulator
-        run: |
-          xcodebuild \
-            -project ios/KeibaAI/KeibaAI.xcodeproj \
-            -scheme KeibaAI \
-            -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-
       - name: Commit generated simulation data
         if: github.event_name == 'push'
         run: |
@@ -100,3 +87,24 @@ jobs:
           git add RaceSimulationData.json
           git commit -m 'Update RaceSimulator output'
           git push
+
+  ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode project
+        run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
+
+      - name: Build KeibaAI for iOS Simulator
+        run: |
+          xcodebuild \
+            -project ios/KeibaAI/KeibaAI.xcodeproj \
+            -scheme KeibaAI \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
