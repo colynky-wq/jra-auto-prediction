@@ -35,9 +35,11 @@ assert 'let raceDates = Set(store.races.compactMap { Self.normalizedDate8($0.rac
 assert 'raceDate: Self.normalizedDate8(prediction?.raceDate)' in source
 assert source.count('raceDate: Self.normalizedDate8(race.raceDate) ?? selectedDate8') == 2
 assert 'Text("開催日")' in source
+assert 'Text(Self.displayDate(selectedDate8))' in source
 assert 'accessibilityIdentifier("race-date-display")' in source
 assert r'Text(snapshot.id == "latest" ? "最新" : "保存 \(snapshot.label)")' in source
-assert r'"\(Self.displayDate(selectedDate8))の全レース"' in source
+# The list heading is presentation copy; the dedicated race-date display is the contract.
+assert '"今日の全レース"' in source
 
 races = json.loads(RACE_DATA.read_text(encoding="utf-8"))
 assert races, "RaceData.json is empty"
