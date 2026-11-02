@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "version": "aligned-portfolio-confirmation-v1-20261102",
+  "registeredAtJST": "2026-11-02T23:45:45+09:00",
+  "startDate": "2026-11-03",
+  "capturePolicy": "formal-portfolio-inputs-v1",
+  "sourceRuleVersion": "portfolio-shadow-v1-20261019",
+  "developmentEvidence": "Legacy first100 diagnostics only; no aligned races observed at registration",
+  "sourceHashes": {
+    "portfolio_shadow.py": "faf6a7fe5cfa4fd00f9b937a34424cc422ed2ff24bf61b6d17e19473a96045a5",
+    "build_signal_data.py": "c25f0f0304df70f74965b2796c3067fca3c287c7c953446dc22362baad9626df",
+    "build_signal_data_v2.py": "8ac54790f14fda0605462c478346a1beb136a8dd2290d252378911ee73fbc1ed",
+    "all_bet_baseline.py": "3de42c613c8f2ed02e14a596e01bce852a9709e303df1120611e20c0e6030ae9",
+    "research_triple_baseline.py": "aa6812887d5fbc4455ac3b4bf8aa397efbf251f7fc8676a09bfa07ce53eb5233"
+  },
+  "unitYen": 100,
+  "betaMinimumVerifiedAndSettledRaces": 300,
+  "milestones": [
+    100,
+    150,
+    200,
+    300
+  ],
+  "windows": {
+    "first100": [
+      1,
+      100
+    ],
+    "confirmation101to200": [
+      101,
+      200
+    ]
+  },
+  "commonWideReference": {
+    "minProbabilityPct": 5.0,
+    "minExpectedMultiplier": 1.1,
+    "maxPairs": 2,
+    "ranking": "existing practicalRank; same frozen signal; all races including skips"
+  },
+  "hypotheses": [
+    {
+      "id": "H1-selection",
+      "question": "Does the participation filter improve the same Wide candidate rule?",
+      "comparison": "commonWideReference in selected vs skipped races; zero-candidate races retained; same unit; no optimized thresholds"
+    },
+    {
+      "id": "H2-battle",
+      "question": "Does S versus A reflect useful Wide value?",
+      "comparison": "S/A by Wide ticket observed vs predicted hits and ROI, subdivided by Chaos and odds; no S exclusion"
+    },
+    {
+      "id": "H3-concentration",
+      "question": "Does Chaos5 x BattleA performance replicate without one-return dependence?",
+      "comparison": "Battle x Chaos, per-day results, largest1/2 return races removed; do not treat overlapping conditions as independent evidence"
+    },
+    {
+      "id": "H4-trio-increment",
+      "question": "Does the trio leg add return beyond the same race Wide-only plan?",
+      "comparison": "incremental trio stake and payout only; never attribute combined-plan ROI to trio hits"
+    }
+  ],
+  "policy": {
+    "noV1Changes": true,
+    "noHistoricalPromotion": true,
+    "noFittingOnEvaluation": true,
+    "first100DiagnosticOnly": true,
+    "confirmationRulesFrozenThrough200": true,
+    "betaIsResearchOnly": true,
+    "automaticBetting": false
+  }
+}
