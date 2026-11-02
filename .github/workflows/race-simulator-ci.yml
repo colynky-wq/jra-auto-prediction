@@ -2,10 +2,22 @@ name: RaceSimulator v0.1 CI and publish
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'RaceData.json'
+      - 'AppResearchData.json'
+      - 'production/race_simulator_v01.py'
+      - 'production/race_simulator_keibaai_adapter.py'
+      - 'production/build_race_simulation_data.py'
+      - 'production/race_metadata_overrides.json'
+      - 'production/test_race_simulator_v01.py'
+      - 'production/test_race_simulator_keibaai_adapter.py'
+      - 'production/test_build_race_simulation_data.py'
+      - 'ios/KeibaAI/**'
+      - '.github/workflows/race-simulator-ci.yml'
   push:
     branches:
       - main
-      - feature/race-simulator-v0-1
     paths:
       - 'RaceData.json'
       - 'AppResearchData.json'
@@ -86,7 +98,7 @@ jobs:
           PY
 
       - name: Publish generated simulation data safely
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
 
