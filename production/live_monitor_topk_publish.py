@@ -282,6 +282,9 @@ def publish_race_to_racedata(race, out):
     manifest_status = record_manifest_best_effort(RACEDATA_PATH.parent, published_race)
     print("TICKET_SHADOW_ODDS_MANIFEST_STATUS", rid, manifest_status)
 
+    from formal_portfolio_capture import record_first as record_formal_portfolio
+    record_formal_portfolio(RACEDATA_PATH.parent, published_race)
+
     from live_recording_resume import research_sidecars_complete
     if not research_sidecars_complete(
         RACEDATA_PATH.parent,

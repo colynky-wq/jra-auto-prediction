@@ -1,0 +1,15 @@
+# Formal T-10 portfolio input capture
+
+Effective race date: **2026-11-03 JST**. The prediction model and `portfolio-shadow-v1-20261019` selection thresholds are unchanged. This is a new data-quality contract, not a new profitability claim.
+
+The live publisher waits for the immutable win/trio pool records, then builds the signal from the exact frozen `live_10min` prediction and `wide_odds_live10` archive. It freezes the signal and v1 plan together under `reports/YYYYMMDD/portfolio_live10/<raceID>.json`. It never reads daily SignalData or the rotating display cache when choosing these tickets.
+
+Prediction capture, pool prediction/receipt/recording, Wide odds capture, and first plan recording must all be inside T-12 through T-8 according to the frozen prediction's scheduled start. They need not be the same second. The three pool inputs must refer to the exact same prediction content. Wide odds require every entrant pair and finite ordered prices. All three source files are SHA-256 bound; the complete bundle has its own canonical fingerprint. The deadline is checked again immediately before the atomic first-write link. First successful records are immutable, including concurrent writes and remote publication.
+
+A missing archive, a morning quote, an incompatible prediction, or a missed deadline does not fall back to another input or a retrospectively generated plan. Failed attempts remain incomplete and do not qualify for the formal review. Restart can reuse an existing valid frozen bundle after post, but cannot create a new one outside the window. Late recovery remains separate.
+
+Results projection copies the frozen ticket identities, prices and probabilities and only attaches settlement fields from the existing result/payout projections. Missing settlements remain pending, not zero. This path works even if daily SignalData is absent or subsequently replaced. The display signal loader also prefers the formal archive for `live_10min` races, and returns probability-only data when it is missing.
+
+Historical dates before 2026-11-03 continue using their existing projection and locked cohort. Their formal-win evidence is explicitly labelled `legacy_win_only_evidence` / `portfolioInputsVerified=false`. Review quality fields distinguish `legacyWinOnlyEvidenceRaces` from `alignedPortfolioInputRaces`. Existing 100R figures must not be described as proof of a completely time-aligned T-10 portfolio. The new aligned series must be examined separately rather than silently appended to a claim of homogeneous historical performance. No historical bundle backfill is performed by this code.
+
+Deployment: merge the change to main before the next live monitor starts. The next session must check out the new main; an already-running checkout will not hot-load code. A real upcoming race is required to verify the first production bundle. Synthetic tests validate pre-start capture, no network during bundle creation, no late first writes, archive/cache precedence, exact prediction binding, source tamper rejection, immutable restarts/publication, and frozen-ticket settlement. No paid betting or automatic stake allocation is enabled.

@@ -147,7 +147,10 @@ class HorseIdentityTests(unittest.TestCase):
         row = {key: 1. for key in ["単勝オッズ", "市場勝率(%)", "AI勝率(%)", "市場2着内率(%)", "AI2着内率(%)", "市場3着内率(%)", "AI3着内率(%)", "AI÷市場", "期待払戻指数"]}
         row.update(馬番=1, 馬名="アインザッツ", 年齢=2, 馬キー="アインザッツ_2024")
         race = dict(race_id="202605040405", venue="東京", race_no=5, start_time="12:00", surface="芝", distance=1600)
-        with tempfile.TemporaryDirectory() as root, patch.object(publisher, "RACEDATA_PATH", Path(root) / "RaceData.json"), patch.object(publisher.base, "TARGET_DATE8", "20261011"), patch.object(publisher, "_refresh_prediction_bundle"), contextlib.redirect_stdout(io.StringIO()):
+        from concurrent.futures import Future
+        completed = Future(); completed.set_result(True)
+        # Identity projection does not perform real historical odds capture.
+        with tempfile.TemporaryDirectory() as root, patch.object(publisher, "RACEDATA_PATH", Path(root) / "RaceData.json"), patch.object(publisher.base, "TARGET_DATE8", "20261011"), patch.object(publisher, "_refresh_prediction_bundle"), patch('triple_research_runtime.schedule', return_value=completed), patch('all_bet_runtime.schedule', return_value=completed), patch('live_recording_resume.research_sidecars_complete', return_value=True), contextlib.redirect_stdout(io.StringIO()):
             publisher.publish_race_to_racedata(race, pd.DataFrame([row]))
             horse = json.loads(publisher.RACEDATA_PATH.read_text())[0]["horses"][0]
         self.assertEqual((horse["age"], horse["horseKey"]), (2, "アインザッツ_2024"))

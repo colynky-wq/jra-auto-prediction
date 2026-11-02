@@ -69,6 +69,14 @@ class TestLiveBundlePublisher(unittest.TestCase):
         self.assertFalse(publisher.publish())
         self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
 
+    def test_formal_portfolio_archive_cannot_be_overwritten(self):
+        path='reports/20261017/portfolio_live10/202605040601.json'
+        self.write(path,{'frozen':1});publisher=self.publisher();publisher.capture()
+        self.assertTrue(publisher.publish())
+        self.write(path,{'frozen':2});publisher.capture()
+        self.assertFalse(publisher.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
+
     def test_added_pool_first_capture_conflict_does_not_block_prediction(self):
         path='reports/20261017/all_bet_v1/place/202605040601.json'
         self.write(path,{'frozen':1});publisher=self.publisher();publisher.capture()

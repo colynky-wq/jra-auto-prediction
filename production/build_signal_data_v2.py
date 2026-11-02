@@ -33,6 +33,8 @@ def _load_wide_by_race(races: list[dict] | None = None) -> dict[str, dict]:
     # The live bundle may be rebuilt after its transient combined file is gone.
     # Reuse the immutable first capture, without fetching odds or recording a race.
     for race in races or []:
+        if race.get("predictionTiming") == "live_10min":
+            continue
         rid = str(race.get("raceID") or "")
         day = str(race.get("raceDate") or "").replace("-", "")
         if not (len(rid) == 12 and rid.isdigit() and len(day) == 8 and day.isdigit()):
@@ -52,6 +54,22 @@ def _load_wide_by_race(races: list[dict] | None = None) -> dict[str, dict]:
             if frozen not in (None, "") and current not in (None, "") and frozen != current:
                 raise ValueError("saved Wide snapshot identity is inconsistent: " + str(path))
         out[rid] = saved
+    # Formal predictions must use their own archive even when the rotating
+    # cache contains an older morning observation. Missing formal odds fail closed.
+    for race in races or []:
+        if race.get("predictionTiming") != "live_10min":
+            continue
+        rid = str(race.get("raceID") or "")
+        day = str(race.get("raceDate") or "").replace("-", "")
+        out.pop(rid, None)
+        path = REPORTS_DIR / day / "wide_odds_live10" / (rid + ".json")
+        if path.exists():
+            from formal_wide_odds_runtime import _valid_window
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            if (saved.get("raceID") != rid or saved.get("raceDate") != race.get("raceDate")
+                    or saved.get("startTime") != race.get("startTime") or not _valid_window(saved)):
+                raise ValueError("invalid formal Wide snapshot: " + str(path))
+            out[rid] = saved
     return out
 
 
