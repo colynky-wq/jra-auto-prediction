@@ -12,25 +12,27 @@ permissions:
 
 concurrency:
   group: race-simulator-main-integration
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   integrate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout feature with full history
+      - name: Checkout feature
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Build resolved merge on latest main
         shell: bash
         run: |
           set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
           FEATURE_HEAD="$(git rev-parse HEAD)"
-          git fetch origin main
-          MAIN_HEAD="$(git rev-parse origin/main)"
+          git fetch --depth=1 origin main
+          MAIN_HEAD="$(git rev-parse FETCH_HEAD)"
           echo "feature=$FEATURE_HEAD"
           echo "main=$MAIN_HEAD"
           cp ios/KeibaAI/KeibaAI/KeibaAIApp.swift /tmp/feature_KeibaAIApp.swift
