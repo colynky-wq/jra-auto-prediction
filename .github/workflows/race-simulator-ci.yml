@@ -1,5 +1,4 @@
 name: RaceSimulator v0.1 CI and publish
-# Validation trigger after safe main integration.
 
 on:
   workflow_dispatch:
@@ -86,31 +85,55 @@ jobs:
           print(json.dumps(data['summary'], ensure_ascii=False))
           PY
 
-      - name: Commit generated simulation data
+      - name: Publish generated simulation data safely
         if: github.event_name == 'push'
         run: |
           set -euo pipefail
+
+          target_branch="${GITHUB_REF_NAME}"
           git add --sparse RaceSimulationData.json
           if git diff --cached --quiet; then
             echo 'RaceSimulationData.json unchanged'
             exit 0
           fi
+
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
           git commit -m 'Update RaceSimulator output'
 
-          # main is updated frequently by other KeibaAI workflows. Rebase the
-          # generated-data commit onto the newest main before each push attempt
-          # so a harmless concurrent research update does not fail this CI.
+          # The generated JSON is valid only for the simulator inputs checked
+          # out at the start of this job. If those inputs advance while the job
+          # is running, never rebase stale output onto them. A newer push to the
+          # relevant paths will run this workflow again from fresh inputs.
+          relevant_re='^(RaceData\.json|AppResearchData\.json|RaceSimulationData\.json|production/(race_simulator_v01\.py|race_simulator_keibaai_adapter\.py|build_race_simulation_data\.py|race_metadata_overrides\.json))$'
+
           for attempt in 1 2 3 4 5; do
-            echo "Publish attempt ${attempt}/5"
-            git fetch origin main --depth=50
-            git rebase origin/main
-            if git push origin HEAD:main; then
+            echo "Publish attempt ${attempt}/5 to ${target_branch}"
+            git fetch origin "${target_branch}" --depth=50
+
+            remote_sha="$(git rev-parse "origin/${target_branch}")"
+            parent_sha="$(git rev-parse HEAD^)"
+
+            if [[ "${remote_sha}" != "${parent_sha}" ]]; then
+              changed_files="$(git diff --name-only "${parent_sha}" "${remote_sha}" || true)"
+              echo 'Remote branch advanced while simulation was running:'
+              printf '%s\n' "${changed_files}"
+
+              if printf '%s\n' "${changed_files}" | grep -Eq "${relevant_re}"; then
+                echo 'Simulator-relevant inputs changed; skipping stale generated output.'
+                exit 0
+              fi
+
+              echo 'Only unrelated files changed; rebasing generated output safely.'
+              git rebase "origin/${target_branch}"
+            fi
+
+            if git push origin "HEAD:${target_branch}"; then
               exit 0
             fi
           done
-          echo 'Failed to publish RaceSimulationData.json after 5 attempts.' >&2
+
+          echo 'Failed to publish RaceSimulationData.json after 5 safe attempts.' >&2
           exit 1
 
   ios-build:
@@ -137,7 +160,3 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             build
-
-# CI revalidation trigger after merging latest main: 2026-11-03 JST
-# Final CI after syncing main ccdf2c977d04d6f0395bb900158257902003c15c
-# Final post-sync CI trigger for merge faf88dbc2c9b6d074c92529460e4fbc29caef8ac
