@@ -196,23 +196,21 @@ struct KeibaAIRaceSimulatorScreen: View {
                     Text("動作計算にAI勝率・市場確率・オッズ・人気を使用しません。AIとの比較はシミュレーション完了後だけです。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(store.sourceMessage).font(.caption2).foregroundStyle(.secondary)
+                    Text(store.sourceMessage)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
                 Section("レース") {
                     ForEach(store.races) { race in
                         Button {
                             selectedID = race.raceID
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(race.venue) \(race.raceNumber)R").font(.subheadline.bold())
-                                    Text(race.raceName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                                }
-                                Spacer()
-                                Image(systemName: store.simulation(for: race.raceID) == nil ? "clock" : "checkmark.circle.fill")
-                                    .foregroundStyle(store.simulation(for: race.raceID) == nil ? .secondary : .green)
-                            }
-                        }.buttonStyle(.plain)
+                            KeibaAIRaceSimulatorRaceRow(
+                                race: race,
+                                hasSimulation: store.simulation(for: race.raceID) != nil
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -236,6 +234,32 @@ struct KeibaAIRaceSimulatorScreen: View {
         .task {
             await store.load()
             if selectedID == nil { selectedID = store.races.first?.raceID }
+        }
+    }
+}
+
+private struct KeibaAIRaceSimulatorRaceRow: View {
+    let race: Race
+    let hasSimulation: Bool
+
+    private var title: String {
+        race.venue + " " + String(race.raceNumber) + "R"
+    }
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                Text(race.raceName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            Image(systemName: hasSimulation ? "checkmark.circle.fill" : "clock")
+                .foregroundStyle(hasSimulation ? Color.green : Color.secondary)
         }
     }
 }
@@ -270,18 +294,34 @@ private struct KeibaAIRaceSimulatorDetail: View {
         card {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)").font(.caption.bold()).foregroundStyle(.blue)
-                    Text(race.raceName).font(.title2.bold())
-                    Text(sim.track ?? race.course).foregroundStyle(.secondary)
+                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.blue)
+                    Text(race.raceName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text(sim.track ?? race.course)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("RaceSimulator v0.1").font(.caption.bold()).padding(7).background(.blue.opacity(0.10), in: Capsule())
+                Text("RaceSimulator v0.1")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .padding(7)
+                    .background(.blue.opacity(0.10), in: Capsule())
             }
             Divider()
-            Label("独立性チェック済み", systemImage: "checkmark.shield.fill").font(.headline).foregroundStyle(.green)
+            Label("独立性チェック済み", systemImage: "checkmark.shield.fill")
+                .font(.headline)
+                .foregroundStyle(.green)
             Text("AI勝率: \(sim.independence.usesPredictionAIForMotion ? "使用" : "未使用") / 市場確率: \(sim.independence.usesMarketProbabilityForMotion ? "使用" : "未使用") / オッズ: \(sim.independence.usesOddsForMotion ? "使用" : "未使用")")
                 .font(.subheadline)
-            if let generated = batch?.generatedAt { Text("生成: \(generated)").font(.caption2).foregroundStyle(.secondary) }
+            if let generated = batch?.generatedAt {
+                Text("生成: \(generated)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -360,7 +400,11 @@ private struct KeibaAIRaceSimulatorDetail: View {
         let label = common.count == 3 ? "高整合" : (common.count == 2 ? "整合" : (common.count == 1 ? "一部整合" : "乖離大"))
         let disagreements = (sim.comparisonWithPredictionAI.horses ?? []).prefix(4)
         return card {
-            HStack { Text("最終統合").font(.title3.bold()); Spacer(); Text(label).font(.caption.bold()).foregroundStyle(common.count >= 2 ? .green : .orange) }
+            HStack {
+                Text("最終統合").font(.title3.bold())
+                Spacer()
+                Text(label).font(.caption.bold()).foregroundStyle(common.count >= 2 ? .green : .orange)
+            }
             Text("ここで初めて既存予測AIとRaceSimulatorを照合します。展開計算への逆流はありません。")
                 .font(.subheadline).foregroundStyle(.secondary)
             HStack(alignment: .top, spacing: 16) {
