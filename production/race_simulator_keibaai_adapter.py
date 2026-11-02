@@ -50,14 +50,37 @@ def _select_race(data: Any, race_id: str) -> Mapping[str, Any]:
 
 
 def _distance_from_course(race: Mapping[str, Any]) -> float:
-    value = race.get("distance", race.get("course"))
-    if isinstance(value, (int, float)) and float(value) > 0:
-        return float(value)
-    text = str(value or "")
-    chunks = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in text).split()
-    if not chunks:
-        raise ValueError(f"cannot parse distance from {value!r}")
-    return float(chunks[0])
+    """Read a plausible JRA distance while tolerating unrelated legacy `distance` fields.
+
+    Current RaceData's canonical field is `course` (for example `芝1800m`). Some
+    historical/sidecar rows also contain a key named `distance` whose value is a
+    timing label such as `前日・朝時点`; that field must never override `course`.
+    """
+    candidates = (
+        race.get("distanceMeters"),
+        race.get("course"),
+        race.get("distance"),
+        race.get("track"),
+    )
+    for value in candidates:
+        if isinstance(value, (int, float)):
+            parsed = float(value)
+            if 600 <= parsed <= 5000:
+                return parsed
+            continue
+        text = str(value or "")
+        chunks = "".join(ch if (ch.isdigit() or ch == ".") else " " for ch in text).split()
+        for chunk in chunks:
+            try:
+                parsed = float(chunk)
+            except ValueError:
+                continue
+            if 600 <= parsed <= 5000:
+                return parsed
+    raise ValueError(
+        "cannot parse distance from distanceMeters/course/distance/track: "
+        + repr(tuple(candidates))
+    )
 
 
 def _probability01(value: Any) -> Optional[float]:
