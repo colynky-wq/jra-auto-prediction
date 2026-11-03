@@ -1,0 +1,32 @@
+name: Package KeibaAI Xcode NavFix
+
+on:
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/keibaai-xcode-package-navfix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Record source commit
+        run: |
+          printf '%s\n' 'Source main commit: b8d04449d04c858e76c1e92f33d479c57953af97' > ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+          printf '%s\n' 'Includes iPhone NavigationLink fix for Race Simulator.' >> ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+      - name: Verify payload
+        run: |
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'NavigationLink' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+      - name: Upload KeibaAI Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI-Xcode-v0.2-iPhoneNavFix-b8d0444
+          path: ios/KeibaAI/
+          if-no-files-found: error
+          retention-days: 7
