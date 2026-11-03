@@ -181,11 +181,6 @@ private final class KeibaAIRaceSimulatorStore: ObservableObject {
 
 struct KeibaAIRaceSimulatorScreen: View {
     @StateObject private var store = KeibaAIRaceSimulatorStore()
-    @State private var selectedID: String?
-
-    private var selectedRace: Race? {
-        store.races.first { $0.raceID == selectedID } ?? store.races.first
-    }
 
     var body: some View {
         NavigationSplitView {
@@ -202,40 +197,53 @@ struct KeibaAIRaceSimulatorScreen: View {
                 }
                 Section("レース") {
                     ForEach(store.races) { race in
-                        Button {
-                            selectedID = race.raceID
+                        NavigationLink {
+                            KeibaAIRaceSimulatorDestination(race: race, store: store)
                         } label: {
                             KeibaAIRaceSimulatorRaceRow(
                                 race: race,
                                 hasSimulation: store.simulation(for: race.raceID) != nil
                             )
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
             .navigationTitle("展開シミュ")
             .refreshable { await store.load(force: true) }
         } detail: {
-            if let race = selectedRace, let sim = store.simulation(for: race.raceID) {
+            ContentUnavailableView(
+                "レースを選択",
+                systemImage: "hand.tap",
+                description: Text("一覧から見たいレースをタップしてください。")
+            )
+        }
+        .task {
+            await store.load()
+        }
+    }
+}
+
+private struct KeibaAIRaceSimulatorDestination: View {
+    let race: Race
+    @ObservedObject var store: KeibaAIRaceSimulatorStore
+
+    var body: some View {
+        Group {
+            if let sim = store.simulation(for: race.raceID) {
                 KeibaAIRaceSimulatorDetail(race: race, sim: sim, batch: store.batch)
                     .id(sim.raceID)
             } else if store.isLoading {
                 ProgressView("シミュレーションを取得中…")
-            } else if let race = selectedRace {
+            } else {
                 ContentUnavailableView(
                     "シミュレーション生成待ち",
                     systemImage: "clock",
                     description: Text("\(race.venue) \(race.raceNumber)R の正式RaceSimulator出力がまだ公開されていません。")
                 )
-            } else {
-                ContentUnavailableView("レースデータなし", systemImage: "tray")
             }
         }
-        .task {
-            await store.load()
-            if selectedID == nil { selectedID = store.races.first?.raceID }
-        }
+        .navigationTitle("\(race.venue) \(race.raceNumber)R")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
