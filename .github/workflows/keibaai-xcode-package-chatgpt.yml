@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - chatgpt/package-keibaai-xcode-v02
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
