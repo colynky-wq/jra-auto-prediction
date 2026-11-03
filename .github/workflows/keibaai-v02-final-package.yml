@@ -1,0 +1,47 @@
+name: Package KeibaAI RaceSimulator v0.2 final
+
+on:
+  push:
+    branches:
+      - chatgpt/package-keibaai-v02-final-20261103
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Verify final iPhone v0.2 source
+        run: |
+          set -euo pipefail
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'race-simulator-v0.2-batch' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'private struct SimReplay' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'Label("総合判断"' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'NavigationStack' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'v0.2 フレーム再生' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+
+      - name: Create Xcode project ZIP
+        run: |
+          set -euo pipefail
+          cd ios
+          zip -qry ../KeibaAI_RaceSimulator_v0.2_Final.zip KeibaAI
+          cd ..
+          unzip -l KeibaAI_RaceSimulator_v0.2_Final.zip | grep 'KeibaAI/KeibaAI/RaceSimulatorView.swift'
+          sha256sum KeibaAI_RaceSimulator_v0.2_Final.zip
+
+      - name: Upload final Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI-RaceSimulator-v0.2-Final
+          path: KeibaAI_RaceSimulator_v0.2_Final.zip
+          if-no-files-found: error
+          retention-days: 7
