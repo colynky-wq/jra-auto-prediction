@@ -1,0 +1,32 @@
+name: Package KeibaAI Xcode Project
+
+on:
+  push:
+    branches:
+      - chatgpt/package-keibaai-xcode-v02
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Record source commit
+        run: |
+          printf '%s\n' 'Source main commit: e0dfbf0cea232af561eb2632af7e2e4d0c9a5b56' > ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+          printf '%s\n' 'Includes KeibaAI v0.2 race replay UI.' >> ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+      - name: Verify Xcode project payload
+        run: |
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q 'KeibaAI v0.2' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+      - name: Upload KeibaAI Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI-Xcode-v0.2-e0dfbf0
+          path: ios/KeibaAI/
+          if-no-files-found: error
+          retention-days: 7
