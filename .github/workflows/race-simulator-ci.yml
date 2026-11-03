@@ -1,4 +1,4 @@
-name: RaceSimulator v0.1 CI and publish
+name: RaceSimulator v0.2 CI and publish
 
 on:
   workflow_dispatch:
@@ -6,34 +6,30 @@ on:
     paths:
       - 'RaceData.json'
       - 'AppResearchData.json'
-      - 'production/race_simulator_v01.py'
-      - 'production/race_simulator_keibaai_adapter.py'
-      - 'production/build_race_simulation_data.py'
+      - 'HorseProfiles/**'
+      - 'production/race_simulator_v02.py'
+      - 'production/race_simulator_v02_adapter.py'
+      - 'production/build_race_simulation_data_v02.py'
       - 'production/race_metadata_overrides.json'
-      - 'production/test_race_simulator_v01.py'
-      - 'production/test_race_simulator_keibaai_adapter.py'
-      - 'production/test_build_race_simulation_data.py'
+      - 'production/test_race_simulator_v02.py'
       - 'ios/KeibaAI/**'
       - '.github/workflows/race-simulator-ci.yml'
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'RaceData.json'
       - 'AppResearchData.json'
-      - 'production/race_simulator_v01.py'
-      - 'production/race_simulator_keibaai_adapter.py'
-      - 'production/build_race_simulation_data.py'
+      - 'HorseProfiles/**'
+      - 'production/race_simulator_v02.py'
+      - 'production/race_simulator_v02_adapter.py'
+      - 'production/build_race_simulation_data_v02.py'
       - 'production/race_metadata_overrides.json'
-      - 'production/test_race_simulator_v01.py'
-      - 'production/test_race_simulator_keibaai_adapter.py'
-      - 'production/test_build_race_simulation_data.py'
+      - 'production/test_race_simulator_v02.py'
       - 'ios/KeibaAI/**'
       - '.github/workflows/race-simulator-ci.yml'
 
 permissions:
   contents: write
-
 concurrency:
   group: race-simulator-${{ github.ref }}
   cancel-in-progress: true
@@ -42,133 +38,80 @@ jobs:
   simulator:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
-      - name: Checkout simulator inputs only
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           sparse-checkout: |
             RaceData.json
             AppResearchData.json
+            HorseProfiles
             production
           sparse-checkout-cone-mode: false
           fetch-depth: 1
-
-      - name: Python version
-        run: python3 --version
-
-      - name: Run RaceSimulator unit tests
+      - name: Run v0.2 unit and independence tests
         working-directory: production
+        run: python3 -m unittest test_race_simulator_v02.py
+      - name: Build audited v0.2 simulation data
         run: |
-          python3 -m unittest \
-            test_race_simulator_v01.py \
-            test_race_simulator_keibaai_adapter.py \
-            test_build_race_simulation_data.py
-
-      - name: Build RaceSimulationData.json
-        run: |
-          python3 production/build_race_simulation_data.py \
+          python3 production/build_race_simulation_data_v02.py \
             --race-data RaceData.json \
             --research-data AppResearchData.json \
+            --profiles-dir HorseProfiles \
             --metadata-overrides production/race_metadata_overrides.json \
-            --runs 250 \
-            --seed 20261103 \
-            --dt 0.5 \
+            --runs 250 --seed 20261103 --dt 0.5 \
             --output RaceSimulationData.json
-
-      - name: Validate published simulation JSON
+      - name: Validate v0.2 quality gates
         run: |
           python3 - <<'PY'
           import json
-          from pathlib import Path
-          p = Path('RaceSimulationData.json')
-          data = json.loads(p.read_text(encoding='utf-8'))
-          assert data['schemaVersion'] == 'race-simulator-v0.1-batch'
-          assert data['status'] == 'ok', data.get('errors')
-          assert data['summary']['simulatedRaces'] > 0
-          assert data['summary']['errorRaces'] == 0, data.get('errors')
-          assert data['errors'] == [], data['errors']
-          for race in data['races']:
-              independent = race['independence']
-              assert independent['usesPredictionAIForMotion'] is False
-              assert independent['usesMarketProbabilityForMotion'] is False
-              assert independent['usesOddsForMotion'] is False
-              assert len(race['horses']) >= 2
-          print(json.dumps(data['summary'], ensure_ascii=False))
+          d=json.load(open('RaceSimulationData.json',encoding='utf-8'))
+          assert d['schemaVersion']=='race-simulator-v0.2-batch'
+          assert d['status']=='ok', d.get('errors')
+          assert d['summary']['simulatedRaces']>0
+          assert d['summary']['errorRaces']==0, d.get('errors')
+          for r in d['races']:
+              i=r['independence']
+              assert i['usesPredictionAIForMotion'] is False
+              assert i['usesMarketProbabilityForMotion'] is False
+              assert i['usesOddsForMotion'] is False
+              assert i['usesPopularityForMotion'] is False
+              assert r['audit']['status']=='pass', r['audit']
+              assert len(r['replay']['frames'])>20
+              assert all(len(f['horses'])==len(r['horses']) for f in r['replay']['frames'])
+          print(json.dumps(d['summary'],ensure_ascii=False))
           PY
-
       - name: Publish generated simulation data safely
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           set -euo pipefail
-
-          target_branch="${GITHUB_REF_NAME}"
           git add --sparse RaceSimulationData.json
-          if git diff --cached --quiet; then
-            echo 'RaceSimulationData.json unchanged'
-            exit 0
-          fi
-
+          if git diff --cached --quiet; then exit 0; fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git commit -m 'Update RaceSimulator output'
-
-          # The generated JSON is valid only for the simulator inputs checked
-          # out at the start of this job. If those inputs advance while the job
-          # is running, never rebase stale output onto them. A newer push to the
-          # relevant paths will run this workflow again from fresh inputs.
-          relevant_re='^(RaceData\.json|AppResearchData\.json|RaceSimulationData\.json|production/(race_simulator_v01\.py|race_simulator_keibaai_adapter\.py|build_race_simulation_data\.py|race_metadata_overrides\.json))$'
-
+          git commit -m 'Update RaceSimulator v0.2 output'
           for attempt in 1 2 3 4 5; do
-            echo "Publish attempt ${attempt}/5 to ${target_branch}"
-            git fetch origin "${target_branch}" --depth=50
-
-            remote_sha="$(git rev-parse "origin/${target_branch}")"
-            parent_sha="$(git rev-parse HEAD^)"
-
-            if [[ "${remote_sha}" != "${parent_sha}" ]]; then
-              changed_files="$(git diff --name-only "${parent_sha}" "${remote_sha}" || true)"
-              echo 'Remote branch advanced while simulation was running:'
-              printf '%s\n' "${changed_files}"
-
-              if printf '%s\n' "${changed_files}" | grep -Eq "${relevant_re}"; then
-                echo 'Simulator-relevant inputs changed; skipping stale generated output.'
-                exit 0
+            git fetch origin main --depth=50
+            parent_sha="$(git rev-parse HEAD^)"; remote_sha="$(git rev-parse origin/main)"
+            if [[ "$parent_sha" != "$remote_sha" ]]; then
+              changed="$(git diff --name-only "$parent_sha" "$remote_sha" || true)"
+              if printf '%s\n' "$changed" | grep -Eq '^(RaceData\.json|AppResearchData\.json|HorseProfiles/|production/race_simulator_v02|production/build_race_simulation_data_v02)'; then
+                echo 'Relevant inputs advanced; skip stale output.'; exit 0
               fi
-
-              echo 'Only unrelated files changed; rebasing generated output safely.'
-              git rebase "origin/${target_branch}"
+              git rebase origin/main
             fi
-
-            if git push origin "HEAD:${target_branch}"; then
-              exit 0
-            fi
+            git push origin HEAD:main && exit 0
           done
-
-          echo 'Failed to publish RaceSimulationData.json after 5 safe attempts.' >&2
           exit 1
 
   ios-build:
     runs-on: xcode-27
     timeout-minutes: 20
-
     steps:
-      - name: Checkout iOS project only
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            ios
+          sparse-checkout: ios
           fetch-depth: 1
-
-      - name: Show Xcode project
-        run: xcodebuild -list -project ios/KeibaAI/KeibaAI.xcodeproj
-
       - name: Build KeibaAI for iOS Simulator
         run: |
-          xcodebuild \
-            -project ios/KeibaAI/KeibaAI.xcodeproj \
-            -scheme KeibaAI \
-            -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+          xcodebuild -project ios/KeibaAI/KeibaAI.xcodeproj -scheme KeibaAI -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
