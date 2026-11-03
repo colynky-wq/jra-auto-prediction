@@ -1,0 +1,32 @@
+name: Package KeibaAI Xcode AI-first v0.3
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Record source commit
+        run: |
+          printf '%s\n' 'Source commit: e054252f97fb7ae974f6fe731fbcde792563faae' > ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+          printf '%s\n' 'AI-first integrated judgment UI v0.3.' >> ios/KeibaAI/LATEST_MAIN_COMMIT.txt
+      - name: Verify payload
+        run: |
+          test -f ios/KeibaAI/KeibaAI.xcodeproj/project.pbxproj
+          test -f ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q '総合判断' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+          grep -q '予測AI主軸' ios/KeibaAI/KeibaAI/RaceSimulatorView.swift
+      - name: Upload KeibaAI Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KeibaAI-Xcode-v0.3-AIFirst-e054252
+          path: ios/KeibaAI/
+          if-no-files-found: error
+          retention-days: 7
