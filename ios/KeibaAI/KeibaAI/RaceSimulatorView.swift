@@ -10,38 +10,135 @@ private struct SimBatch: Decodable {
     let summary: SimBatchSummary
     let races: [SimRace]
 }
-private struct SimBatchSettings: Decodable { let runsPerRace: Int; let baseSeed: Int; let dtSeconds: Double }
-private struct SimBatchSummary: Decodable { let inputRaces: Int; let simulatedRaces: Int; let skippedRaces: Int; let errorRaces: Int }
+
+private struct SimBatchSettings: Decodable {
+    let runsPerRace: Int
+    let baseSeed: Int
+    let dtSeconds: Double
+}
+
+private struct SimBatchSummary: Decodable {
+    let inputRaces: Int
+    let simulatedRaces: Int
+    let skippedRaces: Int
+    let errorRaces: Int
+}
+
 private struct SimRace: Decodable, Identifiable {
     var id: String { raceID }
-    let raceID: String; let raceName: String?; let racecourse: String?; let track: String?; let distanceMeters: Double
-    let pace: String; let paceSource: String; let raceDate: String?; let raceNumber: Int?; let startTime: String?; let venue: String?
-    let inputQuality: SimInputQuality; let independence: SimIndependence; let settings: SimEngineSettings
-    let horses: [SimHorse]; let comparisonWithPredictionAI: SimComparison; let replay: SimReplay
+
+    let raceID: String
+    let raceName: String?
+    let racecourse: String?
+    let track: String?
+    let distanceMeters: Double
+    let pace: String
+    let paceSource: String
+    let raceDate: String?
+    let raceNumber: Int?
+    let startTime: String?
+    let venue: String?
+    let inputQuality: SimInputQuality
+    let independence: SimIndependence
+    let settings: SimEngineSettings
+    let horses: [SimHorse]
+    let comparisonWithPredictionAI: SimComparison
+    let replay: SimReplay
 }
-private struct SimInputQuality: Decodable { let formationStatus: String?; let formationCoveragePct: Double?; let paceForecastStatus: String?; let styleKnownHorses: Int; let styleTotalHorses: Int; let styleCoveragePct: Double }
-private struct SimIndependence: Decodable { let usesPredictionAIForMotion: Bool; let usesMarketProbabilityForMotion: Bool; let usesOddsForMotion: Bool; let strengthSource: String }
-private struct SimEngineSettings: Decodable { let runs: Int; let seed: Int; let dtSeconds: Double }
+
+private struct SimInputQuality: Decodable {
+    let formationStatus: String?
+    let formationCoveragePct: Double?
+    let paceForecastStatus: String?
+    let styleKnownHorses: Int
+    let styleTotalHorses: Int
+    let styleCoveragePct: Double
+}
+
+private struct SimIndependence: Decodable {
+    let usesPredictionAIForMotion: Bool
+    let usesMarketProbabilityForMotion: Bool
+    let usesOddsForMotion: Bool
+    let strengthSource: String
+}
+
+private struct SimEngineSettings: Decodable {
+    let runs: Int
+    let seed: Int
+    let dtSeconds: Double
+}
+
 private struct SimHorse: Decodable, Identifiable {
     var id: Int { horseNumber }
-    let horseNumber: Int; let horseName: String; let style: String; let independentStrength: Double
-    let simulationWinProbability: Double; let simulationTop2Probability: Double; let simulationTop3Probability: Double; let expectedFinish: Double
-    let earlyLeadProbability: Double; let top3At75Probability: Double; let averageFinishTimeSeconds: Double; let averageBlockedSeconds: Double; let averageLaneChanges: Double
+
+    let horseNumber: Int
+    let horseName: String
+    let style: String
+    let independentStrength: Double
+    let simulationWinProbability: Double
+    let simulationTop2Probability: Double
+    let simulationTop3Probability: Double
+    let expectedFinish: Double
+    let earlyLeadProbability: Double
+    let top3At75Probability: Double
+    let averageFinishTimeSeconds: Double
+    let averageBlockedSeconds: Double
+    let averageLaneChanges: Double
     let rankBands: [SimRankBand]
 }
-private struct SimRankBand: Decodable, Identifiable { var id: Double { progress }; let progress: Double; let p20Rank: Double; let medianRank: Double; let p80Rank: Double }
-private struct SimComparison: Decodable { let available: Bool; let note: String?; let reason: String?; let horses: [SimComparisonHorse]? }
-private struct SimComparisonHorse: Decodable, Identifiable { var id: Int { horseNumber }; let horseNumber: Int; let horseName: String; let predictionAIWinProbabilityNormalized: Double; let simulationWinProbability: Double; let delta: Double; let label: String }
 
-// v0.2 is frame-native: the iPhone renders the simulator's actual representative
-// position/lane/speed/rank/gap states instead of inventing motion from rank bands.
-private struct SimReplay: Decodable {
-    let kind: String; let seed: Int; let dtSeconds: Double; let durationSeconds: Double; let frames: [SimFrame]; let note: String?
+private struct SimRankBand: Decodable, Identifiable {
+    var id: Double { progress }
+    let progress: Double
+    let p20Rank: Double
+    let medianRank: Double
+    let p80Rank: Double
 }
-private struct SimFrame: Decodable, Identifiable { var id: Double { t }; let t: Double; let horses: [SimFrameHorse] }
+
+private struct SimComparison: Decodable {
+    let available: Bool
+    let note: String?
+    let reason: String?
+    let horses: [SimComparisonHorse]?
+}
+
+private struct SimComparisonHorse: Decodable, Identifiable {
+    var id: Int { horseNumber }
+
+    let horseNumber: Int
+    let horseName: String
+    let predictionAIWinProbabilityNormalized: Double
+    let simulationWinProbability: Double
+    let delta: Double
+    let label: String
+}
+
+private struct SimReplay: Decodable {
+    let kind: String
+    let seed: Int
+    let dtSeconds: Double
+    let durationSeconds: Double
+    let frames: [SimFrame]
+    let note: String?
+}
+
+private struct SimFrame: Decodable, Identifiable {
+    var id: Double { t }
+    let t: Double
+    let horses: [SimFrameHorse]
+}
+
 private struct SimFrameHorse: Decodable, Identifiable {
     var id: Int { horseNumber }
-    let horseNumber: Int; let progress: Double; let positionMeters: Double; let lane: Double; let speedMps: Double; let rank: Int; let gapMeters: Double; let blocked: Bool
+
+    let horseNumber: Int
+    let progress: Double
+    let positionMeters: Double
+    let lane: Double
+    let speedMps: Double
+    let rank: Int
+    let gapMeters: Double
+    let blocked: Bool
 }
 
 @MainActor
@@ -51,57 +148,101 @@ private final class KeibaAIRaceSimulatorStore: ObservableObject {
     @Published private(set) var batch: SimBatch?
     @Published private(set) var sourceMessage = "未読み込み"
     @Published private(set) var isLoading = false
+
     private let rawMain = "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/"
 
-    func simulation(for raceID: String) -> SimRace? { simulations[raceID] }
+    func simulation(for raceID: String) -> SimRace? {
+        simulations[raceID]
+    }
+
     func load(force: Bool = false) async {
         if isLoading || (!force && !races.isEmpty && batch != nil) { return }
-        isLoading = true; defer { isLoading = false }
+        isLoading = true
+        defer { isLoading = false }
+
         do {
-            let value: [Race] = try await fetch(rawMain + "RaceData.json")
-            races = value.sorted {
-                if $0.raceDate != $1.raceDate { return ($0.raceDate ?? "") > ($1.raceDate ?? "") }
-                if $0.venue != $1.venue { return venueOrder($0.venue) < venueOrder($1.venue) }
+            let raceData: [Race] = try await fetch(rawMain + "RaceData.json")
+            races = raceData.sorted {
+                if $0.raceDate != $1.raceDate {
+                    return ($0.raceDate ?? "") > ($1.raceDate ?? "")
+                }
+                if $0.venue != $1.venue {
+                    return venueOrder($0.venue) < venueOrder($1.venue)
+                }
                 return $0.raceNumber < $1.raceNumber
             }
-            let value2: SimBatch = try await fetch(rawMain + "RaceSimulationData.json")
-            guard value2.schemaVersion == "race-simulator-v0.2-batch" else { throw URLError(.cannotParseResponse) }
-            batch = value2
-            simulations = Dictionary(uniqueKeysWithValues: value2.races.map { ($0.raceID, $0) })
+
+            let simulationData: SimBatch = try await fetch(rawMain + "RaceSimulationData.json")
+            guard simulationData.schemaVersion == "race-simulator-v0.2-batch" else {
+                throw URLError(.cannotParseResponse)
+            }
+
+            batch = simulationData
+            simulations = Dictionary(uniqueKeysWithValues: simulationData.races.map { ($0.raceID, $0) })
             sourceMessage = "RaceSimulator v0.2・フレーム取得済"
         } catch {
-            simulations = [:]; batch = nil
+            simulations = [:]
+            batch = nil
             sourceMessage = races.isEmpty ? "RaceData取得失敗" : "RaceSimulator v0.2取得待ち"
         }
     }
+
     private func fetch<T: Decodable>(_ raw: String) async throws -> T {
-        guard var c = URLComponents(string: raw) else { throw URLError(.badURL) }
-        c.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
-        guard let url = c.url else { throw URLError(.badURL) }
-        var req = URLRequest(url: url); req.cachePolicy = .reloadIgnoringLocalCacheData; req.timeoutInterval = 20
-        req.setValue("KeibaAI-RaceSimulator/0.2", forHTTPHeaderField: "User-Agent")
-        let (data, response) = try await URLSession.shared.data(for: req)
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { throw URLError(.badServerResponse) }
+        guard var components = URLComponents(string: raw) else {
+            throw URLError(.badURL)
+        }
+        components.queryItems = [URLQueryItem(name: "t", value: String(Date().timeIntervalSince1970))]
+        guard let url = components.url else {
+            throw URLError(.badURL)
+        }
+
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 20
+        request.setValue("KeibaAI-RaceSimulator/0.2", forHTTPHeaderField: "User-Agent")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
         return try JSONDecoder().decode(T.self, from: data)
     }
-    private func venueOrder(_ venue: String) -> Int { ["札幌","函館","福島","新潟","東京","中山","中京","京都","阪神","小倉"].firstIndex(of: venue) ?? 99 }
+
+    private func venueOrder(_ venue: String) -> Int {
+        ["札幌", "函館", "福島", "新潟", "東京", "中山", "中京", "京都", "阪神", "小倉"].firstIndex(of: venue) ?? 99
+    }
 }
 
 struct KeibaAIRaceSimulatorScreen: View {
     @StateObject private var store = KeibaAIRaceSimulatorStore()
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    Label("RaceSimulator v0.2", systemImage: "waveform.path.ecg") .font(.headline)
-                    Text("予測AI・オッズ・人気を走行計算に入れず、独立能力・脚質・位置取りから展開を計算します。") .font(.caption).foregroundStyle(.secondary)
-                    Text(store.sourceMessage).font(.caption2).foregroundStyle(.secondary)
+                    Label("RaceSimulator v0.2", systemImage: "waveform.path.ecg")
+                        .font(.headline)
+                    Text("予測AI・オッズ・人気を走行計算に入れず、独立能力・脚質・位置取りから展開を計算します。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("馬券判断は予測AIを主軸にし、展開シミュは追い風・向かい風の確認に使います。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(store.sourceMessage)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
+
                 Section("レース") {
                     ForEach(store.races) { race in
                         NavigationLink {
                             KeibaAIRaceSimulatorDestination(race: race, store: store)
-                        } label: { RaceSimRow(race: race, ready: store.simulation(for: race.raceID) != nil) }
+                        } label: {
+                            RaceSimRow(
+                                race: race,
+                                ready: store.simulation(for: race.raceID) != nil
+                            )
+                        }
                     }
                 }
             }
@@ -113,152 +254,531 @@ struct KeibaAIRaceSimulatorScreen: View {
 }
 
 private struct RaceSimRow: View {
-    let race: Race; let ready: Bool
+    let race: Race
+    let ready: Bool
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(race.venue) \(race.raceNumber)R").font(.subheadline.bold())
-                Text(race.raceName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text("\(race.venue) \(race.raceNumber)R")
+                    .font(.subheadline.bold())
+                Text(race.raceName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer(); Image(systemName: ready ? "checkmark.circle.fill" : "clock").foregroundStyle(ready ? .green : .secondary)
+            Spacer()
+            Image(systemName: ready ? "checkmark.circle.fill" : "clock")
+                .foregroundStyle(ready ? Color.green : Color.secondary)
         }
     }
 }
+
 private struct KeibaAIRaceSimulatorDestination: View {
-    let race: Race; @ObservedObject var store: KeibaAIRaceSimulatorStore
+    let race: Race
+    @ObservedObject var store: KeibaAIRaceSimulatorStore
+
     var body: some View {
         Group {
-            if let sim = store.simulation(for: race.raceID) { RaceSimDetail(race: race, sim: sim, batch: store.batch) }
-            else if store.isLoading { ProgressView("v0.2を取得中…") }
-            else { ContentUnavailableView("v0.2生成待ち", systemImage: "clock", description: Text("\(race.venue) \(race.raceNumber)R のフレームデータはまだありません。")) }
+            if let sim = store.simulation(for: race.raceID) {
+                RaceSimDetail(race: race, sim: sim, batch: store.batch)
+            } else if store.isLoading {
+                ProgressView("v0.2を取得中…")
+            } else {
+                ContentUnavailableView(
+                    "v0.2生成待ち",
+                    systemImage: "clock",
+                    description: Text("\(race.venue) \(race.raceNumber)R のフレームデータはまだありません。")
+                )
+            }
         }
-        .navigationTitle("\(race.venue) \(race.raceNumber)R").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("\(race.venue) \(race.raceNumber)R")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 private struct RaceSimDetail: View {
-    let race: Race; let sim: SimRace; let batch: SimBatch?
+    let race: Race
+    let sim: SimRace
+    let batch: SimBatch?
+
     @State private var elapsed = 0.0
     @State private var playing = false
     @State private var speed = 1.0
     @State private var selectedHorse: Int?
-    private let timer = Timer.publish(every: 1.0/30.0, on: .main, in: .common).autoconnect()
 
-    private var duration: Double { max(sim.replay.durationSeconds, sim.replay.frames.last?.t ?? 1, 1) }
-    private var progress: Double { min(1, max(0, elapsed / duration)) }
-    private var framePair: (SimFrame, SimFrame, Double)? {
-        let f = sim.replay.frames
-        guard let first = f.first else { return nil }
-        if elapsed <= first.t { return (first, first, 0) }
-        guard let last = f.last else { return nil }
-        if elapsed >= last.t { return (last, last, 0) }
-        var lo = 0, hi = f.count - 1
-        while hi - lo > 1 { let m = (lo + hi) / 2; if f[m].t <= elapsed { lo = m } else { hi = m } }
-        let width = max(f[hi].t - f[lo].t, 0.0001)
-        return (f[lo], f[hi], (elapsed - f[lo].t) / width)
+    private let timer = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
+
+    private var duration: Double {
+        max(sim.replay.durationSeconds, sim.replay.frames.last?.t ?? 1.0, 1.0)
     }
+
+    private var progress: Double {
+        min(1.0, max(0.0, elapsed / duration))
+    }
+
+    private var framePair: (SimFrame, SimFrame, Double)? {
+        let frames = sim.replay.frames
+        guard let first = frames.first else { return nil }
+        if elapsed <= first.t { return (first, first, 0.0) }
+        guard let last = frames.last else { return nil }
+        if elapsed >= last.t { return (last, last, 0.0) }
+
+        var low = 0
+        var high = frames.count - 1
+        while high - low > 1 {
+            let middle = (low + high) / 2
+            if frames[middle].t <= elapsed {
+                low = middle
+            } else {
+                high = middle
+            }
+        }
+
+        let width = max(frames[high].t - frames[low].t, 0.0001)
+        let fraction = (elapsed - frames[low].t) / width
+        return (frames[low], frames[high], fraction)
+    }
+
     private var currentStates: [SimFrameHorse] {
         guard let pair = framePair else { return [] }
-        let b = Dictionary(uniqueKeysWithValues: pair.1.horses.map { ($0.horseNumber, $0) })
-        return pair.0.horses.map { a in
-            guard let z = b[a.horseNumber] else { return a }
-            let q = pair.2, lerp: (Double,Double)->Double = { x,y in x + (y-x)*q }
-            return SimFrameHorse(horseNumber:a.horseNumber, progress:lerp(a.progress,z.progress), positionMeters:lerp(a.positionMeters,z.positionMeters), lane:lerp(a.lane,z.lane), speedMps:lerp(a.speedMps,z.speedMps), rank:q < 0.5 ? a.rank : z.rank, gapMeters:lerp(a.gapMeters,z.gapMeters), blocked:q < 0.5 ? a.blocked : z.blocked)
-        }.sorted { $0.rank < $1.rank }
+        let nextByNumber = Dictionary(uniqueKeysWithValues: pair.1.horses.map { ($0.horseNumber, $0) })
+
+        return pair.0.horses.map { current in
+            guard let next = nextByNumber[current.horseNumber] else { return current }
+            let fraction = pair.2
+            func lerp(_ a: Double, _ b: Double) -> Double {
+                a + (b - a) * fraction
+            }
+            return SimFrameHorse(
+                horseNumber: current.horseNumber,
+                progress: lerp(current.progress, next.progress),
+                positionMeters: lerp(current.positionMeters, next.positionMeters),
+                lane: lerp(current.lane, next.lane),
+                speedMps: lerp(current.speedMps, next.speedMps),
+                rank: fraction < 0.5 ? current.rank : next.rank,
+                gapMeters: lerp(current.gapMeters, next.gapMeters),
+                blocked: fraction < 0.5 ? current.blocked : next.blocked
+            )
+        }
+        .sorted { $0.rank < $1.rank }
     }
-    private var simRanked: [SimHorse] { sim.horses.sorted { $0.simulationWinProbability == $1.simulationWinProbability ? $0.expectedFinish < $1.expectedFinish : $0.simulationWinProbability > $1.simulationWinProbability } }
-    private func horseName(_ n: Int) -> String { sim.horses.first { $0.horseNumber == n }?.horseName ?? "#\(n)" }
-    private var phase: String { progress < .05 ? "スタート" : progress < .25 ? "序盤" : progress < .60 ? "中盤" : progress < .82 ? "3〜4角" : progress < .995 ? "直線" : "ゴール" }
+
+    private var aiRanked: [Horse] {
+        race.horses.sorted {
+            if $0.aiProbability != $1.aiProbability {
+                return $0.aiProbability > $1.aiProbability
+            }
+            return $0.number < $1.number
+        }
+    }
+
+    private var aiTop3: [Horse] {
+        Array(aiRanked.prefix(3))
+    }
+
+    private var simRanked: [SimHorse] {
+        sim.horses.sorted {
+            if $0.simulationWinProbability != $1.simulationWinProbability {
+                return $0.simulationWinProbability > $1.simulationWinProbability
+            }
+            return $0.expectedFinish < $1.expectedFinish
+        }
+    }
+
+    private var holeCandidate: SimHorse? {
+        let aiTopNumbers = Set(aiTop3.map(\.number))
+        return simRanked.prefix(3).first { !aiTopNumbers.contains($0.horseNumber) }
+    }
+
+    private var phase: String {
+        if progress < 0.05 { return "スタート" }
+        if progress < 0.25 { return "序盤" }
+        if progress < 0.60 { return "中盤" }
+        if progress < 0.82 { return "3〜4角" }
+        if progress < 0.995 { return "直線" }
+        return "ゴール"
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                card {
-                    HStack { VStack(alignment:.leading) { Text("\(race.venue) \(race.raceNumber)R").font(.caption.bold()).foregroundStyle(.blue); Text(race.raceName).font(.title2.bold()); Text(sim.track ?? race.course).foregroundStyle(.secondary) }; Spacer(); Text("v0.2").font(.caption.bold()).padding(7).background(.blue.opacity(.1),in:Capsule()) }
-                    Text("フレーム \(sim.replay.frames.count)枚 / \(String(format:"%.1f",sim.replay.dtSeconds))秒刻み / \(sim.replay.kind)").font(.caption).foregroundStyle(.secondary)
-                }
+                headerCard
+                overallJudgmentCard
                 replayCard
                 liveOrderCard
                 resultCard
                 qualityCard
-            }.padding(16)
+            }
+            .padding(16)
         }
-        .background(Color(uiColor:.systemGroupedBackground))
+        .background(Color(uiColor: .systemGroupedBackground))
         .onReceive(timer) { _ in
             guard playing else { return }
-            elapsed = min(duration, elapsed + (1.0/30.0)*speed)
-            if elapsed >= duration { playing = false }
+            elapsed = min(duration, elapsed + (1.0 / 30.0) * speed)
+            if elapsed >= duration {
+                playing = false
+            }
+        }
+    }
+
+    private var headerCard: some View {
+        card {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.blue)
+                    Text(race.raceName)
+                        .font(.title2.bold())
+                    Text(sim.track ?? race.course)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text("RaceSimulator v0.2")
+                    .font(.caption.bold())
+                    .padding(7)
+                    .background(.blue.opacity(0.10), in: Capsule())
+            }
+
+            Text("フレーム \(sim.replay.frames.count)枚 / \(String(format: "%.1f", sim.replay.dtSeconds))秒刻み / \(sim.replay.kind)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var overallJudgmentCard: some View {
+        card {
+            HStack {
+                Label("総合判断", systemImage: "checkmark.circle.fill")
+                    .font(.title3.bold())
+                Spacer()
+                Text("予測AI主軸")
+                    .font(.caption.bold())
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(.blue.opacity(0.10), in: Capsule())
+            }
+
+            Text("迷ったときはここを優先します。予測AIの順位を主軸にし、v0.2展開シミュは追い風・向かい風として加味します。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ForEach(aiTop3) { horse in
+                let aiRank = aiRank(for: horse.number) ?? 0
+                let simRank = simRank(for: horse.number)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("#\(horse.number) \(horse.name)")
+                            .font(.headline)
+                            .lineLimit(1)
+                        Spacer()
+                        Text(judgmentTitle(aiRank: aiRank, simRank: simRank))
+                            .font(.caption.bold())
+                            .foregroundStyle(judgmentColor(aiRank: aiRank, simRank: simRank))
+                    }
+                    HStack(spacing: 8) {
+                        Text("AI \(aiRank)位")
+                            .font(.caption.bold())
+                        Text(String(format: "AI勝率 %.1f%%", horse.aiProbability))
+                            .font(.caption.monospacedDigit())
+                        Text(simRank.map { "展開 \($0)位" } ?? "展開 対象外")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(10)
+                .background(
+                    judgmentColor(aiRank: aiRank, simRank: simRank).opacity(0.07),
+                    in: RoundedRectangle(cornerRadius: 12)
+                )
+            }
+
+            if let holeCandidate {
+                Divider()
+                Label("穴候補（参考）", systemImage: "sparkles")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.orange)
+                Text("#\(holeCandidate.horseNumber) \(holeCandidate.horseName) — 展開シミュでは上位ですが、予測AI上位3には入っていません。本命へ自動昇格はさせません。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
     private var replayCard: some View {
         card {
-            HStack { Label("v0.2 フレーム再生",systemImage:"play.circle.fill").font(.title3.bold()); Spacer(); Text(phase).font(.subheadline.bold()).foregroundStyle(.orange) }
-            Text("丸いコースは表示用の模式図です。馬の前後位置・レーン・速度・順位・詰まりはv0.2が出力した実フレーム値を使っています。実GPSではありません。") .font(.caption).foregroundStyle(.secondary)
+            HStack {
+                Label("v0.2 フレーム再生", systemImage: "play.circle.fill")
+                    .font(.title3.bold())
+                Spacer()
+                Text(phase)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.orange)
+            }
+
+            Text("丸いコースは表示用の模式図です。馬の前後位置・レーン・速度・順位・先頭との差・詰まりはv0.2が出力したフレーム値を使っています。実GPSではありません。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             GeometryReader { proxy in
                 ZStack {
-                    RoundedRectangle(cornerRadius:22).fill(Color(uiColor:.secondarySystemBackground))
-                    Ellipse().stroke(Color.brown.opacity(.25),lineWidth:48).padding(28)
-                    Ellipse().stroke(Color.green.opacity(.68),lineWidth:32).padding(28)
-                    Ellipse().stroke(Color.white.opacity(.75),style:StrokeStyle(lineWidth:1.5,dash:[7,6])).padding(28)
-                    ForEach(currentStates) { state in marker(state, size: proxy.size) }
+                    RoundedRectangle(cornerRadius: 22)
+                        .fill(Color(uiColor: .secondarySystemBackground))
+                    Ellipse()
+                        .stroke(Color.brown.opacity(0.25), lineWidth: 48)
+                        .padding(28)
+                    Ellipse()
+                        .stroke(Color.green.opacity(0.68), lineWidth: 32)
+                        .padding(28)
+                    Ellipse()
+                        .stroke(
+                            Color.white.opacity(0.75),
+                            style: StrokeStyle(lineWidth: 1.5, dash: [7, 6])
+                        )
+                        .padding(28)
+
+                    ForEach(currentStates) { state in
+                        marker(state, size: proxy.size)
+                    }
                 }
-            }.frame(height:320)
-            HStack {
-                Button { if elapsed >= duration { elapsed = 0 }; playing.toggle() } label: { Label(playing ? "一時停止":"再生",systemImage:playing ? "pause.fill":"play.fill") }.buttonStyle(.borderedProminent)
-                Button { playing=false; elapsed=0 } label: { Label("最初へ",systemImage:"backward.end.fill") }.buttonStyle(.bordered)
-                Spacer(); Text(String(format:"%.1f / %.1f秒",elapsed,duration)).font(.caption.monospacedDigit())
             }
-            Slider(value:$elapsed,in:0...duration,onEditingChanged:{ if $0 { playing=false } }).accessibilityLabel("レース再生位置")
-            Picker("速度",selection:$speed) { Text("0.5×").tag(0.5);Text("1×").tag(1.0);Text("2×").tag(2.0);Text("4×").tag(4.0) }.pickerStyle(.segmented)
-            if let n=selectedHorse, let s=currentStates.first(where:{$0.horseNumber==n}) {
-                HStack { Text("#\(n) \(horseName(n))").font(.subheadline.bold()); Spacer(); Text("\(s.rank)位"); Text(String(format:"%.1fm/s",s.speedMps)); Text(String(format:"差 %.1fm",s.gapMeters)); if s.blocked { Label("詰まり",systemImage:"exclamationmark.triangle.fill").foregroundStyle(.orange) } }.font(.caption)
+            .frame(height: 320)
+
+            HStack {
+                Button {
+                    if elapsed >= duration { elapsed = 0.0 }
+                    playing.toggle()
+                } label: {
+                    Label(playing ? "一時停止" : "再生", systemImage: playing ? "pause.fill" : "play.fill")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    playing = false
+                    elapsed = 0.0
+                } label: {
+                    Label("最初へ", systemImage: "backward.end.fill")
+                }
+                .buttonStyle(.bordered)
+
+                Spacer()
+                Text(String(format: "%.1f / %.1f秒", elapsed, duration))
+                    .font(.caption.monospacedDigit())
+            }
+
+            Slider(
+                value: $elapsed,
+                in: 0.0...duration,
+                onEditingChanged: { editing in
+                    if editing { playing = false }
+                }
+            )
+            .accessibilityLabel("レース再生位置")
+
+            Picker("速度", selection: $speed) {
+                Text("0.5×").tag(0.5)
+                Text("1×").tag(1.0)
+                Text("2×").tag(2.0)
+                Text("4×").tag(4.0)
+            }
+            .pickerStyle(.segmented)
+
+            if let selectedHorse,
+               let state = currentStates.first(where: { $0.horseNumber == selectedHorse }) {
+                HStack(spacing: 8) {
+                    Text("#\(selectedHorse) \(horseName(selectedHorse))")
+                        .font(.subheadline.bold())
+                    Spacer()
+                    Text("\(state.rank)位")
+                    Text(String(format: "%.1fm/s", state.speedMps))
+                    Text(String(format: "差 %.1fm", state.gapMeters))
+                    if state.blocked {
+                        Label("詰まり", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .font(.caption)
             }
         }
     }
 
-    @ViewBuilder private func marker(_ s: SimFrameHorse, size: CGSize) -> some View {
-        let angle = -Double.pi/2 + s.progress*Double.pi*2
-        let laneOffset = CGFloat((s.lane-2.5)*4.0)
-        let rx=max(24,size.width/2-55-laneOffset), ry=max(24,size.height/2-55-laneOffset*.45)
-        let p=CGPoint(x:size.width/2+cos(angle)*rx,y:size.height/2+sin(angle)*ry)
-        Button { selectedHorse=s.horseNumber } label: {
-            VStack(spacing:1) {
-                ZStack { Circle().fill(color(s.horseNumber)).frame(width:selectedHorse==s.horseNumber ? 34:29,height:selectedHorse==s.horseNumber ? 34:29); Text("\(s.horseNumber)").font(.caption.bold()).foregroundStyle(.white) }
-                Text("\(s.rank)位").font(.system(size:9,weight:.bold)).padding(.horizontal,4).background(.ultraThinMaterial,in:Capsule())
-                if s.blocked { Image(systemName:"exclamationmark.triangle.fill").font(.system(size:9)).foregroundStyle(.orange) }
+    @ViewBuilder
+    private func marker(_ state: SimFrameHorse, size: CGSize) -> some View {
+        let angle = -Double.pi / 2.0 + state.progress * Double.pi * 2.0
+        let laneOffset = CGFloat((state.lane - 2.5) * 4.0)
+        let radiusX = max(CGFloat(24.0), size.width / 2.0 - 55.0 - laneOffset)
+        let radiusY = max(CGFloat(24.0), size.height / 2.0 - 55.0 - laneOffset * 0.45)
+        let point = CGPoint(
+            x: size.width / 2.0 + CGFloat(cos(angle)) * radiusX,
+            y: size.height / 2.0 + CGFloat(sin(angle)) * radiusY
+        )
+
+        Button {
+            selectedHorse = state.horseNumber
+        } label: {
+            VStack(spacing: 1) {
+                ZStack {
+                    Circle()
+                        .fill(horseColor(state.horseNumber))
+                        .frame(
+                            width: selectedHorse == state.horseNumber ? 34 : 29,
+                            height: selectedHorse == state.horseNumber ? 34 : 29
+                        )
+                    Text("\(state.horseNumber)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white)
+                }
+                Text("\(state.rank)位")
+                    .font(.system(size: 9, weight: .bold))
+                    .padding(.horizontal, 4)
+                    .background(.ultraThinMaterial, in: Capsule())
+                if state.blocked {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.orange)
+                }
             }
-        }.buttonStyle(.plain).position(p).animation(.linear(duration:.06),value:elapsed)
+        }
+        .buttonStyle(.plain)
+        .position(point)
+        .animation(.linear(duration: 0.06), value: elapsed)
+        .accessibilityLabel("\(state.horseNumber)番 \(horseName(state.horseNumber))、\(state.rank)位")
     }
 
     private var liveOrderCard: some View {
         card {
-            HStack { Text("現在位置").font(.title3.bold()); Spacer(); Text(paceLabel(sim.pace)).font(.caption.bold()).foregroundStyle(.orange) }
-            ForEach(currentStates.prefix(8)) { s in
-                HStack { Text("\(s.rank)位  #\(s.horseNumber) \(horseName(s.horseNumber))").font(.subheadline.weight(.semibold)).lineLimit(1); Spacer(); Text(String(format:"%.1fm/s",s.speedMps)).font(.caption.monospacedDigit()); Text(String(format:"+%.1fm",s.gapMeters)).font(.caption.monospacedDigit()).foregroundStyle(.secondary); if s.blocked { Image(systemName:"exclamationmark.triangle.fill").foregroundStyle(.orange) } }
+            HStack {
+                Text("現在位置")
+                    .font(.title3.bold())
+                Spacer()
+                Text(paceLabel(sim.pace))
+                    .font(.caption.bold())
+                    .foregroundStyle(.orange)
+            }
+
+            ForEach(Array(currentStates.prefix(8))) { state in
+                HStack {
+                    Text("\(state.rank)位  #\(state.horseNumber) \(horseName(state.horseNumber))")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                    Spacer()
+                    Text(String(format: "%.1fm/s", state.speedMps))
+                        .font(.caption.monospacedDigit())
+                    Text(String(format: "+%.1fm", state.gapMeters))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    if state.blocked {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
         }
     }
+
     private var resultCard: some View {
         card {
-            Text("Monte Carlo 展開評価").font(.title3.bold())
-            Text("代表フレーム1本の着順ではなく、\(sim.settings.runs)回の試行結果です。") .font(.caption).foregroundStyle(.secondary)
-            ForEach(Array(simRanked.prefix(8).enumerated()),id:\.element.id) { i,h in
-                HStack { Text("\(i+1). #\(h.horseNumber) \(h.horseName)").font(.subheadline.weight(.semibold)).lineLimit(1); Text(h.style).font(.caption2).foregroundStyle(.secondary); Spacer(); VStack(alignment:.trailing) { Text(String(format:"1着 %.1f%% / 3着内 %.1f%%",h.simulationWinProbability*100,h.simulationTop3Probability*100)).font(.caption.monospacedDigit()); Text(String(format:"詰まり %.1f秒 / 進路変更 %.1f回",h.averageBlockedSeconds,h.averageLaneChanges)).font(.caption2).foregroundStyle(.secondary) } }
+            Text("Monte Carlo 展開評価")
+                .font(.title3.bold())
+            Text("代表フレーム1本の着順ではなく、\(sim.settings.runs)回の試行結果です。最終判断は上の『総合判断』を優先してください。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ForEach(Array(simRanked.prefix(8))) { horse in
+                HStack {
+                    Text("\(simRank(for: horse.horseNumber) ?? 0). #\(horse.horseNumber) \(horse.horseName)")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                    Text(horse.style)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(String(format: "1着 %.1f%% / 3着内 %.1f%%", horse.simulationWinProbability * 100.0, horse.simulationTop3Probability * 100.0))
+                            .font(.caption.monospacedDigit())
+                        Text(String(format: "詰まり %.1f秒 / 進路変更 %.1f回", horse.averageBlockedSeconds, horse.averageLaneChanges))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
         }
     }
+
     private var qualityCard: some View {
         card {
-            Label("v0.2 品質・独立性",systemImage:"checkmark.shield.fill").font(.headline)
-            Text(String(format:"脚質カバー %.1f%%（%d/%d頭）",sim.inputQuality.styleCoveragePct,sim.inputQuality.styleKnownHorses,sim.inputQuality.styleTotalHorses)).font(.subheadline)
-            Text("ペース: \(paceLabel(sim.pace)) / \(sim.paceSource)").font(.caption).foregroundStyle(.secondary)
-            Text("独立能力: \(sim.independence.strengthSource)").font(.caption).foregroundStyle(.secondary)
-            Label("予測AI・市場確率・オッズは走行計算に不使用",systemImage:"lock.shield").font(.caption.weight(.semibold)).foregroundStyle(.green)
-            if let g=batch?.generatedAt { Text("生成: \(g)").font(.caption2).foregroundStyle(.secondary) }
+            Label("v0.2 品質・独立性", systemImage: "checkmark.shield.fill")
+                .font(.headline)
+            Text(String(format: "脚質カバー %.1f%%（%d/%d頭）", sim.inputQuality.styleCoveragePct, sim.inputQuality.styleKnownHorses, sim.inputQuality.styleTotalHorses))
+                .font(.subheadline)
+            Text("ペース: \(paceLabel(sim.pace)) / \(sim.paceSource)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("独立能力: \(sim.independence.strengthSource)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Label("予測AI・市場確率・オッズは走行計算に不使用", systemImage: "lock.shield")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.green)
+            if let generatedAt = batch?.generatedAt {
+                Text("生成: \(generatedAt)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
-    @ViewBuilder private func card<Content:View>(@ViewBuilder _ content:()->Content)->some View { VStack(alignment:.leading,spacing:12){content()}.padding(18).background(Color(uiColor:.systemBackground),in:RoundedRectangle(cornerRadius:20)) }
-    private func color(_ n:Int)->Color { Color(hue:Double((n*47)%360)/360,saturation:.72,brightness:.84) }
-    private func paceLabel(_ p:String)->String { p=="FAST" ? "ハイ" : p=="SLOW" ? "スロー" : "平均" }
+
+    @ViewBuilder
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            content()
+        }
+        .padding(18)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func horseName(_ number: Int) -> String {
+        sim.horses.first { $0.horseNumber == number }?.horseName ?? "#\(number)"
+    }
+
+    private func aiRank(for number: Int) -> Int? {
+        aiRanked.firstIndex { $0.number == number }.map { $0 + 1 }
+    }
+
+    private func simRank(for number: Int) -> Int? {
+        simRanked.firstIndex { $0.horseNumber == number }.map { $0 + 1 }
+    }
+
+    private func judgmentTitle(aiRank: Int, simRank: Int?) -> String {
+        if aiRank == 1 {
+            if let simRank, simRank <= 3 { return "高信頼本命" }
+            if let simRank, simRank <= 5 { return "本命・軽い注意" }
+            return "注意付き本命"
+        }
+        if let simRank, simRank <= 3 { return "相手有力" }
+        if let simRank, simRank <= 5 { return "相手候補" }
+        return "AI評価優先・展開注意"
+    }
+
+    private func judgmentColor(aiRank: Int, simRank: Int?) -> Color {
+        if let simRank, simRank <= 3 { return .green }
+        if aiRank == 1 && (simRank == nil || simRank! > 5) { return .orange }
+        if let simRank, simRank > 5 { return .orange }
+        return .blue
+    }
+
+    private func horseColor(_ number: Int) -> Color {
+        Color(
+            hue: Double((number * 47) % 360) / 360.0,
+            saturation: 0.72,
+            brightness: 0.84
+        )
+    }
+
+    private func paceLabel(_ pace: String) -> String {
+        if pace == "FAST" { return "ハイ" }
+        if pace == "SLOW" { return "スロー" }
+        return "平均"
+    }
 }
