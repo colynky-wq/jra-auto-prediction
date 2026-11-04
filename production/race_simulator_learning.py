@@ -400,6 +400,20 @@ def load_settled(root, now, commit_resolver=None):
     return sorted(records,key=lambda x:(x['record']['scheduledPost'],x['record']['raceID'])), held
 
 
+def training_fingerprint(records):
+    """Track learning inputs/labels, not fetch timestamps or final market data."""
+    items=[]
+    for row in records:
+        result=row['result'];lap=result.get('raceLap') or {}
+        target={'horses':sorted(({k:h.get(k) for k in ('number','finishPosition','last3F')}
+                    for h in result['horses']),key=lambda h:h['number']),
+            'raceLap':{k:lap.get(k) for k in ('raceID','raceDate','distanceM','winnerTimeSeconds','first600mSeconds')},
+            'lapValidation':{k:(lap.get('validation') or {}).get(k) for k in
+                ('headingMatches','distanceMatches','winnerTimeMatches','raceLast600mMatches')}}
+        items.append((row['record']['recordSHA256'],target))
+    return digest({'objectiveVersion':OBJECTIVE,'inputsAndTargets':items})
+
+
 def fit_candidate(records, current, now, policy=Policy()):
     records = records[-policy.training_window:]
     if len(records) < policy.min_training_races or len({x['record']['raceDate'] for x in records}) < policy.min_training_days:
@@ -433,7 +447,7 @@ def fit_candidate(records, current, now, policy=Policy()):
     if model['settings'] == current['settings'] or score >= trials[0][0]-1e-12:
         return None  # Do not consume a new holdout cohort for an unchanged setting.
     model.pop('modelID'); model['trainingLoss']=score
-    model['trainingDataSHA256']=digest([(x['record']['recordSHA256'],x['evaluation']['resultSHA256']) for x in records])
+    model['trainingDataSHA256']=training_fingerprint(records)
     model['trainingRuns']=policy.training_runs
     model['modelID']='rs-'+digest(model)[:24]
     return validate_model(model)
@@ -527,7 +541,7 @@ def cycle(root=ROOT, now=None, policy=Policy(), commit_resolver=None):
                 state['activeModelID']=candidate['modelID'];current=candidate
     # A candidate's holdout races never influence its fit. A later generation can
     # learn from them only after that generation's irrevocable decision.
-    training_hash=digest([(x['record']['recordSHA256'],x['evaluation']['resultSHA256']) for x in records[-policy.training_window:]])
+    training_hash=training_fingerprint(records[-policy.training_window:])
     if rolled_back:state['lastTrainingDataSHA256']=training_hash
     monitor_ready=not state.get('monitoring') or state['monitoring'].get('checkedCohorts',0)>0
     if not rolled_back and monitor_ready and not state.get('candidateModelID') and training_hash != state.get('lastTrainingDataSHA256'):

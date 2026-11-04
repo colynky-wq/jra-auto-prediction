@@ -29,6 +29,7 @@ class OperationalTests(unittest.TestCase):
             row['record']['conditions']={'surface':'turf' if i%2==0 else 'dirt',
                 'distanceBand':('short','mile','middle','long')[i%4]}
             row['evaluation']['resultSHA256']=str(i)
+            row['result']={'horses':[{'number':1,'finishPosition':1,'last3F':35.0}]}
         return rows
 
     def monitor_rows(self,model,harm=False):
@@ -55,6 +56,16 @@ class OperationalTests(unittest.TestCase):
             self.assertEqual(conditions({'course':'ダート'},distance)['distanceBand'],band)
         for race in ({'course':'障芝3000m'},{'course':'不明'}):
             with self.assertRaises(ValueError):conditions(race,3000)
+
+    def test_fetch_time_and_odds_changes_do_not_restart_learning(self):
+        rows=self.rows(challenger());original=learning.training_fingerprint(rows)
+        for row in rows:
+            row['result']['resultUpdatedAtJST']='2026-11-17 20:17:00'
+            row['result']['horses'][0].update(finalOdds=99.9,popularity=18)
+            row['evaluation']['resultSHA256']='metadata-revision'
+        self.assertEqual(learning.training_fingerprint(rows),original)
+        rows[0]['result']['horses'][0]['last3F']=36.0
+        self.assertNotEqual(learning.training_fingerprint(rows),original)
 
     def test_missing_conditions_wait_without_using_score_to_choose_window(self):
         model=challenger();rows=self.rows(model)
