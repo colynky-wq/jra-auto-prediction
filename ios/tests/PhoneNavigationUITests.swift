@@ -2,11 +2,21 @@ import XCTest
 import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
+    // The production landing screen intentionally shows only Grade B+ picks.
+    // UI fixtures may not have a battle grade, so explicitly navigate to the
+    // unfiltered race list before asserting the presence of fixture race rows.
+    @MainActor
+    private func showAllRaces(_ app: XCUIApplication) {
+        let allRaces = app.buttons["全レース"].firstMatch
+        XCTAssertTrue(allRaces.waitForExistence(timeout: 15), "full race list mode is selectable")
+        allRaces.tap()
+    }
     @MainActor
     private func openResearch(_ app:XCUIApplication) -> XCUIElement {
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"]="1"
         app.launchEnvironment["KEIBAAI_UI_TICKET"]="1"
         app.launch()
+        showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
         let tabs=app.scrollViews["main-tabs"],button=app.buttons["main-tab-券種別研究"]
         for _ in 0..<5 { if button.isHittable { break };tabs.swipeLeft() }
@@ -70,6 +80,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
         app.launchEnvironment["KEIBAAI_UI_AXIS"] = "1"
         app.launch()
+        showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
         let tabs = app.scrollViews["main-tabs"]
         let menu = app.buttons["main-tab-馬券プラン"]
@@ -99,6 +110,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
         app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
         app.launch()
+        showAllRaces(app)
         let race = app.descendants(matching: .any).matching(identifier:"race-card-202605040601").firstMatch
         XCTAssertTrue(race.waitForExistence(timeout:20))
         let tabs = app.scrollViews["main-tabs"]
@@ -147,6 +159,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
         app.launchEnvironment["KEIBAAI_UI_LAYOUT"] = "1"
         app.launch()
+        showAllRaces(app)
         let predicted = app.descendants(matching: .any).matching(identifier: "race-card-202605040601").firstMatch
         XCTAssertTrue(predicted.waitForExistence(timeout: 20))
         predicted.tap()
@@ -209,6 +222,7 @@ final class PhoneNavigationUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
         app.launch()
+        showAllRaces(app)
         let predicted = app.descendants(matching: .any).matching(identifier: "race-card-202605040601").firstMatch
         XCTAssertTrue(predicted.waitForExistence(timeout: 20), "fixture race list loaded")
         predicted.tap()
@@ -266,6 +280,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_TICKET"] = "1"
         app.launchEnvironment["KEIBAAI_UI_LAYOUT"] = "1"
         app.launch()
+        showAllRaces(app)
 
         let predicted = app.descendants(matching: .any)
             .matching(identifier: "race-card-202605040601").firstMatch
