@@ -1,0 +1,96 @@
+name: RaceSimulator forward learning
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8,11 * * *' # 17:17 and 20:17 JST, after official results
+  pull_request:
+    paths:
+      - 'production/race_simulator*.py'
+      - 'production/test_race_simulator*.py'
+      - 'production/build_race_simulation_data_v02.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
+      - '.github/workflows/race-simulator-learning.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/race_simulator*.py'
+      - 'production/test_race_simulator*.py'
+      - 'production/build_race_simulation_data_v02.py'
+      - 'production/live_bundle_publisher.py'
+      - 'production/test_live_bundle_publisher.py'
+      - '.github/workflows/race-simulator-learning.yml'
+
+permissions:
+  contents: write
+concurrency:
+  group: race-simulator-forward-learning-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-and-learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history is required to verify the first durable pre-post commit.
+          fetch-depth: 0
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /production/
+            /research/race_simulator/
+            /reports/*/race_simulator_v02/
+            /reports/*/race_simulator_evaluation/
+            /reports/*/ResultData.json
+            /reports/RaceSimulatorLearning.md
+            /RaceData.json
+            /RaceSimulationData.json
+            /RaceSimulatorLearning.json
+            /ResultData.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test capture, isolation, result pairing and promotion gates
+        working-directory: production
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_live_bundle_publisher
+      - name: Evaluate saved forecasts and resolve one fixed validation cohort
+        if: github.event_name != 'pull_request'
+        run: python3 production/race_simulator_learning.py cycle
+      - name: Publish learning state and evaluation evidence
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          paths = [Path('RaceSimulatorLearning.json'), Path('reports/RaceSimulatorLearning.md')]
+          paths += list(Path('research/race_simulator').rglob('*.json'))
+          paths += list(Path('reports').glob('*/race_simulator_evaluation/*/*.json'))
+          subprocess.run(['git', 'add', '--sparse', '--', *map(str, paths)], check=True)
+          PY
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git commit -m 'Evaluate prospective RaceSimulator forecasts and validation gates'
+          for attempt in 1 2 3; do
+            git fetch origin main
+            # A conflicting learning decision must be reviewed, never overwritten.
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
+      - name: Preserve reports and fixed candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: race-simulator-learning-${{ github.run_id }}
+          path: |
+            RaceSimulatorLearning.json
+            reports/RaceSimulatorLearning.md
+            research/race_simulator
+            reports/*/race_simulator_evaluation
+          if-no-files-found: ignore
+          retention-days: 30

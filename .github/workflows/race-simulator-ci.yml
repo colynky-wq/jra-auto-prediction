@@ -12,6 +12,10 @@ on:
       - 'production/build_race_simulation_data_v02.py'
       - 'production/race_metadata_overrides.json'
       - 'production/test_race_simulator_v02.py'
+      - 'production/race_simulator_calibration.py'
+      - 'production/race_simulator_learning.py'
+      - 'production/test_race_simulator_learning.py'
+      - 'research/race_simulator/**'
       - 'ios/KeibaAI/**'
       - '.github/workflows/race-simulator-ci.yml'
   push:
@@ -25,6 +29,10 @@ on:
       - 'production/build_race_simulation_data_v02.py'
       - 'production/race_metadata_overrides.json'
       - 'production/test_race_simulator_v02.py'
+      - 'production/race_simulator_calibration.py'
+      - 'production/race_simulator_learning.py'
+      - 'production/test_race_simulator_learning.py'
+      - 'research/race_simulator/**'
       - 'ios/KeibaAI/**'
       - '.github/workflows/race-simulator-ci.yml'
 
@@ -46,11 +54,13 @@ jobs:
             AppResearchData.json
             HorseProfiles
             production
+            /research/race_simulator/
+            /reports/*/race_simulator_v02/
           sparse-checkout-cone-mode: false
           fetch-depth: 1
       - name: Run v0.2 unit and independence tests
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02.py
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning
       - name: Build audited v0.2 simulation data
         run: |
           python3 production/build_race_simulation_data_v02.py \
@@ -94,7 +104,7 @@ jobs:
             parent_sha="$(git rev-parse HEAD^)"; remote_sha="$(git rev-parse origin/main)"
             if [[ "$parent_sha" != "$remote_sha" ]]; then
               changed="$(git diff --name-only "$parent_sha" "$remote_sha" || true)"
-              if printf '%s\n' "$changed" | grep -Eq '^(RaceData\.json|AppResearchData\.json|HorseProfiles/|production/race_simulator_v02|production/build_race_simulation_data_v02)'; then
+              if printf '%s\n' "$changed" | grep -Eq '^(RaceData\.json|AppResearchData\.json|RaceSimulationData\.json|HorseProfiles/|research/race_simulator/|reports/[0-9]+/race_simulator_v02/|production/race_simulator_|production/build_race_simulation_data_v02)'; then
                 echo 'Relevant inputs advanced; skip stale output.'; exit 0
               fi
               git rebase origin/main

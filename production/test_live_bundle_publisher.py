@@ -217,6 +217,41 @@ class TestLiveBundlePublisher(unittest.TestCase):
         self.assertEqual(json.loads(self.remote_read(path)),{'first':1})
         self.assertEqual(len(json.loads(self.remote_read('RaceData.json'))),1)
 
+    def test_simulator_overlapping_sessions_keep_first_frozen_forecast(self):
+        from race_simulator_calibration import digest
+        path='reports/20261017/race_simulator_v02/202605040601.json'
+        first={'raceID':'202605040601','raceDate':DAY,'inputCapturedAt':DAY+'T09:48:00+09:00',
+               'recordedAt':DAY+'T09:49:00+09:00','scheduledPost':DAY+'T10:00:00+09:00','seed':1}
+        first['recordSHA256']=digest(first)
+        later={k:v for k,v in first.items() if k!='recordSHA256'}
+        later['recordedAt']=DAY+'T09:50:00+09:00';later['seed']=2;later['recordSHA256']=digest(later)
+        self.advance_peer(path,first);self.write(path,later)
+        sender=self.publisher();sender.capture();self.assertTrue(sender.publish())
+        self.assertEqual(json.loads(self.remote_read(path)),first)
+        self.assertFalse(sender.state['pending'])
+
+    def test_corrupt_simulator_journal_is_not_published(self):
+        path='reports/20261017/race_simulator_v02/202605040601.json'
+        self.write(path,{'raceID':'202605040601','recordSHA256':'invalid'})
+        sender=self.publisher();sender.capture();self.assertFalse(sender.publish())
+        self.assertIn(path,sender.state['pending'])
+
+    def test_simulation_display_keeps_saved_forecasts_and_other_races(self):
+        first={**self.race(),'prospectiveConfirmed':True,'modelID':'first'}
+        batch=lambda rows:{'targetRaceDate':DAY,'races':rows,'summary':{'inputRaces':len(rows),'simulatedRaces':len(rows)}}
+        self.advance_peer('RaceSimulationData.json',batch([first]))
+        self.write('RaceSimulationData.json',batch([{**first,'modelID':'later'},self.race(2)]))
+        sender=self.publisher();sender.capture();self.assertTrue(sender.publish())
+        result=json.loads(self.remote_read('RaceSimulationData.json'))
+        self.assertEqual(result['races'][0]['modelID'],'first')
+        self.assertEqual(result['summary']['simulatedRaces'],2)
+
+    def test_old_simulation_display_cannot_overwrite_newer_day(self):
+        self.advance_peer('RaceSimulationData.json',{'targetRaceDate':'2026-10-18','races':[]})
+        self.write('RaceSimulationData.json',{'targetRaceDate':DAY,'races':[],'summary':{}})
+        sender=self.publisher();sender.capture();self.assertFalse(sender.publish())
+        self.assertEqual(json.loads(self.remote_read('RaceSimulationData.json'))['targetRaceDate'],'2026-10-18')
+
     def test_partial_json_is_not_published_and_other_files_continue(self):
         self.write('SignalData.json', '{unfinished')
         self.write('RaceData.json', [self.race()])

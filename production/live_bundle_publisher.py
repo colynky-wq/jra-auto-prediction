@@ -16,9 +16,9 @@ import time
 
 JST = timezone(timedelta(hours=9))
 ROOT_FILES = ('RaceData.json', 'SignalData.json', 'WideOddsData.json',
-              'AppResearchData.json', 'PaceRecordingStatus.json', 'reports/PaceRecordingStatus.md')
+              'AppResearchData.json', 'PaceRecordingStatus.json', 'reports/PaceRecordingStatus.md', 'RaceSimulationData.json')
 BUILDERS = ('production/build_pace_recording_status.py', 'production/repair_wide_odds.py',
-            'production/build_app_research_data.py')
+            'production/build_app_research_data.py', 'production/race_simulator_learning.py')
 
 
 class PublishError(Exception):
@@ -182,11 +182,26 @@ class Outbox:
             if Path(path).stem != str(health['runID']) or health['raceDate'] != self.day:
                 raise PublishError('monitor journal identity mismatch')
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
+        if '/race_simulator_v02/' in path:
+            # Overlapping live sessions may finish the same race at different
+            # times. Preserve the first complete forecast, never a later rewrite.
+            from race_simulator_calibration import digest
+            from race_simulator_learning import timestamp
+            local = json.loads(data)
+            prior = json.loads(remote) if remote is not None else None
+            for record in (local, prior) if prior is not None else (local,):
+                if record.get('recordSHA256') != digest({k:v for k,v in record.items() if k != 'recordSHA256'}):
+                    raise PublishError('invalid simulator journal digest')
+                if not timestamp(record['inputCapturedAt']) <= timestamp(record['recordedAt']) < timestamp(record['scheduledPost']):
+                    raise PublishError('simulator journal is not pre-post')
+                if record['raceID'] != Path(path).stem or record['raceDate'] != self.day:
+                    raise PublishError('simulator journal path identity mismatch')
+            return remote if prior is not None else data
         immutable = (('/prerace/' in path and not path.endswith('/index.json'))
                      or path.endswith('/PaceRecordingSchedule.json')
                      or any(part in path for part in (
                          '/wide_odds/','/wide_odds_live10/','/wide_axis_v1/','/portfolio_live10/',
-                         '/triple_v1/','/all_bet_v1/','/ticket_shadow_v1/','/win5_v1/'
+                         '/triple_v1/','/all_bet_v1/','/ticket_shadow_v1/','/win5_v1/','/race_simulator_v02/'
                      )))
         if immutable and remote is not None and remote != data:
             raise PublishError(f'既存の発走前記録と競合しています: {path}')
@@ -215,6 +230,22 @@ class Outbox:
             local['snapshots'] = sorted(entries.values(), key=lambda e: (e['capturedAtJST'], e['file']))
             if local['snapshots']:
                 local['latestFingerprint'] = local['snapshots'][-1]['fingerprint']
+            return (json.dumps(local, ensure_ascii=False, indent=2)+'\n').encode()
+        if path == 'RaceSimulationData.json':
+            local = json.loads(data)
+            if local.get('targetRaceDate') != self.day:
+                raise PublishError('simulation display date mismatch')
+            if remote is not None:
+                prior = json.loads(remote)
+                if (prior.get('targetRaceDate') or '') > self.day:
+                    raise PublishError('newer simulation date already published')
+                if prior.get('targetRaceDate') == self.day:
+                    rows = {r['raceID']:r for r in local['races']}
+                    for row in prior['races']:
+                        if row.get('prospectiveConfirmed') or row['raceID'] not in rows:
+                            rows[row['raceID']] = row
+                    local['races'] = sorted(rows.values(), key=lambda r:(r.get('startTime',''),r['raceID']))
+                    local['summary'].update(simulatedRaces=len(rows), inputRaces=len(rows))
             return (json.dumps(local, ensure_ascii=False, indent=2)+'\n').encode()
         if path == 'RaceData.json':
             races = json.loads(data)

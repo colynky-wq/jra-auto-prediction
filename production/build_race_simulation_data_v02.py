@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 from race_simulator_v02_adapter import load_profiles_for_race, simulate_current_keibaai_v02
+from race_simulator_calibration import active_model
 
 SCHEMA_VERSION="race-simulator-v0.2-batch"
 
@@ -66,18 +67,26 @@ def audit_race(r: Mapping[str,Any]) -> Dict[str,Any]:
     if nominal and any(t<nominal*.72 or t>nominal*1.55 for t in avg_times): issues.append("implausible_finish_time")
     if r.get("independence",{}).get("strengthSource")=="historical-performance-v0.2" and len(horses)>=4 and max(strengths)-min(strengths)<.002: issues.append("strengths_effectively_equal")
     return {"status":"pass" if not issues else "fail","issues":sorted(set(issues)),"frameCount":len(frames),"strengthSpread":round(max(strengths)-min(strengths),6) if strengths else 0}
-def build_batch(race_data:Any,research_data:Any,profiles_dir:Path,metadata_overrides:Any=None,*,runs=250,seed=20261103,dt=.5,all_dates=False):
+def build_batch(race_data:Any,research_data:Any,profiles_dir:Path,metadata_overrides:Any=None,*,runs=250,seed=20261103,dt=.5,all_dates=False,learning_root=None):
     races,repairs=_repair(race_data,metadata_overrides); dates=sorted({str(r.get("raceDate")) for r in races if r.get("raceDate")}); target=dates[-1] if dates else None
     selected=races if all_dates or not target else [r for r in races if str(r.get("raceDate"))==target]
     research_by={str(r.get("raceID")):r for r in _rows(research_data) if r.get("raceID")} if research_data is not None else {}
     output=[]; errors=[]; skipped=[]
+    model = active_model(learning_root) if learning_root is not None else None
     for race in selected:
         rid=str(race.get("raceID","")); course=str(race.get("course",race.get("track","")))
         if not rid: errors.append({"raceID":"","reason":"missing raceID"}); continue
         if "障" in course or "障害" in str(race.get("raceName","")): skipped.append({"raceID":rid,"reason":"obstacle race outside v0.2 scope"}); continue
         try:
-            profiles=load_profiles_for_race(race,profiles_dir); rr=research_by.get(rid); research=[rr] if rr else None
-            result=simulate_current_keibaai_v02(races,research,profiles,rid,runs,_seed(seed,rid),dt)
+            result = None
+            if learning_root is not None:
+                from race_simulator_learning import frozen_display, journal_path
+                snapshot = journal_path(learning_root, race)
+                if snapshot.exists(): result = frozen_display(_load(snapshot), race)
+            if result is None:
+                profiles=load_profiles_for_race(race,profiles_dir); rr=research_by.get(rid); research=[rr] if rr else None
+                result=simulate_current_keibaai_v02(races,research,profiles,rid,runs,_seed(seed,rid),dt,calibration=model['settings'] if model else None)
+                if model: result['modelID'] = model['modelID']
             result.update({"raceDate":race.get("raceDate"),"raceNumber":race.get("raceNumber"),"startTime":race.get("startTime"),"venue":race.get("venue")})
             result["audit"]=audit_race(result)
             if result["audit"]["status"]!="pass": errors.append({"raceID":rid,"reason":"audit: "+",".join(result["audit"]["issues"])}); continue
@@ -91,5 +100,5 @@ def _write(path:Path,payload:Any):
     os.replace(tmp,path)
 def main(argv=None):
     p=argparse.ArgumentParser(); p.add_argument("--race-data",type=Path,default=Path("RaceData.json"));p.add_argument("--research-data",type=Path,default=Path("AppResearchData.json"));p.add_argument("--profiles-dir",type=Path,default=Path("HorseProfiles"));p.add_argument("--metadata-overrides",type=Path,default=Path("production/race_metadata_overrides.json"));p.add_argument("--runs",type=int,default=250);p.add_argument("--seed",type=int,default=20261103);p.add_argument("--dt",type=float,default=.5);p.add_argument("--all-dates",action="store_true");p.add_argument("--output",type=Path,default=Path("RaceSimulationData.json"));a=p.parse_args(argv)
-    payload=build_batch(_load(a.race_data),_load(a.research_data),a.profiles_dir,_load(a.metadata_overrides) if a.metadata_overrides.exists() else None,runs=a.runs,seed=a.seed,dt=a.dt,all_dates=a.all_dates); payload["sourceSHA256"]={"RaceData.json":_sha(a.race_data),"AppResearchData.json":_sha(a.research_data),"metadataOverrides":_sha(a.metadata_overrides)};_write(a.output,payload);print(json.dumps({"status":payload["status"],**payload["summary"]},ensure_ascii=False));return 0 if payload["status"]=="ok" else 2
+    payload=build_batch(_load(a.race_data),_load(a.research_data),a.profiles_dir,_load(a.metadata_overrides) if a.metadata_overrides.exists() else None,runs=a.runs,seed=a.seed,dt=a.dt,all_dates=a.all_dates,learning_root=a.race_data.resolve().parent); payload["sourceSHA256"]={"RaceData.json":_sha(a.race_data),"AppResearchData.json":_sha(a.research_data),"metadataOverrides":_sha(a.metadata_overrides)};_write(a.output,payload);print(json.dumps({"status":payload["status"],**payload["summary"]},ensure_ascii=False));return 0 if payload["status"]=="ok" else 2
 if __name__=="__main__": raise SystemExit(main())

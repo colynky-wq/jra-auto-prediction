@@ -134,7 +134,7 @@ def _comparison(horses: Sequence[HorseInput], rows: Sequence[Mapping[str,Any]]) 
     out.sort(key=lambda x:abs(x["delta"]),reverse=True)
     return {"available":True,"note":"Post-hoc only; prediction AI never enters race motion.","horses":out}
 
-def simulate_current_keibaai_v02(race_data: Any, research_data: Any, profile_data: Any, race_id: str, runs: int=400, seed: int=20261103, dt: float=.5) -> Dict[str,Any]:
+def prepare_motion_inputs(race_data: Any, research_data: Any, profile_data: Any, race_id: str):
     race=_select(race_data,race_id); rr=_select(research_data,race_id) if research_data is not None else None
     rows=race.get("horses",[])
     if not isinstance(rows,list) or len(rows)<2: raise ValueError("race has fewer than two horses")
@@ -143,9 +143,14 @@ def simulate_current_keibaai_v02(race_data: Any, research_data: Any, profile_dat
     for row in rows:
         n=_i(row.get("number",row.get("horseNumber"))); x=info.get(n,{})
         horses.append(HorseInput(n,str(row.get("name",row.get("horseName",f"#{n}"))),str(x.get("style","不明")),{str(k):float(v) for k,v in x.get("scores",{}).items() if _f(v) is not None},_i(x.get("sampleCount"),0),_f(x.get("avgCorner1")),None,strengths.get(n,1.),_prob(row.get("aiProbability"))))
-    pace,pace_source,quality=_pace(rr,info,len(rows)); sim=simulate_race(horses,distance,pace,runs,seed,dt,dt)
+    pace,pace_source,quality=_pace(rr,info,len(rows))
+    return race, horses, distance, pace, pace_source, quality, strength_meta
+
+def simulate_current_keibaai_v02(race_data: Any, research_data: Any, profile_data: Any, race_id: str, runs: int=400, seed: int=20261103, dt: float=.5, *, calibration=None) -> Dict[str,Any]:
+    race,horses,distance,pace,pace_source,quality,strength_meta=prepare_motion_inputs(race_data,research_data,profile_data,race_id)
+    sim=simulate_race(horses,distance,pace,runs,seed,dt,dt,calibration=calibration)
     known=sum(h.style!="不明" for h in horses); strength_known=sum(bool(strength_meta.get(h.number,{}).get("components")) for h in horses)
-    return {"schemaVersion":"race-simulator-v0.2-current-keibaai","generatedAt":datetime.now(timezone.utc).isoformat().replace("+00:00","Z"),"raceID":race_id,"raceName":race.get("raceName"),"racecourse":race.get("venue",race.get("racecourse")),"track":race.get("course",race.get("track")),"distanceMeters":distance,"pace":pace,"paceSource":pace_source,"inputQuality":{**quality,"styleKnownHorses":known,"styleTotalHorses":len(horses),"styleCoveragePct":round(100*known/len(horses),1),"strengthKnownHorses":strength_known,"strengthCoveragePct":round(100*strength_known/len(horses),1)},"independence":{"usesPredictionAIForMotion":False,"usesMarketProbabilityForMotion":False,"usesOddsForMotion":False,"usesPopularityForMotion":False,"strengthSource":"historical-performance-v0.2" if strength_known else "neutral-equal-strength"},"strengthDiagnostics":{str(n):m for n,m in strength_meta.items()},"settings":sim["settings"],"horses":sim["horses"],"replay":sim["replay"],"comparisonWithPredictionAI":_comparison(horses,sim["horses"])}
+    return {"schemaVersion":"race-simulator-v0.2-current-keibaai","generatedAt":datetime.now(timezone.utc).isoformat().replace("+00:00","Z"),"raceID":race_id,"raceName":race.get("raceName"),"racecourse":race.get("venue",race.get("racecourse")),"track":race.get("course",race.get("track")),"distanceMeters":distance,"pace":pace,"paceSource":pace_source,"inputQuality":{**quality,"styleKnownHorses":known,"styleTotalHorses":len(horses),"styleCoveragePct":round(100*known/len(horses),1),"strengthKnownHorses":strength_known,"strengthCoveragePct":round(100*strength_known/len(horses),1)},"independence":{"usesPredictionAIForMotion":False,"usesMarketProbabilityForMotion":False,"usesOddsForMotion":False,"usesPopularityForMotion":False,"strengthSource":"historical-performance-v0.2" if strength_known else "neutral-equal-strength"},"strengthDiagnostics":{str(n):m for n,m in strength_meta.items()},"settings":sim["settings"],"flowPrediction":sim["flowPrediction"],"calibration":sim["calibration"],"horses":sim["horses"],"replay":sim["replay"],"comparisonWithPredictionAI":_comparison(horses,sim["horses"])}
 
 def load_profiles_for_race(race: Mapping[str,Any], profiles_dir: Path) -> Dict[str,Any]:
     merged={"profiles":{}}

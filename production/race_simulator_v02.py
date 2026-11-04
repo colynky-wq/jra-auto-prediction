@@ -12,6 +12,7 @@ import math
 import random
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from race_simulator_calibration import settings as calibration_settings
 
 SCHEMA_VERSION = "race-simulator-v0.2"
 CHECKPOINTS: Tuple[float, ...] = (0.25, 0.50, 0.75, 0.90)
@@ -76,9 +77,11 @@ class RunResult:
     blocked_steps: Mapping[int, int]
     lane_changes: Mapping[int, int]
     frames: Tuple[Mapping[str, Any], ...] = ()
+    first600_seconds: Optional[float] = None
+    last600_seconds: Mapping[int, float] = field(default_factory=dict)
 
 
-def _style_params(h: HorseInput) -> Dict[str, float]:
+def _style_params(h: HorseInput, scale: float = 1.0) -> Dict[str, float]:
     base = STYLE_PARAMS[_canonical_style(h.style)].copy()
     parsed = {k: max(0., float(v)) for k, v in h.style_scores.items() if k in STYLE_NAMES}
     total = sum(parsed.values())
@@ -87,7 +90,7 @@ def _style_params(h: HorseInput) -> Dict[str, float]:
         soften = _clamp((conf-.25)/.75, 0., 1.)
         for k in ("early", "middle", "turn", "late", "kick", "aggression"):
             base[k] = 1. + (base[k]-1.) * (.55 + .45*soften)
-    return base
+    return {key: 1. + (value-1.)*scale for key, value in base.items()}
 
 def _lane_open(candidate: float, s: HorseState, states: Sequence[HorseState]) -> bool:
     return 0 <= candidate <= 5 and all(o.horse.number == s.horse.number or o.finished_time_s is not None or abs(o.position_m-s.position_m) >= 2.4 or abs(o.lane-candidate) >= .55 for o in states)
@@ -120,14 +123,16 @@ def _frame(time_s: float, states: Sequence[HorseState], distance_m: float) -> Ma
         })
     return {"t": round(time_s, 3), "horses": horses}
 
-def _one_run(horses: Sequence[HorseInput], distance_m: float, pace: str, seed: int, dt: float, capture_frames: bool=False) -> RunResult:
-    rng = random.Random(seed); nominal = _nominal_speed(distance_m); n = len(horses)
+def _one_run(horses: Sequence[HorseInput], distance_m: float, pace: str, seed: int, dt: float, capture_frames: bool=False, calibration=None) -> RunResult:
+    cfg = calibration_settings(calibration)
+    rng = random.Random(seed); nominal = _nominal_speed(distance_m)*cfg['speedScale']; n = len(horses)
     expected = distance_m/nominal; max_seconds = expected*1.70+25.; states=[]
     for i,h in enumerate(sorted(horses,key=lambda x:x.number)):
-        delay=_clamp(rng.gauss(.15,.10),0,.45); style=_style_params(h)
+        delay=_clamp(rng.gauss(.15,.10),0,.45); style=_style_params(h,cfg['styleScale'])
         start=nominal*(.83+.04*(style["early"]-1.)/.055)
         states.append(HorseState(h,-delay*start,max(8.,start*rng.uniform(.985,1.015)),1., 2.0 if n<=1 else 5.*i/(n-1)))
     checkpoints={}; frames=[]; time_s=0.; pace=_canonical_pace(pace)
+    first600={}; last600_start={}
     if capture_frames: frames.append(_frame(0.,states,distance_m))
     while time_s < max_seconds and any(s.finished_time_s is None for s in states):
         active=[s for s in states if s.finished_time_s is None]
@@ -137,8 +142,8 @@ def _one_run(horses: Sequence[HorseInput], distance_m: float, pace: str, seed: i
                 ordered=sorted(states,key=lambda s:s.position_m,reverse=True); checkpoints[cp]={s.horse.number:i+1 for i,s in enumerate(ordered)}
         updates={}
         for s in active:
-            h=s.horse; p=_clamp(s.position_m/distance_m,0,1); phase=_phase(p); style=_style_params(h)
-            strength=1.+.115*math.tanh((h.independent_strength-1.)*3.5)
+            h=s.horse; p=_clamp(s.position_m/distance_m,0,1); phase=_phase(p); style=_style_params(h,cfg['styleScale'])
+            strength=1.+.115*math.tanh((h.independent_strength-1.)*3.5*cfg['strengthScale'])
             target=nominal*strength*style[phase]
             if phase=="early": target*=PACE_EARLY[pace]
             elif phase=="late": target*=1.-.017*(PACE_FATIGUE[pace]-1.)/.08
@@ -161,6 +166,9 @@ def _one_run(horses: Sequence[HorseInput], distance_m: float, pace: str, seed: i
             if abs(lane-s.lane)>.2: s.lane_changes+=1
             if blocked: s.blocked_steps+=1
             s.speed_mps= speed; s.stamina=stamina; s.lane=lane; s.position_m=position
+            for marker, table in ((600., first600), (distance_m-600., last600_start)):
+                if marker > 0 and prev < marker <= position and s.horse.number not in table:
+                    table[s.horse.number] = time_s + dt*(marker-prev)/max(position-prev,1e-9)
             if prev<distance_m<=position:
                 frac=(distance_m-prev)/max(position-prev,1e-9); s.finished_time_s=time_s+dt*frac; s.position_m=distance_m
         time_s += dt
@@ -170,17 +178,23 @@ def _one_run(horses: Sequence[HorseInput], distance_m: float, pace: str, seed: i
         if cp not in checkpoints: checkpoints[cp]={s.horse.number:i+1 for i,s in enumerate(final)}
     penalty=max_seconds+60.; finish={s.horse.number:(s.finished_time_s if s.finished_time_s is not None else penalty-s.position_m/max(nominal,1.)) for s in states}
     order=tuple(k for k,_ in sorted(finish.items(),key=lambda x:x[1]))
-    return RunResult(order,finish,checkpoints,{s.horse.number:s.blocked_steps for s in states},{s.horse.number:s.lane_changes for s in states},tuple(frames))
+    tail = {n: finish[n]-t for n,t in last600_start.items() if n in finish}
+    return RunResult(order,finish,checkpoints,{s.horse.number:s.blocked_steps for s in states},{s.horse.number:s.lane_changes for s in states},tuple(frames), min(first600.values()) if first600 else None, tail)
 
-def simulate_race(horses: Sequence[HorseInput], distance_m: float, pace: str="MID", runs: int=1000, seed: int=20261103, dt: float=.5, replay_dt: float=.5) -> Dict[str, Any]:
+def simulate_race(horses: Sequence[HorseInput], distance_m: float, pace: str="MID", runs: int=1000, seed: int=20261103, dt: float=.5, replay_dt: float=.5, *, calibration=None) -> Dict[str, Any]:
+    cfg = calibration_settings(calibration)
     if len(horses)<2: raise ValueError("at least two horses are required")
     if distance_m<=0 or runs<1 or not .1<=dt<=2.: raise ValueError("invalid simulator settings")
     nums=[h.number for h in horses]
     if len(set(nums))!=len(nums): raise ValueError("horse numbers must be unique")
     win={n:0 for n in nums}; top2={n:0 for n in nums}; top3={n:0 for n in nums}; ranks={n:[] for n in nums}; times={n:[] for n in nums}
     cps={n:{cp:[] for cp in CHECKPOINTS} for n in nums}; blocked={n:[] for n in nums}; changes={n:[] for n in nums}
+    early_times=[]; winner_times=[]; tail_times={n:[] for n in nums}
     for i in range(runs):
-        r=_one_run(horses,distance_m,pace,seed+i*7919,dt)
+        r=_one_run(horses,distance_m,pace,seed+i*7919,dt,calibration=cfg)
+        winner_times.append(min(r.finish_times.values()))
+        if r.first600_seconds is not None: early_times.append(r.first600_seconds)
+        for n,t in r.last600_seconds.items(): tail_times[n].append(t)
         for rank,n in enumerate(r.order,1):
             ranks[n].append(rank); times[n].append(float(r.finish_times[n])); win[n]+=rank==1; top2[n]+=rank<=2; top3[n]+=rank<=3
         for cp in CHECKPOINTS:
@@ -194,7 +208,10 @@ def simulate_race(horses: Sequence[HorseInput], distance_m: float, pace: str="MI
         v=ranks[n]; bands.append({"progress":1.0,"p20Rank":round(_quantile(v,.2),2),"medianRank":round(_quantile(v,.5),2),"p80Rank":round(_quantile(v,.8),2)})
         rows.append({"horseNumber":n,"horseName":h.name,"style":h.style,"independentStrength":round(h.independent_strength,6),"simulationWinProbability":round(win[n]/runs,6),"simulationTop2Probability":round(top2[n]/runs,6),"simulationTop3Probability":round(top3[n]/runs,6),"expectedFinish":round(sum(v)/len(v),3),"earlyLeadProbability":round(sum(1 for x in cps[n][.25] if x==1)/runs,6),"top3At75Probability":round(sum(1 for x in cps[n][.75] if x<=3)/runs,6),"averageFinishTimeSeconds":round(sum(times[n])/len(times[n]),3),"averageBlockedSeconds":round(sum(blocked[n])/len(blocked[n])*dt,3),"averageLaneChanges":round(sum(changes[n])/len(changes[n]),3),"rankBands":bands})
     rows.sort(key=lambda x:(-x["simulationWinProbability"],x["expectedFinish"],x["horseNumber"]))
-    representative=_one_run(horses,distance_m,pace,seed+104729,replay_dt,True)
+    for row in rows:
+        tail=tail_times[row['horseNumber']]
+        row['averageLast600Seconds']=round(sum(tail)/len(tail),3) if tail else None
+    representative=_one_run(horses,distance_m,pace,seed+104729,replay_dt,True,cfg)
     duration=max(representative.finish_times.values())
     replay={"kind":"deterministic-representative-run","seed":seed+104729,"dtSeconds":replay_dt,"durationSeconds":round(duration,3),"frames":list(representative.frames),"note":"Synthetic simulator trajectory; not GPS or race video."}
-    return {"schemaVersion":SCHEMA_VERSION,"distanceMeters":distance_m,"pace":_canonical_pace(pace),"settings":{"runs":runs,"seed":seed,"dtSeconds":dt},"horses":rows,"replay":replay}
+    return {"schemaVersion":SCHEMA_VERSION,"distanceMeters":distance_m,"pace":_canonical_pace(pace),"settings":{"runs":runs,"seed":seed,"dtSeconds":dt},"calibration":cfg,"flowPrediction":{"meanWinnerTimeSeconds":round(sum(winner_times)/len(winner_times),3),"meanFirst600Seconds":round(sum(early_times)/len(early_times),3) if early_times else None},"horses":rows,"replay":replay}
