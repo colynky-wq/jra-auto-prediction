@@ -41,11 +41,17 @@ final class PhoneNavigationUITests: XCTestCase {
         let duration = try XCTUnwrap(Double(times[1].replacingOccurrences(of: "秒", with: "")))
         XCTAssertEqual(current / duration, 0.5, accuracy: 0.08)
         XCTAssertEqual(play.label, "再生", "seeking pauses playback")
+        seek.adjust(toNormalizedSliderPosition: 0.0)
         let horse = app.buttons["sim-horse-1"]
         for _ in 0..<3 { if horse.isHittable { break }; screen.swipeDown() }
         XCTAssertTrue(horse.isHittable)
         XCTAssertTrue((horse.value as? String ?? "").contains("位置"))
         horse.tap()
+        let choice = app.buttons["#1 再生確認1"]
+        XCTAssertTrue(choice.waitForExistence(timeout: 5), "overlapping markers offer an explicit horse choice")
+        let choiceShot = XCTAttachment(screenshot: app.screenshot())
+        choiceShot.name = "simulator-overlap-picker"; choiceShot.lifetime = .keepAlways; add(choiceShot)
+        choice.tap()
         let selected = app.descendants(matching: .any).matching(identifier: "sim-selected-horse").firstMatch
         for _ in 0..<3 { if selected.isHittable { break }; screen.swipeUp() }
         XCTAssertTrue(selected.label.contains("再生確認1"))
@@ -55,6 +61,7 @@ final class PhoneNavigationUITests: XCTestCase {
         shot.name = "simulator-v02-frame-controls"; shot.lifetime = .keepAlways; add(shot)
         let reset = app.buttons["sim-reset"]
         for _ in 0..<3 { if reset.isHittable { break }; screen.swipeDown() }
+        seek.adjust(toNormalizedSliderPosition: 0.6)
         reset.tap()
         XCTAssertTrue(elapsed.label.hasPrefix("0.0 /"))
         app.navigationBars.buttons.element(boundBy: 0).tap()
@@ -64,7 +71,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
         app.buttons["sim-race-202605040602"].tap()
         XCTAssertTrue(app.staticTexts["v0.2生成待ち"].waitForExistence(timeout: 5))
-        print("PHONE_SIMULATOR_V02_OK: real engine frames, AI-first judgment, play/pause, 4x, seek, horse telemetry, reset, repeat navigation and pending data")
+        print("PHONE_SIMULATOR_V02_OK: real engine frames, AI-first judgment, play/pause, 4x, seek, overlapping horse choice, telemetry, reset, repeat navigation and pending data")
     }
 
     // The production landing screen intentionally shows only Grade B+ picks.

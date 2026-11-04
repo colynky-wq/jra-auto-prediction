@@ -308,6 +308,8 @@ private struct RaceSimDetail: View {
     @State private var playing = false
     @State private var speed = 1.0
     @State private var selectedHorse: Int?
+    @State private var overlappingHorses: [Int] = []
+    @State private var showHorseChoice = false
 
     private let timer = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
 
@@ -417,6 +419,17 @@ private struct RaceSimDetail: View {
         .accessibilityIdentifier("sim-detail")
         .background(Color(uiColor: .systemGroupedBackground))
         .onDisappear { playing = false }
+        .confirmationDialog("重なっている馬を選択", isPresented: $showHorseChoice, titleVisibility: .visible) {
+            ForEach(overlappingHorses, id: \.self) { number in
+                Button("#\(number) \(horseName(number))") {
+                    selectedHorse = number
+                }
+                .accessibilityIdentifier("sim-choose-horse-\(number)")
+            }
+            Button("キャンセル", role: .cancel) { }
+        } message: {
+            Text("馬が重なっています。確認したい馬番を選んでください。")
+        }
         .onReceive(timer) { _ in
             guard playing else { return }
             elapsed = min(duration, elapsed + (1.0 / 30.0) * speed)
@@ -526,6 +539,9 @@ private struct RaceSimDetail: View {
             Text("丸いコースは表示用の模式図です。馬の前後位置・レーン・速度・順位・先頭との差・詰まりはv0.2が出力したフレーム値を使っています。実GPSではありません。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            Text("馬番を押すと詳細を表示します。馬が重なっている場合は選択メニューから馬番を選べます。")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             GeometryReader { proxy in
                 ZStack {
@@ -617,19 +633,32 @@ private struct RaceSimDetail: View {
         }
     }
 
-    @ViewBuilder
-    private func marker(_ state: SimFrameHorse, size: CGSize) -> some View {
+    private func markerPoint(_ state: SimFrameHorse, size: CGSize) -> CGPoint {
         let angle = -Double.pi / 2.0 + state.progress * Double.pi * 2.0
         let laneOffset = CGFloat((state.lane - 2.5) * 4.0)
         let radiusX = max(CGFloat(24.0), size.width / 2.0 - 55.0 - laneOffset)
         let radiusY = max(CGFloat(24.0), size.height / 2.0 - 55.0 - laneOffset * 0.45)
-        let point = CGPoint(
+        return CGPoint(
             x: size.width / 2.0 + CGFloat(cos(angle)) * radiusX,
             y: size.height / 2.0 + CGFloat(sin(angle)) * radiusY
         )
+    }
 
+    @ViewBuilder
+    private func marker(_ state: SimFrameHorse, size: CGSize) -> some View {
+        let point = markerPoint(state, size: size)
         Button {
-            selectedHorse = state.horseNumber
+            playing = false
+            let candidates = currentStates.filter { other in
+                let otherPoint = markerPoint(other, size: size)
+                return abs(otherPoint.x - point.x) < 36 && abs(otherPoint.y - point.y) < 48
+            }.map(\.horseNumber).sorted()
+            if candidates.count > 1 {
+                overlappingHorses = candidates
+                showHorseChoice = true
+            } else {
+                selectedHorse = state.horseNumber
+            }
         } label: {
             VStack(spacing: 1) {
                 ZStack {
