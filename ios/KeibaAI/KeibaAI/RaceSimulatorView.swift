@@ -243,6 +243,7 @@ struct KeibaAIRaceSimulatorScreen: View {
                                 ready: store.simulation(for: race.raceID) != nil
                             )
                         }
+                        .accessibilityIdentifier("sim-race-\(race.raceID)")
                     }
                 }
             }
@@ -290,6 +291,7 @@ private struct KeibaAIRaceSimulatorDestination: View {
                     systemImage: "clock",
                     description: Text("\(race.venue) \(race.raceNumber)R のフレームデータはまだありません。")
                 )
+                .accessibilityIdentifier("sim-pending")
             }
         }
         .navigationTitle("\(race.venue) \(race.raceNumber)R")
@@ -412,7 +414,9 @@ private struct RaceSimDetail: View {
             }
             .padding(16)
         }
+        .accessibilityIdentifier("sim-detail")
         .background(Color(uiColor: .systemGroupedBackground))
+        .onDisappear { playing = false }
         .onReceive(timer) { _ in
             guard playing else { return }
             elapsed = min(duration, elapsed + (1.0 / 30.0) * speed)
@@ -488,6 +492,8 @@ private struct RaceSimDetail: View {
                     }
                 }
                 .padding(10)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("sim-judgment-\(horse.number)")
                 .background(
                     judgmentColor(aiRank: aiRank, simRank: simRank).opacity(0.07),
                     in: RoundedRectangle(cornerRadius: 12)
@@ -553,6 +559,7 @@ private struct RaceSimDetail: View {
                     Label(playing ? "一時停止" : "再生", systemImage: playing ? "pause.fill" : "play.fill")
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("sim-play-pause")
 
                 Button {
                     playing = false
@@ -561,10 +568,12 @@ private struct RaceSimDetail: View {
                     Label("最初へ", systemImage: "backward.end.fill")
                 }
                 .buttonStyle(.bordered)
+                .accessibilityIdentifier("sim-reset")
 
                 Spacer()
                 Text(String(format: "%.1f / %.1f秒", elapsed, duration))
                     .font(.caption.monospacedDigit())
+                    .accessibilityIdentifier("sim-elapsed")
             }
 
             Slider(
@@ -575,6 +584,7 @@ private struct RaceSimDetail: View {
                 }
             )
             .accessibilityLabel("レース再生位置")
+            .accessibilityIdentifier("sim-seek")
 
             Picker("速度", selection: $speed) {
                 Text("0.5×").tag(0.5)
@@ -583,22 +593,26 @@ private struct RaceSimDetail: View {
                 Text("4×").tag(4.0)
             }
             .pickerStyle(.segmented)
+            .accessibilityIdentifier("sim-speed")
 
             if let selectedHorse,
                let state = currentStates.first(where: { $0.horseNumber == selectedHorse }) {
-                HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("#\(selectedHorse) \(horseName(selectedHorse))")
                         .font(.subheadline.bold())
-                    Spacer()
-                    Text("\(state.rank)位")
-                    Text(String(format: "%.1fm/s", state.speedMps))
-                    Text(String(format: "差 %.1fm", state.gapMeters))
+                    HStack(spacing: 8) {
+                        Text("\(state.rank)位")
+                        Text(String(format: "%.1fm/s", state.speedMps))
+                        Text(String(format: "差 %.1fm", state.gapMeters))
+                    }
                     if state.blocked {
                         Label("詰まり", systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                     }
                 }
                 .font(.caption)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("sim-selected-horse")
             }
         }
     }
@@ -644,6 +658,8 @@ private struct RaceSimDetail: View {
         .position(point)
         .animation(.linear(duration: 0.06), value: elapsed)
         .accessibilityLabel("\(state.horseNumber)番 \(horseName(state.horseNumber))、\(state.rank)位")
+        .accessibilityValue(String(format: "位置 %.1fm、速度 %.1fm/s、先頭との差 %.1fm、%@", state.positionMeters, state.speedMps, state.gapMeters, state.blocked ? "詰まり" : "進路あり"))
+        .accessibilityIdentifier("sim-horse-\(state.horseNumber)")
     }
 
     private var liveOrderCard: some View {

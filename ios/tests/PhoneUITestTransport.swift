@@ -11,6 +11,10 @@ enum KeibaAIUITestTransport {
         let researchFixture = #"""
         __BET_RESEARCH_FIXTURE__
         """#
+        let simulationFixture = #"""
+        __SIMULATOR_FIXTURE__
+        """#
+        PhoneFixtureProtocol.simulations = Data(simulationFixture.utf8)
         var research = try! JSONSerialization.jsonObject(with:Data(researchFixture.replacingOccurrences(of:"2026-10-17",with:today).replacingOccurrences(of:"WIN5-20261017",with:"WIN5-"+today.replacingOccurrences(of:"-",with:"")).utf8)) as! [String:Any]
         var researchRows=research["races"] as! [[String:Any]]
         for index in researchRows.indices {
@@ -124,6 +128,23 @@ enum KeibaAIUITestTransport {
         } else {
             PhoneFixtureProtocol.races = try! JSONSerialization.data(withJSONObject: [sample])
         }
+        if ProcessInfo.processInfo.environment["KEIBAAI_UI_SIMULATOR"] == "1" {
+            sample["raceDate"] = today
+            sample["raceName"] = "フレーム操作確認"
+            sample["course"] = "芝1600m"
+            var horses = Array((sample["horses"] as! [[String:Any]]).prefix(3))
+            for i in horses.indices {
+                horses[i]["number"] = i + 1
+                horses[i]["name"] = "再生確認\(i + 1)"
+                horses[i]["aiProbability"] = [60.0, 30.0, 10.0][i]
+            }
+            sample["horses"] = horses
+            var pending = sample
+            pending["raceID"] = "202605040602"
+            pending["raceNumber"] = 2
+            pending["raceName"] = "未生成の操作確認"
+            PhoneFixtureProtocol.races = try! JSONSerialization.data(withJSONObject: [sample, pending])
+        }
         PhoneFixtureProtocol.schedule = try! JSONSerialization.data(withJSONObject: [
             ["raceID": "202605040601", "venue": "東京", "raceNumber": 1, "startTime": "10:00",
              "raceName": "操作確認レース", "course": "芝2000m", "fieldSize": 18],
@@ -141,6 +162,7 @@ private final class PhoneFixtureProtocol: URLProtocol {
     static var shadow = Data()
     static var axisShadow = Data()
     static var research = Data()
+    static var simulations = Data()
     static var researchFails = false
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -149,6 +171,7 @@ private final class PhoneFixtureProtocol: URLProtocol {
         let data: Data
         let code: Int
         if path.hasSuffix("/RaceData.json") { data = Self.races; code = 200 }
+        else if path.hasSuffix("/RaceSimulationData.json") { data = Self.simulations; code = 200 }
         else if path.hasSuffix("/SignalData.json"), !Self.signals.isEmpty { data = Self.signals; code = 200 }
         else if path.hasSuffix("/WideAxisShadow.json"), !Self.axisShadow.isEmpty { data = Self.axisShadow; code = 200 }
         else if path.hasSuffix("/TicketPlanShadow.json"), !Self.shadow.isEmpty { data = Self.shadow; code = 200 }

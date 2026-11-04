@@ -3,6 +3,8 @@
 The tracked Xcode project and App entry are not modified for distribution.
 """
 from pathlib import Path
+import json
+from simulator_ui_fixture import build_simulator_fixture
 
 
 def prepare():
@@ -46,7 +48,10 @@ def prepare():
     transport=Path('ios/tests/PhoneUITestTransport.swift')
     fixture=Path('/tmp/bet-research-contract.json').read_text()
     assert '__BET_RESEARCH_FIXTURE__' in transport.read_text()
-    transport.write_text(transport.read_text().replace('__BET_RESEARCH_FIXTURE__',fixture))
+    simulation = json.dumps(build_simulator_fixture(), ensure_ascii=False)
+    assert '__SIMULATOR_FIXTURE__' in transport.read_text()
+    transport.write_text(transport.read_text().replace('__BET_RESEARCH_FIXTURE__', fixture)
+                         .replace('__SIMULATOR_FIXTURE__', simulation))
     app = Path('ios/KeibaAI/KeibaAI/KeibaAIApp.swift')
     body = app.read_text()
     assert body.count('struct KeibaAIApp: App {') == 1

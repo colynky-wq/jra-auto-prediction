@@ -2,6 +2,71 @@ import XCTest
 import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
+    @MainActor
+    func testSimulatorFramesPlaybackAndPendingRace() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_SIMULATOR"] = "1"
+        app.launch()
+        let tab = app.tabBars.buttons["展開シミュ"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 10))
+        tab.tap()
+        let ready = app.buttons["sim-race-202605040601"]
+        XCTAssertTrue(ready.waitForExistence(timeout: 20))
+        ready.tap()
+        XCTAssertTrue(app.staticTexts["総合判断"].waitForExistence(timeout: 10))
+        let judgment = app.descendants(matching: .any).matching(identifier: "sim-judgment-1").firstMatch
+        XCTAssertTrue(judgment.label.contains("AI 1位"), "the prediction AI remains the primary ranking")
+
+        let screen = app.scrollViews["sim-detail"]
+        let play = app.buttons["sim-play-pause"]
+        for _ in 0..<8 { if play.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(play.isHittable)
+        let elapsed = app.staticTexts["sim-elapsed"]
+        let start = elapsed.label
+        play.tap()
+        let advances = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", start), object: elapsed)
+        XCTAssertEqual(XCTWaiter.wait(for: [advances], timeout: 8), .completed, "play advances the real frame timeline")
+        play.tap()
+        XCTAssertEqual(play.label, "再生")
+        let speeds = app.segmentedControls["sim-speed"]
+        for _ in 0..<3 { if speeds.isHittable { break }; screen.swipeUp() }
+        speeds.buttons["4×"].tap()
+        XCTAssertTrue(speeds.buttons["4×"].isSelected)
+        let seek = app.sliders["sim-seek"]
+        seek.adjust(toNormalizedSliderPosition: 0.5)
+        let times = elapsed.label.components(separatedBy: " / ")
+        let current = try XCTUnwrap(Double(times[0]))
+        let duration = try XCTUnwrap(Double(times[1].replacingOccurrences(of: "秒", with: "")))
+        XCTAssertEqual(current / duration, 0.5, accuracy: 0.08)
+        XCTAssertEqual(play.label, "再生", "seeking pauses playback")
+        let horse = app.buttons["sim-horse-1"]
+        for _ in 0..<3 { if horse.isHittable { break }; screen.swipeDown() }
+        XCTAssertTrue(horse.isHittable)
+        XCTAssertTrue((horse.value as? String ?? "").contains("位置"))
+        horse.tap()
+        let selected = app.descendants(matching: .any).matching(identifier: "sim-selected-horse").firstMatch
+        for _ in 0..<3 { if selected.isHittable { break }; screen.swipeUp() }
+        XCTAssertTrue(selected.label.contains("再生確認1"))
+        XCTAssertTrue(selected.label.contains("m/s"))
+        XCTAssertTrue(selected.label.contains("差"))
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "simulator-v02-frame-controls"; shot.lifetime = .keepAlways; add(shot)
+        let reset = app.buttons["sim-reset"]
+        for _ in 0..<3 { if reset.isHittable { break }; screen.swipeDown() }
+        reset.tap()
+        XCTAssertTrue(elapsed.label.hasPrefix("0.0 /"))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(ready.waitForExistence(timeout: 5))
+        ready.tap()
+        XCTAssertTrue(app.staticTexts["総合判断"].waitForExistence(timeout: 5), "the same race opens after returning")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.buttons["sim-race-202605040602"].tap()
+        XCTAssertTrue(app.staticTexts["v0.2生成待ち"].waitForExistence(timeout: 5))
+        print("PHONE_SIMULATOR_V02_OK: real engine frames, AI-first judgment, play/pause, 4x, seek, horse telemetry, reset, repeat navigation and pending data")
+    }
+
     // The production landing screen intentionally shows only Grade B+ picks.
     // UI fixtures may not have a battle grade, so explicitly navigate to the
     // unfiltered race list before asserting the presence of fixture race rows.
