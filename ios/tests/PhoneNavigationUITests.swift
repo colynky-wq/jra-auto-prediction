@@ -47,7 +47,9 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(horse.isHittable)
         XCTAssertTrue((horse.value as? String ?? "").contains("位置"))
         horse.tap()
-        let choice = app.buttons["#1 再生確認1"]
+        // SwiftUI exposes this one action as nested buttons with the same ID.
+        // Scope to the chooser and use its first representation of that action.
+        let choice = app.sheets["重なっている馬を選択"].buttons["sim-choose-horse-1"].firstMatch
         XCTAssertTrue(choice.waitForExistence(timeout: 5), "overlapping markers offer an explicit horse choice")
         let choiceShot = XCTAttachment(screenshot: app.screenshot())
         choiceShot.name = "simulator-overlap-picker"; choiceShot.lifetime = .keepAlways; add(choiceShot)
