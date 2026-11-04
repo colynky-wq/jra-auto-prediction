@@ -18,8 +18,8 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launch()
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
-        let tabs=app.scrollViews["main-tabs"],button=app.buttons["main-tab-研究"]
-        for _ in 0..<5 { if button.isHittable { break };tabs.swipeLeft() }
+        let button = app.buttons["main-tab-研究"]
+        XCTAssertTrue(button.waitForExistence(timeout: 10), "research tab is accessible")
         button.tap()
         let screen=app.scrollViews["bet-research-screen"]
         XCTAssertTrue(screen.waitForExistence(timeout:5));return screen
@@ -82,9 +82,8 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launch()
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
-        let tabs = app.scrollViews["main-tabs"]
         let menu = app.buttons["main-tab-馬券"]
-        for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
+        XCTAssertTrue(menu.waitForExistence(timeout: 10), "ticket tab is accessible")
         menu.tap()
         let screen = app.scrollViews["reference-ticket-plan"]
         XCTAssertTrue(screen.waitForExistence(timeout:5))
@@ -113,9 +112,8 @@ final class PhoneNavigationUITests: XCTestCase {
         showAllRaces(app)
         let race = app.descendants(matching: .any).matching(identifier:"race-card-202605040601").firstMatch
         XCTAssertTrue(race.waitForExistence(timeout:20))
-        let tabs = app.scrollViews["main-tabs"]
         let menu = app.buttons["main-tab-馬券"]
-        for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
+        XCTAssertTrue(menu.waitForExistence(timeout: 10), "ticket tab is accessible")
         menu.tap()
         let screen = app.scrollViews["reference-ticket-plan"]
         XCTAssertTrue(screen.waitForExistence(timeout:5))
@@ -193,12 +191,8 @@ final class PhoneNavigationUITests: XCTestCase {
         valuesShot.lifetime = .keepAlways
         add(valuesShot)
         app.buttons["back-to-list"].tap()
-        let tabs = app.scrollViews["main-tabs"]
         let guide = app.buttons["見方・凡例"]
-        for _ in 0..<4 {
-            if guide.exists && guide.isHittable { break }
-            tabs.swipeLeft()
-        }
+        XCTAssertTrue(guide.waitForExistence(timeout: 10), "guide entry is accessible")
         guide.tap()
         let full = app.scrollViews["full-guide"]
         for term in ["大穴の見方", "大穴とは", "オッズの妙味", "候補になる条件"] {
@@ -246,13 +240,8 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["東京 2R"].exists)
         XCTAssertTrue(app.staticTexts["未予測の操作確認"].exists)
         back.tap()
-        let tabs = app.scrollViews["main-tabs"]
         let guide = app.buttons["見方・凡例"]
-        for _ in 0..<4 {
-            if guide.exists && guide.isHittable { break }
-            tabs.swipeLeft()
-        }
-        XCTAssertTrue(guide.isHittable)
+        XCTAssertTrue(guide.waitForExistence(timeout: 10), "guide entry is accessible")
         guide.tap()
         XCTAssertTrue(app.navigationBars["凡例"].waitForExistence(timeout: 5))
         let full = app.scrollViews["full-guide"]
