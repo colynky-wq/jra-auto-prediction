@@ -3,6 +3,41 @@ import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
     @MainActor
+    func testSimulatorRecordingLearningAndFailureDisplay() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launchEnvironment["KEIBAAI_UI_SIMULATOR"] = "1"
+        app.launch()
+        let tab = app.tabBars.buttons["展開シミュ"]
+        XCTAssertTrue(tab.waitForExistence(timeout: 10)); tab.tap()
+        let link = app.buttons["sim-learning-link"]
+        XCTAssertTrue(link.waitForExistence(timeout: 15)); link.tap()
+        XCTAssertTrue(app.staticTexts["別レースで候補を検証中"].waitForExistence(timeout: 15))
+        let list = app.collectionViews.firstMatch
+        for _ in 0..<8 {
+            if app.descendants(matching: .any).matching(identifier: "sim-condition-surface:dirt").firstMatch.isHittable { break }
+            list.swipeUp()
+        }
+        let condition = app.descendants(matching: .any).matching(identifier: "sim-condition-surface:dirt").firstMatch
+        XCTAssertTrue(condition.isHittable)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "データ不足・判断保留")).firstMatch.exists)
+        let failed = app.descendants(matching: .any).matching(identifier: "sim-recording-202605040602").firstMatch
+        for _ in 0..<6 { if failed.isHittable { break }; list.swipeUp() }
+        XCTAssertTrue(failed.isHittable)
+        XCTAssertTrue(app.staticTexts["保存失敗"].exists)
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "simulator-recording-learning"; shot.lifetime = .keepAlways; add(shot)
+        app.terminate()
+        app.launchEnvironment["KEIBAAI_UI_SIM_OPS_ERROR"] = "1"; app.launch()
+        XCTAssertTrue(tab.waitForExistence(timeout: 10)); tab.tap()
+        XCTAssertTrue(link.waitForExistence(timeout: 15)); link.tap()
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "取得できませんでした")).firstMatch.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["別レースで候補を検証中"].exists)
+        print("PHONE_SIMULATOR_OPERATIONS_OK: live verification pending, conditional insufficiency, recording failure and HTTP errors")
+    }
+
+    @MainActor
     func testSimulatorFramesPlaybackAndPendingRace() throws {
         continueAfterFailure = false
         let app = XCUIApplication()

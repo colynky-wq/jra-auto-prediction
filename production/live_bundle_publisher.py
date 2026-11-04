@@ -16,7 +16,8 @@ import time
 
 JST = timezone(timedelta(hours=9))
 ROOT_FILES = ('RaceData.json', 'SignalData.json', 'WideOddsData.json',
-              'AppResearchData.json', 'PaceRecordingStatus.json', 'reports/PaceRecordingStatus.md', 'RaceSimulationData.json')
+              'AppResearchData.json', 'PaceRecordingStatus.json', 'reports/PaceRecordingStatus.md', 'RaceSimulationData.json',
+              'RaceSimulatorRecordingStatus.json')
 BUILDERS = ('production/build_pace_recording_status.py', 'production/repair_wide_odds.py',
             'production/build_app_research_data.py', 'production/race_simulator_learning.py')
 
@@ -166,6 +167,30 @@ class Outbox:
         return self.git.run('show', f'{base}:{path}').stdout if exists else None
 
     def bytes_for_remote(self, path, data, remote):
+        if path == 'RaceSimulatorRecordingStatus.json':
+            from collections import Counter
+            local=json.loads(data)
+            if remote is not None:
+                prior=json.loads(remote)
+                if prior['targetRaceDate']>local['targetRaceDate']:
+                    raise PublishError('newer simulator recording date already published')
+                rows={(r['raceDate'],r['raceID']):r for r in local.get('history',local['races'])}
+                for row in prior.get('history',prior['races']):
+                    key=(row['raceDate'],row['raceID']);current=rows.get(key)
+                    if (current is None or (row.get('durableConfirmed') and not current.get('durableConfirmed'))
+                            or (row.get('verificationCheckedAt') and not current.get('verificationCheckedAt'))):
+                        rows[key]=row
+                dates=sorted({r['raceDate'] for r in rows.values()},reverse=True)[:30]
+                local['history']=sorted((r for r in rows.values() if r['raceDate'] in dates),
+                    key=lambda r:(r['raceDate'],r.get('startTime') or '',r['raceID']),reverse=True)
+                local['availableDates']=dates
+                local['races']=[r for r in local['history'] if r['raceDate']==local['targetRaceDate']]
+                local['counts']=dict(Counter(r['state'] for r in local['races']))
+                local['scheduleDates']=sorted(set(local.get('scheduleDates',[]))|set(prior.get('scheduleDates',[])))
+                if prior['targetRaceDate']==local['targetRaceDate']:
+                    local['expectedScheduleAvailable']=local.get('expectedScheduleAvailable',False) or prior.get('expectedScheduleAvailable',False)
+                if prior.get('liveVerification',{}).get('status')=='verified':local['liveVerification']=prior['liveVerification']
+            return (json.dumps(local,ensure_ascii=False,indent=2)+'\n').encode()
         if path == 'PaceRecordingStatus.json':
             from monitor_health_runtime import apply_health, choose_health
             local = json.loads(data)

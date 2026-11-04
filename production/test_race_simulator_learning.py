@@ -14,7 +14,7 @@ from race_simulator_v02 import HorseInput, simulate_race
 
 SMALL = replace(learning.Policy(), min_training_races=4, min_training_days=2,
                 min_validation_races=4, min_validation_days=2, training_runs=2,
-                capture_runs=4, bootstrap_draws=200)
+                capture_runs=4, bootstrap_draws=200, min_condition_races=0)
 
 
 def fixture(day='2026-11-07', number=1):

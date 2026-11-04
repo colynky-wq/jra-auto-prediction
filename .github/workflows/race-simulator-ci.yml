@@ -14,6 +14,9 @@ on:
       - 'production/test_race_simulator_v02.py'
       - 'production/race_simulator_calibration.py'
       - 'production/race_simulator_learning.py'
+      - 'production/race_simulator_guards.py'
+      - 'production/race_simulator_operations.py'
+      - 'production/test_race_simulator_operations.py'
       - 'production/test_race_simulator_learning.py'
       - 'research/race_simulator/**'
       - 'ios/KeibaAI/**'
@@ -31,6 +34,9 @@ on:
       - 'production/test_race_simulator_v02.py'
       - 'production/race_simulator_calibration.py'
       - 'production/race_simulator_learning.py'
+      - 'production/race_simulator_guards.py'
+      - 'production/race_simulator_operations.py'
+      - 'production/test_race_simulator_operations.py'
       - 'production/test_race_simulator_learning.py'
       - 'research/race_simulator/**'
       - 'ios/KeibaAI/**'
@@ -60,7 +66,7 @@ jobs:
           fetch-depth: 1
       - name: Run v0.2 unit and independence tests
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations
       - name: Build audited v0.2 simulation data
         run: |
           python3 production/build_race_simulation_data_v02.py \

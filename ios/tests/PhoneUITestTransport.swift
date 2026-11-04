@@ -15,6 +15,28 @@ enum KeibaAIUITestTransport {
         __SIMULATOR_FIXTURE__
         """#
         PhoneFixtureProtocol.simulations = Data(simulationFixture.utf8)
+        let verification: [String:Any] = ["status":"awaiting_live_race","matchedRaces":0,
+            "message":"実開催の保存・結果照合が一巡する確認はこれからです。"]
+        PhoneFixtureProtocol.simulatorRecording = try! JSONSerialization.data(withJSONObject:[
+            "generatedAt":today+"T09:50:00+09:00","targetRaceDate":today,"expectedScheduleAvailable":true,
+            "counts":["failed":1,"result_waiting":1],"issues":[String](),"liveVerification":verification,
+            "races":[["raceID":"202605040601","raceDate":today,"venue":"東京","raceNumber":1,
+                "raceName":"フレーム操作確認","startTime":"10:00","state":"result_waiting",
+                "label":"予測保存済・結果待ち","reason":"発走前の公開履歴を確認済みです。","durableConfirmed":true],
+                ["raceID":"202605040602","raceDate":today,"venue":"東京","raceNumber":2,
+                "raceName":"未生成の操作確認","startTime":"10:30","state":"failed",
+                "label":"保存失敗","reason":"保存処理に失敗しました。発走前は再試行します。","durableConfirmed":false]]])
+        PhoneFixtureProtocol.simulatorLearning = try! JSONSerialization.data(withJSONObject:[
+            "generatedAt":today+"T09:50:00+09:00","status":"candidate_in_forward_validation",
+            "activeModelID":"race-simulator-v02-baseline","candidateModelID":"fixture-candidate",
+            "settledProspectiveRaces":30,"liveVerification":verification,"decisionHistory":[Any](),
+            "policy":["min_training_races":30,"min_validation_races":30,"min_validation_days":2,
+                "min_condition_races":6,"min_condition_days":2,"min_monitor_races":30,"min_monitor_days":2,
+                "rollback_relative_degradation":0.05],
+            "conditionComparisons":[["key":"surface:turf","label":"芝","races":12,"days":2,
+                "status":"pass","relativeImprovement":0.04],
+                ["key":"surface:dirt","label":"ダート","races":2,"days":1,"status":"insufficient_data"]]])
+        PhoneFixtureProtocol.simulatorOperationsFail = ProcessInfo.processInfo.environment["KEIBAAI_UI_SIM_OPS_ERROR"] == "1"
         var research = try! JSONSerialization.jsonObject(with:Data(researchFixture.replacingOccurrences(of:"2026-10-17",with:today).replacingOccurrences(of:"WIN5-20261017",with:"WIN5-"+today.replacingOccurrences(of:"-",with:"")).utf8)) as! [String:Any]
         var researchRows=research["races"] as! [[String:Any]]
         for index in researchRows.indices {
@@ -164,6 +186,9 @@ private final class PhoneFixtureProtocol: URLProtocol {
     static var research = Data()
     static var simulations = Data()
     static var researchFails = false
+    static var simulatorRecording = Data()
+    static var simulatorLearning = Data()
+    static var simulatorOperationsFail = false
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -172,6 +197,8 @@ private final class PhoneFixtureProtocol: URLProtocol {
         let code: Int
         if path.hasSuffix("/RaceData.json") { data = Self.races; code = 200 }
         else if path.hasSuffix("/RaceSimulationData.json") { data = Self.simulations; code = 200 }
+        else if path.hasSuffix("/RaceSimulatorRecordingStatus.json") { data = Self.simulatorRecording; code = Self.simulatorOperationsFail ? 503 : 200 }
+        else if path.hasSuffix("/RaceSimulatorLearning.json") { data = Self.simulatorLearning; code = Self.simulatorOperationsFail ? 503 : 200 }
         else if path.hasSuffix("/SignalData.json"), !Self.signals.isEmpty { data = Self.signals; code = 200 }
         else if path.hasSuffix("/WideAxisShadow.json"), !Self.axisShadow.isEmpty { data = Self.axisShadow; code = 200 }
         else if path.hasSuffix("/TicketPlanShadow.json"), !Self.shadow.isEmpty { data = Self.shadow; code = 200 }

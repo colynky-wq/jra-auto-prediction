@@ -148,6 +148,10 @@ private final class KeibaAIRaceSimulatorStore: ObservableObject {
     @Published private(set) var batch: SimBatch?
     @Published private(set) var sourceMessage = "未読み込み"
     @Published private(set) var isLoading = false
+    @Published private(set) var recordingReport: SimulatorRecordingReport?
+    @Published private(set) var learningReport: SimulatorLearningReport?
+    @Published private(set) var recordingError: String?
+    @Published private(set) var learningError: String?
 
     private let rawMain = "https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/"
 
@@ -184,6 +188,29 @@ private final class KeibaAIRaceSimulatorStore: ObservableObject {
             simulations = [:]
             batch = nil
             sourceMessage = races.isEmpty ? "RaceData取得失敗" : "RaceSimulator v0.2取得待ち"
+        }
+        async let recording: Void = loadRecording()
+        async let learning: Void = loadLearning()
+        _ = await (recording, learning)
+    }
+
+    private func loadRecording() async {
+        do {
+            recordingReport = try await fetch(rawMain + "RaceSimulatorRecordingStatus.json")
+            recordingError = nil
+        } catch {
+            recordingReport = nil
+            recordingError = "記録状況を取得できませんでした。更新して再確認してください。"
+        }
+    }
+
+    private func loadLearning() async {
+        do {
+            learningReport = try await fetch(rawMain + "RaceSimulatorLearning.json")
+            learningError = nil
+        } catch {
+            learningReport = nil
+            learningError = "改善状況を取得できませんでした。更新して再確認してください。"
         }
     }
 
@@ -233,6 +260,17 @@ struct KeibaAIRaceSimulatorScreen: View {
                         .foregroundStyle(.secondary)
                 }
 
+                Section {
+                    NavigationLink {
+                        SimulatorOperationsScreen(store: store)
+                    } label: {
+                        Label("記録状況・継続改善", systemImage: "checklist")
+                    }
+                    .accessibilityIdentifier("sim-learning-link")
+                    Text(store.learningReport?.stateLabel ?? (store.learningError ?? "改善状況を取得中…"))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+
                 Section("レース") {
                     ForEach(store.races) { race in
                         NavigationLink {
@@ -240,7 +278,8 @@ struct KeibaAIRaceSimulatorScreen: View {
                         } label: {
                             RaceSimRow(
                                 race: race,
-                                ready: store.simulation(for: race.raceID) != nil
+                                ready: store.simulation(for: race.raceID) != nil,
+                                recordingLabel: store.recordingReport?.races.first(where: { $0.raceID == race.raceID })?.label
                             )
                         }
                         .accessibilityIdentifier("sim-race-\(race.raceID)")
@@ -254,9 +293,113 @@ struct KeibaAIRaceSimulatorScreen: View {
     }
 }
 
+private struct SimulatorOperationsScreen: View {
+    @ObservedObject var store: KeibaAIRaceSimulatorStore
+    @State private var selectedDay = ""
+
+    var body: some View {
+        List {
+            Section("実開催の確認") {
+                if let verification = store.recordingReport?.liveVerification ?? store.learningReport?.liveVerification {
+                    Label(verification.message, systemImage: verification.status == "verified" ? "checkmark.circle" : "clock")
+                        .accessibilityIdentifier("sim-live-verification")
+                } else {
+                    Text(store.recordingError ?? "実開催の確認状況を取得中…")
+                }
+            }
+            Section("学習・採用") {
+                if let report = store.learningReport {
+                    Text(report.stateLabel).font(.headline)
+                    LabeledContent("結果照合済み", value: "\(report.settledProspectiveRaces)レース")
+                    Text("学習は\(report.policy.min_training_races)レース以上。その後の別の\(report.policy.min_validation_races)レース・\(report.policy.min_validation_days)開催日以上で検証します。")
+                        .font(.caption).foregroundStyle(.secondary)
+                    Text("芝・ダート・距離別の件数が足りない場合は検証を続け、悪化防止条件を満たした設定だけを採用します。")
+                        .font(.caption).foregroundStyle(.secondary)
+                    if let decision = report.latestDecision { Text(decision.label).font(.subheadline) }
+                    if let recent = report.decisionHistory?.last { Text("直近の判定：\(recent.label)").font(.caption) }
+                    DisclosureGroup("設定の識別情報") {
+                        Text("採用中：\(report.activeModelID)").font(.caption).textSelection(.enabled)
+                        Text("検証中：\(report.candidateModelID ?? "なし")").font(.caption).textSelection(.enabled)
+                    }
+                    Text("最終更新：\(report.generatedAt)").font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    Text(store.learningError ?? "改善状況を取得中…")
+                }
+            }
+            Section("採用後の監視") {
+                if let report = store.learningReport {
+                    if let monitoring = report.monitoring {
+                        Text("旧設定も発走前に並行保存し、同じレースで比較しています。")
+                        LabeledContent("確認した期間", value: "\(monitoring.checkedCohorts)区間")
+                        if let decision = report.latestMonitorDecision { Text(decision.label).font(.caption) }
+                    } else {
+                        Text("新設定の採用後に、旧設定との継続比較を開始します。")
+                    }
+                    Text("\(report.policy.min_monitor_races ?? 30)レース・\(report.policy.min_monitor_days ?? 2)開催日以上の区間ごとに判定します。誤差が\(Int((report.policy.rollback_relative_degradation ?? 0.05) * 100))%以上増え、統計条件と期間後半の悪化も確認した場合は旧設定に戻します。")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text("監視状況は改善データの取得後に表示します。")
+                }
+            }
+            Section("条件別の検証") {
+                if let report = store.learningReport, !report.conditionRows.isEmpty {
+                    ForEach(report.conditionRows) { row in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(row.label).font(.subheadline.bold())
+                            Text("\(row.races)レース・\(row.days)開催日 ／ \(row.stateLabel)")
+                                .font(.caption).foregroundStyle(row.status == "regressed" ? Color.red : Color.secondary)
+                            if let improvement = row.relativeImprovement {
+                                Text(String(format: "総合誤差の改善率 %.1f%%", improvement * 100)).font(.caption)
+                            }
+                        }.accessibilityIdentifier("sim-condition-\(row.key)")
+                    }
+                } else {
+                    Text("候補と現行設定の比較データは蓄積待ちです。")
+                }
+            }
+            Section("各レースの記録") {
+                if let report = store.recordingReport {
+                    let day = selectedDay.isEmpty ? report.targetRaceDate : selectedDay
+                    Picker("対象日", selection: Binding(get: { day }, set: { selectedDay = $0 })) {
+                        ForEach(report.availableDates ?? [report.targetRaceDate], id: \.self) { date in
+                            Text(date).tag(date)
+                        }
+                    }
+                    if !(report.scheduleDates?.contains(day) ?? report.expectedScheduleAvailable) {
+                        Text("予定一覧を取得できていないため、取得済みレースの一覧です。開催全体の保存率は未確定です。")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    ForEach(report.issues, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
+                    ForEach(report.rows(for: day)) { row in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(row.venue ?? "会場未確認") \(row.raceNumber.map { "\($0)R" } ?? "") \(row.startTime ?? "")")
+                                .font(.subheadline.bold())
+                            if let name = row.raceName { Text(name).font(.caption) }
+                            Text(row.label).font(.subheadline)
+                                .foregroundStyle(["failed", "missed", "held"].contains(row.state) ? Color.orange : Color.primary)
+                            Text(row.reason).font(.caption).foregroundStyle(.secondary)
+                        }.accessibilityIdentifier("sim-recording-\(row.raceID)")
+                    }
+                    Text("最終更新：\(report.generatedAt)").font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    Text(store.recordingError ?? "記録状況を取得中…")
+                }
+            }
+        }
+        .navigationTitle("記録状況・継続改善")
+        .navigationBarTitleDisplayMode(.inline)
+        .refreshable { await store.load(force: true) }
+        .toolbar {
+            Button("更新") { Task { await store.load(force: true) } }
+                .disabled(store.isLoading).accessibilityIdentifier("sim-learning-refresh")
+        }
+    }
+}
+
 private struct RaceSimRow: View {
     let race: Race
     let ready: Bool
+    let recordingLabel: String?
 
     var body: some View {
         HStack {
@@ -267,6 +410,9 @@ private struct RaceSimRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                if let recordingLabel {
+                    Text(recordingLabel).font(.caption2).foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Image(systemName: ready ? "checkmark.circle.fill" : "clock")

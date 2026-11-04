@@ -43,18 +43,21 @@ jobs:
             /research/race_simulator/
             /reports/*/race_simulator_v02/
             /reports/*/race_simulator_evaluation/
+            /reports/*/race_simulator_attempts.json
+            /reports/*/PaceRecordingSchedule.json
             /reports/*/ResultData.json
             /reports/RaceSimulatorLearning.md
             /RaceData.json
             /RaceSimulationData.json
             /RaceSimulatorLearning.json
+            /RaceSimulatorRecordingStatus.json
             /ResultData.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Test capture, isolation, result pairing and promotion gates
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_live_bundle_publisher
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher
       - name: Evaluate saved forecasts and resolve one fixed validation cohort
         if: github.event_name != 'pull_request'
         run: python3 production/race_simulator_learning.py cycle
@@ -66,7 +69,7 @@ jobs:
           python3 - <<'PY'
           import subprocess
           from pathlib import Path
-          paths = [Path('RaceSimulatorLearning.json'), Path('reports/RaceSimulatorLearning.md')]
+          paths = [Path('RaceSimulatorLearning.json'), Path('RaceSimulatorRecordingStatus.json'), Path('reports/RaceSimulatorLearning.md')]
           paths += list(Path('research/race_simulator').rglob('*.json'))
           paths += list(Path('reports').glob('*/race_simulator_evaluation/*/*.json'))
           subprocess.run(['git', 'add', '--sparse', '--', *map(str, paths)], check=True)
@@ -89,6 +92,7 @@ jobs:
           name: race-simulator-learning-${{ github.run_id }}
           path: |
             RaceSimulatorLearning.json
+            RaceSimulatorRecordingStatus.json
             reports/RaceSimulatorLearning.md
             research/race_simulator
             reports/*/race_simulator_evaluation

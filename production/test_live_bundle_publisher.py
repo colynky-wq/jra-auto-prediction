@@ -252,6 +252,23 @@ class TestLiveBundlePublisher(unittest.TestCase):
         sender=self.publisher();sender.capture();self.assertFalse(sender.publish())
         self.assertEqual(json.loads(self.remote_read('RaceSimulationData.json'))['targetRaceDate'],'2026-10-18')
 
+    def test_recording_status_keeps_verified_rows_and_held_decisions(self):
+        row={'raceID':'202605040601','raceDate':DAY,'state':'held','durableConfirmed':False,
+             'verificationCheckedAt':DAY+'T20:17:00+09:00'}
+        prior={'targetRaceDate':DAY,'races':[row],'counts':{'held':1},'expectedScheduleAvailable':True}
+        local={'targetRaceDate':DAY,'races':[{**row,'state':'local_saved','verificationCheckedAt':None}],
+               'counts':{'local_saved':1},'expectedScheduleAvailable':False}
+        result=json.loads(self.publisher().bytes_for_remote('RaceSimulatorRecordingStatus.json',json.dumps(local).encode(),json.dumps(prior).encode()))
+        self.assertEqual(result['races'][0]['state'],'held');self.assertEqual(result['counts'],{'held':1})
+        self.assertTrue(result['expectedScheduleAvailable'])
+
+    def test_next_day_recording_history_preserves_prior_result_proof(self):
+        row={'raceID':'202605040601','raceDate':DAY,'state':'matched','durableConfirmed':True}
+        prior={'targetRaceDate':DAY,'races':[row],'counts':{'matched':1}}
+        local={'targetRaceDate':'2026-10-18','races':[],'history':[{**row,'state':'local_saved','durableConfirmed':False}], 'counts':{}}
+        result=json.loads(self.publisher().bytes_for_remote('RaceSimulatorRecordingStatus.json',json.dumps(local).encode(),json.dumps(prior).encode()))
+        self.assertEqual(result['races'],[]);self.assertEqual(result['history'][0]['state'],'matched')
+
     def test_partial_json_is_not_published_and_other_files_continue(self):
         self.write('SignalData.json', '{unfinished')
         self.write('RaceData.json', [self.race()])

@@ -24,6 +24,8 @@ from race_simulator_calibration import (BASELINE_ID, active_model, baseline, can
     digest, engine_digest, load_model, load_registry, settings, validate_model)
 from race_simulator_v02 import HorseInput, simulate_race
 from race_simulator_v02_adapter import load_profiles_for_race, prepare_motion_inputs, simulate_current_keibaai_v02
+from race_simulator_guards import conditions, coverage, coverage_ready, comparisons, monitor_decision
+from race_simulator_operations import note_attempt, build_status
 
 JST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +44,13 @@ class Policy:
     training_runs: int = 40
     training_window: int = 60
     capture_runs: int = 250
+    min_condition_races: int = 6
+    min_condition_days: int = 2
+    max_validation_races: int = 120
+    max_condition_regression: float = 0.02
+    min_monitor_races: int = 30
+    min_monitor_days: int = 2
+    rollback_relative_degradation: float = 0.05
 
 
 def timestamp(value):
@@ -150,6 +159,7 @@ def capture_one(root, race, research, profiles, now=None, policy=Policy(), clock
     for horse in horses:
         row = asdict(horse); row['prediction_ai_probability'] = None; motion_horses.append(row)
     motion = {'horses': motion_horses, 'distanceMeters': distance, 'pace': pace, 'dtSeconds': 0.5}
+    race_conditions = conditions(race, distance)
     state = load_registry(root); active = load_model(root, state['activeModelID'])
     models = [active]
     if state.get('candidateModelID'):
@@ -157,6 +167,11 @@ def capture_one(root, race, research, profiles, now=None, policy=Policy(), clock
         if candidate['baselineModelID'] != active['modelID']: raise ValueError('candidate baseline changed')
         if timestamp(candidate['createdAt']) > now: raise ValueError('candidate created after capture')
         models.append(candidate)
+    monitoring = state.get('monitoring')
+    if monitoring:
+        if monitoring['activeModelID'] != active['modelID']: raise ValueError('stale post-adoption monitor')
+        models.append(load_model(root, monitoring['referenceModelID']))
+    models = list({m['modelID']:m for m in models}.values())
     seed = 20261104 + int(digest(race['raceID'])[:8], 16) % 1000000
     forecasts = {m['modelID']: {'model': m, 'prediction': predict(motion, m, policy.capture_runs, seed)} for m in models}
     display = simulate_current_keibaai_v02([race], safe_research, safe_profiles, race['raceID'],
@@ -173,6 +188,7 @@ def capture_one(root, race, research, profiles, now=None, policy=Policy(), clock
         'startTime': race['startTime'], 'scheduledPost': stamp(post), 'recordedAt': stamp(end),
         'inputCapturedAt': stamp(captured), 'engineSHA256': engine_digest(), 'seed': seed,
         'activeModelID': active['modelID'], 'candidateModelID': state.get('candidateModelID'),
+        'monitorModelID': monitoring['referenceModelID'] if monitoring else None, 'conditions':race_conditions,
         'inputSHA256': digest({'race': race, 'research': safe_research, 'profiles': safe_profiles}),
         'motion': motion, 'forecasts': forecasts, 'displaySimulation': display}
     record['recordSHA256'] = digest(record)
@@ -199,14 +215,16 @@ def capture_upcoming(root=ROOT, now=None, policy=Policy(), clock=None):
             record = capture_one(root, race, research, profiles, now, policy, clock)
             if record:
                 saved.append(record['raceID']); outputs[record['raceID']] = record['displaySimulation']; changed = True
+                note_attempt(root,race,'saved','pre-post simulation saved',now)
             elif record is None:
                 frozen = read_json(journal_path(root, race))
                 if frozen:
                     display = frozen_display(frozen, race)
                     if outputs.get(race['raceID']) != display: changed = True
                     outputs[race['raceID']] = display
-        except (ValueError, KeyError, TypeError) as exc:
+        except (ValueError, KeyError, TypeError, OSError) as exc:
             held.append({'raceID': race.get('raceID'), 'reason': str(exc)})
+            note_attempt(root,race,'pending' if str(exc)=='formal pre-race input required' else 'failed',str(exc),now)
     if changed:
         day = now.astimezone(JST).date().isoformat()
         rows = sorted((r for r in outputs.values() if r.get('raceDate') == day), key=lambda r:(r.get('startTime',''),r['raceID']))
@@ -215,6 +233,7 @@ def capture_upcoming(root=ROOT, now=None, policy=Policy(), clock=None):
             'summary': {'inputRaces': len(rows), 'simulatedRaces': len(rows), 'skippedRaces': 0, 'errorRaces': 0},
             'races': rows, 'learning': {'activeModelID': active_model(root)['modelID'], 'prospectiveCapture': True}}
         write_json(root/'RaceSimulationData.json', batch)
+    build_status(root,now)
     return {'saved': saved, 'held': held, 'historicalRacesExcluded': historical}
 
 
@@ -257,6 +276,7 @@ def validate_record(record, committed_at):
         raise ValueError('prediction AI in motion inputs')
     expected = {record['activeModelID']}
     if record.get('candidateModelID'): expected.add(record['candidateModelID'])
+    if record.get('monitorModelID'): expected.add(record['monitorModelID'])
     if set(record['forecasts']) != expected: raise ValueError('forecast model set mismatch')
     for key, forecast in record['forecasts'].items():
         model = validate_model(forecast['model'])
@@ -371,6 +391,8 @@ def load_settled(root, now, commit_resolver=None):
             evaluation_key = digest({'objectiveVersion':OBJECTIVE,'resultSHA256':evaluation['resultSHA256']})
             dest = root/'reports'/record['raceDate'].replace('-','')/'race_simulator_evaluation'/record['raceID']/(evaluation_key+'.json')
             write_json(dest, evaluation, immutable=True)
+            if 'conditions' not in record:
+                record['conditions']=conditions(record.get('displaySimulation') or {},record['motion']['distanceMeters'])
             record.pop('displaySimulation', None)
             records.append({'record':record,'result':result,'evaluation':evaluation})
         except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
@@ -400,7 +422,7 @@ def fit_candidate(records, current, now, policy=Policy()):
         # A temporary model with a valid immutable identity, using training races only.
         model={'schemaVersion':1,'settings':settings(config),'engineSHA256':engine_digest(),
                'createdAt':stamp(now),'trainingCutoff':stamp(cutoff),'trainingRaceIDs':[x['record']['raceID'] for x in records],
-               'baselineModelID':current['modelID'],'objectiveVersion':OBJECTIVE}
+               'baselineModelID':current['modelID'],'objectiveVersion':OBJECTIVE,'validationPolicy':asdict(policy)}
         model['modelID']='rs-'+digest(model)[:24]
         losses=[]
         for x in records:
@@ -418,6 +440,7 @@ def fit_candidate(records, current, now, policy=Policy()):
 
 
 def promotion_decision(records, candidate, current, policy=Policy()):
+    if candidate.get('validationPolicy',asdict(policy))!=asdict(policy):raise ValueError('candidate validation policy changed')
     eligible=[]; training=set(candidate['trainingRaceIDs'])
     if candidate['baselineModelID'] != current['modelID']: raise ValueError('challenger baseline is stale')
     for x in records:
@@ -428,11 +451,14 @@ def promotion_decision(records, candidate, current, policy=Policy()):
         if current['modelID'] not in scores or candidate['modelID'] not in scores: continue
         if r['forecasts'][candidate['modelID']]['model'] != candidate: raise ValueError('challenger content changed')
         eligible.append(x)
-        if len(eligible) >= policy.min_validation_races and len({z['record']['raceDate'] for z in eligible}) >= policy.min_validation_days:
+        if (len(eligible) >= policy.min_validation_races and len({z['record']['raceDate'] for z in eligible}) >= policy.min_validation_days
+                and (coverage_ready(eligible,policy) or len(eligible)>=policy.max_validation_races)):
             break  # One fixed first eligible cohort. Never repeatedly peek at later windows.
     info={'status':'awaiting_validation','validationRaces':len(eligible),'validationDays':len({x['record']['raceDate'] for x in eligible}),
-          'candidateModelID':candidate['modelID'],'baselineModelID':current['modelID']}
+          'candidateModelID':candidate['modelID'],'baselineModelID':current['modelID'],
+          'conditionCoverage':coverage(eligible,policy)}
     if len(eligible) < policy.min_validation_races or info['validationDays'] < policy.min_validation_days: return info
+    if not coverage_ready(eligible,policy) and len(eligible)<policy.max_validation_races:return info
     old=[x['evaluation']['scores'][current['modelID']] for x in eligible]
     new=[x['evaluation']['scores'][candidate['modelID']] for x in eligible]
     differences=[a['loss']-b['loss'] for a,b in zip(old,new)]
@@ -443,6 +469,9 @@ def promotion_decision(records, candidate, current, policy=Policy()):
     improvement=(before-after)/max(before,1e-12)
     clock_coverage=statistics.mean(x['winnerTimeMAPE'] is not None and x['first600MAPE'] is not None for x in old)
     reasons=[]
+    condition_scores=comparisons(eligible,current['modelID'],candidate['modelID'],policy)
+    if not coverage_ready(eligible,policy):reasons.append('insufficient_condition_coverage')
+    reasons.extend('condition_regressed:'+c['key'] for c in condition_scores if c['status']=='regressed')
     if improvement < policy.min_relative_improvement: reasons.append('insufficient_relative_improvement')
     if lower <= 0: reasons.append('paired_bootstrap_not_positive')
     if clock_coverage < policy.min_clock_coverage: reasons.append('insufficient_sectional_coverage')
@@ -456,7 +485,8 @@ def promotion_decision(records, candidate, current, policy=Policy()):
     if statistics.mean(differences[len(differences)//2:]) < 0: reasons.append('recent_half_regressed')
     info.update(status='promote' if not reasons else 'reject',reasons=reasons,
         validationRaceIDs=[x['record']['raceID'] for x in eligible],beforeLoss=before,afterLoss=after,
-        relativeImprovement=improvement,paired95LowerMeanImprovement=lower,clockCoverage=clock_coverage)
+        relativeImprovement=improvement,paired95LowerMeanImprovement=lower,clockCoverage=clock_coverage,
+        conditionComparisons=condition_scores)
     return info
 
 
@@ -464,20 +494,43 @@ def cycle(root=ROOT, now=None, policy=Policy(), commit_resolver=None):
     root=Path(root);now=now or datetime.now(timezone.utc)
     records, held=load_settled(root,now,commit_resolver)
     state=load_registry(root); current=load_model(root,state['activeModelID'])
-    decision=None
+    state.setdefault('operationsStartedAt',stamp(now))
+    decision=None;monitor_result=None;rolled_back=False
+    def save_event(event):
+        event={**event,'decidedAt':stamp(now)};event['decisionSHA256']=digest(event)
+        write_json(root/'research/race_simulator/decisions'/(event['decisionSHA256']+'.json'),event,immutable=True)
+        state['decisions'].append(event)
+        return event
+    if state.get('monitoring'):
+        monitoring=state['monitoring'];reference=load_model(root,monitoring['referenceModelID'])
+        monitor_result=monitor_decision(records,monitoring,current,reference,policy)
+        if monitor_result['status'] in {'rollback','monitor_pass'}:
+            event=save_event({**monitor_result,'kind':'post_adoption_monitor'})
+            if monitor_result['status']=='rollback':
+                state.setdefault('rolledBackModelIDs',[]).append(current['modelID'])
+                state.update(activeModelID=reference['modelID'],candidateModelID=None,monitoring=None)
+                current=reference;rolled_back=True
+            else:
+                monitoring.setdefault('checkedRaceIDs',[]).extend(monitor_result['checkedRaceIDs'])
+                monitoring['checkedCohorts']=monitoring.get('checkedCohorts',0)+1
+                monitoring['latestCheck']=event
     if state.get('candidateModelID'):
         candidate=load_model(root,state['candidateModelID'])
         decision=promotion_decision(records,candidate,current,policy)
         if decision['status'] != 'awaiting_validation':
-            event={**decision,'decidedAt':stamp(now)}
-            event['decisionSHA256']=digest(event)
-            write_json(root/'research/race_simulator/decisions'/(event['decisionSHA256']+'.json'),event,immutable=True)
-            state['decisions'].append(event);state['candidateModelID']=None
-            if decision['status']=='promote': state['activeModelID']=candidate['modelID'];current=candidate
+            event=save_event({**decision,'kind':'candidate_validation'})
+            state['candidateModelID']=None
+            if decision['status']=='promote':
+                state['monitoring']={'activeModelID':candidate['modelID'],'referenceModelID':current['modelID'],
+                    'adoptedAt':stamp(now),'promotionDecisionSHA256':event['decisionSHA256'],
+                    'checkedRaceIDs':[],'checkedCohorts':0,'policy':asdict(policy)}
+                state['activeModelID']=candidate['modelID'];current=candidate
     # A candidate's holdout races never influence its fit. A later generation can
     # learn from them only after that generation's irrevocable decision.
     training_hash=digest([(x['record']['recordSHA256'],x['evaluation']['resultSHA256']) for x in records[-policy.training_window:]])
-    if not state.get('candidateModelID') and training_hash != state.get('lastTrainingDataSHA256'):
+    if rolled_back:state['lastTrainingDataSHA256']=training_hash
+    monitor_ready=not state.get('monitoring') or state['monitoring'].get('checkedCohorts',0)>0
+    if not rolled_back and monitor_ready and not state.get('candidateModelID') and training_hash != state.get('lastTrainingDataSHA256'):
         candidate=fit_candidate(records,current,now,policy)
         state['lastTrainingDataSHA256']=training_hash
         if candidate:
@@ -486,6 +539,7 @@ def cycle(root=ROOT, now=None, policy=Policy(), commit_resolver=None):
                          generation=state.get('generation',0)+1)
     state['lastCycleAt']=stamp(now)
     write_json(root/'research/race_simulator/state.json',state)
+    operational=build_status(root,now,records,held,verify_commits=True,commit_resolver=commit_resolver)
     display=read_json(root/'RaceSimulationData.json',{})
     report={'schemaVersion':1,'generatedAt':stamp(now),'objectiveVersion':OBJECTIVE,
         'status':('candidate_in_forward_validation' if state.get('candidateModelID') else
@@ -495,6 +549,9 @@ def cycle(root=ROOT, now=None, policy=Policy(), commit_resolver=None):
         'retrospectiveDisplayRacesExcluded':sum(not r.get('prospectiveConfirmed',False) for r in display.get('races',[])),
         'formalPredictionAIChanged':False,'automaticBettingEnabled':False,
         'generation':state.get('generation',0),'decisionHistory':state['decisions'],
+        'monitoring':state.get('monitoring'),'latestMonitorDecision':monitor_result,
+        'conditionComparisons':(decision or {}).get('conditionComparisons',[]) or (monitor_result or {}).get('conditionComparisons',[]) or ((state.get('monitoring') or {}).get('latestCheck') or {}).get('conditionComparisons',[]),
+        'liveVerification':operational['liveVerification'],
         'meaning':'Only durably committed pre-post forecasts count. Retrospective simulations are excluded. Lower held-out loss is better.'}
     write_json(root/'RaceSimulatorLearning.json',report)
     write_markdown(root,report)
@@ -516,9 +573,12 @@ def write_markdown(root,report):
 - 保留記録: {len(report['heldRecords'])}件
 - 学習開始: {p['min_training_races']}レース・{p['min_training_days']}開催日以上
 - 採用判定: 学習に使っていない、その後の{p['min_validation_races']}レース・{p['min_validation_days']}開催日以上
+- 条件別確認: 芝・ダートと4距離帯で、それぞれ{p['min_condition_races']}レース・{p['min_condition_days']}開催日以上。件数不足時は最大{p['max_validation_races']}レースまで蓄積
 - 採用条件: 損失{p['min_relative_improvement']:.0%}以上改善、対応のあるブートストラップ下限が正、勝率・順位の悪化なし、ラップ情報の充足・大きな悪化なし
 - 直近の判定: {decision}
 - 実績に含めないレース後の表示用シミュレーション: {report['retrospectiveDisplayRacesExcluded']}レース
+- 実開催の確認: {report['liveVerification']['message']}
+- 採用後の監視: {p['min_monitor_races']}レース・{p['min_monitor_days']}開催日以上の重複しない区間で旧設定と比較。誤差{p['rollback_relative_degradation']:.0%}以上増加・統計条件・後半の悪化を確認したら旧設定へ復帰
 
 発走前に保存・コミットできた予測だけを実績として数えます。レース後の再生成は含めません。
 通過順は実測値を保存しますが、コーナーと距離の対応がない箇所を25%地点などと同一視しません。

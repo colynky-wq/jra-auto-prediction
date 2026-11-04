@@ -13,6 +13,9 @@ on:
       - 'production/race_simulator_v02_adapter.py'
       - 'production/race_simulator_calibration.py'
       - 'production/race_simulator_learning.py'
+      - 'production/race_simulator_guards.py'
+      - 'production/race_simulator_operations.py'
+      - 'production/test_race_simulator_operations.py'
       - 'production/test_race_simulator_learning.py'
       - 'production/ticket_shadow_forward.py'
       - 'production/ticket_shadow_bridge.py'
@@ -96,6 +99,7 @@ jobs:
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py
           python -m unittest discover -s production -p test_race_simulator_learning.py
+          python -m unittest discover -s production -p test_race_simulator_operations.py
           python -m py_compile production/ticket_shadow_forward.py
           python -m py_compile production/ticket_shadow_bridge.py
           python -m py_compile production/ticket_probability_runtime.py
