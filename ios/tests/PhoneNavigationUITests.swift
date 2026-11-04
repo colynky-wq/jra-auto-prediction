@@ -237,6 +237,10 @@ final class PhoneNavigationUITests: XCTestCase {
         add(headerShot)
         let detail = app.scrollViews["race-detail"]
         XCTAssertTrue(detail.exists)
+        let reasons = app.buttons["理由を見る"]
+        for _ in 0..<5 { if reasons.isHittable { break }; detail.swipeUp() }
+        XCTAssertTrue(reasons.isHittable)
+        reasons.tap()
         for value in ["22.6%", "22.4%", "35.8%", "100.0%", "0.99", "78.7", "41.2%", "57.4%"] {
             let label = app.staticTexts.matching(NSPredicate(format: "label == %@", value)).firstMatch
             for _ in 0..<8 {
@@ -345,6 +349,11 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         XCTAssertEqual(title.label, "オクトーバー")
 
+        let detail = app.scrollViews["race-detail"]
+        let research = app.buttons["研究データを見る"]
+        for _ in 0..<5 { if research.isHittable { break }; detail.swipeUp() }
+        XCTAssertTrue(research.isHittable)
+        research.tap()
         let tabs = app.scrollViews["detail-tabs"]
         XCTAssertTrue(tabs.waitForExistence(timeout: 5))
         let wide = app.buttons["detail-tab-ワイド評価"]
@@ -358,7 +367,6 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(title.frame.minX, app.frame.minX - 1)
         XCTAssertLessThanOrEqual(title.frame.maxX, app.frame.maxX + 1)
 
-        let detail = app.scrollViews["race-detail"]
         let table = app.scrollViews["wide-evaluation-table-live"]
         for _ in 0..<8 {
             if table.exists && table.isHittable { break }

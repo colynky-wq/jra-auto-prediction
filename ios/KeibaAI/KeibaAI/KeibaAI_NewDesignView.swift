@@ -2561,18 +2561,10 @@ private struct KeibaAIRaceDetailNew: View {
 
     private var conclusionCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.blue)
-                    Text(race.raceName)
-                        .font(.title2.weight(.heavy))
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(race.course)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+            HStack {
+                Text("\(race.venue) \(race.raceNumber)R ・ \(race.startTime)")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.blue)
                 Spacer()
                 Text("AI評価 \(signal?.battle?.grade ?? "—")")
                     .font(.subheadline.weight(.bold))
@@ -2582,8 +2574,18 @@ private struct KeibaAIRaceDetailNew: View {
                     .background(.orange.opacity(0.10), in: Capsule())
             }
 
+            Text(race.raceName)
+                .font(.title2.weight(.heavy))
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("race-detail-name")
+            Text(race.course)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
             Label("AIの結論", systemImage: "sparkles")
                 .font(.headline)
+                .accessibilityIdentifier("race-conclusion")
 
             if let top = sortedHorses.first {
                 conclusionHorseRow(label: "本命", horse: top, tint: .blue)
@@ -2650,7 +2652,6 @@ private struct KeibaAIRaceDetailNew: View {
         }
         .padding(18)
         .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 22))
-        .accessibilityIdentifier("race-conclusion")
     }
 
     private func conclusionHorseRow(label: String, horse: Horse, tint: Color) -> some View {
