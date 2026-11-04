@@ -18,16 +18,17 @@ def build_simulator_fixture():
         {"number": n, "styleTendency": {"sampleRaces": 6, "dominantStyle": style,
                                        "distributionPct": {style: 100}},
          "initialPositionHistory": {"meanRelativePosition": position}}
-        for n, style, position in [(1, "逃げ", .1), (2, "先行", .3), (3, "差し", .8)]
+        for n, style, position in [(1, "差し", .8), (2, "先行", .3), (3, "逃げ", .1)]
     ]}]
     profiles = {"profiles": {f"ui-{n}": {
         "horseKey": f"ui-{n}", "distanceStats": [
             {"distanceBand": "1600-1799m", "starts": 8, "smoothedPerformanceScore": score}]
-    } for n, score in [(1, 70), (2, 55), (3, 40)]}}
+    } for n, score in [(1, 10), (2, 50), (3, 95)]}}
     result = simulate_current_keibaai_v02([race], research, profiles, rid, 30, 20261104, .5)
     result["audit"] = audit_race(result)
     assert result["audit"]["status"] == "pass", result["audit"]
     assert result["independence"]["strengthSource"] == "historical-performance-v0.2"
+    assert max(result["horses"], key=lambda h: h["simulationWinProbability"])["horseNumber"] != 1
     return {"schemaVersion": "race-simulator-v0.2-batch", "generatedAt": result["generatedAt"],
             "status": "ok", "settings": {"runsPerRace": 30, "baseSeed": 20261104, "dtSeconds": .5},
             "summary": {"inputRaces": 2, "simulatedRaces": 1, "skippedRaces": 1, "errorRaces": 0},

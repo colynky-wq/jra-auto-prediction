@@ -2669,6 +2669,7 @@ private struct KeibaAIRaceDetailNew: View {
             Text(String(format: "%.1f%%", horse.aiProbability))
                 .font(.headline.monospacedDigit())
                 .foregroundStyle(tint)
+                .accessibilityIdentifier("conclusion-win-probability-\(horse.number)")
         }
     }
 

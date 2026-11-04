@@ -242,7 +242,9 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(reasons.isHittable)
         reasons.tap()
         for value in ["22.6%", "22.4%", "35.8%", "100.0%", "0.99", "78.7", "41.2%", "57.4%"] {
-            let label = app.staticTexts.matching(NSPredicate(format: "label == %@", value)).firstMatch
+            // The compact conclusion repeats the AI win probability. Inspect the
+            // detailed metric rather than an offscreen copy in the conclusion.
+            let label = app.staticTexts.matching(NSPredicate(format: "label == %@ AND identifier != %@", value, "conclusion-win-probability-1")).firstMatch
             for _ in 0..<8 {
                 if label.exists && label.isHittable { break }
                 detail.swipeUp()
