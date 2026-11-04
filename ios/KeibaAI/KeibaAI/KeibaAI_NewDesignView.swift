@@ -1617,7 +1617,6 @@ struct KeibaAINewDesignView: View {
                 .accessibilityIdentifier("main-tab-\(tab.rawValue)")
             }
         }
-        .accessibilityIdentifier("main-tabs")
     }
 
     private var snapshotBar: some View {
