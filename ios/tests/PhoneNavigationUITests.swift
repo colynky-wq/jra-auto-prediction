@@ -18,7 +18,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launch()
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
-        let tabs=app.scrollViews["main-tabs"],button=app.buttons["main-tab-券種別研究"]
+        let tabs=app.scrollViews["main-tabs"],button=app.buttons["main-tab-研究"]
         for _ in 0..<5 { if button.isHittable { break };tabs.swipeLeft() }
         button.tap()
         let screen=app.scrollViews["bet-research-screen"]
@@ -83,7 +83,7 @@ final class PhoneNavigationUITests: XCTestCase {
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
         let tabs = app.scrollViews["main-tabs"]
-        let menu = app.buttons["main-tab-馬券プラン"]
+        let menu = app.buttons["main-tab-馬券"]
         for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
         menu.tap()
         let screen = app.scrollViews["reference-ticket-plan"]
@@ -114,7 +114,7 @@ final class PhoneNavigationUITests: XCTestCase {
         let race = app.descendants(matching: .any).matching(identifier:"race-card-202605040601").firstMatch
         XCTAssertTrue(race.waitForExistence(timeout:20))
         let tabs = app.scrollViews["main-tabs"]
-        let menu = app.buttons["main-tab-馬券プラン"]
+        let menu = app.buttons["main-tab-馬券"]
         for _ in 0..<4 { if menu.isHittable { break }; tabs.swipeLeft() }
         menu.tap()
         let screen = app.scrollViews["reference-ticket-plan"]
@@ -194,7 +194,7 @@ final class PhoneNavigationUITests: XCTestCase {
         add(valuesShot)
         app.buttons["back-to-list"].tap()
         let tabs = app.scrollViews["main-tabs"]
-        let guide = app.buttons["main-tab-凡例"]
+        let guide = app.buttons["見方・凡例"]
         for _ in 0..<4 {
             if guide.exists && guide.isHittable { break }
             tabs.swipeLeft()
@@ -247,7 +247,7 @@ final class PhoneNavigationUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["未予測の操作確認"].exists)
         back.tap()
         let tabs = app.scrollViews["main-tabs"]
-        let guide = app.buttons["main-tab-凡例"]
+        let guide = app.buttons["見方・凡例"]
         for _ in 0..<4 {
             if guide.exists && guide.isHittable { break }
             tabs.swipeLeft()
