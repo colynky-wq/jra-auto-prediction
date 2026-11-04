@@ -1818,17 +1818,18 @@ struct KeibaAINewDesignView: View {
                     )
                 } else {
                     ForEach(todayListItems) { item in
-                        KeibaAIRaceCard(
-                            item: item,
-                            status: status(for: item),
-                            signal: signalStore.signal(for: item.raceID),
-                            isSelected: selectedRaceID == item.raceID
-                        )
-                        .contentShape(Rectangle())
-                        .accessibilityIdentifier("race-card-\(item.raceID)")
-                        .onTapGesture {
+                        Button {
                             openRace(item.raceID)
+                        } label: {
+                            KeibaAIRaceCard(
+                                item: item,
+                                status: status(for: item),
+                                signal: signalStore.signal(for: item.raceID),
+                                isSelected: selectedRaceID == item.raceID
+                            )
                         }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("race-card-\(item.raceID)")
                     }
                 }
             }
