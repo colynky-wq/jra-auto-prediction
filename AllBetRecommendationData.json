@@ -1,24 +1,16 @@
 {
   "schemaVersion": 2,
-  "version": "all-bet-recommendation-shadow-v3-20261101",
+  "version": "all-bet-morning-real-odds-shadow-v1-20261023",
   "status": "research_display_only",
-  "raceDate": "2026-11-01",
-  "generatedAtJST": "2026-11-07T01:49:31+09:00",
+  "raceDate": "2026-11-07",
+  "snapshotStage": "morning",
+  "generatedAtJST": "2026-11-07T07:37:51+09:00",
   "prospectiveStartDate": "2026-10-24",
   "rulesFrozenAtJST": "2026-10-23",
-  "wideChaosPriority": {
-    "enabled": true,
-    "effectiveAtJST": "2026-11-01T13:20:00+09:00",
-    "minChaosLevel": 4,
-    "scanScope": "all live-odds-connected SignalData wideEvaluation.validationPairs",
-    "minProbabilityPct": 8.0,
-    "minExpectedMultiplier": 1.05,
-    "battleGradeGateUnchanged": true,
-    "historicalBackfill": false
-  },
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
+  "frozenLiveResearchChanged": false,
   "ordinaryBetTypes": [
     {
       "id": "win",
@@ -85,37 +77,93 @@
     }
   ],
   "win5Policy": "WIN5は5対象レース共通締切の別研究として扱い、1レース単位の9券種横断順位には混ぜない。",
-  "candidateScope": "単勝系・馬連系・3連系・応援馬券は保存済み全組合せを走査。ワイドは通常は事前固定候補を使い、改定後の正式スナップショットで荒れ度4以上ならSignalDataの実オッズ接続済み全ペアを優先探索する。",
+  "candidateScope": "朝時点の実オッズを別スナップショットとして取得し、9券種の全組合せ（ワイドを含む）を比較。直前の凍結研究記録は変更しない。",
   "scoreMeaning": "researchScore = 表示確率 × 保守的期待値超過分 ÷ 券種リスク係数。研究上の並び順であり利益予測ではない。",
   "counts": {
-    "candidate": 8,
-    "skip": 11,
-    "odds_pending": 4,
+    "candidate": 16,
+    "skip": 19,
+    "odds_pending": 0,
     "signal_pending": 0
   },
   "races": [
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041101",
-      "venue": "京都",
+      "raceDate": "2026-11-07",
+      "raceID": "202603030101",
+      "venue": "福島",
       "raceNumber": 1,
       "raceName": "2歳未勝利",
       "startTime": "09:45",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "S",
       "chaosLevel": 2,
       "wideChaosPriorityApplied": false,
       "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 2,
+      "bestBet": {
+        "betType": "trio",
+        "betTypeLabel": "3連複",
+        "candidateID": "030407",
+        "label": "3番 クリコキアナ − 4番 ティエルニート − 7番 フィールザウィル",
+        "probabilityPct": 4.139343,
+        "oddsLow": 49.9,
+        "oddsHigh": 49.9,
+        "expectedMultiplierLow": 2.065532,
+        "expectedMultiplierHigh": 2.065532,
+        "researchScore": 0.027566265,
+        "riskPenalty": 1.6,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "trio",
+          "betTypeLabel": "3連複",
+          "candidateID": "030407",
+          "label": "3番 クリコキアナ − 4番 ティエルニート − 7番 フィールザウィル",
+          "probabilityPct": 4.139343,
+          "oddsLow": 49.9,
+          "oddsHigh": 49.9,
+          "expectedMultiplierLow": 2.065532,
+          "expectedMultiplierHigh": 2.065532,
+          "researchScore": 0.027566265,
+          "riskPenalty": 1.6,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "exacta",
+          "betTypeLabel": "馬単",
+          "candidateID": "0307",
+          "label": "3番 クリコキアナ → 7番 フィールザウィル",
+          "probabilityPct": 5.584106,
+          "oddsLow": 21.8,
+          "oddsHigh": 21.8,
+          "expectedMultiplierLow": 1.217335,
+          "expectedMultiplierHigh": 1.217335,
+          "researchScore": 0.008369805,
+          "riskPenalty": 1.45,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0407",
+          "label": "7番 フィールザウィル − 4番 ティエルニート",
+          "probabilityPct": 12.396,
+          "oddsLow": 8.7,
+          "oddsHigh": 9.5,
+          "expectedMultiplierLow": 1.078452,
+          "expectedMultiplierHigh": 1.17762,
+          "researchScore": 0.008104092,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 4,
       "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -123,7 +171,7 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -131,7 +179,7 @@
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -139,7 +187,7 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -147,23 +195,23 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "no_candidate",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": false,
+          "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -171,7 +219,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -179,7 +227,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -187,15 +235,1096 @@
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041101",
+      "raceDate": "2026-11-07",
+      "raceID": "202605050101",
       "venue": "東京",
       "raceNumber": 1,
       "raceName": "2歳未勝利",
-      "startTime": "10:00",
+      "startTime": "09:55",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 7,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050101",
+      "venue": "京都",
+      "raceNumber": 1,
+      "raceName": "2歳未勝利",
+      "startTime": "10:05",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 3,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030102",
+      "venue": "福島",
+      "raceNumber": 2,
+      "raceName": "2歳未勝利",
+      "startTime": "10:15",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "14",
+        "label": "14番 インヴィディア",
+        "probabilityPct": 36.817095,
+        "oddsLow": 3.1,
+        "oddsHigh": 3.8,
+        "expectedMultiplierLow": 1.14133,
+        "expectedMultiplierHigh": 1.39905,
+        "researchScore": 0.0520336,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "14",
+          "label": "14番 インヴィディア",
+          "probabilityPct": 36.817095,
+          "oddsLow": 3.1,
+          "oddsHigh": 3.8,
+          "expectedMultiplierLow": 1.14133,
+          "expectedMultiplierHigh": 1.39905,
+          "researchScore": 0.0520336,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        }
+      ],
+      "qualifyingPoolCount": 1,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050102",
+      "venue": "東京",
+      "raceNumber": 2,
+      "raceName": "2歳未勝利",
+      "startTime": "10:25",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "A",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "frame_quinella",
+        "betTypeLabel": "枠連",
+        "candidateID": "0107",
+        "label": "1枠（エコロヴォルグ） − 7枠（ベールダウン・マオスカイシー）",
+        "probabilityPct": 15.377859,
+        "oddsLow": 12.5,
+        "oddsHigh": 12.5,
+        "expectedMultiplierLow": 1.922232,
+        "expectedMultiplierHigh": 1.922232,
+        "researchScore": 0.118182947,
+        "riskPenalty": 1.2,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "frame_quinella",
+          "betTypeLabel": "枠連",
+          "candidateID": "0107",
+          "label": "1枠（エコロヴォルグ） − 7枠（ベールダウン・マオスカイシー）",
+          "probabilityPct": 15.377859,
+          "oddsLow": 12.5,
+          "oddsHigh": 12.5,
+          "expectedMultiplierLow": 1.922232,
+          "expectedMultiplierHigh": 1.922232,
+          "researchScore": 0.118182947,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "quinella",
+          "betTypeLabel": "馬連",
+          "candidateID": "0110",
+          "label": "1番 エコロヴォルグ − 10番 ベールダウン",
+          "probabilityPct": 11.155391,
+          "oddsLow": 13.5,
+          "oddsHigh": 13.5,
+          "expectedMultiplierLow": 1.505978,
+          "expectedMultiplierHigh": 1.505978,
+          "researchScore": 0.04703652,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0110",
+          "label": "1番 エコロヴォルグ − 10番 ベールダウン",
+          "probabilityPct": 18.916,
+          "oddsLow": 6.7,
+          "oddsHigh": 7.6,
+          "expectedMultiplierLow": 1.267372,
+          "expectedMultiplierHigh": 1.437616,
+          "researchScore": 0.04214674,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050102",
+      "venue": "京都",
+      "raceNumber": 2,
+      "raceName": "2歳未勝利",
+      "startTime": "10:35",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030103",
+      "venue": "福島",
+      "raceNumber": 3,
+      "raceName": "2歳未勝利",
+      "startTime": "10:45",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "02",
+        "label": "2番 スーパーユタカ",
+        "probabilityPct": 49.370507,
+        "oddsLow": 2.9,
+        "oddsHigh": 4.0,
+        "expectedMultiplierLow": 1.431745,
+        "expectedMultiplierHigh": 1.97482,
+        "researchScore": 0.213154695,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "02",
+          "label": "2番 スーパーユタカ",
+          "probabilityPct": 49.370507,
+          "oddsLow": 2.9,
+          "oddsHigh": 4.0,
+          "expectedMultiplierLow": 1.431745,
+          "expectedMultiplierHigh": 1.97482,
+          "researchScore": 0.213154695,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "support",
+          "betTypeLabel": "応援馬券",
+          "candidateID": "02",
+          "label": "2番 スーパーユタカ（単勝100円＋複勝100円）",
+          "probabilityPct": 49.370507,
+          "oddsLow": null,
+          "oddsHigh": null,
+          "expectedMultiplierLow": 1.152805,
+          "expectedMultiplierHigh": 1.424343,
+          "researchScore": 0.068582367,
+          "riskPenalty": 1.1,
+          "sourceScope": "same_day_morning_real_odds",
+          "winProbabilityPct": 17.834,
+          "winOddsLow": 4.9,
+          "winOddsHigh": 4.9,
+          "placeOddsLow": 2.9,
+          "placeOddsHigh": 4.0
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0208",
+          "label": "2番 スーパーユタカ − 8番 ソリドゥス",
+          "probabilityPct": 14.074,
+          "oddsLow": 9.7,
+          "oddsHigh": 10.8,
+          "expectedMultiplierLow": 1.365178,
+          "expectedMultiplierHigh": 1.519992,
+          "researchScore": 0.042829293,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050103",
+      "venue": "東京",
+      "raceNumber": 3,
+      "raceName": "2歳未勝利",
+      "startTime": "10:55",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050103",
+      "venue": "京都",
+      "raceNumber": 3,
+      "raceName": "2歳未勝利",
+      "startTime": "11:05",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030104",
+      "venue": "福島",
+      "raceNumber": 4,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "11:15",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "S",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "02",
+        "label": "2番 ダイシンレアレア",
+        "probabilityPct": 51.953803,
+        "oddsLow": 2.6,
+        "oddsHigh": 3.2,
+        "expectedMultiplierLow": 1.350799,
+        "expectedMultiplierHigh": 1.662522,
+        "researchScore": 0.182253421,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "02",
+          "label": "2番 ダイシンレアレア",
+          "probabilityPct": 51.953803,
+          "oddsLow": 2.6,
+          "oddsHigh": 3.2,
+          "expectedMultiplierLow": 1.350799,
+          "expectedMultiplierHigh": 1.662522,
+          "researchScore": 0.182253421,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "support",
+          "betTypeLabel": "応援馬券",
+          "candidateID": "02",
+          "label": "2番 ダイシンレアレア（単勝100円＋複勝100円）",
+          "probabilityPct": 51.953803,
+          "oddsLow": null,
+          "oddsHigh": null,
+          "expectedMultiplierLow": 1.059648,
+          "expectedMultiplierHigh": 1.215509,
+          "researchScore": 0.028172186,
+          "riskPenalty": 1.1,
+          "sourceScope": "same_day_morning_real_odds",
+          "winProbabilityPct": 20.223596,
+          "winOddsLow": 3.8,
+          "winOddsHigh": 3.8,
+          "placeOddsLow": 2.6,
+          "placeOddsHigh": 3.2
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0206",
+          "label": "2番 ダイシンレアレア − 6番 ロードヴェリタス",
+          "probabilityPct": 9.409,
+          "oddsLow": 14.4,
+          "oddsHigh": 15.3,
+          "expectedMultiplierLow": 1.354896,
+          "expectedMultiplierHigh": 1.439577,
+          "researchScore": 0.027826804,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 3,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050104",
+      "venue": "東京",
+      "raceNumber": 4,
+      "raceName": "2歳未勝利",
+      "startTime": "11:25",
       "recommendationStatus": "skip",
       "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
       "battleGrade": "C",
@@ -210,7 +1339,7 @@
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -218,15 +1347,15 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -234,7 +1363,7 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -242,15 +1371,15 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": false,
+          "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -258,7 +1387,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -266,7 +1395,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -274,7 +1403,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -282,86 +1411,32 @@
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041102",
+      "raceDate": "2026-11-07",
+      "raceID": "202608050104",
       "venue": "京都",
-      "raceNumber": 2,
+      "raceNumber": 4,
       "raceName": "2歳未勝利",
-      "startTime": "10:15",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "S",
-      "chaosLevel": 4,
+      "startTime": "11:35",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 5,
       "wideChaosPriorityApplied": false,
       "wideChaosPairsScanned": 0,
-      "bestBet": {
-        "betType": "quinella",
-        "betTypeLabel": "馬連",
-        "candidateID": "0110",
-        "label": "1番 グランビート − 10番 オーバーシュタイン",
-        "probabilityPct": 8.822397,
-        "oddsLow": 15.7,
-        "oddsHigh": 15.7,
-        "expectedMultiplierLow": 1.385116,
-        "expectedMultiplierHigh": 1.385116,
-        "researchScore": 0.028313719,
-        "riskPenalty": 1.2,
-        "sourceScope": "all_saved_odds_outcomes"
-      },
-      "betRecommendations": [
-        {
-          "betType": "quinella",
-          "betTypeLabel": "馬連",
-          "candidateID": "0110",
-          "label": "1番 グランビート − 10番 オーバーシュタイン",
-          "probabilityPct": 8.822397,
-          "oddsLow": 15.7,
-          "oddsHigh": 15.7,
-          "expectedMultiplierLow": 1.385116,
-          "expectedMultiplierHigh": 1.385116,
-          "researchScore": 0.028313719,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "010510",
-          "label": "1番 グランビート − 5番 テーオータイタン − 10番 オーバーシュタイン",
-          "probabilityPct": 5.06956,
-          "oddsLow": 34.2,
-          "oddsHigh": 34.2,
-          "expectedMultiplierLow": 1.733789,
-          "expectedMultiplierHigh": 1.733789,
-          "researchScore": 0.023249921,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "betTypeLabel": "馬単",
-          "candidateID": "1001",
-          "label": "10番 オーバーシュタイン → 1番 グランビート",
-          "probabilityPct": 4.025811,
-          "oddsLow": 41.9,
-          "oddsHigh": 41.9,
-          "expectedMultiplierLow": 1.686815,
-          "expectedMultiplierHigh": 1.686815,
-          "researchScore": 0.019068878,
-          "riskPenalty": 1.45,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 4,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 3,
       "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -369,15 +1444,15 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": false,
+          "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -385,23 +1460,120 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030105",
+      "venue": "福島",
+      "raceNumber": 5,
+      "raceName": "2歳新馬",
+      "startTime": "12:05",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 3,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 3,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -409,7 +1581,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -417,15 +1589,15 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -433,15 +1605,820 @@
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041102",
+      "raceDate": "2026-11-07",
+      "raceID": "202605050105",
       "venue": "東京",
-      "raceNumber": 2,
-      "raceName": "2歳未勝利",
-      "startTime": "10:30",
+      "raceNumber": 5,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "12:15",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "S",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "13",
+        "label": "13番 アンディラメナ",
+        "probabilityPct": 45.576653,
+        "oddsLow": 2.7,
+        "oddsHigh": 3.8,
+        "expectedMultiplierLow": 1.23057,
+        "expectedMultiplierHigh": 1.731913,
+        "researchScore": 0.105086089,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "13",
+          "label": "13番 アンディラメナ",
+          "probabilityPct": 45.576653,
+          "oddsLow": 2.7,
+          "oddsHigh": 3.8,
+          "expectedMultiplierLow": 1.23057,
+          "expectedMultiplierHigh": 1.731913,
+          "researchScore": 0.105086089,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0916",
+          "label": "9番 ティルベリー − 16番 ナムラティアラ",
+          "probabilityPct": 8.498,
+          "oddsLow": 15.3,
+          "oddsHigh": 17.0,
+          "expectedMultiplierLow": 1.300194,
+          "expectedMultiplierHigh": 1.44466,
+          "researchScore": 0.021258738,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "support",
+          "betTypeLabel": "応援馬券",
+          "candidateID": "13",
+          "label": "13番 アンディラメナ（単勝100円＋複勝100円）",
+          "probabilityPct": 45.576653,
+          "oddsLow": null,
+          "oddsHigh": null,
+          "expectedMultiplierLow": 1.031978,
+          "expectedMultiplierHigh": 1.28265,
+          "researchScore": 0.013249547,
+          "riskPenalty": 1.1,
+          "sourceScope": "same_day_morning_real_odds",
+          "winProbabilityPct": 16.026679,
+          "winOddsLow": 5.2,
+          "winOddsHigh": 5.2,
+          "placeOddsLow": 2.7,
+          "placeOddsHigh": 3.8
+        }
+      ],
+      "qualifyingPoolCount": 3,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050105",
+      "venue": "京都",
+      "raceNumber": 5,
+      "raceName": "2歳新馬",
+      "startTime": "12:25",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [
+        "frame_quinella"
+      ],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "held",
+          "realOddsAvailable": false,
+          "qualifyingCandidate": false,
+          "candidateScope": "display_candidates_or_none"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030106",
+      "venue": "福島",
+      "raceNumber": 6,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "12:35",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 2,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "13",
+        "label": "13番 ドリームプレミア",
+        "probabilityPct": 77.923572,
+        "oddsLow": 3.0,
+        "oddsHigh": 3.6,
+        "expectedMultiplierLow": 2.337707,
+        "expectedMultiplierHigh": 2.805249,
+        "researchScore": 1.042389077,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "13",
+          "label": "13番 ドリームプレミア",
+          "probabilityPct": 77.923572,
+          "oddsLow": 3.0,
+          "oddsHigh": 3.6,
+          "expectedMultiplierLow": 2.337707,
+          "expectedMultiplierHigh": 2.805249,
+          "researchScore": 1.042389077,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "support",
+          "betTypeLabel": "応援馬券",
+          "candidateID": "13",
+          "label": "13番 ドリームプレミア（単勝100円＋複勝100円）",
+          "probabilityPct": 77.923572,
+          "oddsLow": null,
+          "oddsHigh": null,
+          "expectedMultiplierLow": 1.614145,
+          "expectedMultiplierHigh": 1.847916,
+          "researchScore": 0.435057928,
+          "riskPenalty": 1.1,
+          "sourceScope": "same_day_morning_real_odds",
+          "winProbabilityPct": 37.107629,
+          "winOddsLow": 2.4,
+          "winOddsHigh": 2.4,
+          "placeOddsLow": 3.0,
+          "placeOddsHigh": 3.6
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "1213",
+          "label": "13番 ドリームプレミア − 12番 アマンヘセル",
+          "probabilityPct": 9.333,
+          "oddsLow": 44.6,
+          "oddsHigh": 46.9,
+          "expectedMultiplierLow": 4.162518,
+          "expectedMultiplierHigh": 4.377177,
+          "researchScore": 0.245964837,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050106",
+      "venue": "東京",
+      "raceNumber": 6,
+      "raceName": "2歳新馬",
+      "startTime": "12:45",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 1,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050106",
+      "venue": "京都",
+      "raceNumber": 6,
+      "raceName": "2歳新馬",
+      "startTime": "12:55",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 3,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 6,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030107",
+      "venue": "福島",
+      "raceNumber": 7,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "13:05",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 3,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 2,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050107",
+      "venue": "東京",
+      "raceNumber": 7,
+      "raceName": "2歳新馬",
+      "startTime": "13:15",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 1,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050107",
+      "venue": "京都",
+      "raceNumber": 7,
+      "raceName": "3歳以上2勝クラス",
+      "startTime": "13:25",
       "recommendationStatus": "candidate",
       "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
       "battleGrade": "S",
@@ -451,649 +2428,68 @@
       "bestBet": {
         "betType": "wide",
         "betTypeLabel": "ワイド",
-        "candidateID": "0615",
-        "label": "6番 ナムラアラバイ → 15番 タワーレイヴン",
-        "probabilityPct": 11.341,
-        "oddsLow": 19.1,
-        "oddsHigh": 20.0,
-        "expectedMultiplierLow": 2.166131,
-        "expectedMultiplierHigh": 2.2682,
-        "researchScore": 0.110209097,
+        "candidateID": "0309",
+        "label": "9番 パンサーズ − 3番 ヴリトラハン",
+        "probabilityPct": 12.057,
+        "oddsLow": 11.2,
+        "oddsHigh": 12.4,
+        "expectedMultiplierLow": 1.350384,
+        "expectedMultiplierHigh": 1.495068,
+        "researchScore": 0.035204832,
         "riskPenalty": 1.2,
-        "sourceScope": "frozen_wide_rule_candidates"
+        "sourceScope": "same_day_morning_real_odds_all_pairs"
       },
       "betRecommendations": [
         {
           "betType": "wide",
           "betTypeLabel": "ワイド",
-          "candidateID": "0615",
-          "label": "6番 ナムラアラバイ → 15番 タワーレイヴン",
-          "probabilityPct": 11.341,
-          "oddsLow": 19.1,
-          "oddsHigh": 20.0,
-          "expectedMultiplierLow": 2.166131,
-          "expectedMultiplierHigh": 2.2682,
-          "researchScore": 0.110209097,
+          "candidateID": "0309",
+          "label": "9番 パンサーズ − 3番 ヴリトラハン",
+          "probabilityPct": 12.057,
+          "oddsLow": 11.2,
+          "oddsHigh": 12.4,
+          "expectedMultiplierLow": 1.350384,
+          "expectedMultiplierHigh": 1.495068,
+          "researchScore": 0.035204832,
           "riskPenalty": 1.2,
-          "sourceScope": "frozen_wide_rule_candidates"
-        },
-        {
-          "betType": "frame_quinella",
-          "betTypeLabel": "枠連",
-          "candidateID": "0308",
-          "label": "3枠（アブリコース・ナムラアラバイ） − 8枠（タワーレイヴン・スピカテソーロ）",
-          "probabilityPct": 13.392515,
-          "oddsLow": 12.8,
-          "oddsHigh": 12.8,
-          "expectedMultiplierLow": 1.714242,
-          "expectedMultiplierHigh": 1.714242,
-          "researchScore": 0.079712472,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
         },
         {
           "betType": "place",
           "betTypeLabel": "複勝",
-          "candidateID": "06",
-          "label": "6番 ナムラアラバイ",
-          "probabilityPct": 57.722102,
-          "oddsLow": 1.9,
-          "oddsHigh": 2.3,
-          "expectedMultiplierLow": 1.09672,
-          "expectedMultiplierHigh": 1.327608,
-          "researchScore": 0.055828817,
+          "candidateID": "09",
+          "label": "9番 パンサーズ",
+          "probabilityPct": 57.710222,
+          "oddsLow": 1.8,
+          "oddsHigh": 2.5,
+          "expectedMultiplierLow": 1.038784,
+          "expectedMultiplierHigh": 1.442756,
+          "researchScore": 0.022382333,
           "riskPenalty": 1.0,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 4,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
+          "sourceScope": "same_day_morning_real_odds"
         },
         {
           "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
+          "betTypeLabel": "馬単",
+          "candidateID": "0709",
+          "label": "7番 ゴールデンカイト → 9番 パンサーズ",
+          "probabilityPct": 5.062362,
+          "oddsLow": 29.0,
+          "oddsHigh": 29.0,
+          "expectedMultiplierLow": 1.468085,
+          "expectedMultiplierHigh": 1.468085,
+          "researchScore": 0.016342177,
+          "riskPenalty": 1.45,
+          "sourceScope": "same_day_morning_real_odds"
         }
       ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041103",
-      "venue": "京都",
-      "raceNumber": 3,
-      "raceName": "2歳未勝利",
-      "startTime": "10:45",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "C",
-      "chaosLevel": 1,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 2,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041103",
-      "venue": "東京",
-      "raceNumber": 3,
-      "raceName": "2歳未勝利",
-      "startTime": "11:00",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
-      "chaosLevel": 2,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 5,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "no_candidate",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041104",
-      "venue": "東京",
-      "raceNumber": 4,
-      "raceName": "2歳新馬",
-      "startTime": "11:30",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
-      "battleGrade": "見送り",
-      "chaosLevel": 1,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
-      "pendingBetTypes": [
-        "win",
-        "place",
-        "frame_quinella",
-        "quinella",
-        "exacta",
-        "trio",
-        "trifecta",
-        "support"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "dead_heat_excluded",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041105",
-      "venue": "京都",
-      "raceNumber": 5,
-      "raceName": "2歳新馬",
-      "startTime": "12:05",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
-      "chaosLevel": 4,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 1,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041105",
-      "venue": "東京",
-      "raceNumber": 5,
-      "raceName": "2歳新馬",
-      "startTime": "12:20",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
-      "chaosLevel": 3,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 4,
-      "pendingBetTypes": [
-        "frame_quinella"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "no_candidate",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041106",
-      "venue": "京都",
-      "raceNumber": 6,
-      "raceName": "2歳新馬",
-      "startTime": "12:35",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
-      "chaosLevel": 2,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
       "qualifyingPoolCount": 6,
       "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -1101,7 +2497,7 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -1109,206 +2505,7 @@
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041106",
-      "venue": "東京",
-      "raceNumber": 6,
-      "raceName": "3歳以上1勝クラス",
-      "startTime": "12:50",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
-      "battleGrade": "見送り",
-      "chaosLevel": 5,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
-      "pendingBetTypes": [
-        "win",
-        "place",
-        "frame_quinella",
-        "quinella",
-        "exacta",
-        "trio",
-        "trifecta",
-        "support"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041107",
-      "venue": "京都",
-      "raceNumber": 7,
-      "raceName": "3歳以上1勝クラス",
-      "startTime": "13:05",
-      "recommendationStatus": "skip",
-      "reason": "9券種を確認しましたが、事前固定した確率・期待値条件を満たす候補がありません。",
-      "battleGrade": "S",
-      "chaosLevel": 5,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -1316,119 +2513,15 @@
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": false,
+          "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041107",
-      "venue": "東京",
-      "raceNumber": 7,
-      "raceName": "3歳以上1勝クラス",
-      "startTime": "13:20",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "C",
-      "chaosLevel": 3,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 1,
-      "pendingBetTypes": [
-        "win",
-        "place",
-        "frame_quinella",
-        "quinella",
-        "exacta",
-        "trio",
-        "trifecta",
-        "support"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -1436,722 +2529,111 @@
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         }
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041108",
-      "venue": "京都",
+      "raceDate": "2026-11-07",
+      "raceID": "202603030108",
+      "venue": "福島",
       "raceNumber": 8,
       "raceName": "3歳以上1勝クラス",
       "startTime": "13:35",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
-      "battleGrade": "C",
-      "chaosLevel": 3,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 0,
-      "pendingBetTypes": [
-        "win",
-        "place",
-        "frame_quinella",
-        "quinella",
-        "wide",
-        "exacta",
-        "trio",
-        "trifecta",
-        "support"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "missing_record",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041108",
-      "venue": "東京",
-      "raceNumber": 8,
-      "raceName": "本栖湖特別",
-      "startTime": "13:50",
-      "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
-      "chaosLevel": 3,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 3,
-      "pendingBetTypes": [
-        "frame_quinella"
-      ],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "no_candidate",
-          "realOddsAvailable": false,
-          "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041109",
-      "venue": "京都",
-      "raceNumber": 9,
-      "raceName": "愛宕特別",
-      "startTime": "14:10",
       "recommendationStatus": "candidate",
       "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "A",
-      "chaosLevel": 3,
-      "wideChaosPriorityApplied": false,
-      "wideChaosPairsScanned": 0,
-      "bestBet": {
-        "betType": "quinella",
-        "betTypeLabel": "馬連",
-        "candidateID": "0408",
-        "label": "4番 タガノアルトゥーラ − 8番 ロードアマルフィ",
-        "probabilityPct": 13.655541,
-        "oddsLow": 13.0,
-        "oddsHigh": 13.0,
-        "expectedMultiplierLow": 1.77522,
-        "expectedMultiplierHigh": 1.77522,
-        "researchScore": 0.088217071,
-        "riskPenalty": 1.2,
-        "sourceScope": "all_saved_odds_outcomes"
-      },
-      "betRecommendations": [
-        {
-          "betType": "quinella",
-          "betTypeLabel": "馬連",
-          "candidateID": "0408",
-          "label": "4番 タガノアルトゥーラ − 8番 ロードアマルフィ",
-          "probabilityPct": 13.655541,
-          "oddsLow": 13.0,
-          "oddsHigh": 13.0,
-          "expectedMultiplierLow": 1.77522,
-          "expectedMultiplierHigh": 1.77522,
-          "researchScore": 0.088217071,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "betTypeLabel": "枠連",
-          "candidateID": "0407",
-          "label": "4枠（タガノアルトゥーラ） − 7枠（ゼットレジーナ・ロードアマルフィ）",
-          "probabilityPct": 14.389302,
-          "oddsLow": 10.6,
-          "oddsHigh": 10.6,
-          "expectedMultiplierLow": 1.525266,
-          "expectedMultiplierHigh": 1.525266,
-          "researchScore": 0.062985093,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "040809",
-          "label": "4番 タガノアルトゥーラ − 8番 ロードアマルフィ − 9番 アトモス",
-          "probabilityPct": 7.417025,
-          "oddsLow": 22.6,
-          "oddsHigh": 22.6,
-          "expectedMultiplierLow": 1.676248,
-          "expectedMultiplierHigh": 1.676248,
-          "researchScore": 0.031348427,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 5,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041109",
-      "venue": "東京",
-      "raceNumber": 9,
-      "raceName": "紅葉S",
-      "startTime": "14:25",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "B",
+      "battleGrade": "S",
       "chaosLevel": 4,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 91,
-      "bestBet": {
-        "betType": "trio",
-        "betTypeLabel": "3連複",
-        "candidateID": "010407",
-        "label": "1番 ミッキーソルジャー − 4番 マクリール − 7番 エルハーベン",
-        "probabilityPct": 4.105456,
-        "oddsLow": 31.9,
-        "oddsHigh": 31.9,
-        "expectedMultiplierLow": 1.309641,
-        "expectedMultiplierHigh": 1.309641,
-        "researchScore": 0.007945109,
-        "riskPenalty": 1.6,
-        "sourceScope": "all_saved_odds_outcomes"
-      },
-      "betRecommendations": [
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "010407",
-          "label": "1番 ミッキーソルジャー − 4番 マクリール − 7番 エルハーベン",
-          "probabilityPct": 4.105456,
-          "oddsLow": 31.9,
-          "oddsHigh": 31.9,
-          "expectedMultiplierLow": 1.309641,
-          "expectedMultiplierHigh": 1.309641,
-          "researchScore": 0.007945109,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 1,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041110",
-      "venue": "京都",
-      "raceNumber": 10,
-      "raceName": "古都S",
-      "startTime": "14:45",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "S",
-      "chaosLevel": 5,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 36,
-      "bestBet": {
-        "betType": "trio",
-        "betTypeLabel": "3連複",
-        "candidateID": "020507",
-        "label": "2番 アスクデッドヒート − 5番 エコロレイズ − 7番 ウイナーズナイン",
-        "probabilityPct": 3.02769,
-        "oddsLow": 43.8,
-        "oddsHigh": 43.8,
-        "expectedMultiplierLow": 1.326128,
-        "expectedMultiplierHigh": 1.326128,
-        "researchScore": 0.006171341,
-        "riskPenalty": 1.6,
-        "sourceScope": "all_saved_odds_outcomes"
-      },
-      "betRecommendations": [
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "020507",
-          "label": "2番 アスクデッドヒート − 5番 エコロレイズ − 7番 ウイナーズナイン",
-          "probabilityPct": 3.02769,
-          "oddsLow": 43.8,
-          "oddsHigh": 43.8,
-          "expectedMultiplierLow": 1.326128,
-          "expectedMultiplierHigh": 1.326128,
-          "researchScore": 0.006171341,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 1,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041110",
-      "venue": "東京",
-      "raceNumber": 10,
-      "raceName": "秋嶺S",
-      "startTime": "15:01",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "S",
-      "chaosLevel": 2,
       "wideChaosPriorityApplied": false,
       "wideChaosPairsScanned": 0,
       "bestBet": {
-        "betType": "trio",
-        "betTypeLabel": "3連複",
-        "candidateID": "020910",
-        "label": "2番 タマモティーカップ − 9番 プルメリアリノ − 10番 メイショウツヨキ",
-        "probabilityPct": 6.890402,
-        "oddsLow": 39.0,
-        "oddsHigh": 39.0,
-        "expectedMultiplierLow": 2.687257,
-        "expectedMultiplierHigh": 2.687257,
-        "researchScore": 0.072661744,
-        "riskPenalty": 1.6,
-        "sourceScope": "all_saved_odds_outcomes"
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "04",
+        "label": "4番 ガルディーノ",
+        "probabilityPct": 26.240769,
+        "oddsLow": 4.7,
+        "oddsHigh": 6.3,
+        "expectedMultiplierLow": 1.233316,
+        "expectedMultiplierHigh": 1.653168,
+        "researchScore": 0.061223913,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
       },
       "betRecommendations": [
         {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "020910",
-          "label": "2番 タマモティーカップ − 9番 プルメリアリノ − 10番 メイショウツヨキ",
-          "probabilityPct": 6.890402,
-          "oddsLow": 39.0,
-          "oddsHigh": 39.0,
-          "expectedMultiplierLow": 2.687257,
-          "expectedMultiplierHigh": 2.687257,
-          "researchScore": 0.072661744,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "betTypeLabel": "馬連",
-          "candidateID": "0910",
-          "label": "9番 プルメリアリノ − 10番 メイショウツヨキ",
-          "probabilityPct": 9.134533,
-          "oddsLow": 19.8,
-          "oddsHigh": 19.8,
-          "expectedMultiplierLow": 1.808638,
-          "expectedMultiplierHigh": 1.808638,
-          "researchScore": 0.061554421,
-          "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "04",
+          "label": "4番 ガルディーノ",
+          "probabilityPct": 26.240769,
+          "oddsLow": 4.7,
+          "oddsHigh": 6.3,
+          "expectedMultiplierLow": 1.233316,
+          "expectedMultiplierHigh": 1.653168,
+          "researchScore": 0.061223913,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
         },
         {
           "betType": "support",
           "betTypeLabel": "応援馬券",
-          "candidateID": "10",
-          "label": "10番 メイショウツヨキ（単勝100円＋複勝100円）",
-          "probabilityPct": 35.211883,
+          "candidateID": "04",
+          "label": "4番 ガルディーノ（単勝100円＋複勝100円）",
+          "probabilityPct": 26.240769,
           "oddsLow": null,
           "oddsHigh": null,
-          "expectedMultiplierLow": 1.1158,
-          "expectedMultiplierHigh": 1.415101,
-          "researchScore": 0.03706851,
+          "expectedMultiplierLow": 1.051481,
+          "expectedMultiplierHigh": 1.261407,
+          "researchScore": 0.012280918,
           "riskPenalty": 1.1,
-          "sourceScope": "all_saved_win_place_packages",
-          "winProbabilityPct": 10.831892,
-          "winOddsLow": 11.5,
-          "winOddsHigh": 11.5,
-          "placeOddsLow": 2.8,
-          "placeOddsHigh": 4.5
+          "sourceScope": "same_day_morning_real_odds",
+          "winProbabilityPct": 8.443169,
+          "winOddsLow": 10.3,
+          "winOddsHigh": 10.3,
+          "placeOddsLow": 4.7,
+          "placeOddsHigh": 6.3
         }
       ],
-      "qualifyingPoolCount": 6,
+      "qualifyingPoolCount": 2,
       "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2159,31 +2641,31 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": false,
+          "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2191,31 +2673,31 @@
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
-          "qualifyingCandidate": true,
+          "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -2223,77 +2705,829 @@
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041111",
-      "venue": "京都",
-      "raceNumber": 11,
-      "raceName": "まほろばS",
-      "startTime": "15:20",
+      "raceDate": "2026-11-07",
+      "raceID": "202605050108",
+      "venue": "東京",
+      "raceNumber": 8,
+      "raceName": "3歳以上2勝クラス",
+      "startTime": "13:50",
       "recommendationStatus": "candidate",
       "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "A",
-      "chaosLevel": 5,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 78,
+      "battleGrade": "S",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "wide",
+        "betTypeLabel": "ワイド",
+        "candidateID": "0506",
+        "label": "5番 リポサンテ − 6番 アッカン",
+        "probabilityPct": 11.98,
+        "oddsLow": 14.5,
+        "oddsHigh": 17.2,
+        "expectedMultiplierLow": 1.7371,
+        "expectedMultiplierHigh": 2.06056,
+        "researchScore": 0.07358715,
+        "riskPenalty": 1.2,
+        "sourceScope": "same_day_morning_real_odds_all_pairs"
+      },
+      "betRecommendations": [
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0506",
+          "label": "5番 リポサンテ − 6番 アッカン",
+          "probabilityPct": 11.98,
+          "oddsLow": 14.5,
+          "oddsHigh": 17.2,
+          "expectedMultiplierLow": 1.7371,
+          "expectedMultiplierHigh": 2.06056,
+          "researchScore": 0.07358715,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "trio",
+          "betTypeLabel": "3連複",
+          "candidateID": "050710",
+          "label": "5番 リポサンテ − 7番 アクロフェイズ − 10番 ウェイクフィールド",
+          "probabilityPct": 6.917767,
+          "oddsLow": 24.7,
+          "oddsHigh": 24.7,
+          "expectedMultiplierLow": 1.708688,
+          "expectedMultiplierHigh": 1.708688,
+          "researchScore": 0.030640865,
+          "riskPenalty": 1.6,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "trifecta",
+          "betTypeLabel": "3連単",
+          "candidateID": "100705",
+          "label": "10番 ウェイクフィールド → 7番 アクロフェイズ → 5番 リポサンテ",
+          "probabilityPct": 1.006331,
+          "oddsLow": 296.2,
+          "oddsHigh": 296.2,
+          "expectedMultiplierLow": 2.980753,
+          "expectedMultiplierHigh": 2.980753,
+          "researchScore": 0.009966466,
+          "riskPenalty": 2.0,
+          "sourceScope": "same_day_morning_real_odds"
+        }
+      ],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030109",
+      "venue": "福島",
+      "raceNumber": 9,
+      "raceName": "三春駒特別",
+      "startTime": "14:10",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
       "bestBet": {
         "betType": "frame_quinella",
         "betTypeLabel": "枠連",
-        "candidateID": "0406",
-        "label": "4枠（テリオスララ・ビップデイジー） − 6枠（スマートワイス・ムイ）",
-        "probabilityPct": 10.11403,
-        "oddsLow": 13.8,
-        "oddsHigh": 13.8,
-        "expectedMultiplierLow": 1.395736,
-        "expectedMultiplierHigh": 1.395736,
-        "researchScore": 0.033354048,
+        "candidateID": "0208",
+        "label": "2枠（レダアトミカ・アッシズオブローズ） − 8枠（マイネルクオリア・ダーコ）",
+        "probabilityPct": 11.468675,
+        "oddsLow": 15.1,
+        "oddsHigh": 15.1,
+        "expectedMultiplierLow": 1.73177,
+        "expectedMultiplierHigh": 1.73177,
+        "researchScore": 0.069936936,
         "riskPenalty": 1.2,
-        "sourceScope": "all_saved_odds_outcomes"
+        "sourceScope": "same_day_morning_real_odds"
       },
       "betRecommendations": [
         {
           "betType": "frame_quinella",
           "betTypeLabel": "枠連",
-          "candidateID": "0406",
-          "label": "4枠（テリオスララ・ビップデイジー） − 6枠（スマートワイス・ムイ）",
-          "probabilityPct": 10.11403,
-          "oddsLow": 13.8,
-          "oddsHigh": 13.8,
-          "expectedMultiplierLow": 1.395736,
-          "expectedMultiplierHigh": 1.395736,
-          "researchScore": 0.033354048,
+          "candidateID": "0208",
+          "label": "2枠（レダアトミカ・アッシズオブローズ） − 8枠（マイネルクオリア・ダーコ）",
+          "probabilityPct": 11.468675,
+          "oddsLow": 15.1,
+          "oddsHigh": 15.1,
+          "expectedMultiplierLow": 1.73177,
+          "expectedMultiplierHigh": 1.73177,
+          "researchScore": 0.069936936,
           "riskPenalty": 1.2,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "040708",
-          "label": "4番 テリオスララ − 7番 レザベーション − 8番 スマートワイス",
-          "probabilityPct": 4.162239,
-          "oddsLow": 36.8,
-          "oddsHigh": 36.8,
-          "expectedMultiplierLow": 1.531704,
-          "expectedMultiplierHigh": 1.531704,
-          "researchScore": 0.013831745,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
+          "sourceScope": "same_day_morning_real_odds"
         },
         {
           "betType": "wide",
           "betTypeLabel": "ワイド",
-          "candidateID": "0312",
-          "label": "3番 ブエナオンダ − 12番 キョウエイブリッサ",
-          "probabilityPct": 9.933,
-          "oddsLow": 11.6,
-          "oddsHigh": 12.4,
-          "expectedMultiplierLow": 1.152228,
-          "expectedMultiplierHigh": 1.231692,
-          "researchScore": 0.012600673,
+          "candidateID": "0316",
+          "label": "16番 ダーコ − 3番 レダアトミカ",
+          "probabilityPct": 13.579,
+          "oddsLow": 11.9,
+          "oddsHigh": 12.8,
+          "expectedMultiplierLow": 1.615901,
+          "expectedMultiplierHigh": 1.738112,
+          "researchScore": 0.069694331,
           "riskPenalty": 1.2,
-          "sourceScope": "chaos_priority_all_live_wide_pairs"
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "trio",
+          "betTypeLabel": "3連複",
+          "candidateID": "031316",
+          "label": "3番 レダアトミカ − 13番 トレベルオール − 16番 ダーコ",
+          "probabilityPct": 3.445049,
+          "oddsLow": 97.8,
+          "oddsHigh": 97.8,
+          "expectedMultiplierLow": 3.369258,
+          "expectedMultiplierHigh": 3.369258,
+          "researchScore": 0.051013812,
+          "riskPenalty": 1.6,
+          "sourceScope": "same_day_morning_real_odds"
+        }
+      ],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050109",
+      "venue": "東京",
+      "raceNumber": 9,
+      "raceName": "神奈川新聞杯",
+      "startTime": "14:25",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050109",
+      "venue": "京都",
+      "raceNumber": 9,
+      "raceName": "木津川特別",
+      "startTime": "14:35",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "C",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 7,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030110",
+      "venue": "福島",
+      "raceNumber": 10,
+      "raceName": "飯坂温泉特別",
+      "startTime": "14:45",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "A",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "11",
+        "label": "11番 タナブイハチターボ",
+        "probabilityPct": 43.351723,
+        "oddsLow": 3.0,
+        "oddsHigh": 3.6,
+        "expectedMultiplierLow": 1.300552,
+        "expectedMultiplierHigh": 1.560662,
+        "researchScore": 0.130294471,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "11",
+          "label": "11番 タナブイハチターボ",
+          "probabilityPct": 43.351723,
+          "oddsLow": 3.0,
+          "oddsHigh": 3.6,
+          "expectedMultiplierLow": 1.300552,
+          "expectedMultiplierHigh": 1.560662,
+          "researchScore": 0.130294471,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "trio",
+          "betTypeLabel": "3連複",
+          "candidateID": "011116",
+          "label": "1番 デアリングエア − 11番 タナブイハチターボ − 16番 アイルドリアン",
+          "probabilityPct": 3.98387,
+          "oddsLow": 114.1,
+          "oddsHigh": 114.1,
+          "expectedMultiplierLow": 4.545595,
+          "expectedMultiplierHigh": 4.545595,
+          "researchScore": 0.088282435,
+          "riskPenalty": 1.6,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0111",
+          "label": "11番 タナブイハチターボ − 1番 デアリングエア",
+          "probabilityPct": 10.573,
+          "oddsLow": 15.8,
+          "oddsHigh": 16.6,
+          "expectedMultiplierLow": 1.670534,
+          "expectedMultiplierHigh": 1.755118,
+          "researchScore": 0.059079633,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050110",
+      "venue": "東京",
+      "raceNumber": 10,
+      "raceName": "ノベンバーS",
+      "startTime": "15:00",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 2,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 5,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050110",
+      "venue": "京都",
+      "raceNumber": 10,
+      "raceName": "貴船S",
+      "startTime": "15:10",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "A",
+      "chaosLevel": 3,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "05",
+        "label": "5番 ルクスデイジー",
+        "probabilityPct": 53.922091,
+        "oddsLow": 2.1,
+        "oddsHigh": 3.0,
+        "expectedMultiplierLow": 1.132364,
+        "expectedMultiplierHigh": 1.617663,
+        "researchScore": 0.071373437,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "05",
+          "label": "5番 ルクスデイジー",
+          "probabilityPct": 53.922091,
+          "oddsLow": 2.1,
+          "oddsHigh": 3.0,
+          "expectedMultiplierLow": 1.132364,
+          "expectedMultiplierHigh": 1.617663,
+          "researchScore": 0.071373437,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0111",
+          "label": "1番 メイショウバルク − 11番 シュヴァルボヌール",
+          "probabilityPct": 9.452,
+          "oddsLow": 13.1,
+          "oddsHigh": 14.9,
+          "expectedMultiplierLow": 1.238212,
+          "expectedMultiplierHigh": 1.408348,
+          "researchScore": 0.018763165,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "trio",
+          "betTypeLabel": "3連複",
+          "candidateID": "010511",
+          "label": "1番 メイショウバルク − 5番 ルクスデイジー − 11番 シュヴァルボヌール",
+          "probabilityPct": 4.403725,
+          "oddsLow": 36.7,
+          "oddsHigh": 36.7,
+          "expectedMultiplierLow": 1.616167,
+          "expectedMultiplierHigh": 1.616167,
+          "researchScore": 0.016958938,
+          "riskPenalty": 1.6,
+          "sourceScope": "same_day_morning_real_odds"
         }
       ],
       "qualifyingPoolCount": 3,
@@ -2302,7 +3536,7 @@
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2310,23 +3544,23 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
         },
         {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2334,15 +3568,15 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2350,7 +3584,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": true,
           "candidateScope": "all_saved_outcomes"
@@ -2358,7 +3592,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2366,7 +3600,7 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2374,266 +3608,32 @@
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     },
     {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041111",
-      "venue": "東京",
+      "raceDate": "2026-11-07",
+      "raceID": "202603030111",
+      "venue": "福島",
       "raceNumber": 11,
-      "raceName": "天皇賞(秋)",
-      "startTime": "15:40",
-      "recommendationStatus": "candidate",
-      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
-      "battleGrade": "S",
-      "chaosLevel": 4,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 136,
-      "bestBet": {
-        "betType": "trio",
-        "betTypeLabel": "3連複",
-        "candidateID": "010713",
-        "label": "1番 クロワデュノール − 7番 マスカレードボール − 13番 リアライズシリウス",
-        "probabilityPct": 7.066664,
-        "oddsLow": 25.6,
-        "oddsHigh": 25.6,
-        "expectedMultiplierLow": 1.809066,
-        "expectedMultiplierHigh": 1.809066,
-        "researchScore": 0.035733735,
-        "riskPenalty": 1.6,
-        "sourceScope": "all_saved_odds_outcomes"
-      },
-      "betRecommendations": [
-        {
-          "betType": "trio",
-          "betTypeLabel": "3連複",
-          "candidateID": "010713",
-          "label": "1番 クロワデュノール − 7番 マスカレードボール − 13番 リアライズシリウス",
-          "probabilityPct": 7.066664,
-          "oddsLow": 25.6,
-          "oddsHigh": 25.6,
-          "expectedMultiplierLow": 1.809066,
-          "expectedMultiplierHigh": 1.809066,
-          "researchScore": 0.035733735,
-          "riskPenalty": 1.6,
-          "sourceScope": "all_saved_odds_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "betTypeLabel": "3連単",
-          "candidateID": "071301",
-          "label": "7番 マスカレードボール → 13番 リアライズシリウス → 1番 クロワデュノール",
-          "probabilityPct": 1.053558,
-          "oddsLow": 172.3,
-          "oddsHigh": 172.3,
-          "expectedMultiplierLow": 1.815281,
-          "expectedMultiplierHigh": 1.815281,
-          "researchScore": 0.004294729,
-          "riskPenalty": 2.0,
-          "sourceScope": "all_saved_odds_outcomes"
-        }
-      ],
-      "qualifyingPoolCount": 2,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202608041112",
-      "venue": "京都",
-      "raceNumber": 12,
-      "raceName": "3歳以上2勝クラス",
-      "startTime": "16:05",
+      "raceName": "キビタキS",
+      "startTime": "15:20",
       "recommendationStatus": "skip",
-      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
-      "battleGrade": "見送り",
+      "reason": "9券種を確認しましたが、事前固定した確率・期待値条件を満たす候補がありません。",
+      "battleGrade": "A",
       "chaosLevel": 5,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 78,
-      "bestBet": null,
-      "betRecommendations": [],
-      "qualifyingPoolCount": 2,
-      "pendingBetTypes": [],
-      "coverage": [
-        {
-          "betType": "win",
-          "label": "単勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "place",
-          "label": "複勝",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "frame_quinella",
-          "label": "枠連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "quinella",
-          "label": "馬連",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "wide",
-          "label": "ワイド",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": true,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
-        },
-        {
-          "betType": "exacta",
-          "label": "馬単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trio",
-          "label": "3連複",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "trifecta",
-          "label": "3連単",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        },
-        {
-          "betType": "support",
-          "label": "応援馬券",
-          "sourceStatus": "matched",
-          "realOddsAvailable": true,
-          "qualifyingCandidate": false,
-          "candidateScope": "all_saved_outcomes"
-        }
-      ],
-      "formalRecommendation": false,
-      "autoBetEnabled": false,
-      "stakeSizingEnabled": false
-    },
-    {
-      "raceDate": "2026-11-01",
-      "raceID": "202605041112",
-      "venue": "東京",
-      "raceNumber": 12,
-      "raceName": "清里特別",
-      "startTime": "16:25",
-      "recommendationStatus": "odds_pending",
-      "reason": "実オッズの初回保存が未完了の券種があります。推定オッズでは補いません。",
-      "battleGrade": "見送り",
-      "chaosLevel": 4,
-      "wideChaosPriorityApplied": true,
-      "wideChaosPairsScanned": 91,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
       "bestBet": null,
       "betRecommendations": [],
       "qualifyingPoolCount": 0,
-      "pendingBetTypes": [
-        "place",
-        "frame_quinella",
-        "support"
-      ],
+      "pendingBetTypes": [],
       "coverage": [
         {
           "betType": "win",
           "label": "単勝",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2641,23 +3641,23 @@
         {
           "betType": "place",
           "label": "複勝",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "frame_quinella",
           "label": "枠連",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "quinella",
           "label": "馬連",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2665,15 +3665,15 @@
         {
           "betType": "wide",
           "label": "ワイド",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "chaos_priority_all_live_wide_pairs"
+          "candidateScope": "all_saved_outcomes"
         },
         {
           "betType": "exacta",
           "label": "馬単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2681,7 +3681,7 @@
         {
           "betType": "trio",
           "label": "3連複",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2689,7 +3689,7 @@
         {
           "betType": "trifecta",
           "label": "3連単",
-          "sourceStatus": "matched",
+          "sourceStatus": "ready",
           "realOddsAvailable": true,
           "qualifyingCandidate": false,
           "candidateScope": "all_saved_outcomes"
@@ -2697,15 +3697,628 @@
         {
           "betType": "support",
           "label": "応援馬券",
-          "sourceStatus": "held",
-          "realOddsAvailable": false,
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
           "qualifyingCandidate": false,
-          "candidateScope": "display_candidates_or_none"
+          "candidateScope": "all_saved_outcomes"
         }
       ],
       "formalRecommendation": false,
       "autoBetEnabled": false,
-      "stakeSizingEnabled": false
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050111",
+      "venue": "東京",
+      "raceNumber": 11,
+      "raceName": "京王杯2歳S",
+      "startTime": "15:35",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "wide",
+        "betTypeLabel": "ワイド",
+        "candidateID": "0203",
+        "label": "2番 フレイコン − 3番 ニシノトラノスケ",
+        "probabilityPct": 8.062,
+        "oddsLow": 27.2,
+        "oddsHigh": 29.7,
+        "expectedMultiplierLow": 2.192864,
+        "expectedMultiplierHigh": 2.394414,
+        "researchScore": 0.08014058,
+        "riskPenalty": 1.2,
+        "sourceScope": "same_day_morning_real_odds_all_pairs"
+      },
+      "betRecommendations": [
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0203",
+          "label": "2番 フレイコン − 3番 ニシノトラノスケ",
+          "probabilityPct": 8.062,
+          "oddsLow": 27.2,
+          "oddsHigh": 29.7,
+          "expectedMultiplierLow": 2.192864,
+          "expectedMultiplierHigh": 2.394414,
+          "researchScore": 0.08014058,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        }
+      ],
+      "qualifyingPoolCount": 1,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050111",
+      "venue": "京都",
+      "raceNumber": 11,
+      "raceName": "室町S",
+      "startTime": "15:45",
+      "recommendationStatus": "skip",
+      "reason": "9券種を確認しましたが、事前固定した確率・期待値条件を満たす候補がありません。",
+      "battleGrade": "S",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 0,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030112",
+      "venue": "福島",
+      "raceNumber": 12,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "16:00",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "B",
+      "chaosLevel": 4,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "place",
+        "betTypeLabel": "複勝",
+        "candidateID": "05",
+        "label": "5番 コイオステソーロ",
+        "probabilityPct": 63.068041,
+        "oddsLow": 1.9,
+        "oddsHigh": 2.5,
+        "expectedMultiplierLow": 1.198293,
+        "expectedMultiplierHigh": 1.576701,
+        "researchScore": 0.125059511,
+        "riskPenalty": 1.0,
+        "sourceScope": "same_day_morning_real_odds"
+      },
+      "betRecommendations": [
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "05",
+          "label": "5番 コイオステソーロ",
+          "probabilityPct": 63.068041,
+          "oddsLow": 1.9,
+          "oddsHigh": 2.5,
+          "expectedMultiplierLow": 1.198293,
+          "expectedMultiplierHigh": 1.576701,
+          "researchScore": 0.125059511,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        },
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0506",
+          "label": "5番 コイオステソーロ − 6番 エイシンマールス",
+          "probabilityPct": 20.592,
+          "oddsLow": 5.7,
+          "oddsHigh": 6.2,
+          "expectedMultiplierLow": 1.173744,
+          "expectedMultiplierHigh": 1.276704,
+          "researchScore": 0.02981447,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "quinella",
+          "betTypeLabel": "馬連",
+          "candidateID": "0506",
+          "label": "5番 コイオステソーロ − 6番 エイシンマールス",
+          "probabilityPct": 11.437694,
+          "oddsLow": 9.8,
+          "oddsHigh": 9.8,
+          "expectedMultiplierLow": 1.120894,
+          "expectedMultiplierHigh": 1.120894,
+          "researchScore": 0.011522905,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds"
+        }
+      ],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050112",
+      "venue": "東京",
+      "raceNumber": 12,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "16:10",
+      "recommendationStatus": "skip",
+      "reason": "勝負度がC以下のため、期待値候補があってもこのレースは見送ります。",
+      "battleGrade": "見送り",
+      "chaosLevel": 3,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": null,
+      "betRecommendations": [],
+      "qualifyingPoolCount": 4,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202608050112",
+      "venue": "京都",
+      "raceNumber": 12,
+      "raceName": "3歳以上1勝クラス",
+      "startTime": "16:25",
+      "recommendationStatus": "candidate",
+      "reason": "勝負度B以上で、保存済み実オッズを使った9券種横断条件を満たしました。",
+      "battleGrade": "S",
+      "chaosLevel": 5,
+      "wideChaosPriorityApplied": false,
+      "wideChaosPairsScanned": 0,
+      "bestBet": {
+        "betType": "wide",
+        "betTypeLabel": "ワイド",
+        "candidateID": "0309",
+        "label": "9番 アグレイビューティ − 3番 パラディオン",
+        "probabilityPct": 8.922,
+        "oddsLow": 20.5,
+        "oddsHigh": 21.6,
+        "expectedMultiplierLow": 1.82901,
+        "expectedMultiplierHigh": 1.927152,
+        "researchScore": 0.061636894,
+        "riskPenalty": 1.2,
+        "sourceScope": "same_day_morning_real_odds_all_pairs"
+      },
+      "betRecommendations": [
+        {
+          "betType": "wide",
+          "betTypeLabel": "ワイド",
+          "candidateID": "0309",
+          "label": "9番 アグレイビューティ − 3番 パラディオン",
+          "probabilityPct": 8.922,
+          "oddsLow": 20.5,
+          "oddsHigh": 21.6,
+          "expectedMultiplierLow": 1.82901,
+          "expectedMultiplierHigh": 1.927152,
+          "researchScore": 0.061636894,
+          "riskPenalty": 1.2,
+          "sourceScope": "same_day_morning_real_odds_all_pairs"
+        },
+        {
+          "betType": "place",
+          "betTypeLabel": "複勝",
+          "candidateID": "02",
+          "label": "2番 ロードスタニング",
+          "probabilityPct": 35.525646,
+          "oddsLow": 3.3,
+          "oddsHigh": 4.1,
+          "expectedMultiplierLow": 1.172346,
+          "expectedMultiplierHigh": 1.456551,
+          "researchScore": 0.06122703,
+          "riskPenalty": 1.0,
+          "sourceScope": "same_day_morning_real_odds"
+        }
+      ],
+      "qualifyingPoolCount": 2,
+      "pendingBetTypes": [],
+      "coverage": [
+        {
+          "betType": "win",
+          "label": "単勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "place",
+          "label": "複勝",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "frame_quinella",
+          "label": "枠連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "quinella",
+          "label": "馬連",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "wide",
+          "label": "ワイド",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": true,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "exacta",
+          "label": "馬単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trio",
+          "label": "3連複",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "trifecta",
+          "label": "3連単",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        },
+        {
+          "betType": "support",
+          "label": "応援馬券",
+          "sourceStatus": "ready",
+          "realOddsAvailable": true,
+          "qualifyingCandidate": false,
+          "candidateScope": "all_saved_outcomes"
+        }
+      ],
+      "formalRecommendation": false,
+      "autoBetEnabled": false,
+      "stakeSizingEnabled": false,
+      "snapshotStage": "morning",
+      "realOddsSnapshot": true
     }
   ]
 }
