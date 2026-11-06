@@ -17,6 +17,23 @@ emit_result() {
   echo "has_races=${has_races}" >> "$GITHUB_OUTPUT"
 }
 
+# On a normal weekend, treat inaccessible/ambiguous calendar sources as a
+# reason to TRY the normal live monitor, never as proof of a race day.
+# The monitor still fetches the actual race schedule and can publish only
+# within its unchanged formal T-10 evidence window. A verified JRA 404
+# continues to suppress a no-race day. Weekday ambiguity remains blocked.
+allow_weekend_schedule_probe() {
+  local reason="$1"
+  local weekday
+  weekday=$(date -d "${date8:0:4}-${date8:4:2}-${date8:6:2}" '+%u')
+  if [ "$weekday" -eq 6 ] || [ "$weekday" -eq 7 ]; then
+    emit_result true
+    echo "::warning::${date8}の開催判定は未確認（${reason}）。土日のため実レース一覧を確認する本番監視だけを許可します。開催・保存成功の証拠にはしません。"
+    return 0
+  fi
+  return 1
+}
+
 # Primary source: same race-list source used by the live monitor.  A positive
 # race-ID parse is enough to start.  Zero IDs are NOT trusted as a no-race day,
 # because an upstream HTML change can look exactly like zero races; official JRA
@@ -55,6 +72,7 @@ jra_status=$?
 set -e
 
 if [ "$jra_status" -ne 0 ]; then
+  if allow_weekend_schedule_probe "JRA通信失敗"; then exit 0; fi
   echo "::error::${date8}のJRA公式開催確認に通信失敗しました。開催なしとは扱いません。"
   exit 1
 fi
@@ -65,6 +83,7 @@ if [ "$jra_code" = '200' ]; then
     echo "JRA race day detected via official JRA fallback: ${date8}"
     exit 0
   fi
+  if allow_weekend_schedule_probe "JRA番組解析が不確実"; then exit 0; fi
   echo "::error::${date8}のJRA公式ページは取得できましたが競馬番組を確認できません。解析失敗として停止します。"
   exit 1
 fi
@@ -75,5 +94,6 @@ if [ "$jra_code" = '404' ]; then
   exit 0
 fi
 
+if allow_weekend_schedule_probe "JRA HTTP ${jra_code}"; then exit 0; fi
 echo "::error::${date8}のJRA公式開催確認がHTTP ${jra_code}でした。開催なしとは扱わず停止します。"
 exit 1
