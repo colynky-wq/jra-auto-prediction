@@ -65,6 +65,16 @@ jobs:
             evening=true
           fi
 
+          # GitHub scheduled workflows can start many hours late. If a
+          # previous-evening schedule finally starts after JST midnight,
+          # the calendar day is already the intended race day. Never shift
+          # it to tomorrow, and never label a post-midnight capture as
+          # a genuine previous-evening observation.
+          if [ "$event_name" = 'schedule' ] && [ "$evening" = true ] && [ "$jst_hour" -lt 12 ]; then
+            echo "::warning::Delayed previous-evening job ran after JST midnight; capture today's morning snapshot, not tomorrow's races."
+            evening=false
+          fi
+
           if [ -n '${{ github.event.inputs.target_date }}' ]; then
             date8='${{ github.event.inputs.target_date }}'
           elif [ "$evening" = true ]; then
