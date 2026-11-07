@@ -44,7 +44,7 @@ permissions:
 
 concurrency:
   group: keibaai-live-result-sync
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   sync-results:
@@ -177,12 +177,11 @@ jobs:
                 echo '::warning::Downstream result/validation build failed; publish completed result receipts independently and retry validation next cycle.'
                 # ResultData is an independently validated, completed-result snapshot.
                 # Do not publish partially regenerated research/validation products.
-                if [ -n "$(git status --porcelain -- ResultData.json reports/$(
-                  TZ=Asia/Tokyo date +%Y%m%d
-                )/ResultData.json)" ]; then
+                result_day="${KEIBAAI_RESULT_DATE:-$(TZ=Asia/Tokyo date +%Y%m%d)}"
+                if [ -n "$(git status --porcelain -- ResultData.json "reports/$result_day/ResultData.json")" ]; then
                   git add -- ResultData.json
-                  if [ -f "reports/$(TZ=Asia/Tokyo date +%Y%m%d)/ResultData.json" ]; then
-                    git add -- "reports/$(TZ=Asia/Tokyo date +%Y%m%d)/ResultData.json"
+                  if [ -f "reports/$result_day/ResultData.json" ]; then
+                    git add -- "reports/$result_day/ResultData.json"
                   fi
                   git commit -m "Publish independently completed KeibaAI results" || true
                   if ! git push origin HEAD:main; then
