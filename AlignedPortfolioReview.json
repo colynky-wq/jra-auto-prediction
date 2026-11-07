@@ -3,7 +3,7 @@
   "version": "aligned-portfolio-review-v1",
   "inputPolicy": "formal-portfolio-inputs-v1",
   "projectionState": "verified",
-  "generatedAtJST": "2026-11-03T00:19:40+09:00",
+  "generatedAtJST": "2026-11-07T09:50:55+09:00",
   "startDate": "2026-11-03",
   "protocolVersion": "aligned-portfolio-confirmation-v1-20261102",
   "protocolFingerprint": "55ee84560014f5f4dec94996da103855c0d6a926f386973934922e894a293d79",
@@ -38,14 +38,14 @@
   },
   "aligned": {
     "countsAreCurrent": true,
-    "racesObserved": 0,
+    "racesObserved": 2,
     "matchedResultRaces": 0,
     "overall": {
-      "races": 0,
+      "races": 2,
       "selectedRaces": 0,
-      "skippedRaces": 0,
-      "participationRatePct": null,
-      "skipRatePct": null,
+      "skippedRaces": 2,
+      "participationRatePct": 0.0,
+      "skipRatePct": 100.0,
       "settledSelectedRaces": 0,
       "resultsPendingSelectedRaces": 0,
       "hitAnyRaces": 0,
@@ -61,13 +61,16 @@
       "returnIndex": null
     },
     "first100": {
-      "raceIDs": [],
+      "raceIDs": [
+        "202603030101",
+        "202605050101"
+      ],
       "complete": false,
-      "races": 0,
+      "races": 2,
       "selectedRaces": 0,
-      "skippedRaces": 0,
-      "participationRatePct": null,
-      "skipRatePct": null,
+      "skippedRaces": 2,
+      "participationRatePct": 0.0,
+      "skipRatePct": 100.0,
       "settledSelectedRaces": 0,
       "resultsPendingSelectedRaces": 0,
       "hitAnyRaces": 0,
@@ -98,13 +101,13 @@
           "sumPredictedHits": 0
         },
         "sameWideRuleSkipped": {
-          "races": 0,
-          "racesWithCandidates": 0,
+          "races": 2,
+          "racesWithCandidates": 2,
           "fullySettledRaces": 0,
-          "committedStakeYen": 0,
-          "tickets": 0,
+          "committedStakeYen": 200,
+          "tickets": 2,
           "settledTickets": 0,
-          "pendingTickets": 0,
+          "pendingTickets": 2,
           "hitTickets": 0,
           "stakeYen": 0,
           "returnYen": 0,
@@ -494,7 +497,29 @@
           "returnIndex": null,
           "sumPredictedHits": 0
         },
-        "byDay": []
+        "byDay": [
+          {
+            "raceDate": "2026-11-07",
+            "races": 2,
+            "selectedRaces": 0,
+            "skippedRaces": 2,
+            "participationRatePct": 0.0,
+            "skipRatePct": 100.0,
+            "settledSelectedRaces": 0,
+            "resultsPendingSelectedRaces": 0,
+            "hitAnyRaces": 0,
+            "hitRatePctOfSettledSelected": null,
+            "profitableRaces": 0,
+            "profitableRatePctOfSettledSelected": null,
+            "torigamiRaces": 0,
+            "torigamiRatePctOfSettledSelected": null,
+            "torigamiRatePctOfHitRaces": null,
+            "stakeYen": 0,
+            "returnYen": 0,
+            "profitYen": 0,
+            "returnIndex": null
+          }
+        ]
       }
     },
     "confirmation101to200": {
@@ -936,7 +961,7 @@
     }
   },
   "quality": {
-    "status": "waiting_for_first_capture",
+    "status": "collecting",
     "fullInputEvidenceRequired": true,
     "issues": [],
     "invalidCaptureCount": 0,
@@ -944,15 +969,15 @@
     "resultExclusions": []
   },
   "acceptance": {
-    "status": "awaiting_first_capture",
-    "firstCaptureVerified": false,
+    "status": "awaiting_first_settlement",
+    "firstCaptureVerified": true,
     "firstSelectedSettlementVerified": false,
     "restartAndPublicationLiveVerified": false,
     "restartAndPublicationEvidence": "synthetic CI coverage only; live session restart is not inferred"
   },
   "betaDecision": {
     "minimumRaces": 300,
-    "verifiedAlignedRaces": 0,
+    "verifiedAlignedRaces": 2,
     "matchedResultRaces": 0,
     "eligibleForResearchBeta": false,
     "blockReasons": [
@@ -964,7 +989,101 @@
     "profitabilityProven": false
   },
   "cohortLocks": {},
-  "notificationEvents": [],
-  "races": [],
+  "notificationEvents": [
+    {
+      "event": "first_capture_verified",
+      "key": "first_capture_verified:c6f81788cc666e97f9d7bd59dbd6bba7999135c4bf58b15419bc8a2055f6cc82",
+      "raceDate": "2026-11-07",
+      "raceID": "202603030101"
+    }
+  ],
+  "races": [
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202603030101",
+      "venue": "福島",
+      "raceNumber": 1,
+      "raceName": "2歳未勝利",
+      "startTime": "09:45",
+      "chaosLevel": 2,
+      "chaosStars": "★★☆☆☆",
+      "battleGrade": "B",
+      "scope": "prospective",
+      "ruleVersion": "portfolio-shadow-v1-20261019",
+      "planType": "skip",
+      "planLabel": "見送り",
+      "reason": "堅め想定でも単勝の確率・期待値条件を満たしません",
+      "legs": [],
+      "totalStakeYen": 0,
+      "settled": false,
+      "returnYen": null,
+      "profitYen": null,
+      "hitAny": null,
+      "profitable": null,
+      "torigami": null,
+      "inputFingerprint": "c6f81788cc666e97f9d7bd59dbd6bba7999135c4bf58b15419bc8a2055f6cc82",
+      "inputRecordedAtJST": "2026-11-07T09:33:34.930722+09:00",
+      "resultState": "awaiting_results",
+      "actualFinish": {},
+      "commonWideReference": [
+        {
+          "betType": "wide",
+          "candidateID": "0213",
+          "label": "2番 アフィーリア − 13番 コウユーキミガイテ",
+          "probabilityPct": 8.614,
+          "oddsLow": 14.4,
+          "oddsHigh": 16.3,
+          "expectedMultiplierLow": 1.24,
+          "unitYen": 100,
+          "hit": null,
+          "payoutYen": null
+        }
+      ],
+      "referenceSettled": false
+    },
+    {
+      "raceDate": "2026-11-07",
+      "raceID": "202605050101",
+      "venue": "東京",
+      "raceNumber": 1,
+      "raceName": "2歳未勝利",
+      "startTime": "09:55",
+      "chaosLevel": 1,
+      "chaosStars": "★☆☆☆☆",
+      "battleGrade": "C",
+      "scope": "prospective",
+      "ruleVersion": "portfolio-shadow-v1-20261019",
+      "planType": "skip",
+      "planLabel": "見送り",
+      "reason": "勝負度がC以下のため研究プランを作りません",
+      "legs": [],
+      "totalStakeYen": 0,
+      "settled": false,
+      "returnYen": null,
+      "profitYen": null,
+      "hitAny": null,
+      "profitable": null,
+      "torigami": null,
+      "inputFingerprint": "6c2a15ebe569fad092b2d5c3b402a726573db167d250c975dec9ae515159ea96",
+      "inputRecordedAtJST": "2026-11-07T09:43:31.655774+09:00",
+      "resultState": "awaiting_results",
+      "actualFinish": {},
+      "commonWideReference": [
+        {
+          "betType": "wide",
+          "candidateID": "0205",
+          "label": "2番 エンドクレジット − 5番 ブリスブリンク",
+          "probabilityPct": 7.997,
+          "oddsLow": 14.2,
+          "oddsHigh": 17.1,
+          "expectedMultiplierLow": 1.136,
+          "unitYen": 100,
+          "hit": null,
+          "payoutYen": null
+        }
+      ],
+      "referenceSettled": false
+    }
+  ],
   "interpretation": "Legacy, aligned, post-hoc reconstruction and shadow variants must not be combined. ROI is descriptive; 300 races permits research beta review only."
 }
