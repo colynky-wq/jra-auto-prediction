@@ -232,6 +232,22 @@ def main() -> None:
         by_race[rid] = built
         added_or_refreshed += 1
 
+        # Persist each independently completed race immediately. A later race
+        # may take minutes to resolve through JRA's routed result pages;
+        # it must not prevent earlier confirmed results from being recoverable.
+        partial = sorted(
+            by_race.values(),
+            key=lambda r: (
+                str(r.get("startTime") or ""),
+                str(r.get("venue") or ""),
+                int(r.get("raceNumber") or 0),
+                str(r.get("raceID") or ""),
+            ),
+        )
+        write_json(RESULTDATA_PATH, partial)
+        write_json(day_path, partial)
+        print("COMPLETED_RESULT_PERSISTED:", rid, "total:", len(partial), flush=True)
+
     output = list(by_race.values())
     output.sort(
         key=lambda r: (
