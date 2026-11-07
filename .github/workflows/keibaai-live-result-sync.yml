@@ -43,7 +43,9 @@ permissions:
   contents: write
 
 concurrency:
-  group: keibaai-live-result-sync
+  # Allow the corrected result publisher to run without waiting for an old
+  # four-hour runner whose job definition cannot be updated mid-flight.
+  group: keibaai-live-result-sync-20261107
   cancel-in-progress: false
 
 jobs:
@@ -113,7 +115,7 @@ jobs:
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
           elif [ "${{ github.event_name }}" = 'push' ]; then
-            minutes='240'
+            minutes='35'
           elif [ "${{ github.event.schedule }}" = '45 23 * * *' ]; then
             minutes='330'
           else
