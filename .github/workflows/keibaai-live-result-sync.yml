@@ -156,7 +156,43 @@ jobs:
               git clean -fd -- reports AlignedPortfolioReview.json AlignedPortfolioReview.md ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json >/dev/null 2>&1 || true
 
               cycle_failed=0
-              python production/build_result_data_live.py || cycle_failed=1
+              python -u production/build_result_data_live.py || cycle_failed=1
+
+              # Publish independently completed results BEFORE optional research.
+              # A slow/failed downstream job must never hold confirmed results.
+              result_day="${KEIBAAI_RESULT_DATE:-$(TZ=Asia/Tokyo date +%Y%m%d)}"
+              day_result="reports/$result_day/ResultData.json"
+              if [ -f "$day_result" ] && [ -n "$(git status --porcelain -- ResultData.json "$day_result")" ]; then
+                git add -- ResultData.json "$day_result"
+                git commit -m "Publish KeibaAI completed results before downstream research"
+                results_published=0
+                for publish_attempt in 1 2 3 4 5; do
+                  if ! git fetch --no-tags origin main; then
+                    echo "::warning::Result publish fetch retry $publish_attempt"
+                    sleep 2
+                    continue
+                  fi
+                  if ! git rebase origin/main; then
+                    echo '::warning::Result publish rebase conflict; defer to next cycle.'
+                    git rebase --abort || true
+                    break
+                  fi
+                  if git push origin HEAD:main; then
+                    results_published=1
+                    echo "COMPLETED_RESULTS_PUBLISHED: $result_day"
+                    break
+                  fi
+                  echo "::warning::Result publish push retry $publish_attempt"
+                  sleep 2
+                done
+                if [ "$results_published" -ne 1 ]; then
+                  echo '::error::Completed results were saved locally but not published; retry next cycle.'
+                  cycle_failed=1
+                fi
+              elif [ ! -f "$day_result" ]; then
+                echo "::warning::RESULT_DATA_NOT_YET_AVAILABLE for $result_day; see JRA result-fetch diagnostics."
+              fi
+
               if [ "$cycle_failed" -eq 0 ]; then python production/same_day_shadow_runtime.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/evaluate_same_day_shadow.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/same_day_shadow_portfolio_review.py || cycle_failed=1; fi
