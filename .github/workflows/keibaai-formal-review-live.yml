@@ -11,6 +11,9 @@ on:
       - 'production/portfolio_review_100_diagnostics.py'
       - 'production/refresh_portfolio_review_live.py'
       - 'production/aligned_portfolio_review.py'
+      # Trigger a fresh, read-only aligned audit as soon as confirmed results land.
+      - 'ResultData.json'
+      - 'reports/**/ResultData.json'
       - 'production/test_aligned_portfolio_review.py'
       - 'production/ALIGNED_PORTFOLIO_PROTOCOL.json'
       - 'production/portfolio_shadow_v2.py'
@@ -52,24 +55,13 @@ jobs:
       - name: Install offline evidence validation dependencies
         run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
-      - name: Verify strict formal review refresh, v2 shadow, and frozen 100R diagnostics
-        run: |
-          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_review_100_diagnostics.py production/refresh_portfolio_review_live.py production/portfolio_shadow.py production/portfolio_shadow_v2.py
-          python production/test_formal_10min_evidence.py
-          python production/test_portfolio_review_100.py
-          python production/test_portfolio_review_100_diagnostics.py
-          python production/test_refresh_portfolio_review_live.py
-          python production/test_aligned_portfolio_review.py
-          python production/test_portfolio_shadow.py
-          python production/test_portfolio_shadow_v2.py
-
       - name: Publish aligned audit independently of legacy projections
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          for attempt in 1 2 3 4; do
+          for attempt in 1 2 3 4 5 6 7 8; do
             git fetch origin main
             git reset --hard origin/main
             audit_failed=0
@@ -88,6 +80,17 @@ jobs:
           done
           echo 'Unable to publish aligned audit state after bounded retries.' >&2
           exit 1
+
+      - name: Verify strict formal review refresh, v2 shadow, and frozen 100R diagnostics
+        run: |
+          python -m py_compile production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_review_100_diagnostics.py production/refresh_portfolio_review_live.py production/portfolio_shadow.py production/portfolio_shadow_v2.py
+          python production/test_formal_10min_evidence.py
+          python production/test_portfolio_review_100.py
+          python production/test_portfolio_review_100_diagnostics.py
+          python production/test_refresh_portfolio_review_live.py
+          python production/test_aligned_portfolio_review.py
+          python production/test_portfolio_shadow.py
+          python production/test_portfolio_shadow_v2.py
 
       - name: Refresh review, freeze v2 shadow, and publish material diagnostics
         shell: bash
