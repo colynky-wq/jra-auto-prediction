@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-11-07T11:23:26+09:00",
+  "generatedAtJST": "2026-11-07T11:27:58+09:00",
   "baselineRuleVersion": "portfolio-shadow-v1-20261019",
   "prospectiveStartDate": "2026-11-02",
   "evidencePolicy": "2026-11-01以前はV2定義後の再生であり、V2前向き成績には数えない。",
@@ -36,8 +36,8 @@
         "returnIndex": 2.512903
       },
       "prospective": {
-        "racesSeen": 11,
-        "selectedRaces": 2,
+        "racesSeen": 12,
+        "selectedRaces": 3,
         "settledSelectedRaces": 0,
         "hitAnyRaces": 0,
         "profitableRaces": 0,
@@ -74,15 +74,15 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 2,
-            "selectedRaces": 2,
+            "racesSeen": 3,
+            "selectedRaces": 3,
             "settledSelectedRaces": 0,
             "hitAnyRaces": 0,
             "profitableRaces": 0,
             "stakeYen": 0,
             "returnYen": 0,
             "returnIndex": null,
-            "meanSelectedWideFormalTop3Coverage": 1.5
+            "meanSelectedWideFormalTop3Coverage": 1.333
           },
           "S": {
             "racesSeen": 0,
@@ -6380,6 +6380,73 @@
           ],
           "selectedWideTop3CoverageCount": 0,
           "selectedWideTop3CoveredNumbers": []
+        },
+        {
+          "raceDate": "2026-11-07",
+          "raceID": "202608050104",
+          "venue": "京都",
+          "raceNumber": 4,
+          "raceName": "2歳未勝利",
+          "startTime": "11:35",
+          "chaosLevel": 5,
+          "chaosStars": "★★★★★",
+          "battleGrade": "A",
+          "challenger": "battle_a_only",
+          "scope": "prospective",
+          "ruleVersion": "portfolio-shadow-v2-20261101",
+          "planType": "wide_focus",
+          "planLabel": "ワイド中心",
+          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
+          "legs": [
+            {
+              "betType": "wide",
+              "candidateID": "0615",
+              "label": "6番 グラシアレスインク − 15番 クラルテロワ",
+              "numbers": [
+                6,
+                15
+              ],
+              "probabilityPct": 5.185,
+              "oddsLow": 35.9,
+              "oddsHigh": 38.7,
+              "expectedMultiplierLow": 1.861,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            },
+            {
+              "betType": "wide",
+              "candidateID": "0614",
+              "label": "6番 グラシアレスインク − 14番 コジアン",
+              "numbers": [
+                6,
+                14
+              ],
+              "probabilityPct": 6.211,
+              "oddsLow": 22.9,
+              "oddsHigh": 25.0,
+              "expectedMultiplierLow": 1.422,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            }
+          ],
+          "totalStakeYen": 200,
+          "settled": false,
+          "returnYen": null,
+          "profitYen": null,
+          "hitAny": null,
+          "profitable": null,
+          "torigami": null,
+          "formalTop3": [
+            2,
+            6,
+            13
+          ],
+          "selectedWideTop3CoverageCount": 1,
+          "selectedWideTop3CoveredNumbers": [
+            6
+          ]
         }
       ]
     },
@@ -6397,8 +6464,8 @@
         "returnIndex": 1.6375
       },
       "prospective": {
-        "racesSeen": 11,
-        "selectedRaces": 2,
+        "racesSeen": 12,
+        "selectedRaces": 3,
         "settledSelectedRaces": 0,
         "hitAnyRaces": 0,
         "profitableRaces": 0,
@@ -6435,15 +6502,15 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 2,
-            "selectedRaces": 2,
+            "racesSeen": 3,
+            "selectedRaces": 3,
             "settledSelectedRaces": 0,
             "hitAnyRaces": 0,
             "profitableRaces": 0,
             "stakeYen": 0,
             "returnYen": 0,
             "returnIndex": null,
-            "meanSelectedWideFormalTop3Coverage": 2.0
+            "meanSelectedWideFormalTop3Coverage": 1.667
           },
           "S": {
             "racesSeen": 0,
@@ -12527,6 +12594,73 @@
           ],
           "selectedWideTop3CoverageCount": 0,
           "selectedWideTop3CoveredNumbers": []
+        },
+        {
+          "raceDate": "2026-11-07",
+          "raceID": "202608050104",
+          "venue": "京都",
+          "raceNumber": 4,
+          "raceName": "2歳未勝利",
+          "startTime": "11:35",
+          "chaosLevel": 5,
+          "chaosStars": "★★★★★",
+          "battleGrade": "A",
+          "challenger": "top3_coverage",
+          "scope": "prospective",
+          "ruleVersion": "portfolio-shadow-v2-20261101",
+          "planType": "wide_focus",
+          "planLabel": "ワイド中心",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
+          "legs": [
+            {
+              "betType": "wide",
+              "candidateID": "0614",
+              "label": "6番 グラシアレスインク − 14番 コジアン",
+              "numbers": [
+                6,
+                14
+              ],
+              "probabilityPct": 6.211,
+              "oddsLow": 22.9,
+              "oddsHigh": 25.0,
+              "expectedMultiplierLow": 1.422,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            },
+            {
+              "betType": "wide",
+              "candidateID": "0615",
+              "label": "6番 グラシアレスインク − 15番 クラルテロワ",
+              "numbers": [
+                6,
+                15
+              ],
+              "probabilityPct": 5.185,
+              "oddsLow": 35.9,
+              "oddsHigh": 38.7,
+              "expectedMultiplierLow": 1.861,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            }
+          ],
+          "totalStakeYen": 200,
+          "settled": false,
+          "returnYen": null,
+          "profitYen": null,
+          "hitAny": null,
+          "profitable": null,
+          "torigami": null,
+          "formalTop3": [
+            2,
+            6,
+            13
+          ],
+          "selectedWideTop3CoverageCount": 1,
+          "selectedWideTop3CoveredNumbers": [
+            6
+          ]
         }
       ]
     },
@@ -12544,8 +12678,8 @@
         "returnIndex": 3.742857
       },
       "prospective": {
-        "racesSeen": 11,
-        "selectedRaces": 2,
+        "racesSeen": 12,
+        "selectedRaces": 3,
         "settledSelectedRaces": 0,
         "hitAnyRaces": 0,
         "profitableRaces": 0,
@@ -12582,15 +12716,15 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 2,
-            "selectedRaces": 2,
+            "racesSeen": 3,
+            "selectedRaces": 3,
             "settledSelectedRaces": 0,
             "hitAnyRaces": 0,
             "profitableRaces": 0,
             "stakeYen": 0,
             "returnYen": 0,
             "returnIndex": null,
-            "meanSelectedWideFormalTop3Coverage": 2.0
+            "meanSelectedWideFormalTop3Coverage": 1.667
           },
           "S": {
             "racesSeen": 0,
@@ -18511,6 +18645,73 @@
           ],
           "selectedWideTop3CoverageCount": 0,
           "selectedWideTop3CoveredNumbers": []
+        },
+        {
+          "raceDate": "2026-11-07",
+          "raceID": "202608050104",
+          "venue": "京都",
+          "raceNumber": 4,
+          "raceName": "2歳未勝利",
+          "startTime": "11:35",
+          "chaosLevel": 5,
+          "chaosStars": "★★★★★",
+          "battleGrade": "A",
+          "challenger": "combined",
+          "scope": "prospective",
+          "ruleVersion": "portfolio-shadow-v2-20261101",
+          "planType": "wide_focus",
+          "planLabel": "ワイド中心",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
+          "legs": [
+            {
+              "betType": "wide",
+              "candidateID": "0614",
+              "label": "6番 グラシアレスインク − 14番 コジアン",
+              "numbers": [
+                6,
+                14
+              ],
+              "probabilityPct": 6.211,
+              "oddsLow": 22.9,
+              "oddsHigh": 25.0,
+              "expectedMultiplierLow": 1.422,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            },
+            {
+              "betType": "wide",
+              "candidateID": "0615",
+              "label": "6番 グラシアレスインク − 15番 クラルテロワ",
+              "numbers": [
+                6,
+                15
+              ],
+              "probabilityPct": 5.185,
+              "oddsLow": 35.9,
+              "oddsHigh": 38.7,
+              "expectedMultiplierLow": 1.861,
+              "unitYen": 100,
+              "hit": null,
+              "payoutYen": null
+            }
+          ],
+          "totalStakeYen": 200,
+          "settled": false,
+          "returnYen": null,
+          "profitYen": null,
+          "hitAny": null,
+          "profitable": null,
+          "torigami": null,
+          "formalTop3": [
+            2,
+            6,
+            13
+          ],
+          "selectedWideTop3CoverageCount": 1,
+          "selectedWideTop3CoveredNumbers": [
+            6
+          ]
         }
       ]
     }
