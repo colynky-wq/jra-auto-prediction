@@ -174,7 +174,21 @@ jobs:
               if [ -f RaceData.json ]; then python production/all_bet_recommendation_shadow.py || echo '::warning::All-bet recommendation build failed for this cycle.'; fi
 
               if [ "$cycle_failed" -ne 0 ]; then
-                echo '::warning::Core result/validation build failed; retrying next cycle.'
+                echo '::warning::Downstream result/validation build failed; publish completed result receipts independently and retry validation next cycle.'
+                # ResultData is an independently validated, completed-result snapshot.
+                # Do not publish partially regenerated research/validation products.
+                if [ -n "$(git status --porcelain -- ResultData.json reports/$(
+                  TZ=Asia/Tokyo date +%Y%m%d
+                )/ResultData.json)" ]; then
+                  git add -- ResultData.json
+                  if [ -f "reports/$(TZ=Asia/Tokyo date +%Y%m%d)/ResultData.json" ]; then
+                    git add -- "reports/$(TZ=Asia/Tokyo date +%Y%m%d)/ResultData.json"
+                  fi
+                  git commit -m "Publish independently completed KeibaAI results" || true
+                  if ! git push origin HEAD:main; then
+                    echo '::warning::Result publish raced with main; retry next cycle without changing frozen predictions.'
+                  fi
+                fi
               elif [ -z "$(git status --porcelain -- AlignedPortfolioReview.json AlignedPortfolioReview.md ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json reports)" ]; then
                 echo 'No result/performance/validation changes to publish.'
               else
