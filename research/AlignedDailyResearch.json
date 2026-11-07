@@ -1,0 +1,589 @@
+{
+  "schemaVersion": 1,
+  "status": "verified_research_only",
+  "source": {
+    "file": "AlignedPortfolioReview.json",
+    "generatedAtJST": "2026-11-07T20:49:20+09:00",
+    "projectionState": "verified",
+    "countsAreCurrent": true,
+    "inputProtocolVersion": "aligned-portfolio-confirmation-v1-20261102",
+    "inputFingerprint": "90c44534fcaedf161b0cf476146600382976757d64061416f96473a48c7b4cbd"
+  },
+  "rules": {
+    "modelUnchanged": true,
+    "selectionUnchanged": true,
+    "automaticBetting": false,
+    "thresholdFittingOnEvaluation": false,
+    "betaEligibilityUnchanged": false
+  },
+  "cohort": {
+    "racesObserved": 35,
+    "resultMatchedRaces": 35,
+    "selectedRaces": 11,
+    "skippedRaces": 24,
+    "settledSelectedRaces": 11,
+    "pendingSelectedRaces": 0,
+    "referenceUnsettledRaces": 0,
+    "zeroReferenceCandidateRaces": {
+      "selected": 0,
+      "skipped": 2
+    },
+    "dailyCoverage": {
+      "2026-11-07": {
+        "all": 35,
+        "matched": 35,
+        "selected": 11,
+        "settledSelected": 11
+      }
+    }
+  },
+  "probability": {
+    "byBetType": {
+      "wide": {
+        "tickets": 19,
+        "distinctRaces": 11,
+        "winningTickets": 2,
+        "expectedWinningTickets": 1.5861,
+        "meanPredictedProbabilityPct": 8.348,
+        "actualHitRatePct": 10.526,
+        "brierScore": 0.069351,
+        "stakeYen": 1900,
+        "returnYen": 1310,
+        "profitYen": -590,
+        "returnIndex": 0.689474,
+        "conservativeFrozenOddsExpectationYen": 2522.13
+      },
+      "trio": {
+        "tickets": 3,
+        "distinctRaces": 3,
+        "winningTickets": 0,
+        "expectedWinningTickets": 0.1765,
+        "meanPredictedProbabilityPct": 5.883,
+        "actualHitRatePct": 0.0,
+        "brierScore": 0.003527,
+        "stakeYen": 300,
+        "returnYen": 0,
+        "profitYen": -300,
+        "returnIndex": 0.0,
+        "conservativeFrozenOddsExpectationYen": 402.63
+      }
+    },
+    "reliabilityByBetType": {
+      "wide": {
+        "10-<20%": {
+          "tickets": 2,
+          "distinctRaces": 2,
+          "winningTickets": 1,
+          "expectedWinningTickets": 0.2568,
+          "meanPredictedProbabilityPct": 12.839,
+          "actualHitRatePct": 50.0,
+          "brierScore": 0.381242,
+          "stakeYen": 200,
+          "returnYen": 960,
+          "profitYen": 760,
+          "returnIndex": 4.8,
+          "conservativeFrozenOddsExpectationYen": 246.9
+        },
+        "20-<40%": {
+          "tickets": 1,
+          "distinctRaces": 1,
+          "winningTickets": 1,
+          "expectedWinningTickets": 0.3023,
+          "meanPredictedProbabilityPct": 30.227,
+          "actualHitRatePct": 100.0,
+          "brierScore": 0.486827,
+          "stakeYen": 100,
+          "returnYen": 350,
+          "profitYen": 250,
+          "returnIndex": 3.5,
+          "conservativeFrozenOddsExpectationYen": 123.93
+        },
+        "5-<10%": {
+          "tickets": 16,
+          "distinctRaces": 10,
+          "winningTickets": 0,
+          "expectedWinningTickets": 1.0271,
+          "meanPredictedProbabilityPct": 6.419,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.004272,
+          "stakeYen": 1600,
+          "returnYen": 0,
+          "profitYen": -1600,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 2151.31
+        }
+      },
+      "trio": {
+        "0-<5%": {
+          "tickets": 1,
+          "distinctRaces": 1,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.0499,
+          "meanPredictedProbabilityPct": 4.987,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.002487,
+          "stakeYen": 100,
+          "returnYen": 0,
+          "profitYen": -100,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 138.63
+        },
+        "5-<10%": {
+          "tickets": 2,
+          "distinctRaces": 2,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.1266,
+          "meanPredictedProbabilityPct": 6.331,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.004048,
+          "stakeYen": 200,
+          "returnYen": 0,
+          "profitYen": -200,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 264.0
+        }
+      }
+    },
+    "note": "Ticket outcomes within a race are correlated; these summaries are descriptive, not IID confidence intervals."
+  },
+  "selection": {
+    "preRegisteredH1SameWideReference": {
+      "selectedRaceReference": {
+        "tickets": 19,
+        "distinctRaces": 11,
+        "winningTickets": 2,
+        "expectedWinningTickets": 1.5861,
+        "meanPredictedProbabilityPct": 8.348,
+        "actualHitRatePct": 10.526,
+        "brierScore": 0.069351,
+        "stakeYen": 1900,
+        "returnYen": 1310,
+        "profitYen": -590,
+        "returnIndex": 0.689474,
+        "conservativeFrozenOddsExpectationYen": 2522.13
+      },
+      "skippedRaceReference": {
+        "tickets": 34,
+        "distinctRaces": 22,
+        "winningTickets": 2,
+        "expectedWinningTickets": 3.4952,
+        "meanPredictedProbabilityPct": 10.28,
+        "actualHitRatePct": 5.882,
+        "brierScore": 0.060061,
+        "stakeYen": 3400,
+        "returnYen": 2970,
+        "profitYen": -430,
+        "returnIndex": 0.873529,
+        "conservativeFrozenOddsExpectationYen": 4618.57
+      },
+      "allRacesReference": {
+        "tickets": 53,
+        "distinctRaces": 33,
+        "winningTickets": 4,
+        "expectedWinningTickets": 5.0813,
+        "meanPredictedProbabilityPct": 9.587,
+        "actualHitRatePct": 7.547,
+        "brierScore": 0.063391,
+        "stakeYen": 5300,
+        "returnYen": 4280,
+        "profitYen": -1020,
+        "returnIndex": 0.807547,
+        "conservativeFrozenOddsExpectationYen": 7140.7
+      },
+      "byDayAndSelection": {
+        "2026-11-07/selected": {
+          "tickets": 19,
+          "distinctRaces": 11,
+          "winningTickets": 2,
+          "expectedWinningTickets": 1.5861,
+          "meanPredictedProbabilityPct": 8.348,
+          "actualHitRatePct": 10.526,
+          "brierScore": 0.069351,
+          "stakeYen": 1900,
+          "returnYen": 1310,
+          "profitYen": -590,
+          "returnIndex": 0.689474,
+          "conservativeFrozenOddsExpectationYen": 2522.13
+        },
+        "2026-11-07/skipped": {
+          "tickets": 34,
+          "distinctRaces": 22,
+          "winningTickets": 2,
+          "expectedWinningTickets": 3.4952,
+          "meanPredictedProbabilityPct": 10.28,
+          "actualHitRatePct": 5.882,
+          "brierScore": 0.060061,
+          "stakeYen": 3400,
+          "returnYen": 2970,
+          "profitYen": -430,
+          "returnIndex": 0.873529,
+          "conservativeFrozenOddsExpectationYen": 4618.57
+        }
+      },
+      "caution": "Same frozen Wide reference in both cohorts; missing reference candidates remain counted as races. Not a causally identified strategy improvement."
+    },
+    "preRegisteredH2Battle": {
+      "wideByGrade": {
+        "A": {
+          "tickets": 11,
+          "distinctRaces": 6,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.7135,
+          "meanPredictedProbabilityPct": 6.486,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.004544,
+          "stakeYen": 1100,
+          "returnYen": 0,
+          "profitYen": -1100,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 1526.54
+        },
+        "S": {
+          "tickets": 8,
+          "distinctRaces": 5,
+          "winningTickets": 2,
+          "expectedWinningTickets": 0.8726,
+          "meanPredictedProbabilityPct": 10.908,
+          "actualHitRatePct": 25.0,
+          "brierScore": 0.15846,
+          "stakeYen": 800,
+          "returnYen": 1310,
+          "profitYen": 510,
+          "returnIndex": 1.6375,
+          "conservativeFrozenOddsExpectationYen": 995.59
+        }
+      },
+      "wideByGradeChaos": {
+        "A/Chaos4": {
+          "tickets": 2,
+          "distinctRaces": 1,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.1885,
+          "meanPredictedProbabilityPct": 9.425,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.009625,
+          "stakeYen": 200,
+          "returnYen": 0,
+          "profitYen": -200,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 245.75
+        },
+        "A/Chaos5": {
+          "tickets": 9,
+          "distinctRaces": 5,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.525,
+          "meanPredictedProbabilityPct": 5.833,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.003415,
+          "stakeYen": 900,
+          "returnYen": 0,
+          "profitYen": -900,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 1280.79
+        },
+        "S/Chaos4": {
+          "tickets": 5,
+          "distinctRaces": 3,
+          "winningTickets": 2,
+          "expectedWinningTickets": 0.6526,
+          "meanPredictedProbabilityPct": 13.052,
+          "actualHitRatePct": 40.0,
+          "brierScore": 0.250093,
+          "stakeYen": 500,
+          "returnYen": 1310,
+          "profitYen": 810,
+          "returnIndex": 2.62,
+          "conservativeFrozenOddsExpectationYen": 599.05
+        },
+        "S/Chaos5": {
+          "tickets": 3,
+          "distinctRaces": 2,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.22,
+          "meanPredictedProbabilityPct": 7.335,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.005738,
+          "stakeYen": 300,
+          "returnYen": 0,
+          "profitYen": -300,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 396.55
+        }
+      },
+      "wideByFrozenOdds": {
+        "10-<20x": {
+          "tickets": 8,
+          "distinctRaces": 6,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.6326,
+          "meanPredictedProbabilityPct": 7.908,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.006678,
+          "stakeYen": 800,
+          "returnYen": 0,
+          "profitYen": -800,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 969.38
+        },
+        "5-<10x": {
+          "tickets": 1,
+          "distinctRaces": 1,
+          "winningTickets": 1,
+          "expectedWinningTickets": 0.1353,
+          "meanPredictedProbabilityPct": 13.529,
+          "actualHitRatePct": 100.0,
+          "brierScore": 0.747723,
+          "stakeYen": 100,
+          "returnYen": 960,
+          "profitYen": 860,
+          "returnIndex": 9.6,
+          "conservativeFrozenOddsExpectationYen": 121.76
+        },
+        "<5x": {
+          "tickets": 1,
+          "distinctRaces": 1,
+          "winningTickets": 1,
+          "expectedWinningTickets": 0.3023,
+          "meanPredictedProbabilityPct": 30.227,
+          "actualHitRatePct": 100.0,
+          "brierScore": 0.486827,
+          "stakeYen": 100,
+          "returnYen": 350,
+          "profitYen": 250,
+          "returnIndex": 3.5,
+          "conservativeFrozenOddsExpectationYen": 123.93
+        },
+        ">=20x": {
+          "tickets": 9,
+          "distinctRaces": 6,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.5159,
+          "meanPredictedProbabilityPct": 5.732,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.003298,
+          "stakeYen": 900,
+          "returnYen": 0,
+          "profitYen": -900,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 1307.07
+        }
+      }
+    },
+    "preRegisteredH3Concentration": {
+      "payoutConcentration": {
+        "removeTop0ReturnRaces": {
+          "remainingRaces": 11,
+          "stakeYen": 2200,
+          "returnYen": 1310,
+          "returnIndex": 0.595455,
+          "excludedRaceIDs": []
+        },
+        "removeTop1ReturnRaces": {
+          "remainingRaces": 10,
+          "stakeYen": 1900,
+          "returnYen": 0,
+          "returnIndex": 0.0,
+          "excludedRaceIDs": [
+            "202608050107"
+          ]
+        },
+        "removeTop2ReturnRaces": {
+          "remainingRaces": 9,
+          "stakeYen": 1700,
+          "returnYen": 0,
+          "returnIndex": 0.0,
+          "excludedRaceIDs": [
+            "202608050107",
+            "202603030102"
+          ]
+        },
+        "largestOneRaceShareOfPayoutPct": 100.0,
+        "originalReturnIndex": 0.595455
+      },
+      "byDate": {
+        "2026-11-07": {
+          "tickets": 22,
+          "distinctRaces": 11,
+          "winningTickets": 2,
+          "expectedWinningTickets": 1.7626,
+          "meanPredictedProbabilityPct": 8.012,
+          "actualHitRatePct": 9.091,
+          "brierScore": 0.060375,
+          "stakeYen": 2200,
+          "returnYen": 1310,
+          "profitYen": -890,
+          "returnIndex": 0.595455,
+          "conservativeFrozenOddsExpectationYen": 2924.76
+        }
+      },
+      "byVenue": {
+        "京都": {
+          "tickets": 7,
+          "distinctRaces": 3,
+          "winningTickets": 2,
+          "expectedWinningTickets": 0.777,
+          "meanPredictedProbabilityPct": 11.1,
+          "actualHitRatePct": 28.571,
+          "brierScore": 0.179765,
+          "stakeYen": 700,
+          "returnYen": 1310,
+          "profitYen": 610,
+          "returnIndex": 1.871429,
+          "conservativeFrozenOddsExpectationYen": 946.69
+        },
+        "東京": {
+          "tickets": 3,
+          "distinctRaces": 2,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.2057,
+          "meanPredictedProbabilityPct": 6.857,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.005167,
+          "stakeYen": 300,
+          "returnYen": 0,
+          "profitYen": -300,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 395.81
+        },
+        "福島": {
+          "tickets": 12,
+          "distinctRaces": 6,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.7799,
+          "meanPredictedProbabilityPct": 6.499,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.004533,
+          "stakeYen": 1200,
+          "returnYen": 0,
+          "profitYen": -1200,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 1582.26
+        }
+      },
+      "allSelectedByGradeChaos": {
+        "A/Chaos4": {
+          "tickets": 2,
+          "distinctRaces": 1,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.1885,
+          "meanPredictedProbabilityPct": 9.425,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.009625,
+          "stakeYen": 200,
+          "returnYen": 0,
+          "profitYen": -200,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 245.75
+        },
+        "A/Chaos5": {
+          "tickets": 9,
+          "distinctRaces": 5,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.525,
+          "meanPredictedProbabilityPct": 5.833,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.003415,
+          "stakeYen": 900,
+          "returnYen": 0,
+          "profitYen": -900,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 1280.79
+        },
+        "S/Chaos4": {
+          "tickets": 7,
+          "distinctRaces": 3,
+          "winningTickets": 2,
+          "expectedWinningTickets": 0.7792,
+          "meanPredictedProbabilityPct": 11.132,
+          "actualHitRatePct": 28.571,
+          "brierScore": 0.179794,
+          "stakeYen": 700,
+          "returnYen": 1310,
+          "profitYen": 610,
+          "returnIndex": 1.871429,
+          "conservativeFrozenOddsExpectationYen": 863.04
+        },
+        "S/Chaos5": {
+          "tickets": 4,
+          "distinctRaces": 2,
+          "winningTickets": 0,
+          "expectedWinningTickets": 0.2699,
+          "meanPredictedProbabilityPct": 6.748,
+          "actualHitRatePct": 0.0,
+          "brierScore": 0.004925,
+          "stakeYen": 400,
+          "returnYen": 0,
+          "profitYen": -400,
+          "returnIndex": 0.0,
+          "conservativeFrozenOddsExpectationYen": 535.18
+        }
+      }
+    },
+    "preRegisteredH4TrioIncrement": {
+      "trioIncrement": {
+        "tickets": 3,
+        "distinctRaces": 3,
+        "winningTickets": 0,
+        "expectedWinningTickets": 0.1765,
+        "meanPredictedProbabilityPct": 5.883,
+        "actualHitRatePct": 0.0,
+        "brierScore": 0.003527,
+        "stakeYen": 300,
+        "returnYen": 0,
+        "profitYen": -300,
+        "returnIndex": 0.0,
+        "conservativeFrozenOddsExpectationYen": 402.63
+      },
+      "wideLegsInSameTrioRaces": {
+        "tickets": 4,
+        "distinctRaces": 3,
+        "winningTickets": 2,
+        "expectedWinningTickets": 0.5954,
+        "meanPredictedProbabilityPct": 14.886,
+        "actualHitRatePct": 50.0,
+        "brierScore": 0.31195,
+        "stakeYen": 400,
+        "returnYen": 1310,
+        "profitYen": 910,
+        "returnIndex": 3.275,
+        "conservativeFrozenOddsExpectationYen": 481.05
+      },
+      "allWideLegs": {
+        "tickets": 19,
+        "distinctRaces": 11,
+        "winningTickets": 2,
+        "expectedWinningTickets": 1.5861,
+        "meanPredictedProbabilityPct": 8.348,
+        "actualHitRatePct": 10.526,
+        "brierScore": 0.069351,
+        "stakeYen": 1900,
+        "returnYen": 1310,
+        "profitYen": -590,
+        "returnIndex": 0.689474,
+        "conservativeFrozenOddsExpectationYen": 2522.13
+      },
+      "caution": "Incremental trio tickets are not an independent comparison with separately fitted rules."
+    },
+    "actualSelectedTickets": {
+      "tickets": 22,
+      "distinctRaces": 11,
+      "winningTickets": 2,
+      "expectedWinningTickets": 1.7626,
+      "meanPredictedProbabilityPct": 8.012,
+      "actualHitRatePct": 9.091,
+      "brierScore": 0.060375,
+      "stakeYen": 2200,
+      "returnYen": 1310,
+      "profitYen": -890,
+      "returnIndex": 0.595455,
+      "conservativeFrozenOddsExpectationYen": 2924.76
+    }
+  },
+  "limitations": [
+    "Research-only diagnostics under registered aligned H1-H4: no V1 changes, no backfill promotion, no post-hoc parameter fitting.",
+    "The first 100 aligned races are diagnostic; 101-200 are frozen-rule confirmation; beta needs 300 plus other requirements.",
+    "Multiple tickets from the same race are correlated; return concentration and final payout changes make one-day ROI unstable.",
+    "Conservative odds expected return is a frozen-odds counterfactual, not guaranteed realized payout or a profitability proof."
+  ]
+}
