@@ -1,0 +1,72 @@
+name: KeibaAI Aligned Daily Research
+
+# Research-only retrospective diagnostics from the already-verified formal audit.
+# Never fetch racing pages, replay predictions, mutate frozen T-10 records,
+# tune V1 thresholds, place bets, or activate research beta.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-aligned-research-daily.yml'
+      - 'production/aligned_daily_research.py'
+      - 'production/test_aligned_daily_research.py'
+  workflow_dispatch:
+  schedule:
+    # 21:15 JST every day (12:15 UTC), after the daytime result/settlement jobs.
+    - cron: '15 12 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-aligned-research-daily
+  cancel-in-progress: true
+
+jobs:
+  research:
+    name: Validate frozen research inputs and publish H1-H4 daily diagnostics
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Verify offline research contract and safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile production/aligned_daily_research.py production/test_aligned_daily_research.py
+          python production/test_aligned_daily_research.py -v
+      - name: Rebuild from current verified audit and publish only research reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          for attempt in 1 2 3 4 5 6; do
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            # The script fails closed on stale, failed, inconsistent, or
+            # nonfrozen cohorts and never writes a misleading report.
+            python -u production/aligned_daily_research.py
+            git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md
+            if git diff --cached --quiet; then
+              echo 'ALIGNED_RESEARCH_UNCHANGED: source material unchanged'
+              exit 0
+            fi
+            git commit -m 'Publish verified aligned daily H1-H4 research diagnostics'
+            if git push origin HEAD:main; then
+              echo 'ALIGNED_DAILY_RESEARCH_PUBLISHED'
+              exit 0
+            fi
+            echo "::warning::Main advanced during research publication; revalidate latest audit (attempt $attempt)"
+            sleep $((attempt * 2))
+          done
+          echo '::error::Aligned research report publication exhausted retries.' >&2
+          exit 1
