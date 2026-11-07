@@ -208,14 +208,43 @@ def build_date(date8: str) -> dict:
     for rid, race in by_validated.items():
         _normalize_validated_pair_names(race, by_id.get(rid))
 
+    # From the aligned-series start date onward, query payouts only for
+    # races with independently confirmed finishing orders already published
+    # by Result Sync. Never poll future/unsettled races or invent outcomes.
+    confirmed = None
+    if date8 >= "20261103":
+        day_results = _load_json(day / "ResultData.json", [])
+        if not isinstance(day_results, list):
+            raise RuntimeError("ResultData must be a list of confirmed races")
+        date_text = f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}"
+        confirmed = {
+            str(row.get("raceID") or "")
+            for row in day_results
+            if isinstance(row, dict) and row.get("raceDate") == date_text
+            and isinstance(row.get("horses"), list)
+            and sum(
+                type(h.get("finishPosition")) is int and h["finishPosition"] > 0
+                for h in row["horses"] if isinstance(h, dict)
+            ) >= 3
+        }
+        print("WIDE_CONFIRMED_RESULT_RACES:", len(confirmed), flush=True)
+
     waiting = 0
     added = 0
     for path in sorted((day / "wide_odds").glob("*.json")):
         snapshot = _load_json(path, {})
         rid = str(snapshot.get("raceID") or path.stem)
-        if rid in by_validated:
+        if rid in by_validated or (confirmed is not None and rid not in confirmed):
             continue
         signal = by_id.get(rid)
+        # For the aligned cohort validate against the exact frozen T-10
+        # signal and odds when available, not later display recomputations.
+        frozen = _load_json(day / "portfolio_live10" / (rid + ".json"), {})
+        if isinstance(frozen, dict) and (frozen.get("prediction") or {}).get("raceID") == rid:
+            bound_signal = frozen.get("signal") or {}
+            bound_odds = _load_json(day / "wide_odds_live10" / (rid + ".json"), {})
+            if bound_signal.get("raceID") == rid and bound_odds.get("raceID") == rid:
+                signal, snapshot = bound_signal, bound_odds
         if not signal or not bool(signal.get("eligible", False)):
             continue
         try:
