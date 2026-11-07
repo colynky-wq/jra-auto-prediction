@@ -1,0 +1,94 @@
+name: KeibaAI Settled Wide Validation
+
+# Read only independently published finished races and frozen T-10 inputs.
+# Never rerun live predictions, reacquire pre-race odds, or change the v1 plan.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-settled-wide-validation.yml'
+      - 'production/wide_forward_validation.py'
+      - 'reports/**/ResultData.json'
+  workflow_dispatch:
+  schedule:
+    # End-of-racing-day retry for already completed results (18:05 JST).
+    - cron: '5 9 * * 0,1,6'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-settled-wide-validation
+  cancel-in-progress: false
+
+jobs:
+  settle:
+    name: Verify Wide payouts and publish aligned settlement
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install result verification dependencies
+        run: |
+          python -m pip install -r production/requirements.txt
+          python -m pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Verify offline audit and payout code
+        run: |
+          python -m py_compile production/wide_forward_validation.py production/aligned_portfolio_review.py
+          python production/test_aligned_portfolio_review.py
+      - name: Publish only independently verified settlement evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          date8="$(TZ=Asia/Tokyo date +%Y%m%d)"
+          for attempt in 1 2 3 4 5 6; do
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            receipt="reports/$date8/WideValidation.json"
+            if [ ! -f "reports/$date8/ResultData.json" ]; then
+              echo "No independently confirmed results for $date8"
+              exit 0
+            fi
+            KEIBAAI_WIDE_VALIDATE_DATE="$date8" python -u production/wide_forward_validation.py
+            if [ ! -f "$receipt" ]; then
+              echo 'No verified payouts yet; never label unsettled tickets as losses.'
+              exit 0
+            fi
+            python -u production/aligned_portfolio_review.py
+            # Do not publish an inconsistent payout receipt. Audit is read-only
+            # and checks against independently saved final finish positions.
+            python - <<'PY'
+          import json
+          audit=json.load(open("AlignedPortfolioReview.json",encoding="utf-8"))
+          if audit.get("projectionState") != "verified" or audit.get("aligned",{}).get("countsAreCurrent") is not True:
+              raise SystemExit("Aligned review is not verified")
+          if any(issue.get("code") == "settlement_integrity" for issue in audit.get("quality",{}).get("issues",[])):
+              raise SystemExit("Payout receipt failed independent finish/identity validation")
+          print("ALIGNED_SETTLEMENT_VALIDATED:", audit["aligned"]["matchedResultRaces"],
+                audit["aligned"]["overall"]["settledSelectedRaces"])
+          PY
+            if [ -z "$(git status --porcelain -- "$receipt" AlignedPortfolioReview.json AlignedPortfolioReview.md)" ]; then
+              echo 'Verified settlement and aligned audit unchanged.'
+              exit 0
+            fi
+            git add -f -- "$receipt" AlignedPortfolioReview.json AlignedPortfolioReview.md
+            git commit -m 'Publish independently verified KeibaAI Wide settlement'
+            if git push origin HEAD:main; then
+              echo "VERIFIED_WIDE_SETTLEMENT_PUBLISHED: $date8"
+              exit 0
+            fi
+            echo "::warning::Main advanced; revalidate all receipts before retry $attempt"
+            sleep $((attempt * 2))
+          done
+          echo '::error::Could not publish verified Wide settlement after retries.' >&2
+          exit 1
