@@ -278,11 +278,21 @@ def build_date(date8: str) -> dict:
         "waitingForResult": waiting,
         "races": races,
     }
-    if races or list((day / "wide_odds").glob("*.json")):
-        out.parent.mkdir(parents=True, exist_ok=True)
-        tmp = out.with_suffix(out.suffix + ".tmp")
-        tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        tmp.replace(out)
+    # Do not create an empty validation receipt or churn on timestamps alone.
+    # The published file is evidence of actual independently checked payouts.
+    if not races:
+        print("NO_CONFIRMED_WIDE_PAYOUTS", date8, flush=True)
+        return payload
+    volatile = {"generatedAtJST", "newValidationsThisRun", "waitingForResult"}
+    material = lambda data: {k: v for k, v in data.items() if k not in volatile}
+    if out.exists() and material(old_payload) == material(payload):
+        print("WIDE_VALIDATION_UNCHANGED", date8, flush=True)
+        return payload
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_suffix(out.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(out)
+    print("WIDE_VALIDATION_UPDATED", date8, len(races), flush=True)
     return payload
 
 
