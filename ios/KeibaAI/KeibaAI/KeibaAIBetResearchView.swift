@@ -25,6 +25,67 @@ struct KeibaAIBetResearchView: View {
         return Array(Set(available + [date8])).sorted(by: >)
     }
 
+    // Research-only comparison; never turns a candidate into a formal betting instruction.
+    private var singleResearchChoices: [(raceID: String, title: String, betType: String, candidate: KeibaAIBetResearchCandidate, recordedAt: String)] {
+        guard let data = store.data, data.raceDate == chosenDay,
+              !data.formalRecommendationsEnabled, !data.autoBetEnabled else { return [] }
+        let eligible = data.races.filter {
+            $0.raceDate == chosenDay && $0.betType != "win5" && $0.betType != "support" &&
+            $0.isSaved && $0.hasRecord && $0.recordedAtJST != nil &&
+            !["invalid", "failed", "missing_record", "held", "entrant_changed", "dead_heat_excluded"].contains($0.status)
+        }
+        let grouped = Dictionary(grouping: eligible, by: \.raceID)
+        return grouped.keys.sorted().compactMap { raceID in
+            let choices = (grouped[raceID] ?? []).flatMap { row in
+                row.candidates.compactMap { candidate -> (KeibaAIBetResearchRow, KeibaAIBetResearchCandidate)? in
+                    guard let multiplier = candidate.expectedMultiplierLow,
+                          multiplier.isFinite, multiplier > 0,
+                          candidate.probabilityPct.isFinite, candidate.probabilityPct > 0,
+                          candidate.oddsLow != nil else { return nil }
+                    return (row, candidate)
+                }
+            }
+            guard let best = choices.sorted(by: {
+                let a = $0.1.expectedMultiplierLow ?? 0
+                let b = $1.1.expectedMultiplierLow ?? 0
+                if a != b { return a > b }
+                if $0.1.probabilityPct != $1.1.probabilityPct { return $0.1.probabilityPct > $1.1.probabilityPct }
+                return $0.0.betType + $0.1.id < $1.0.betType + $1.1.id
+            }).first, let saved = best.0.recordedAtJST else { return nil }
+            return (raceID: raceID, title: best.0.title, betType: best.0.betType,
+                    candidate: best.1, recordedAt: saved)
+        }
+    }
+
+    private var singleResearchChoiceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("各レースの最上位候補（研究用）", systemImage: "list.number")
+                .font(.headline)
+            Text("保存済みの券種横断候補を、保存時の比較期待倍率で1点に絞って表示します。的中率の校正は未完了で、購入推奨ではありません。正式T-10の凍結買い目とは別です。")
+                .font(.caption).foregroundStyle(.secondary)
+            if singleResearchChoices.isEmpty {
+                Text("見送り・検証不足：比較できる保存済み候補がありません。")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            ForEach(singleResearchChoices, id: \.raceID) { choice in
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(choice.title).font(.headline)
+                    Text("\(choice.betType)｜\(choice.candidate.label)").font(.subheadline.bold())
+                    Text("AI比較確率 \(choice.candidate.probabilityText) / 保存時期待倍率 \(String(format: "%.2f", choice.candidate.expectedMultiplierLow ?? 0))倍")
+                        .font(.caption)
+                    Text("記録 \(choice.recordedAt)・研究候補のみ／正式購入推奨なし")
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(10)
+                .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+            }
+        }
+        .padding(14)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityIdentifier("single-research-choice-section")
+    }
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment:.leading, spacing:16) {
@@ -43,6 +104,8 @@ struct KeibaAIBetResearchView: View {
                             Text(dateLabel(value)).tag(value)
                         }
                     }.pickerStyle(.menu).accessibilityIdentifier("bet-research-date")
+
+                    singleResearchChoiceSection
 
                     earlyPredictionSection
 
