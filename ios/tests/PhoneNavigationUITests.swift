@@ -138,7 +138,14 @@ final class PhoneNavigationUITests: XCTestCase {
     func testAllBetResearchReferenceAndDecimals() throws {
         continueAfterFailure=false
         let app=XCUIApplication(),screen=openResearch(app)
-        XCTAssertTrue(app.buttons["bet-type-win5"].waitForExistence(timeout:10))
+        // The new one-ticket research section precedes the lazy bet-type grid.
+        // Scroll the grid into the viewport before querying lazily realized buttons.
+        let win5Button = app.buttons["bet-type-win5"]
+        for _ in 0..<8 {
+            if win5Button.exists { break }
+            screen.swipeUp()
+        }
+        XCTAssertTrue(win5Button.waitForExistence(timeout:10))
         for kind in ["win","place","frame_quinella","quinella","wide","exacta","trio","trifecta","support","win5"] {
             XCTAssertTrue(app.buttons["bet-type-"+kind].exists,"every pool is selectable")
         }
