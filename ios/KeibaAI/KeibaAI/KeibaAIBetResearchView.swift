@@ -67,7 +67,8 @@ struct KeibaAIBetResearchView: View {
                 Text("見送り・検証不足：比較できる保存済み候補がありません。")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
-            ForEach(singleResearchChoices, id: \.raceID) { choice in
+            ForEach(singleResearchChoices.indices, id: \.self) { index in
+                let choice = singleResearchChoices[index]
                 VStack(alignment: .leading, spacing: 5) {
                     Text(choice.title).font(.headline)
                     Text("\(choice.betType)｜\(choice.candidate.label)").font(.subheadline.bold())
