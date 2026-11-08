@@ -4,6 +4,8 @@ on:
     paths:
       - 'production/research_ticket_calibration.py'
       - 'production/test_research_ticket_calibration.py'
+      - 'ios/KeibaAI/KeibaAI/KeibaAIBetResearchView.swift'
+      - 'ios/tests/test_single_research_choice_contract.py'
       - '.github/workflows/research-ticket-calibration-check.yml'
   pull_request:
     paths:
@@ -25,5 +27,7 @@ jobs:
         run: python3 --version
       - name: Run isolated research calibration regression tests
         run: python3 -m unittest -v production.test_research_ticket_calibration
+      - name: Verify single research candidate source contract
+        run: python3 -m unittest -v ios.tests.test_single_research_choice_contract
       - name: Check Python syntax
         run: python3 -m py_compile production/research_ticket_calibration.py production/test_research_ticket_calibration.py
