@@ -1,0 +1,29 @@
+name: Research Ticket Calibration Checks
+on:
+  push:
+    paths:
+      - 'production/research_ticket_calibration.py'
+      - 'production/test_research_ticket_calibration.py'
+      - '.github/workflows/research-ticket-calibration-check.yml'
+  pull_request:
+    paths:
+      - 'production/research_ticket_calibration.py'
+      - 'production/test_research_ticket_calibration.py'
+      - '.github/workflows/research-ticket-calibration-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibration-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python version
+        run: python3 --version
+      - name: Run isolated research calibration regression tests
+        run: python3 -m unittest -v production.test_research_ticket_calibration
+      - name: Check Python syntax
+        run: python3 -m py_compile production/research_ticket_calibration.py production/test_research_ticket_calibration.py
