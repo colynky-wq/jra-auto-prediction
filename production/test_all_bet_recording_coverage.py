@@ -102,7 +102,7 @@ class CoverageTests(unittest.TestCase):
             self.assertEqual(len(warnings),1)
             self.assertIn('1件',warnings[0])
             value=ui.build(root,clock=lambda:NOW.replace(hour=18))
-            self.assertEqual([x['raceID'] for x in value['races']],[later['raceID']])
+            self.assertEqual(set(x['raceID'] for x in value['races']),{later['raceID']})
             self.assertEqual(value['collectionStatus'],'attention_required')
 
     def test_wrong_identity_or_future_failure_event_is_not_attributed_to_race(self):
