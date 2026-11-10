@@ -84,6 +84,27 @@ class CoverageTests(unittest.TestCase):
                 self.assertEqual(value['collectionStatus'],'attention_required')
                 self.assertTrue(value['warnings'])
 
+    def test_late_schedule_keeps_only_races_not_yet_started_at_observation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);r=forecast();path,data=schedule(root,r)
+            # Add one later race on the same card while retaining the original
+            # race as an elapsed row in this late-observed schedule snapshot.
+            later=dict(data['races'][0])
+            later['raceID']=later['raceID'][:-2]+'03'
+            later['raceNumber']=3
+            later['startTime']='10:35'
+            later['scheduledPostJST']=r['raceDate']+'T10:35:00+09:00'
+            data['races'].append(later)
+            data['observedAtJST']=NOW.replace(hour=10,minute=25).isoformat()
+            path.write_text(json.dumps(data))
+            races,warnings=expected_races(root,ui.added.START,NOW.replace(hour=18))
+            self.assertEqual([x['raceID'] for x in races],[later['raceID']])
+            self.assertEqual(len(warnings),1)
+            self.assertIn('1件',warnings[0])
+            value=ui.build(root,clock=lambda:NOW.replace(hour=18))
+            self.assertEqual(set(x['raceID'] for x in value['races']),{later['raceID']})
+            self.assertEqual(value['collectionStatus'],'attention_required')
+
     def test_wrong_identity_or_future_failure_event_is_not_attributed_to_race(self):
         for mode in ('wrong_race','future'):
             with self.subTest(mode=mode),tempfile.TemporaryDirectory() as temp:
