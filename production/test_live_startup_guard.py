@@ -9,7 +9,7 @@ SCRIPT = Path(__file__).resolve().parent.parent / '.github/scripts/keibaai-race-
 
 
 class TestLiveStartupGuard(unittest.TestCase):
-    def guard(self, body, exit_code=0, date='20261017', official_code='200'):
+    def guard(self, body, exit_code=0, date='20271019', official_code='200'):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             curl = root/'curl'
@@ -33,7 +33,7 @@ class TestLiveStartupGuard(unittest.TestCase):
     def test_race_day_counts_distinct_races(self):
         result, fields = self.guard('<a href="?race_id=202605040601">a</a>'
                                     '<a href="?race_id=202605040601">a</a>'
-                                    '<a href="?race_id=202605040602">b</a>')
+                                    '<a href="?race_id=202605040602">b</a>', date='20261017')
         self.assertEqual(result.returncode, 0)
         self.assertEqual(fields['has_races'], 'true')
         self.assertEqual(fields['target_date'], '20261017')
