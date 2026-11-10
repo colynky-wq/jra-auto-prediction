@@ -54,16 +54,27 @@ def expected_races(root, start, now):
                     or not isinstance(data['races'], list)):
                 raise ValueError('invalid observed schedule')
             staged, seen = {}, set()
+            late_rows = 0
             for race in data['races']:
                 key, post = identity(race)
-                if (key[0] != day or key in seen or observed >= post
+                if (key[0] != day or key in seen
                         or stamp(race['scheduledPostJST']) != post
                         or race['raceNumber'] != int(key[1][-2:])):
                     raise ValueError('schedule race/time mismatch')
                 seen.add(key)
+                # A schedule snapshot can arrive after early races have started.
+                # Validate every row, but never use an elapsed row as prospective
+                # evidence. Keep later rows from the same otherwise-valid snapshot.
+                if observed >= post:
+                    late_rows += 1
+                    continue
                 if start <= post <= now:
                     staged[key] = {**race, 'raceName':race.get('raceName') or
                                    f"{race.get('venue','')}{race['raceNumber']}R"}
+            # A late snapshot is partially useful, not wholly corrupt. Its past
+            # rows are excluded and surfaced as a diagnostic; future rows remain.
+            if late_rows:
+                warnings.append(str(path.relative_to(root))+f': {late_rows}件は予定時刻後の観測のため事前予定の根拠から除外しました。')
             # A published prediction may reflect a legitimate changed post time.
             for key, race in staged.items():
                 found.setdefault(key, race)
