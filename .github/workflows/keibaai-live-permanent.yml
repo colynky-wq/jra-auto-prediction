@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/scripts/keibaai-race-day-check.sh'
+      - 'production/test_race_day_check.sh'
       - 'production/live_monitor_topk_publish.py'
       - 'production/live_bundle_publisher.py'
       - 'production/race_simulator_v02.py'
@@ -95,6 +96,7 @@ jobs:
         if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
         run: |
           bash -n .github/scripts/keibaai-race-day-check.sh
+          bash production/test_race_day_check.sh
           python -m py_compile production/live_monitor_topk_publish.py
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py

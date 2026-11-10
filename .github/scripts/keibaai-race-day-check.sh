@@ -17,27 +17,57 @@ emit_result() {
   echo "has_races=${has_races}" >> "$GITHUB_OUTPUT"
 }
 
-# On a normal weekend, treat inaccessible/ambiguous calendar sources as a
-# reason to TRY the normal live monitor, never as proof of a race day.
-# The monitor still fetches the actual race schedule and can publish only
-# within its unchanged formal T-10 evidence window. A verified JRA 404
-# continues to suppress a no-race day. Weekday ambiguity remains blocked.
-allow_weekend_schedule_probe() {
+# JRA's published 2026 annual schedule includes four weekday holiday
+# sessions in addition to the normal Saturday/Sunday programme.
+# Source: https://www.jra.go.jp/keiba/program/2026/pdf/kaisainittei.pdf
+is_2026_weekday_race_date() {
+  case "$date8" in
+    20260112|20260921|20261012|20261123) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# If live calendar providers are blocked, permit a provisional live schedule
+# probe only on a published JRA race day. The live monitor still fetches the
+# actual schedule and can publish only within its unchanged formal T-10 window.
+allow_scheduled_day_probe() {
   local reason="$1"
   local weekday
   weekday=$(date -d "${date8:0:4}-${date8:4:2}-${date8:6:2}" '+%u')
-  if [ "$weekday" -eq 6 ] || [ "$weekday" -eq 7 ]; then
+  if [ "$weekday" -ge 6 ] || is_2026_weekday_race_date; then
     emit_result true
-    echo "::warning::${date8}の開催判定は未確認（${reason}）。土日のため実レース一覧を確認する本番監視だけを許可します。開催・保存成功の証拠にはしません。"
+    echo "::warning::${date8}の開催判定は未確認（${reason}）。公表済み開催日候補のため実レース一覧を確認する本番監視だけを許可します。開催・保存成功の証拠にはしません。"
     return 0
   fi
   return 1
 }
 
-# Primary source: same race-list source used by the live monitor.  A positive
-# race-ID parse is enough to start.  Zero IDs are NOT trusted as a no-race day,
-# because an upstream HTML change can look exactly like zero races; official JRA
-# is cross-checked before the monitor is allowed to stay off.
+# The official 2026 annual JRA schedule has no ordinary weekday meetings
+# outside the four holiday dates above. This avoids turning a known non-race
+# weekday into a failed production run when both live calendar endpoints
+# reject the runner. Other years remain fail-closed until their official
+# annual schedule is explicitly added.
+confirm_2026_non_race_weekday() {
+  local weekday
+  weekday=$(date -d "${date8:0:4}-${date8:4:2}-${date8:6:2}" '+%u')
+  if [ "${date8:0:4}" = "2026" ] && [ "$weekday" -le 5 ] && ! is_2026_weekday_race_date; then
+    emit_result false
+    echo "No JRA meeting scheduled on weekday ${date8} in the published 2026 annual schedule."
+    return 0
+  fi
+  return 1
+}
+
+handle_ambiguous_calendar() {
+  local reason="$1"
+  if allow_scheduled_day_probe "$reason"; then return 0; fi
+  if confirm_2026_non_race_weekday; then return 0; fi
+  echo "::error::${date8}の開催確認が不確実です。開催なしとは扱わず停止します（${reason}）。"
+  return 1
+}
+
+# Primary source: same race-list source used by the live monitor. A positive
+# race-ID parse is enough to start. Zero IDs are cross-checked against JRA.
 if curl -fsSL --retry 2 --retry-all-errors --connect-timeout 5 --max-time 20 \
   -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140.0 Safari/537.36' \
   "https://race.netkeiba.com/top/race_list_sub.html?kaisai_date=${date8}" -o "$netkeiba_file"; then
@@ -49,7 +79,7 @@ if curl -fsSL --retry 2 --retry-all-errors --connect-timeout 5 --max-time 20 \
       echo "JRA race day detected via netkeiba: ${date8}, races=${count}"
       exit 0
     fi
-    echo "::warning::${date8}のnetkeibaページからレースIDを抽出できませんでした。HTML変更との区別のためJRA公式で再確認します。"
+    echo "::warning::${date8}のnetkeibaページからレースIDを抽出できませんでした。JRA公式で再確認します。"
   else
     echo "::warning::${date8}のnetkeiba開催一覧が空でした。JRA公式で再確認します。"
   fi
@@ -57,9 +87,6 @@ else
   echo "::warning::${date8}のnetkeiba開催確認に失敗しました。JRA公式へフォールバックします。"
 fi
 
-# Secondary source: official JRA calendar page.  HTTP 404 is a verified absence
-# of a daily programme and can safely mean no JRA races.  Any other transport or
-# parse ambiguity fails closed instead of silently suppressing the live monitor.
 year="${date8:0:4}"
 month="${date8:4:2}"
 day="${date8:6:2}"
@@ -72,8 +99,7 @@ jra_status=$?
 set -e
 
 if [ "$jra_status" -ne 0 ]; then
-  if allow_weekend_schedule_probe "JRA通信失敗"; then exit 0; fi
-  echo "::error::${date8}のJRA公式開催確認に通信失敗しました。開催なしとは扱いません。"
+  handle_ambiguous_calendar "JRA通信失敗" && exit 0
   exit 1
 fi
 
@@ -83,8 +109,7 @@ if [ "$jra_code" = '200' ]; then
     echo "JRA race day detected via official JRA fallback: ${date8}"
     exit 0
   fi
-  if allow_weekend_schedule_probe "JRA番組解析が不確実"; then exit 0; fi
-  echo "::error::${date8}のJRA公式ページは取得できましたが競馬番組を確認できません。解析失敗として停止します。"
+  handle_ambiguous_calendar "JRA番組解析が不確実" && exit 0
   exit 1
 fi
 
@@ -94,6 +119,5 @@ if [ "$jra_code" = '404' ]; then
   exit 0
 fi
 
-if allow_weekend_schedule_probe "JRA HTTP ${jra_code}"; then exit 0; fi
-echo "::error::${date8}のJRA公式開催確認がHTTP ${jra_code}でした。開催なしとは扱わず停止します。"
+handle_ambiguous_calendar "JRA HTTP ${jra_code}" && exit 0
 exit 1

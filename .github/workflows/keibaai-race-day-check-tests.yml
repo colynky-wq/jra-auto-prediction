@@ -1,0 +1,27 @@
+name: KeibaAI Race Day Guard Tests
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/keibaai-race-day-check.sh'
+      - 'production/test_race_day_check.sh'
+      - '.github/workflows/keibaai-race-day-check-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/keibaai-race-day-check.sh'
+      - 'production/test_race_day_check.sh'
+      - '.github/workflows/keibaai-race-day-check-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  race-day-guard:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check shell syntax
+        run: bash -n .github/scripts/keibaai-race-day-check.sh production/test_race_day_check.sh
+      - name: Test normal, holiday, weekend and unknown-year behavior
+        run: bash production/test_race_day_check.sh
