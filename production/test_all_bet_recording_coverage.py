@@ -90,12 +90,12 @@ class CoverageTests(unittest.TestCase):
             # Add one later race on the same card while retaining the original
             # race as an elapsed row in this late-observed schedule snapshot.
             later=dict(data['races'][0])
-            later['raceID']=later['raceID'][:-2]+'02'
-            later['raceNumber']=2
-            later['startTime']='10:15'
-            later['scheduledPostJST']=r['raceDate']+'T10:15:00+09:00'
+            later['raceID']=later['raceID'][:-2]+'03'
+            later['raceNumber']=3
+            later['startTime']='10:35'
+            later['scheduledPostJST']=r['raceDate']+'T10:35:00+09:00'
             data['races'].append(later)
-            data['observedAtJST']=NOW.replace(hour=10,minute=0).isoformat()
+            data['observedAtJST']=NOW.replace(hour=10,minute=25).isoformat()
             path.write_text(json.dumps(data))
             races,warnings=expected_races(root,ui.added.START,NOW.replace(hour=18))
             self.assertEqual([x['raceID'] for x in races],[later['raceID']])
