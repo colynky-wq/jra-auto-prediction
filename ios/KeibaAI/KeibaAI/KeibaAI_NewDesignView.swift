@@ -1256,6 +1256,11 @@ struct KeibaAINewDesignView: View {
         .onChange(of: store.races) { _, _ in
             chooseFirstRaceIfNeeded()
         }
+        .onChange(of: selectedDate8) { _, _ in
+            // A new race day should start at the conclusion, not yesterday's detail.
+            showTodayLanding = true
+            selectedRaceID = nil
+        }
         .task(id: selectedDate8) {
             await quickResearchStore.load(date8: selectedDate8)
         }
