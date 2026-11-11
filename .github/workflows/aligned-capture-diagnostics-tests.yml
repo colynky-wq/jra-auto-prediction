@@ -26,6 +26,20 @@ jobs:
         run: python production/test_aligned_capture_diagnostics.py -v
       - name: Inspect saved audit without altering evidence
         run: python production/aligned_capture_diagnostics.py --root . > /tmp/aligned_capture_diagnostics.json
+      - name: Print evidence-only missing capture summary
+        run: |
+          python - <<'PY'
+          import json
+          with open('/tmp/aligned_capture_diagnostics.json', encoding='utf-8') as f:
+              data = json.load(f)
+          print('AUDIT_STATE:', data['status'])
+          print('MISSING_CAPTURE_ISSUES:', data.get('missingCaptureIssueCount'))
+          for row in data['races']:
+              print('RACE:', row.get('raceID'),
+                    'CLASS:', row.get('classification'),
+                    'MISSING_SOURCES:', ','.join(row.get('missingSourceKinds', [])),
+                    'EVENT_STAGES:', ','.join(str(e.get('stage')) for e in row.get('savedEvents', [])))
+          PY
       - name: Validate output schema
         run: |
           python - <<'PY'
