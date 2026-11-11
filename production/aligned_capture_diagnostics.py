@@ -47,12 +47,31 @@ def inspect(root):
                 pass
         frozen = base / "portfolio_live10" / (rid + ".json")
         events = base / "prerace" / rid / "events"
+        sources = {
+            "win": base / "all_bet_v1" / "win" / (rid + ".json"),
+            "trio": base / "triple_v1" / "trio" / (rid + ".json"),
+            "wideOdds": base / "wide_odds_live10" / (rid + ".json"),
+        }
+        event_rows = []
+        if events.is_dir():
+            for event_path in sorted(events.glob("*.json")):
+                event = load(event_path)
+                if isinstance(event, dict) and event.get("raceID") == rid:
+                    event_rows.append({
+                        "stage": event.get("stage"),
+                        "atJST": event.get("atJST"),
+                        "detail": str(event.get("detail") or "")[:300],
+                    })
+        missing_sources = [name for name, path in sources.items() if not path.is_file()]
         output.append({
             "raceID": rid, "raceDate": date,
             "scheduleObservedAtJST": observed, "scheduledPostJST": post,
             "scheduleFirstObservedTooLate": late,
             "frozenPortfolioFilePresent": frozen.is_file(),
-            "savedEventFiles": len(list(events.glob("*.json"))) if events.is_dir() else 0,
+            "savedEventFiles": len(event_rows),
+            "savedEvents": event_rows,
+            "sourceFilesPresent": {name: path.is_file() for name, path in sources.items()},
+            "missingSourceKinds": missing_sources,
             "classification": ("schedule_observed_after_post" if late else
                                "schedule_available_but_capture_missing" if row else
                                "schedule_evidence_unavailable"),
