@@ -2461,6 +2461,7 @@ struct KeibaAINewDesignView: View {
                     signal: signalStore.signal(for: race.raceID),
                     wideValidation: wideValidationStore.race(for: race.raceID),
                     research: appResearchStore.race(for: race),
+                    quickResearchChoice: quickResearchChoicesByRace[race.raceID],
                     horseProfileStore: horseProfileStore,
                     onOpenTicketPlan: { mainTab = .ticket; preferredCompactColumn = .detail },
                     selectedTab: $detailTab
@@ -2778,6 +2779,7 @@ private struct KeibaAIRaceDetailNew: View {
     let signal: KeibaAIRaceSignal?
     let wideValidation: KeibaAIWideValidationRace?
     let research: KeibaAIAppResearchRace?
+    let quickResearchChoice: KeibaAIQuickResearchChoice?
     @ObservedObject var horseProfileStore: KeibaAIHorseProfileStore
     let onOpenTicketPlan: () -> Void
     @Binding var selectedTab: KeibaAIDetailTab
@@ -2920,14 +2922,24 @@ private struct KeibaAIRaceDetailNew: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 6) {
-                Label("参考馬券（研究中）", systemImage: "ticket")
+                Label("最有力の馬券候補（研究中）", systemImage: "ticket")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.secondary)
-                if let pair = rankedSignalWidePairs.first, pair.wideOddsLow != nil {
+                if let choice = quickResearchChoice {
+                    Text("\(choice.betTypeLabel)  \(choice.ticketLabel)")
+                        .font(.title3.bold())
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(String(format: "AI推定的中率 %.1f%% / 保存時期待倍率 %.2f倍",
+                                choice.probabilityPct, choice.expectedMultiplierLow))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                    Text("券種横断の比較候補。的中率の校正は未完了で、購入推奨ではありません。")
+                        .font(.caption2).foregroundStyle(.secondary)
+                } else if let pair = rankedSignalWidePairs.first, pair.wideOddsLow != nil {
                     Text("ワイド  \(pair.number1)-\(pair.number2)  \(pair.name1) × \(pair.name2)")
                         .font(.headline)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(String(format: "AI同時3着内 %.1f%%", pair.aiWideProbability))
+                    Text(String(format: "別系統のワイド参考値 / AI同時3着内 %.1f%%", pair.aiWideProbability))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                 } else {
@@ -3041,30 +3053,18 @@ private struct KeibaAIRaceDetailNew: View {
     }
 
     private var detailTabBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+        HStack {
+            Text("分析の種類")
+                .font(.subheadline.weight(.semibold))
+            Spacer()
+            Picker("分析の種類", selection: $selectedTab) {
                 ForEach(KeibaAIDetailTab.allCases) { tab in
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.18)) {
-                            selectedTab = tab
-                        }
-                    } label: {
-                        Text(tab.rawValue)
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .foregroundStyle(selectedTab == tab ? .white : .primary)
-                            .background {
-                                Capsule()
-                                    .fill(selectedTab == tab ? Color.blue : Color(uiColor: .systemBackground))
-                            }
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("detail-tab-\(tab.rawValue)")
+                    Text(tab.rawValue).tag(tab)
                 }
             }
+            .pickerStyle(.menu)
         }
-        .accessibilityIdentifier("detail-tabs")
+        .accessibilityIdentifier("detail-analysis-picker")
     }
 
     private var predictionSection: some View {
