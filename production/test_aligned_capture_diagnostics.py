@@ -54,6 +54,33 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertTrue(row["scheduleSnapshotAfterT10Window"])
             self.assertEqual(row["classification"], "schedule_snapshot_after_t10_window")
 
+    def test_post_window_monitor_missed_does_not_claim_collector_cause(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "AlignedPortfolioReview.json").write_text(json.dumps({
+                "projectionState": "verified", "aligned": {"countsAreCurrent": True},
+                "quality": {"issues": [{"code": "capture_missing_after_window",
+                                       "raceDate": "2026-11-08", "raceID": "202605050212"}]}
+            }))
+            folder = root / "reports" / "20261108"
+            folder.mkdir(parents=True)
+            (folder / "PaceRecordingSchedule.json").write_text(json.dumps({
+                "observedAtJST": "2026-11-08T10:52:02+09:00",
+                "races": [{"raceID": "202605050212",
+                           "scheduledPostJST": "2026-11-08T16:10:00+09:00"}]
+            }))
+            events = folder / "prerace" / "202605050212" / "events"
+            events.mkdir(parents=True)
+            (events / "miss.json").write_text(json.dumps({
+                "raceID": "202605050212", "stage": "monitor_missed",
+                "atJST": "2026-11-08T18:45:57+09:00",
+                "detail": "live capture window expired"
+            }))
+            row = inspect(root)["races"][0]
+            self.assertFalse(row["scheduleSnapshotAfterT10Window"])
+            self.assertEqual(row["monitorMissedAfterT10Window"], ["2026-11-08T18:45:57+09:00"])
+            self.assertFalse(row["collectorRootCauseEstablished"])
+
     def test_failed_audit_never_current(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
