@@ -1,0 +1,20 @@
+name: KeibaAI Swift UI syntax
+
+on:
+  pull_request:
+    paths:
+      - 'ios/KeibaAI/KeibaAI/*.swift'
+      - '.github/workflows/ios-ui-syntax.yml'
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse SwiftUI screens
+        run: |
+          xcrun swiftc -frontend -parse \
+            ios/KeibaAI/KeibaAI/KeibaAI_NewDesignView.swift \
+            ios/KeibaAI/KeibaAI/KeibaAIApp.swift
