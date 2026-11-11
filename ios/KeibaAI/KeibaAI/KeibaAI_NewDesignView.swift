@@ -2487,7 +2487,9 @@ struct KeibaAINewDesignView: View {
 
     private func openMoreTab(_ tab: KeibaAIMainTab) {
         mainTab = tab
-        preferredCompactColumn = .detail
+        // List-driven features should open their list on compact iPhones.
+        preferredCompactColumn = (tab == .focus || tab == .longshot)
+            ? .sidebar : .detail
     }
 
     private var moreHub: some View {
@@ -2504,8 +2506,10 @@ struct KeibaAINewDesignView: View {
                            icon: "ticket.fill") { openMoreTab(.ticket) }
                 moreAction("展開シミュレーション", description: "展開・位置取りの分析",
                            icon: "figure.run") { openMoreTab(.simulator) }
-                moreAction("注目レース・大穴", description: "勝負度と穴候補の詳細一覧",
+                moreAction("注目レース", description: "勝負度の高いレースを一覧で見る",
                            icon: "scope") { openMoreTab(.focus) }
+                moreAction("大穴候補", description: "穴馬とその評価を比較する",
+                           icon: "sparkles") { openMoreTab(.longshot) }
                 moreAction("予測記録の状態", description: "保存・結果照合の状況を確認",
                            icon: "checklist") { showRecordingStatus = true }
                 moreAction("見方・凡例", description: "各指標の意味とデータの読み方",
