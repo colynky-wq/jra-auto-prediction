@@ -1,0 +1,37 @@
+name: Aligned Capture Diagnostics Tests
+
+on:
+  pull_request:
+    paths:
+      - 'production/aligned_capture_diagnostics.py'
+      - 'production/test_aligned_capture_diagnostics.py'
+      - '.github/workflows/aligned-capture-diagnostics-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile diagnostics
+        run: python -m py_compile production/aligned_capture_diagnostics.py production/test_aligned_capture_diagnostics.py
+      - name: Run offline regression tests
+        run: python production/test_aligned_capture_diagnostics.py -v
+      - name: Inspect saved audit without altering evidence
+        run: python production/aligned_capture_diagnostics.py --root . > /tmp/aligned_capture_diagnostics.json
+      - name: Validate output schema
+        run: |
+          python - <<'PY'
+          import json
+          with open('/tmp/aligned_capture_diagnostics.json', encoding='utf-8') as f:
+              report=json.load(f)
+          assert report['status'] in ('audit_verified','latest_unverified','blocked')
+          assert isinstance(report['races'], list)
+          PY
