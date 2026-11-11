@@ -1240,6 +1240,7 @@ struct KeibaAINewDesignView: View {
                     await performanceStore.load(force: true)
                     await ticketShadowStore.load()
                     await appResearchStore.load(date8: selectedDate8, force: true)
+                    await quickResearchStore.load(date8: selectedDate8)
                     betResearchRefreshID = UUID()
                 }
 
@@ -1568,18 +1569,42 @@ struct KeibaAINewDesignView: View {
             Divider()
 
             if mainTab == .today {
-                snapshotBar
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
+                HStack(spacing: 10) {
+                    Button {
+                        todayMode = todayMode == .all ? .recommended : .all
+                    } label: {
+                        Label(todayMode == .all ? "注目だけ" : "全レース",
+                              systemImage: "list.bullet")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showTodayFilters.toggle()
+                        }
+                    } label: {
+                        Label("絞り込み",
+                              systemImage: showTodayFilters ? "chevron.up" : "slider.horizontal.3")
+                            .font(.subheadline)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("today-advanced-filters")
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 10)
 
-                todayModeControl
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
-
-                venueAndSortControls
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 10)
-
+                if showTodayFilters {
+                    snapshotBar
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                    todayModeControl
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 8)
+                    venueAndSortControls
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 10)
+                }
                 Divider()
             }
 
@@ -1590,7 +1615,7 @@ struct KeibaAINewDesignView: View {
                     performanceSidebar
                 } else if mainTab == .ticket {
                     ticketSidebar
-                } else if mainTab == .research {
+                } else if mainTab == .research || mainTab == .more || mainTab == .simulator {
                     sidebarContent
                 } else if (store.isLoading || scheduleStore.isLoading) && allScheduleItems.isEmpty {
                     loadingState
@@ -1678,6 +1703,11 @@ struct KeibaAINewDesignView: View {
         }
     }
 
+    private func mainTabIsActive(_ tab: KeibaAIMainTab) -> Bool {
+        if tab == .more { return mainTab != .today && mainTab != .performance }
+        return mainTab == tab
+    }
+
     private var mainTabBar: some View {
         HStack(spacing: 8) {
             ForEach(KeibaAIMainTab.primaryCases) { tab in
@@ -1685,7 +1715,7 @@ struct KeibaAINewDesignView: View {
                     withAnimation(.easeInOut(duration: 0.18)) {
                         mainTab = tab
                         switch tab {
-                        case .ticket, .research, .performance:
+                        case .ticket, .research, .performance, .more, .simulator, .guide:
                             preferredCompactColumn = .detail
                         default:
                             preferredCompactColumn = .sidebar
@@ -1701,10 +1731,10 @@ struct KeibaAINewDesignView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .foregroundStyle(mainTab == tab ? .white : .primary)
+                    .foregroundStyle(mainTabIsActive(tab) ? .white : .primary)
                     .background {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(mainTab == tab ? Color.blue : Color(uiColor: .secondarySystemGroupedBackground))
+                            .fill(mainTabIsActive(tab) ? Color.blue : Color(uiColor: .secondarySystemGroupedBackground))
                     }
                 }
                 .buttonStyle(.plain)
@@ -1854,6 +1884,19 @@ struct KeibaAINewDesignView: View {
             performanceSidebar
         case .guide:
             guideSidebar
+        case .more, .simulator:
+            VStack(alignment: .leading, spacing: 12) {
+                Text("研究・その他").font(.title3.bold())
+                Text("詳しい分析や展開シミュレーションは「その他」にまとめました。")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                Button("メニューを開く") {
+                    mainTab = .more
+                    preferredCompactColumn = .detail
+                }
+                .buttonStyle(.borderedProminent)
+                Spacer()
+            }
+            .padding(16)
         }
     }
 
@@ -2328,9 +2371,76 @@ struct KeibaAINewDesignView: View {
 
     // MARK: - Detail
 
+    private func moreAction(_ title: String, description: String,
+                            icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title).font(.headline)
+                    Text(description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+            }
+            .foregroundStyle(.primary)
+            .padding(15)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(uiColor: .systemBackground),
+                        in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func openMoreTab(_ tab: KeibaAIMainTab) {
+        mainTab = tab
+        preferredCompactColumn = .detail
+    }
+
+    private var moreHub: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("研究・その他").font(.largeTitle.bold())
+                Text("今日の予測以外の機能はここから開けます。データや研究機能は削除していません。")
+                    .font(.subheadline).foregroundStyle(.secondary)
+                    .padding(.bottom, 8)
+
+                moreAction("全券種の研究", description: "保存した予測馬券・券種別比較・結果照合",
+                           icon: "flask.fill") { openMoreTab(.research) }
+                moreAction("参考馬券プラン", description: "ワイドの仮配分と検証",
+                           icon: "ticket.fill") { openMoreTab(.ticket) }
+                moreAction("展開シミュレーション", description: "展開・位置取りの分析",
+                           icon: "figure.run") { openMoreTab(.simulator) }
+                moreAction("注目レース・大穴", description: "勝負度と穴候補の詳細一覧",
+                           icon: "scope") { openMoreTab(.focus) }
+                moreAction("予測記録の状態", description: "保存・結果照合の状況を確認",
+                           icon: "checklist") { showRecordingStatus = true }
+                moreAction("見方・凡例", description: "各指標の意味とデータの読み方",
+                           icon: "book.closed.fill") { openMoreTab(.guide) }
+                moreAction("設定", description: "アプリの表示・データ設定",
+                           icon: "gearshape.fill") { showSettings = true }
+            }
+            .padding(20)
+            .frame(maxWidth: 760, alignment: .leading)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("その他")
+    }
+
     @ViewBuilder
     private var detail: some View {
-        if mainTab == .guide {
+        if mainTab == .more {
+            moreHub
+        } else if mainTab == .simulator {
+            KeibaAIRaceSimulatorScreen()
+        } else if mainTab == .guide {
             KeibaAIGuideView()
         } else if mainTab == .performance {
             KeibaAIPerformanceView(
