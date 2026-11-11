@@ -2,6 +2,17 @@ import XCTest
 import UIKit
 
 final class PhoneNavigationUITests: XCTestCase {
+    // Specialist screens now live under the More hub.
+    @MainActor
+    private func openFromMore(_ app: XCUIApplication, title: String) {
+        let more = app.buttons["main-tab-その他"]
+        XCTAssertTrue(more.waitForExistence(timeout: 15), "More tab is accessible")
+        more.tap()
+        let destination = app.buttons["more-item-" + title]
+        XCTAssertTrue(destination.waitForExistence(timeout: 15), "\(title) is listed in More")
+        destination.tap()
+    }
+
     @MainActor
     func testSimulatorRecordingLearningAndFailureDisplay() throws {
         continueAfterFailure = false
@@ -9,8 +20,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
         app.launchEnvironment["KEIBAAI_UI_SIMULATOR"] = "1"
         app.launch()
-        let tab = app.tabBars.buttons["展開シミュ"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 10)); tab.tap()
+        openFromMore(app, title: "展開シミュレーション")
         let link = app.buttons["sim-learning-link"]
         XCTAssertTrue(link.waitForExistence(timeout: 15)); link.tap()
         XCTAssertTrue(app.staticTexts["別レースで候補を検証中"].waitForExistence(timeout: 15))
@@ -30,7 +40,7 @@ final class PhoneNavigationUITests: XCTestCase {
         shot.name = "simulator-recording-learning"; shot.lifetime = .keepAlways; add(shot)
         app.terminate()
         app.launchEnvironment["KEIBAAI_UI_SIM_OPS_ERROR"] = "1"; app.launch()
-        XCTAssertTrue(tab.waitForExistence(timeout: 10)); tab.tap()
+        openFromMore(app, title: "展開シミュレーション")
         XCTAssertTrue(link.waitForExistence(timeout: 15)); link.tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "取得できませんでした")).firstMatch.waitForExistence(timeout: 15))
         XCTAssertFalse(app.staticTexts["別レースで候補を検証中"].exists)
@@ -44,9 +54,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
         app.launchEnvironment["KEIBAAI_UI_SIMULATOR"] = "1"
         app.launch()
-        let tab = app.tabBars.buttons["展開シミュ"]
-        XCTAssertTrue(tab.waitForExistence(timeout: 10))
-        tab.tap()
+        openFromMore(app, title: "展開シミュレーション")
         let ready = app.buttons["sim-race-202605040601"]
         XCTAssertTrue(ready.waitForExistence(timeout: 20))
         ready.tap()
@@ -111,6 +119,25 @@ final class PhoneNavigationUITests: XCTestCase {
         print("PHONE_SIMULATOR_V02_OK: real engine frames, AI-first judgment, play/pause, 4x, seek, overlapping horse choice, telemetry, reset, repeat navigation and pending data")
     }
 
+
+    @MainActor
+    func testNewThreeTabHomeAndMoreNavigation() throws {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["KEIBAAI_UI_FIXTURE"] = "1"
+        app.launch()
+        XCTAssertTrue(app.buttons["main-tab-今日"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["main-tab-成績"].exists)
+        XCTAssertTrue(app.buttons["main-tab-その他"].exists)
+        XCTAssertFalse(app.buttons["main-tab-馬券"].exists)
+        XCTAssertFalse(app.buttons["main-tab-研究"].exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "today-one-pick").firstMatch
+            .waitForExistence(timeout: 15), "Research-only one-pick card is visible on Today's screen")
+        openFromMore(app, title: "全券種の研究")
+        XCTAssertTrue(app.scrollViews["bet-research-screen"].waitForExistence(timeout: 15))
+        print("PHONE_THREE_TAB_OK: Today card and More > research navigation")
+    }
+
     // The production landing screen intentionally shows only Grade B+ picks.
     // UI fixtures may not have a battle grade, so explicitly navigate to the
     // unfiltered race list before asserting the presence of fixture race rows.
@@ -127,9 +154,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launch()
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
-        let button = app.buttons["main-tab-研究"]
-        XCTAssertTrue(button.waitForExistence(timeout: 10), "research tab is accessible")
-        button.tap()
+        openFromMore(app, title: "全券種の研究")
         let screen=app.scrollViews["bet-research-screen"]
         XCTAssertTrue(screen.waitForExistence(timeout:5));return screen
     }
@@ -198,9 +223,7 @@ final class PhoneNavigationUITests: XCTestCase {
         app.launch()
         showAllRaces(app)
         XCTAssertTrue(app.descendants(matching:.any).matching(identifier:"race-card-202605040601").firstMatch.waitForExistence(timeout:20))
-        let menu = app.buttons["main-tab-馬券"]
-        XCTAssertTrue(menu.waitForExistence(timeout: 10), "ticket tab is accessible")
-        menu.tap()
+        openFromMore(app, title: "参考馬券プラン")
         let screen = app.scrollViews["reference-ticket-plan"]
         XCTAssertTrue(screen.waitForExistence(timeout:5))
         let count = app.staticTexts["axis-validation-count"]
@@ -228,9 +251,7 @@ final class PhoneNavigationUITests: XCTestCase {
         showAllRaces(app)
         let race = app.descendants(matching: .any).matching(identifier:"race-card-202605040601").firstMatch
         XCTAssertTrue(race.waitForExistence(timeout:20))
-        let menu = app.buttons["main-tab-馬券"]
-        XCTAssertTrue(menu.waitForExistence(timeout: 10), "ticket tab is accessible")
-        menu.tap()
+        openFromMore(app, title: "参考馬券プラン")
         let screen = app.scrollViews["reference-ticket-plan"]
         XCTAssertTrue(screen.waitForExistence(timeout:5))
         for _ in 0..<4 { if app.buttons["バランス型"].isHittable { break }; screen.swipeUp() }
@@ -407,14 +428,17 @@ final class PhoneNavigationUITests: XCTestCase {
         for _ in 0..<5 { if research.isHittable { break }; detail.swipeUp() }
         XCTAssertTrue(research.isHittable)
         research.tap()
-        let tabs = app.scrollViews["detail-tabs"]
-        XCTAssertTrue(tabs.waitForExistence(timeout: 5))
-        let wide = app.buttons["detail-tab-ワイド評価"]
+        // The former seven tabs are now a compact analysis menu.
+        let picker = app.descendants(matching: .any)
+            .matching(identifier: "detail-analysis-picker").firstMatch
         for _ in 0..<6 {
-            if wide.isHittable { break }
-            tabs.swipeLeft()
+            if picker.isHittable { break }
+            detail.swipeUp()
         }
-        XCTAssertTrue(wide.isHittable)
+        XCTAssertTrue(picker.isHittable, "analysis menu is visible")
+        picker.tap()
+        let wide = app.buttons["ワイド評価"]
+        XCTAssertTrue(wide.waitForExistence(timeout: 5), "Wide evaluation remains selectable")
         wide.tap()
 
         XCTAssertGreaterThanOrEqual(title.frame.minX, app.frame.minX - 1)

@@ -2488,6 +2488,7 @@ struct KeibaAINewDesignView: View {
                         in: RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("more-item-\(title)")
     }
 
     private func openMoreTab(_ tab: KeibaAIMainTab) {
@@ -3160,8 +3161,8 @@ private struct KeibaAIRaceDetailNew: View {
                 }
             }
             .pickerStyle(.menu)
+            .accessibilityIdentifier("detail-analysis-picker")
         }
-        .accessibilityIdentifier("detail-analysis-picker")
     }
 
     private var predictionSection: some View {
