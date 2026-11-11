@@ -39,6 +39,9 @@ jobs:
                     'CLASS:', row.get('classification'),
                     'MISSING_SOURCES:', ','.join(row.get('missingSourceKinds', [])),
                     'EVENT_STAGES:', ','.join(str(e.get('stage')) for e in row.get('savedEvents', [])))
+              if row.get('raceID') in ('202605050203', '202605050212', '202608050212'):
+                  for event in row.get('savedEvents', []):
+                      print('MONITOR_EVIDENCE:', row['raceID'], json.dumps(event, ensure_ascii=False))
           PY
       - name: Validate output schema
         run: |
