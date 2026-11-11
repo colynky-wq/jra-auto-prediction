@@ -32,6 +32,20 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(uncovered_formal_windows(start, 340, posts), [])
 
 
+    def test_nov8_handoff_after_275_minutes_with_queue_delay(self):
+        jst = "+09:00"
+        morning_start = datetime.fromisoformat("2026-11-08T10:52:00" + jst)
+        morning_end = morning_start + timedelta(minutes=275)
+        tokyo_window = datetime.fromisoformat("2026-11-08T15:58:00" + jst)
+        kyoto_window = datetime.fromisoformat("2026-11-08T16:13:00" + jst)
+        # A queued afternoon job must finish startup before the first window.
+        # This is a bounded scenario test, not proof of GitHub scheduler SLA.
+        for handoff_startup_delay in (0, 10, 20, 30):
+            ready = morning_end + timedelta(minutes=handoff_startup_delay)
+            self.assertLessEqual(ready, tokyo_window)
+            self.assertLessEqual(ready, kyoto_window)
+        self.assertGreater(morning_end + timedelta(minutes=32), tokyo_window)
+
     def test_unavailable_audit_blocks(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(inspect(Path(d))["status"], "blocked")
