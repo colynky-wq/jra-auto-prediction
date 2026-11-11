@@ -37,8 +37,10 @@ private enum KeibaAIMainTab: String, CaseIterable, Identifiable {
     case research = "研究"
     case performance = "成績"
     case guide = "凡例"
+    case more = "その他"
+    case simulator = "展開シミュ"
 
-    static let primaryCases: [KeibaAIMainTab] = [.today, .ticket, .research, .performance]
+    static let primaryCases: [KeibaAIMainTab] = [.today, .performance, .more]
 
     var id: String { rawValue }
 
@@ -51,8 +53,22 @@ private enum KeibaAIMainTab: String, CaseIterable, Identifiable {
         case .research: return "flask"
         case .performance: return "chart.line.uptrend.xyaxis"
         case .guide: return "book.closed.fill"
+        case .more: return "square.grid.2x2.fill"
+        case .simulator: return "figure.run"
         }
     }
+}
+
+// A saved research comparison, never an official betting instruction.
+private struct KeibaAIQuickResearchChoice: Identifiable {
+    let raceID: String
+    let betType: String
+    let betTypeLabel: String
+    let ticketLabel: String
+    let probabilityPct: Double
+    let expectedMultiplierLow: Double
+    let recordedAtJST: String
+    var id: String { raceID }
 }
 
 private enum KeibaAIDetailTab: String, CaseIterable, Identifiable {
@@ -1157,6 +1173,7 @@ struct KeibaAINewDesignView: View {
     @StateObject private var appResearchStore = KeibaAIAppResearchStore()
     @StateObject private var budgetStore = KeibaAIBudgetStore()
     @StateObject private var ticketShadowStore = KeibaAITicketShadowStore()
+    @StateObject private var quickResearchStore = KeibaAIBetResearchStore()
     @State private var referenceProfile = KeibaAIReferenceProfile.wideAxis
 
     @State private var mainTab: KeibaAIMainTab = .today
@@ -1166,6 +1183,7 @@ struct KeibaAINewDesignView: View {
     @State private var detailTab: KeibaAIDetailTab = .prediction
     @State private var showSettings = false
     @State private var showRecordingStatus = false
+    @State private var showTodayFilters = false
     @State private var betResearchRefreshID = UUID()
 
     @State private var selectedVenue = "全場"
@@ -1235,6 +1253,9 @@ struct KeibaAINewDesignView: View {
         .onChange(of: store.races) { _, _ in
             chooseFirstRaceIfNeeded()
         }
+        .task(id: selectedDate8) {
+            await quickResearchStore.load(date8: selectedDate8)
+        }
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
@@ -1293,6 +1314,78 @@ struct KeibaAINewDesignView: View {
 
     private static var todayJST8: String {
         date8Formatter.string(from: Date())
+    }
+
+    private var selectedDateISO: String {
+        guard selectedDate8.count == 8 else { return "" }
+        return String(selectedDate8.prefix(4)) + "-"
+            + String(selectedDate8.dropFirst(4).prefix(2)) + "-"
+            + String(selectedDate8.suffix(2))
+    }
+
+    // Only rank saved, date-matched, still-upcoming research candidates.
+    // This follows the same source and exclusions as the existing research screen.
+    // It does not convert the candidate into a formal recommendation.
+    private var quickResearchChoicesByRace: [String: KeibaAIQuickResearchChoice] {
+        guard let data = quickResearchStore.data,
+              data.raceDate == selectedDateISO,
+              !data.formalRecommendationsEnabled, !data.autoBetEnabled else { return [:] }
+
+        let validIDs = Set(allScheduleItems.filter {
+            $0.prediction != nil && status(for: $0) == .predicted
+        }.map(\.raceID))
+        var choices: [String: KeibaAIQuickResearchChoice] = [:]
+        let rejected: Set<String> = [
+            "invalid", "failed", "missing_record", "held",
+            "entrant_changed", "dead_heat_excluded"
+        ]
+
+        for row in data.races {
+            guard row.raceDate == selectedDateISO, validIDs.contains(row.raceID),
+                  row.betType != "win5", row.betType != "support",
+                  row.isSaved, row.hasRecord,
+                  let savedAt = row.recordedAtJST, !savedAt.isEmpty,
+                  !rejected.contains(row.status) else { continue }
+
+            for candidate in row.candidates {
+                guard let multiplier = candidate.expectedMultiplierLow,
+                      let oddsLow = candidate.oddsLow,
+                      multiplier.isFinite, multiplier > 1,
+                      oddsLow.isFinite, oddsLow > 0,
+                      candidate.probabilityPct.isFinite, candidate.probabilityPct > 0,
+                      candidate.probabilityPct <= 100 else { continue }
+
+                let choice = KeibaAIQuickResearchChoice(
+                    raceID: row.raceID,
+                    betType: row.betType,
+                    betTypeLabel: data.catalog.first(where: { $0.id == row.betType })?.label ?? row.betType,
+                    ticketLabel: candidate.label,
+                    probabilityPct: candidate.probabilityPct,
+                    expectedMultiplierLow: multiplier,
+                    recordedAtJST: savedAt
+                )
+                if let existing = choices[row.raceID], !quickChoiceRanksAbove(choice, existing) {
+                    continue
+                }
+                choices[row.raceID] = choice
+            }
+        }
+        return choices
+    }
+
+    private func quickChoiceRanksAbove(_ left: KeibaAIQuickResearchChoice,
+                                      _ right: KeibaAIQuickResearchChoice) -> Bool {
+        if left.expectedMultiplierLow != right.expectedMultiplierLow {
+            return left.expectedMultiplierLow > right.expectedMultiplierLow
+        }
+        if left.probabilityPct != right.probabilityPct {
+            return left.probabilityPct > right.probabilityPct
+        }
+        return left.betType + left.ticketLabel < right.betType + right.ticketLabel
+    }
+
+    private var topQuickResearchChoice: KeibaAIQuickResearchChoice? {
+        quickResearchChoicesByRace.values.sorted(by: quickChoiceRanksAbove).first
     }
 
     private var allScheduleItems: [KeibaAIScheduleItem] {
@@ -1545,6 +1638,7 @@ struct KeibaAINewDesignView: View {
                     await ticketShadowStore.load()
                     await horseProfileStore.loadIndex(force: true)
                     await appResearchStore.load(date8: selectedDate8, force: true)
+                    await quickResearchStore.load(date8: selectedDate8)
                     betResearchRefreshID = UUID()
                     chooseFirstRaceIfNeeded()
                 }
@@ -1784,17 +1878,92 @@ struct KeibaAINewDesignView: View {
             }
         case .recommended:
             return displayedTodayItems.filter { item in
+                if quickResearchChoicesByRace[item.raceID] != nil { return true }
                 guard let grade = signalStore.signal(for: item.raceID)?.battle?.grade else { return false }
                 return grade == "S" || grade == "A" || grade == "B"
             }
         }
     }
 
+    private var onePickHomeCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("この開催日の最有力1点", systemImage: "ticket.fill")
+                    .font(.headline)
+                Spacer()
+                Text("研究候補")
+                    .font(.caption2.bold())
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(Color.orange.opacity(0.10), in: Capsule())
+            }
+
+            if let choice = topQuickResearchChoice {
+                if let item = allScheduleItems.first(where: { $0.raceID == choice.raceID }) {
+                    Text("\(item.venue) \(item.raceNumber)R  \(item.startTime)")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Text(item.raceName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text("\(choice.betTypeLabel)  \(choice.ticketLabel)")
+                    .font(.title2.weight(.heavy))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("today-one-pick-ticket")
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("AI推定的中率").font(.caption2).foregroundStyle(.secondary)
+                        Text(String(format: "%.1f%%", choice.probabilityPct))
+                            .font(.title3.bold().monospacedDigit())
+                    }
+                    Spacer()
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("保存時期待倍率").font(.caption2).foregroundStyle(.secondary)
+                        Text(String(format: "%.2f倍", choice.expectedMultiplierLow))
+                            .font(.title3.bold().monospacedDigit())
+                    }
+                }
+                .padding(10)
+                .background(Color(uiColor: .secondarySystemGroupedBackground),
+                            in: RoundedRectangle(cornerRadius: 12))
+                Button {
+                    openRace(choice.raceID)
+                } label: {
+                    Label("このレースの詳細を見る", systemImage: "arrow.right.circle")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+                Text("記録: \(choice.recordedAtJST)")
+                    .font(.caption2).foregroundStyle(.secondary)
+            } else if quickResearchStore.isLoading {
+                ProgressView("保存済み候補を確認中…")
+            } else {
+                Text("現在、比較できる馬券はありません")
+                    .font(.title3.bold())
+                Text(quickResearchStore.errorMessage
+                     ?? "発走前の保存候補が未取得、条件不足、または該当レースが発走済みです。候補を無理に選びません。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Text("期待倍率と的中率は未校正の研究値です。正式な購入推奨ではありません。")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .accessibilityIdentifier("today-one-pick")
+    }
+
     private var todayList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
+                onePickHomeCard
                 sectionHeader(
-                    title: todayMode == .recommended ? "今日のおすすめ" : (todayMode == .longshot ? "穴狙い候補" : "今日の全レース"),
+                    title: todayMode == .recommended ? "注目レースと研究候補" : (todayMode == .longshot ? "穴狙い候補" : "今日の全レース"),
                     subtitle: todayMode == .recommended
                         ? "AI評価B以上だけ表示。候補がなければ無理に選びません"
                         : (todayMode == .longshot ? "人気薄の候補があるレースだけ表示" : "未予測を含む予定表 / \(todayListItems.count)レース")
@@ -1820,12 +1989,24 @@ struct KeibaAINewDesignView: View {
                         Button {
                             openRace(item.raceID)
                         } label: {
-                            KeibaAIRaceCard(
-                                item: item,
-                                status: status(for: item),
-                                signal: signalStore.signal(for: item.raceID),
-                                isSelected: selectedRaceID == item.raceID
-                            )
+                            VStack(alignment: .leading, spacing: 6) {
+                                KeibaAIRaceCard(
+                                    item: item,
+                                    status: status(for: item),
+                                    signal: signalStore.signal(for: item.raceID),
+                                    isSelected: selectedRaceID == item.raceID
+                                )
+                                if let choice = quickResearchChoicesByRace[item.raceID] {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "ticket")
+                                        Text("研究候補: \(choice.betTypeLabel) \(choice.ticketLabel)")
+                                            .lineLimit(2)
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.blue)
+                                    .padding(.horizontal, 10)
+                                }
+                            }
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("race-card-\(item.raceID)")
