@@ -30,6 +30,8 @@ class DiagnosticsTests(unittest.TestCase):
             self.assertEqual(report["missingCaptureIssueCount"], 1)
             self.assertTrue(report["races"][0]["scheduleFirstObservedTooLate"])
             self.assertFalse(report["races"][0]["frozenPortfolioFilePresent"])
+            self.assertEqual(report["races"][0]["missingSourceKinds"], ["win", "trio", "wideOdds"])
+            self.assertEqual(report["races"][0]["savedEvents"], [])
 
     def test_failed_audit_never_current(self):
         with tempfile.TemporaryDirectory() as d:
