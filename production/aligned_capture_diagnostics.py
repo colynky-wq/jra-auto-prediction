@@ -66,6 +66,20 @@ def inspect(root):
                         "atJST": event.get("atJST"),
                         "detail": str(event.get("detail") or "")[:300],
                     })
+        # A post-window monitor_missed event proves late detection, not why
+        # the live collector failed. Preserve this distinction explicitly.
+        monitor_missed_after_window = []
+        if post:
+            try:
+                close = datetime.fromisoformat(post) - timedelta(minutes=8)
+                for event in event_rows:
+                    if event.get("stage") != "monitor_missed" or not event.get("atJST"):
+                        continue
+                    at = datetime.fromisoformat(event["atJST"])
+                    if at > close:
+                        monitor_missed_after_window.append(event["atJST"])
+            except (ValueError, TypeError):
+                pass
         missing_sources = [name for name, path in sources.items() if not path.is_file()]
         output.append({
             "raceID": rid, "raceDate": date,
@@ -75,6 +89,8 @@ def inspect(root):
             "frozenPortfolioFilePresent": frozen.is_file(),
             "savedEventFiles": len(event_rows),
             "savedEvents": event_rows,
+            "monitorMissedAfterT10Window": monitor_missed_after_window,
+            "collectorRootCauseEstablished": False,
             "sourceFilesPresent": {name: path.is_file() for name, path in sources.items()},
             "missingSourceKinds": missing_sources,
             "classification": ("schedule_snapshot_after_post" if late else
