@@ -5,7 +5,7 @@ Never re-fetch predictions, odds or results; never promote missing records.
 """
 import argparse
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 def load(path):
@@ -40,9 +40,13 @@ def inspect(root):
         observed = (schedule or {}).get("observedAtJST")
         post = row.get("scheduledPostJST") if row else None
         late = None
+        after_window = None
         if observed and post:
             try:
-                late = datetime.fromisoformat(observed) >= datetime.fromisoformat(post)
+                observed_dt = datetime.fromisoformat(observed)
+                post_dt = datetime.fromisoformat(post)
+                late = observed_dt >= post_dt
+                after_window = observed_dt > post_dt - timedelta(minutes=8)
             except ValueError:
                 pass
         frozen = base / "portfolio_live10" / (rid + ".json")
@@ -67,13 +71,15 @@ def inspect(root):
             "raceID": rid, "raceDate": date,
             "scheduleObservedAtJST": observed, "scheduledPostJST": post,
             "scheduleFirstObservedTooLate": late,
+            "scheduleSnapshotAfterT10Window": after_window,
             "frozenPortfolioFilePresent": frozen.is_file(),
             "savedEventFiles": len(event_rows),
             "savedEvents": event_rows,
             "sourceFilesPresent": {name: path.is_file() for name, path in sources.items()},
             "missingSourceKinds": missing_sources,
-            "classification": ("schedule_observed_after_post" if late else
-                               "schedule_available_but_capture_missing" if row else
+            "classification": ("schedule_snapshot_after_post" if late else
+                               "schedule_snapshot_after_t10_window" if after_window else
+                               "schedule_snapshot_within_or_before_t10_window" if row and after_window is False else
                                "schedule_evidence_unavailable"),
             "note": "Diagnostic only; does not establish root cause or recover T-10 evidence"
         })
