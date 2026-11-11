@@ -126,7 +126,11 @@ jobs:
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
           elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
-            minutes='305'
+            # Hand over before the late T-10 windows even when the morning cron
+            # starts several hours late (as observed on 2026-11-08).
+            # The noon scheduled session is serialized by the production
+            # concurrency group and resumes published race IDs.
+            minutes='275'
           else
             minutes='330'
           fi
