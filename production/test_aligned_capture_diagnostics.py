@@ -5,7 +5,33 @@ import unittest
 from pathlib import Path
 from aligned_capture_diagnostics import inspect
 
+from datetime import datetime, timedelta
+
+
+def uncovered_formal_windows(session_start, max_minutes, posts):
+    """Offline scheduling check; does not run or reconstruct captures."""
+    session_end = session_start + timedelta(minutes=max_minutes)
+    return [(rid, post - timedelta(minutes=12), post - timedelta(minutes=8))
+            for rid, post in posts.items()
+            if post - timedelta(minutes=12) >= session_end]
+
+
 class DiagnosticsTests(unittest.TestCase):
+    def test_nov8_session_305_minutes_leaves_both_last_races_uncovered(self):
+        jst = "+09:00"
+        start = datetime.fromisoformat("2026-11-08T10:52:00" + jst)
+        posts = {
+            "202605050212": datetime.fromisoformat("2026-11-08T16:10:00" + jst),
+            "202608050212": datetime.fromisoformat("2026-11-08T16:25:00" + jst),
+        }
+        uncovered = uncovered_formal_windows(start, 305, posts)
+        self.assertEqual([row[0] for row in uncovered],
+                         ["202605050212", "202608050212"])
+        self.assertEqual(uncovered[0][1].strftime("%H:%M"), "15:58")
+        self.assertEqual(uncovered[1][1].strftime("%H:%M"), "16:13")
+        self.assertEqual(uncovered_formal_windows(start, 340, posts), [])
+
+
     def test_unavailable_audit_blocks(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(inspect(Path(d))["status"], "blocked")
