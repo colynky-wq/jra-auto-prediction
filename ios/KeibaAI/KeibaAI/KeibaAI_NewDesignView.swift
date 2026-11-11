@@ -1184,6 +1184,8 @@ struct KeibaAINewDesignView: View {
     @State private var showSettings = false
     @State private var showRecordingStatus = false
     @State private var showTodayFilters = false
+    // Show the one-pick conclusion in the wide iPad detail pane on launch.
+    @State private var showTodayLanding = true
     @State private var betResearchRefreshID = UUID()
 
     @State private var selectedVenue = "全場"
@@ -1343,9 +1345,15 @@ struct KeibaAINewDesignView: View {
 
         for row in data.races {
             guard row.raceDate == selectedDateISO, validIDs.contains(row.raceID),
+                  let raceItem = allScheduleItems.first(where: { $0.raceID == row.raceID }),
+                  raceItem.venue == row.venue,
+                  row.raceNumber.map({ $0 == raceItem.raceNumber }) ?? true,
                   row.betType != "win5", row.betType != "support",
                   row.isSaved, row.hasRecord,
-                  let savedAt = row.recordedAtJST, !savedAt.isEmpty,
+                  let savedAt = row.recordedAtJST,
+                  savedAt.hasPrefix(selectedDateISO + "T"),
+                  raceItem.startTime.count == 5,
+                  String(savedAt.dropFirst(11).prefix(5)) < raceItem.startTime,
                   !rejected.contains(row.status) else { continue }
 
             for candidate in row.candidates {
@@ -1464,6 +1472,7 @@ struct KeibaAINewDesignView: View {
 
     private func openRace(_ raceID: String, tab: KeibaAIDetailTab = .prediction) {
         selectedRaceID = raceID
+        showTodayLanding = false
         detailTab = tab
         preferredCompactColumn = .detail
     }
@@ -1714,6 +1723,7 @@ struct KeibaAINewDesignView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) {
                         mainTab = tab
+                        if tab == .today { showTodayLanding = true }
                         switch tab {
                         case .ticket, .research, .performance, .more, .simulator, .guide:
                             preferredCompactColumn = .detail
@@ -2001,10 +2011,86 @@ struct KeibaAINewDesignView: View {
         .accessibilityIdentifier("today-one-pick")
     }
 
+
+    // The iPad's large pane starts with the same actionable conclusion as iPhone.
+    // Race details are displayed only after an explicit race selection.
+    private var todayOverview: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 10) {
+                    Image(systemName: "sparkles")
+                        .font(.title2)
+                        .foregroundStyle(.blue)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("今日の結論").font(.largeTitle.bold())
+                        Text("開催日 \(Self.displayDate(selectedDate8))")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }
+                onePickHomeCard
+
+                sectionHeader(title: "注目レース",
+                    subtitle: "候補がないレースは無理に選びません。詳しく見るレースをタップしてください。")
+                if todayListItems.isEmpty {
+                    KeibaAIInfoCard(icon: "hand.raised.fill",
+                                    title: "現在は見送り・データ待ち",
+                                    message: "発走前の保存候補が揃うと、ここに表示されます。")
+                } else {
+                    ForEach(Array(todayListItems.prefix(5))) { item in
+                        Button {
+                            openRace(item.raceID)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                KeibaAIRaceCard(
+                                    item: item, status: status(for: item),
+                                    signal: signalStore.signal(for: item.raceID),
+                                    isSelected: false
+                                )
+                                if let choice = quickResearchChoicesByRace[item.raceID] {
+                                    Text("研究候補: \(choice.betTypeLabel) \(choice.ticketLabel)")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                Button {
+                    preferredCompactColumn = .sidebar
+                } label: {
+                    Label("レース一覧へ", systemImage: "list.bullet")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .buttonStyle(.bordered)
+            }
+            .padding(22)
+            .frame(maxWidth: 820, alignment: .leading)
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle("今日の結論")
+        .accessibilityIdentifier("today-overview")
+    }
+
     private var todayList: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
-                onePickHomeCard
+                if horizontalSizeClass == .compact {
+                    onePickHomeCard
+                } else {
+                    Button {
+                        showTodayLanding = true
+                        preferredCompactColumn = .detail
+                    } label: {
+                        Label("今日の結論を見る", systemImage: "ticket.fill")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(Color(uiColor: .systemBackground),
+                                        in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
                 sectionHeader(
                     title: todayMode == .recommended ? "注目レースと研究候補" : (todayMode == .longshot ? "穴狙い候補" : "今日の全レース"),
                     subtitle: todayMode == .recommended
@@ -2436,7 +2522,9 @@ struct KeibaAINewDesignView: View {
 
     @ViewBuilder
     private var detail: some View {
-        if mainTab == .more {
+        if mainTab == .today && showTodayLanding {
+            todayOverview
+        } else if mainTab == .more {
             moreHub
         } else if mainTab == .simulator {
             KeibaAIRaceSimulatorScreen()
