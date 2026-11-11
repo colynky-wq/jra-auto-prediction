@@ -155,6 +155,26 @@ def resilient_main() -> None:
     pending = sorted(
         r["race_id"] for r in flat if r["race_id"] not in processed and r["race_id"] not in missed
     )
+    if pending:
+        # An otherwise successful Actions job can finish before later T-10
+        # windows. Surface the coverage gap without forging captures or
+        # failing publication of valid earlier records.
+        next_windows = []
+        for race in flat:
+            if race["race_id"] not in pending:
+                continue
+            post = base.race_post_datetime(base.TARGET_DATE8, race["start_time"])
+            next_windows.append((post - timedelta(minutes=base.WINDOW_EARLY_MINUTES), race["race_id"]))
+        next_windows.sort()
+        first_start, first_race = next_windows[0]
+        print(
+            "::warning title=Live T-10 monitor coverage gap::"
+            f"Session ended with {len(pending)} pending races; "
+            f"next formal window begins {first_start.isoformat()} "
+            f"({first_race}). A subsequent live session must start before that window."
+        )
+        print("RESILIENT_PENDING_RESTART_REQUIRED", pending,
+              "nextFormalWindowStartJST=", first_start.isoformat())
     print(
         "RESILIENT_LIVE_SUMMARY processed=", sorted(processed),
         "missed=", sorted(missed), "pending=", pending,
