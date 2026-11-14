@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "all-bet-forward-v1-20261015",
   "scope": "JRA domestic flat races",
-  "generatedAtJST": "2026-11-14T18:05:56.805949+09:00",
+  "generatedAtJST": "2026-11-14T21:14:37.350402+09:00",
   "evaluationStartJST": "2026-10-15T17:47:37+09:00",
   "betTypes": {
     "win": "単勝",
@@ -159,8 +159,8 @@
       "probability_matched": 5,
       "matched": 5,
       "payouts_pending": 0,
-      "missingRecords": 2,
-      "failedSessions": 6
+      "missingRecords": 3,
+      "failedSessions": 7
     },
     "races": [
       {
@@ -454,6 +454,11 @@
       },
       {
         "raceDate": "2026-11-08",
+        "status": "missing_record",
+        "reason": "common_deadline_missed"
+      },
+      {
+        "raceDate": "2026-11-14",
         "status": "missing_record",
         "reason": "common_deadline_missed"
       }
@@ -750,6 +755,17 @@
         "officialSourceURL": "https://www.jra.go.jp/kouza/win5/info/racelist.html",
         "officialSourceFingerprint": "2f6b1d732b2befd86585f2d06969fb5321b37dc8ffa8401fd2760916762ec0f7",
         "finishedAtJST": "2026-11-13T19:10:55.314645+09:00"
+      },
+      {
+        "version": "win5-factorized-win-v1-20261015",
+        "raceDate": "2026-11-14",
+        "startedAtJST": "2026-11-14T18:34:59.647082+09:00",
+        "hasTarget": true,
+        "status": "common_deadline_missed",
+        "officialSourceURL": "https://www.jra.go.jp/kouza/win5/info/racelist.html",
+        "officialSourceFingerprint": "2f6b1d732b2befd86585f2d06969fb5321b37dc8ffa8401fd2760916762ec0f7",
+        "deadlineJST": "2026-11-14T14:50:00+09:00",
+        "finishedAtJST": "2026-11-14T18:34:59.936628+09:00"
       }
     ],
     "warnings": [
