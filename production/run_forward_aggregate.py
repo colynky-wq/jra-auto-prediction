@@ -216,6 +216,12 @@ def _discover_result_url_for_race(race_id: str, date8: str) -> str:
         )
         return result_url
 
+    # Diagnose missing results without treating a different race as a match.
+    # The entry page may be reachable before the official result is published.
+    parsed_ids = [
+        _race_id_from_result_url(u, date8) for u in candidates
+    ]
+    same_date_ids = sorted({rid for rid in parsed_ids if rid is not None})
     print(
         "JRA result links seen from entry page:",
         len(candidates),
@@ -223,6 +229,10 @@ def _discover_result_url_for_race(race_id: str, date8: str) -> str:
         len(exact),
         "routed same-race:",
         len(routed),
+        "same-date distinct races:",
+        len(same_date_ids),
+        "target present:",
+        race_id in same_date_ids,
         "race:",
         race_id,
     )
