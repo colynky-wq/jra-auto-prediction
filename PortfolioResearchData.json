@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-11-14T16:38:49+09:00",
+  "generatedAtJST": "2026-11-14T16:42:15+09:00",
   "prospectiveStartDate": "2026-10-24",
   "developmentDataPolicy": "Dates before prospectiveStartDate are development/backfill only and cannot prove performance.",
   "selectionPolicy": "Rules are fixed before prospectiveStartDate; selection never reads finish, hit, payout or return fields.",
@@ -71,13 +71,13 @@
   "prospective": {
     "racesSeen": 220,
     "selectedRaces": 52,
-    "settledSelectedRaces": 49,
+    "settledSelectedRaces": 50,
     "hitAnyRaces": 5,
     "profitableRaces": 5,
     "torigamiRaces": 0,
-    "stakeYen": 9700,
+    "stakeYen": 9900,
     "returnYen": 9740,
-    "returnIndex": 1.004124
+    "returnIndex": 0.983838
   },
   "races": [
     {
@@ -9129,8 +9129,8 @@
           "oddsHigh": 14.8,
           "expectedMultiplierLow": 1.773,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         },
         {
           "betType": "wide",
@@ -9141,17 +9141,17 @@
           "oddsHigh": 42.6,
           "expectedMultiplierLow": 2.28,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
       "totalStakeYen": 200,
-      "settled": false,
-      "returnYen": null,
-      "profitYen": null,
-      "hitAny": null,
-      "profitable": null,
-      "torigami": null,
+      "settled": true,
+      "returnYen": 0,
+      "profitYen": -200,
+      "hitAny": false,
+      "profitable": false,
+      "torigami": false,
       "inputPolicy": "formal-portfolio-inputs-v1",
       "inputFingerprint": "155b74f92942a608afc6c4601248c7dcc3081073562eadce6490223551dc76d5",
       "inputRecordedAtJST": "2026-11-14T16:13:25.266855+09:00"
