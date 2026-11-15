@@ -68,6 +68,9 @@ private struct KeibaAIQuickResearchChoice: Identifiable {
     let probabilityPct: Double
     let expectedMultiplierLow: Double
     let recordedAtJST: String
+    let hit: Bool?
+    let payoutYen: Int?
+    let unitYen: Int
     var id: String { raceID }
 }
 
@@ -1331,26 +1334,24 @@ struct KeibaAINewDesignView: View {
             + String(selectedDate8.suffix(2))
     }
 
-    // Only rank saved, date-matched, still-upcoming research candidates.
-    // This follows the same source and exclusions as the existing research screen.
-    // It does not convert the candidate into a formal recommendation.
-    private var quickResearchChoicesByRace: [String: KeibaAIQuickResearchChoice] {
+    // Preserve a pre-race selection after post time. Hit and payout are
+    // displayed only AFTER selecting by saved expected value and probability.
+    private var savedResearchChoicesByRace: [String: KeibaAIQuickResearchChoice] {
         guard let data = quickResearchStore.data,
               data.raceDate == selectedDateISO,
               !data.formalRecommendationsEnabled, !data.autoBetEnabled else { return [:] }
 
-        let validIDs = Set(allScheduleItems.filter {
-            $0.prediction != nil && status(for: $0) == .predicted
-        }.map(\.raceID))
+        let raceItems = Dictionary(uniqueKeysWithValues: allScheduleItems.map { ($0.raceID, $0) })
         var choices: [String: KeibaAIQuickResearchChoice] = [:]
         let rejected: Set<String> = [
             "invalid", "failed", "missing_record", "held",
-            "entrant_changed", "dead_heat_excluded"
+            "entrant_changed", "dead_heat_excluded", "no_candidate", "no_target"
         ]
 
         for row in data.races {
-            guard row.raceDate == selectedDateISO, validIDs.contains(row.raceID),
-                  let raceItem = allScheduleItems.first(where: { $0.raceID == row.raceID }),
+            guard row.raceDate == selectedDateISO,
+                  let raceItem = raceItems[row.raceID],
+                  raceItem.prediction != nil,
                   raceItem.venue == row.venue,
                   row.raceNumber.map({ $0 == raceItem.raceNumber }) ?? true,
                   row.betType != "win5", row.betType != "support",
@@ -1376,7 +1377,10 @@ struct KeibaAINewDesignView: View {
                     ticketLabel: candidate.label,
                     probabilityPct: candidate.probabilityPct,
                     expectedMultiplierLow: multiplier,
-                    recordedAtJST: savedAt
+                    recordedAtJST: savedAt,
+                    hit: row.status == "matched" ? candidate.hit : nil,
+                    payoutYen: row.status == "matched" ? candidate.payoutYen : nil,
+                    unitYen: candidate.unitYen
                 )
                 if let existing = choices[row.raceID], !quickChoiceRanksAbove(choice, existing) {
                     continue
@@ -1385,6 +1389,14 @@ struct KeibaAINewDesignView: View {
             }
         }
         return choices
+    }
+
+    // The top recommendation-style research card stays upcoming-only.
+    private var quickResearchChoicesByRace: [String: KeibaAIQuickResearchChoice] {
+        savedResearchChoicesByRace.filter { raceID, _ in
+            guard let item = allScheduleItems.first(where: { $0.raceID == raceID }) else { return false }
+            return status(for: item) == .predicted
+        }
     }
 
     private func quickChoiceRanksAbove(_ left: KeibaAIQuickResearchChoice,
@@ -2056,6 +2068,9 @@ struct KeibaAINewDesignView: View {
                                         .font(.caption.weight(.semibold))
                                         .foregroundStyle(.blue)
                                 }
+                                if status(for: item) == .finished {
+                                    finishedRaceOutcome(for: item)
+                                }
                             }
                         }
                         .buttonStyle(.plain)
@@ -2075,6 +2090,53 @@ struct KeibaAINewDesignView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle("今日の結論")
         .accessibilityIdentifier("today-overview")
+    }
+
+    // Show only saved pre-race research tickets. Missing settlement is not a miss.
+    private func finishedRaceOutcome(for item: KeibaAIScheduleItem) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Label("発走前に保存した研究馬券", systemImage: "ticket")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            if let choice = savedResearchChoicesByRace[item.raceID] {
+                Text("\(choice.betTypeLabel)  \(choice.ticketLabel)")
+                    .font(.subheadline.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let hit = choice.hit {
+                    HStack(spacing: 10) {
+                        Label(hit ? "的中" : "不的中",
+                              systemImage: hit ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(hit ? Color.green : Color.red)
+                        if let payout = choice.payoutYen {
+                            Text("参考払戻 \(payout)円（\(choice.unitYen)円換算）")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    Label(resultStore.result(for: item.raceID) == nil
+                          ? "結果取得・馬券照合待ち" : "馬券結果の照合待ち",
+                          systemImage: "clock.arrow.circlepath")
+                        .foregroundStyle(.orange)
+                }
+            } else if quickResearchStore.data?.raceDate != selectedDateISO ||
+                      quickResearchStore.isLoading ||
+                      quickResearchStore.data?.races.contains(where: { $0.raceID == item.raceID }) != true {
+                Label("研究記録が未反映（的中判定保留）", systemImage: "clock")
+                    .foregroundStyle(.secondary)
+            } else {
+                Label("有効な保存候補なし・見送り（的中判定なし）", systemImage: "minus.circle")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(Color(uiColor: .secondarySystemGroupedBackground),
+                    in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityIdentifier("race-outcome-\(item.raceID)")
     }
 
     private var todayList: some View {
@@ -2139,6 +2201,9 @@ struct KeibaAINewDesignView: View {
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.blue)
                                     .padding(.horizontal, 10)
+                                }
+                                if status(for: item) == .finished {
+                                    finishedRaceOutcome(for: item)
                                 }
                             }
                         }
@@ -2314,6 +2379,7 @@ struct KeibaAINewDesignView: View {
                     ForEach(data.periods) { period in
                         Button {
                             selectedPerformancePeriodID = period.id
+                            preferredCompactColumn = .detail
                         } label: {
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -2353,6 +2419,7 @@ struct KeibaAINewDesignView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("performance-period-\(period.id)")
                     }
 
                     Text("AI1位勝率を大きく表示していますが、これは馬券推奨ではなく予測性能の確認用です。")
@@ -4853,6 +4920,15 @@ private struct KeibaAIPerformanceView: View {
         period.id == "all" ? "実運用開始から" : period.label.replacingOccurrences(of: "前向き検証 全期間", with: "実運用開始から")
     }
 
+    private var recentRacesInPeriod: [KeibaAIPerformanceRace] {
+        guard let period = selectedPeriod else { return [] }
+        let start = period.startDate ?? "0000-01-01"
+        let end = period.endDate ?? "9999-12-31"
+        return (data?.recentRaces ?? []).filter {
+            $0.raceDate >= start && $0.raceDate <= end
+        }
+    }
+
     private func pct(_ value: Double?) -> String {
         guard let value else { return "--" }
         return String(format: "%.1f%%", value)
@@ -4937,7 +5013,7 @@ private struct KeibaAIPerformanceView: View {
                         .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
                     }
 
-                    if selectedPeriodID == "all" || selectedPeriodID == "last7" {
+                    if selectedPeriodID == "all" {
                         KeibaAIPerformanceBreakdown(
                             title: "勝負度別（正式版）",
                             rows: data.byBattleGrade.map {
@@ -4957,7 +5033,13 @@ private struct KeibaAIPerformanceView: View {
                         Text("最近の突合レース")
                             .font(.title3.weight(.bold))
 
-                        ForEach(data.recentRaces.prefix(16)) { race in
+                        if recentRacesInPeriod.isEmpty {
+                            Text("この期間の照合済みレースはありません。")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        ForEach(recentRacesInPeriod.prefix(16)) { race in
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text("\(race.venue ?? "") \(race.raceNumber)R  \(race.raceName ?? "")")
