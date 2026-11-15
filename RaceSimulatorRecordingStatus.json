@@ -12,12 +12,13 @@
     "2026-10-17"
   ],
   "counts": {
-    "pending": 24,
+    "pending": 23,
     "local_saved": 1,
+    "failed": 1,
     "missed": 9
   },
   "expectedScheduleAvailable": true,
-  "generatedAt": "2026-11-15T02:14:24.436264+00:00",
+  "generatedAt": "2026-11-15T02:14:39.459836+00:00",
   "history": [
     {
       "durableConfirmed": false,
@@ -357,15 +358,15 @@
     },
     {
       "durableConfirmed": false,
-      "label": "発走前の保存待ち",
+      "label": "保存失敗",
       "raceDate": "2026-11-15",
       "raceID": "202605050404",
       "raceName": "2歳新馬",
       "raceNumber": 4,
-      "reason": "正式10分前の入力と発走前の保存を待っています。",
+      "reason": "保存処理に失敗しました。発走前は再試行し、発走後の作り直しは実績に含めません。",
       "recordedAt": null,
       "startTime": "11:15",
-      "state": "pending",
+      "state": "failed",
       "venue": "東京",
       "verificationCheckedAt": null
     },
@@ -4902,15 +4903,15 @@
     },
     {
       "durableConfirmed": false,
-      "label": "発走前の保存待ち",
+      "label": "保存失敗",
       "raceDate": "2026-11-15",
       "raceID": "202605050404",
       "raceName": "2歳新馬",
       "raceNumber": 4,
-      "reason": "正式10分前の入力と発走前の保存を待っています。",
+      "reason": "保存処理に失敗しました。発走前は再試行し、発走後の作り直しは実績に含めません。",
       "recordedAt": null,
       "startTime": "11:15",
-      "state": "pending",
+      "state": "failed",
       "venue": "東京",
       "verificationCheckedAt": null
     },
