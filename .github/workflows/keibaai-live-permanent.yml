@@ -30,6 +30,9 @@ on:
       - 'production/test_live_recording_resume.py'
       - 'production/test_live_capture_recovery.py'
   schedule:
+    # Earlier backstop: GitHub scheduled runs can arrive hours late. The first
+    # race has a fixed T-12..T-8 window; do not postdate missed captures.
+    - cron: '15 20 * * 5,6,0'  # 05:15 JST Sat/Sun/Mon (UTC previous day)
     - cron: '45 22 * * *'  # 07:45 JST
     - cron: '0 3 * * *'    # 12:00 JST; queue early so cron delay cannot miss afternoon T-10 windows
   workflow_dispatch:
@@ -125,6 +128,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
             minutes='${{ github.event.inputs.max_minutes }}'
+          elif [ "${{ github.event.schedule }}" = '15 20 * * 5,6,0' ]; then
+            minutes='320'
           elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
             minutes='305'
           else
