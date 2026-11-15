@@ -3,7 +3,7 @@
   "version": "aligned-portfolio-review-v1",
   "inputPolicy": "formal-portfolio-inputs-v1",
   "projectionState": "verified",
-  "generatedAtJST": "2026-11-15T16:19:59+09:00",
+  "generatedAtJST": "2026-11-15T16:28:23+09:00",
   "startDate": "2026-11-03",
   "protocolVersion": "aligned-portfolio-confirmation-v1-20261102",
   "protocolFingerprint": "55ee84560014f5f4dec94996da103855c0d6a926f386973934922e894a293d79",
@@ -39,7 +39,7 @@
   "aligned": {
     "countsAreCurrent": true,
     "racesObserved": 105,
-    "matchedResultRaces": 101,
+    "matchedResultRaces": 102,
     "overall": {
       "races": 105,
       "selectedRaces": 34,
@@ -734,17 +734,17 @@
         "sameWideRuleSkipped": {
           "races": 4,
           "racesWithCandidates": 3,
-          "fullySettledRaces": 2,
+          "fullySettledRaces": 3,
           "committedStakeYen": 600,
           "tickets": 6,
-          "settledTickets": 4,
-          "pendingTickets": 2,
+          "settledTickets": 6,
+          "pendingTickets": 0,
           "hitTickets": 0,
-          "stakeYen": 400,
+          "stakeYen": 600,
           "returnYen": 0,
-          "profitYen": -400,
+          "profitYen": -600,
           "returnIndex": 0.0,
-          "sumPredictedHits": 0.29374
+          "sumPredictedHits": 0.47774
         },
         "battleWide": [
           {
@@ -1266,7 +1266,7 @@
   "betaDecision": {
     "minimumRaces": 300,
     "verifiedAlignedRaces": 105,
-    "matchedResultRaces": 101,
+    "matchedResultRaces": 102,
     "eligibleForResearchBeta": false,
     "blockReasons": [
       "aligned_capture_count_below_300",
@@ -9460,8 +9460,27 @@
       "torigami": null,
       "inputFingerprint": "32d14c2352d1c85db6b683d7c20b1ecf6b2aa69dad5ed621a70198c7676cb74e",
       "inputRecordedAtJST": "2026-11-15T15:58:18.965824+09:00",
-      "resultState": "awaiting_results",
-      "actualFinish": {},
+      "resultState": "matched",
+      "actualFinish": {
+        "1": 1,
+        "2": 3,
+        "3": 11,
+        "4": 2,
+        "5": 15,
+        "6": 8,
+        "7": 14,
+        "8": 4,
+        "9": 6,
+        "10": 10,
+        "11": 7,
+        "12": 18,
+        "13": 9,
+        "14": 5,
+        "15": 16,
+        "16": 17,
+        "17": 13,
+        "18": 12
+      },
       "commonWideReference": [
         {
           "betType": "wide",
@@ -9472,8 +9491,8 @@
           "oddsHigh": 11.6,
           "expectedMultiplierLow": 1.175,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         },
         {
           "betType": "wide",
@@ -9484,11 +9503,11 @@
           "oddsHigh": 17.7,
           "expectedMultiplierLow": 1.248,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
-      "referenceSettled": false
+      "referenceSettled": true
     },
     {
       "raceDate": "2026-11-15",
