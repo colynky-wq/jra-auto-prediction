@@ -50,24 +50,43 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
+      # A heavily delayed 08:25 JST GitHub cron must not publish a large
+      # reference projection while T-10 live bundles are being frozen.
+      # Evening scheduled runs still refresh these read-only projections.
+      - name: Guard delayed morning research during live collection
+        id: morning_window
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = 'schedule' ] && [ "${{ github.event.schedule }}" = '25 23 * * 0,5,6' ]; then
+            hhmm=$(TZ=Asia/Tokyo date +%H%M)
+            if [ "$hhmm" -ge 0900 ] && [ "$hhmm" -lt 1730 ]; then
+              echo 'skip=true' >> "$GITHUB_OUTPUT"
+              echo '::notice::Late morning research run skipped to protect live T-10 capture; evening refresh remains scheduled.'
+            fi
+          fi
       - name: Checkout latest main
+        if: steps.morning_window.outputs.skip != 'true'
         uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
 
       - name: Set up Python
+        if: steps.morning_window.outputs.skip != 'true'
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
 
       - name: Install reference projection dependencies
+        if: steps.morning_window.outputs.skip != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
       - name: Verify fixed shadow rules and review contracts
+        if: steps.morning_window.outputs.skip != 'true'
         run: |
           python -m py_compile production/build_bet_research_data.py production/portfolio_shadow.py production/portfolio_shadow_v2.py production/all_bet_recommendation_shadow.py production/formal_10min_evidence.py production/portfolio_review_100.py production/portfolio_early_review.py
           python production/test_bet_research_data.py
@@ -81,23 +100,28 @@ jobs:
           python production/test_portfolio_early_review.py
 
       - name: Refresh reference display inputs before portfolio projection
+        if: steps.morning_window.outputs.skip != 'true'
         run: python production/build_bet_research_data.py
 
       - name: Build portfolio research projection
+        if: steps.morning_window.outputs.skip != 'true'
         run: |
           python production/portfolio_shadow.py
           python production/portfolio_shadow_v2.py
           python production/all_bet_recommendation_shadow.py
 
       - name: Build formal prospective 100-race review projection
+        if: steps.morning_window.outputs.skip != 'true'
         run: |
           python production/portfolio_review_100.py
           python production/aligned_portfolio_review.py || echo '::warning::Aligned audit is blocked; publish its failure report.'
 
       - name: Build accelerated mixed reference review
+        if: steps.morning_window.outputs.skip != 'true'
         run: python production/portfolio_early_review.py
 
       - name: Publish research projections with bounded concurrent-update retry
+        if: steps.morning_window.outputs.skip != 'true'
         shell: bash
         run: |
           set -euo pipefail
