@@ -76,6 +76,7 @@ jobs:
 
       - name: Compile result and validation publishers
         run: |
+          bash -n production/publish_aligned_audit_from_main.sh
           python -m py_compile production/build_result_data_live.py
           python -m py_compile production/result_detail_enrichment.py
           python -m py_compile production/build_performance_data.py
@@ -242,6 +243,14 @@ jobs:
                   git clean -fd -- reports AlignedPortfolioReview.json AlignedPortfolioReview.md ResultData.json PerformanceData.json BetResearchData.json PortfolioResearchData.json AllBetRecommendationData.json SameDayTrackBiasShadow.json SameDayShadowEvaluation.json SameDayShadowPortfolioReview.json >/dev/null 2>&1 || true
                 fi
               fi
+            fi
+
+            # Audit publication is independent of optional shadow/research builds.
+            # Re-read published main; never project from locally uncommitted results.
+            # A failed audit may publish ONLY an explicit failed/blocked projection.
+            if ! bash production/publish_aligned_audit_from_main.sh; then
+              echo '::warning::Aligned audit publication not verified; retain last checked projection as historical only.'
+              cycle_failed=1
             fi
 
             now=$(date +%s)

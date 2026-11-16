@@ -10,6 +10,8 @@ on:
       - '.github/workflows/keibaai-aligned-research-daily.yml'
       - 'production/aligned_daily_research.py'
       - 'production/test_aligned_daily_research.py'
+      - 'production/inspect_frozen_win_probabilities.py'
+      - 'production/test_inspect_frozen_win_probabilities.py'
   workflow_dispatch:
   schedule:
     # 21:15 JST every day (12:15 UTC), after the daytime result/settlement jobs.
@@ -43,6 +45,15 @@ jobs:
           set -euo pipefail
           python -m py_compile production/aligned_daily_research.py production/test_aligned_daily_research.py
           python production/test_aligned_daily_research.py -v
+      - name: Inspect frozen horse-level probabilities without touching model or beta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile production/inspect_frozen_win_probabilities.py production/test_inspect_frozen_win_probabilities.py
+          python production/test_inspect_frozen_win_probabilities.py -v
+          # Quality-limited, descriptive data may be printed without weakening
+          # the separate H1-H4 full-cohort integrity gate below.
+          python production/inspect_frozen_win_probabilities.py
       - name: Rebuild from current verified audit and publish only research reports
         shell: bash
         run: |

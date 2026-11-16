@@ -29,10 +29,16 @@ on:
       - 'production/live_recording_resume.py'
       - 'production/test_live_recording_resume.py'
       - 'production/test_live_capture_recovery.py'
+      - 'production/live_session_slots.py'
+      - 'production/test_live_session_slots.py'
   schedule:
     # Earlier backstop: GitHub scheduled runs can arrive hours late. The first
     # race has a fixed T-12..T-8 window; do not postdate missed captures.
     - cron: '15 20 * * 5,6,0'  # 05:15 JST Sat/Sun/Mon (UTC previous day)
+    # Backup starts are serialized with queue:max below and have strict
+    # JST phase cutoffs. A delayed run never backfills missed T-10 windows.
+    - cron: '15 21 * * 5,6,0'  # 06:15 JST Sat/Sun/Mon
+    - cron: '15 23 * * 5,6,0'  # 08:15 JST Sat/Sun/Mon
     - cron: '45 22 * * *'  # 07:45 JST
     - cron: '0 3 * * *'    # 12:00 JST; queue early so cron delay cannot miss afternoon T-10 windows
   workflow_dispatch:
@@ -45,6 +51,10 @@ permissions:
   contents: write
 concurrency:
   group: keibaai-live-${{ github.event_name == 'push' && github.sha || 'production' }}
+  # Preserve all pending scheduled slots in FIFO order. The default queue:single
+  # silently replaces the 07:45 primary with a later 08:15 backup.
+  # Only one production writer may run, and no running session is canceled.
+  queue: max
   cancel-in-progress: false
 jobs:
   monitor:
@@ -56,7 +66,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           path: startup-guard
-          sparse-checkout: /.github/scripts/keibaai-race-day-check.sh
+          sparse-checkout: |
+            /.github/scripts/keibaai-race-day-check.sh
+            /production/live_session_slots.py
           sparse-checkout-cone-mode: false
 
       - name: Decide CI or live race day
@@ -73,15 +85,28 @@ jobs:
           fi
           bash startup-guard/.github/scripts/keibaai-race-day-check.sh "$date8"
 
+      - name: Select bounded JST session slot before expensive setup
+        id: runtime
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_EVENT_NAME: ${{ github.event_name }}
+          KEIBAAI_EVENT_SCHEDULE: ${{ github.event.schedule }}
+          KEIBAAI_DATE8: ${{ steps.day.outputs.target_date }}
+          KEIBAAI_MAX_MINUTES_INPUT: ${{ github.event.inputs.max_minutes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 startup-guard/production/live_session_slots.py --github-output "$GITHUB_OUTPUT"
+
       - name: Checkout repository
-        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || (steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true')
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: main
 
       - name: Set up Python
-        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || (steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true')
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -89,14 +114,14 @@ jobs:
           cache-dependency-path: production/requirements.txt
 
       - name: Install dependencies
-        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || (steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true')
         run: |
           python -m pip install --upgrade pip
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
 
       - name: Smoke-test bundled runtime
-        if: github.event_name == 'push' || steps.day.outputs.has_races == 'true'
+        if: github.event_name == 'push' || (steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true')
         run: |
           bash -n .github/scripts/keibaai-race-day-check.sh
           bash production/test_race_day_check.sh
@@ -110,6 +135,7 @@ jobs:
           python -m py_compile production/ticket_probability_runtime.py
           python -m py_compile production/resilient_live_entrypoint.py
           python -m py_compile production/live_capture_policy.py
+          python -m py_compile production/live_session_slots.py
           python -m py_compile production/live_recording_resume.py
           python -m py_compile production/all_bet_runtime.py
           python -m py_compile production/triple_research_runtime.py
@@ -120,37 +146,37 @@ jobs:
           python production/smoke_topk_runtime.py
           python production/test_live_recording_resume.py
           python production/test_live_capture_recovery.py
-
-      - name: Choose live session runtime
-        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
-        id: runtime
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = 'workflow_dispatch' ]; then
-            minutes='${{ github.event.inputs.max_minutes }}'
-          elif [ "${{ github.event.schedule }}" = '15 20 * * 5,6,0' ]; then
-            minutes='320'
-          elif [ "${{ github.event.schedule }}" = '45 22 * * *' ]; then
-            minutes='305'
-          else
-            minutes='330'
-          fi
-          echo "minutes=${minutes}" >> "$GITHUB_OUTPUT"
+          python production/test_live_session_slots.py -v
 
       - name: Configure git publisher
-        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true'
         run: |
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
+      - name: Recheck JST phase cutoff immediately before live worker starts
+        id: runtime_final
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true'
+        env:
+          KEIBAAI_EVENT_NAME: ${{ github.event_name }}
+          KEIBAAI_EVENT_SCHEDULE: ${{ github.event.schedule }}
+          KEIBAAI_DATE8: ${{ steps.day.outputs.target_date }}
+          KEIBAAI_MAX_MINUTES_INPUT: ${{ github.event.inputs.max_minutes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Setup, dependency installation, and smoke tests may consume minutes.
+          # Recalculate remaining time to avoid running an expired backup.
+          python production/live_session_slots.py --github-output "$GITHUB_OUTPUT"
+
       - name: Monitor races and publish one consistent bundle
         id: session
-        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true'
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime_final.outputs.active == 'true'
         env:
           KEIBAAI_LIVE_DATE: ${{ steps.day.outputs.target_date }}
           KEIBAAI_LIVE_MODE: 'live'
           KEIBAAI_LIVE_RACE_ID: ''
-          KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
+          KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime_final.outputs.minutes }}
           KEIBAAI_LIVE_POLL_SECONDS: '10'
           KEIBAAI_LIVE_GRACE_MINUTES: '5'
           KEIBAAI_PUBLISH_RACEDATA: 'true'
@@ -165,7 +191,7 @@ jobs:
           python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 10 -- python -u production/resilient_live_entrypoint.py
 
       - name: Preserve live outbox for recovery
-        if: always() && github.event_name != 'push' && steps.day.outputs.has_races == 'true'
+        if: always() && github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime_final.outputs.active == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: keibaai-live-outbox-${{ github.run_id }}
