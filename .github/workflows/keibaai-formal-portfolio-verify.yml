@@ -31,6 +31,8 @@ jobs:
           python-version: '3.13'
       - run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
       - run: |
+          bash -n production/publish_aligned_audit_from_main.sh
+          python production/test_publish_aligned_audit_from_main.py -v
           python -m py_compile production/inspect_frozen_win_probabilities.py
           python production/test_inspect_frozen_win_probabilities.py -v
           python production/inspect_frozen_win_probabilities.py --output /tmp/keibaai-frozen-probability-audit.json
