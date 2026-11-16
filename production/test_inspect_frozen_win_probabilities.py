@@ -86,12 +86,24 @@ class FrozenWinProbabilitiesTests(unittest.TestCase):
             with self.subTest(action=action), self.assertRaises(ValueError):
                 build(Path("."), a, p, load_bundle=lambda *_: r)
 
-    def test_incomplete_finish_and_invalid_probability_fail_closed(self):
+    def test_unknown_finish_is_excluded_per_event_not_counted_as_loss(self):
         audit, protocol, record = fixture()
         bad = deepcopy(audit)
-        del bad["races"][0]["actualFinish"]["3"]
-        with self.assertRaises(ValueError):
-            build(Path("."), bad, protocol, load_bundle=lambda *_: record)
+        bad["races"][0]["actualFinish"]["3"] = None
+        out = build(Path("."), bad, protocol, load_bundle=lambda *_: record)
+        self.assertEqual(out["probabilities"]["first100"]["win"]["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["probabilities"]["first100"]["top2"]["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["probabilities"]["first100"]["top3"]["topPredictedHorseRaces"], 0)
+        self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top3"], ["202603030101"])
+
+        bad["races"][0]["actualFinish"]["2"] = None
+        out = build(Path("."), bad, protocol, load_bundle=lambda *_: record)
+        self.assertEqual(out["probabilities"]["first100"]["win"]["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["probabilities"]["first100"]["top2"]["topPredictedHorseRaces"], 0)
+        self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top2"], ["202603030101"])
+
+    def test_invalid_probability_still_fails_closed(self):
+        audit, protocol, record = fixture()
         bad_record = deepcopy(record)
         bad_record["prediction"]["horses"][0]["aiProbability"] = None
         with self.assertRaises(ValueError):
