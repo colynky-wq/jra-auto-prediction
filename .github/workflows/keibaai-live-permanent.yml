@@ -154,14 +154,29 @@ jobs:
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
+      - name: Recheck JST phase cutoff immediately before live worker starts
+        id: runtime_final
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true'
+        env:
+          KEIBAAI_EVENT_NAME: ${{ github.event_name }}
+          KEIBAAI_EVENT_SCHEDULE: ${{ github.event.schedule }}
+          KEIBAAI_DATE8: ${{ steps.day.outputs.target_date }}
+          KEIBAAI_MAX_MINUTES_INPUT: ${{ github.event.inputs.max_minutes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Setup, dependency installation, and smoke tests may consume minutes.
+          # Recalculate remaining time to avoid running an expired backup.
+          python production/live_session_slots.py --github-output "$GITHUB_OUTPUT"
+
       - name: Monitor races and publish one consistent bundle
         id: session
-        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true'
+        if: github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime_final.outputs.active == 'true'
         env:
           KEIBAAI_LIVE_DATE: ${{ steps.day.outputs.target_date }}
           KEIBAAI_LIVE_MODE: 'live'
           KEIBAAI_LIVE_RACE_ID: ''
-          KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime.outputs.minutes }}
+          KEIBAAI_LIVE_MAX_MINUTES: ${{ steps.runtime_final.outputs.minutes }}
           KEIBAAI_LIVE_POLL_SECONDS: '10'
           KEIBAAI_LIVE_GRACE_MINUTES: '5'
           KEIBAAI_PUBLISH_RACEDATA: 'true'
@@ -176,7 +191,7 @@ jobs:
           python production/live_bundle_publisher.py --date "$date8" --outbox "$KEIBAAI_OUTBOX" --poll-seconds 10 -- python -u production/resilient_live_entrypoint.py
 
       - name: Preserve live outbox for recovery
-        if: always() && github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true'
+        if: always() && github.event_name != 'push' && steps.day.outputs.has_races == 'true' && steps.runtime_final.outputs.active == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: keibaai-live-outbox-${{ github.run_id }}
