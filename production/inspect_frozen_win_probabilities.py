@@ -92,13 +92,19 @@ def build(root, audit, protocol, load_bundle=capture.load):
     check(not first_ids.intersection(confirm_ids), "cohorts overlap")
     check(len(first_ids) == cohorts.get("races") and
           len(confirm_ids) == confirm.get("races"), "cohort identity mismatch")
+    # This diagnostic is intentionally restricted to the two registered
+    # windows. After 200 observations, more frozen races are legitimate:
+    # they belong to neither window and must not silently enter either.
+    check(len(first_ids | confirm_ids) == min(len(rows), 200),
+          "missing or overlapping fixed research window members")
 
     exclusions = {(r["raceDate"], r["raceID"]) for r in
                   (quality.get("resultExclusions") or [])}
     samples = defaultdict(lambda: defaultdict(list))
     top_picks = defaultdict(lambda: [0, 0])
     counts = {"matchedAuditedRaces": 0, "pendingOrExcludedRaces": 0,
-              "evaluatedRaces": 0, "evaluatedHorses": 0}
+              "evaluatedRaces": 0, "evaluatedHorses": 0,
+              "matchedOutsideFirst200Races": 0}
     seen = set()
     unknown_finish_by_kind = defaultdict(list)
 
@@ -124,7 +130,9 @@ def build(root, audit, protocol, load_bundle=capture.load):
         numbers = [int(h["number"]) for h in horses]
         check(len(numbers) == len(set(numbers)), "duplicate horse: " + rid)
         group = "first100" if rid in first_ids else "confirmation101to200" if rid in confirm_ids else None
-        check(group is not None, "unlocked cohort identity: " + rid)
+        if group is None:
+            counts["matchedOutsideFirst200Races"] += 1
+            continue
 
         # A matched race can still contain a null finishing position. It is
         # unknown, not a loss. Score the shorter observable place events only.
@@ -186,6 +194,7 @@ def build(root, audit, protocol, load_bundle=capture.load):
             "Exclude unmatched, dead-heat and changed-entrant outcomes; never count missing as losses.",
             "For otherwise matched races, an unknown placement excludes only events requiring that rank.",
             "Brier/reliability is descriptive; horses within the same race are correlated.",
+            "Only registered first100 and confirmation101to200 races enter the fixed-window comparison.",
             "No threshold fitting, betting changes or beta activation.",
         ],
     }
