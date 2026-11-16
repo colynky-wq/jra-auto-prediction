@@ -76,6 +76,7 @@ jobs:
 
       - name: Compile result and validation publishers
         run: |
+          bash -n production/publish_aligned_audit_from_main.sh
           python -m py_compile production/build_result_data_live.py
           python -m py_compile production/result_detail_enrichment.py
           python -m py_compile production/build_performance_data.py
