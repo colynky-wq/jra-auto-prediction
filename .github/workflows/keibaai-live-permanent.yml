@@ -96,7 +96,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python startup-guard/production/live_session_slots.py --github-output "$GITHUB_OUTPUT"
+          python3 startup-guard/production/live_session_slots.py --github-output "$GITHUB_OUTPUT"
 
       - name: Checkout repository
         if: github.event_name == 'push' || (steps.day.outputs.has_races == 'true' && steps.runtime.outputs.active == 'true')
