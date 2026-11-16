@@ -59,6 +59,31 @@ class LiveSessionSlotTests(unittest.TestCase):
                 self.assertFalse(choose("schedule", cron, DAY,
                                         clock(hh, mm - 1))["active"])
 
+    def test_fifo_queued_backups_do_not_occupy_primary_handoff_windows(self):
+        # GitHub queue:max permits multiple pending runs, but the live writer
+        # remains serialized. Simulate timely primary and queued backups.
+        crons = (
+            "15 20 * * 5,6,0", "15 21 * * 5,6,0",
+            "45 22 * * *", "15 23 * * 5,6,0", "0 3 * * *",
+        )
+        start = clock(5, 15)
+        timeline = []
+        for cron in crons:
+            state = choose("schedule", cron, DAY, start)
+            if state["active"]:
+                end = start + timedelta(minutes=state["minutes"])
+                timeline.append((cron, start.strftime("%H:%M"), end.strftime("%H:%M")))
+                start = end
+            else:
+                timeline.append((cron, start.strftime("%H:%M"), "skipped"))
+        self.assertEqual(timeline, [
+            ("15 20 * * 5,6,0", "05:15", "10:35"),
+            ("15 21 * * 5,6,0", "10:35", "skipped"),
+            ("45 22 * * *", "10:35", "12:50"),
+            ("15 23 * * 5,6,0", "12:50", "skipped"),
+            ("0 3 * * *", "12:50", "17:30"),
+        ])
+
     def test_push_cannot_run_live_session(self):
         self.assertFalse(choose("push", "", "", clock(9, 30))["active"])
 
