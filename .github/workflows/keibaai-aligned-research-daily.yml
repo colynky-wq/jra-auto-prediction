@@ -10,6 +10,8 @@ on:
       - '.github/workflows/keibaai-aligned-research-daily.yml'
       - 'production/aligned_daily_research.py'
       - 'production/test_aligned_daily_research.py'
+      - 'production/inspect_frozen_win_probabilities.py'
+      - 'production/test_inspect_frozen_win_probabilities.py'
   workflow_dispatch:
   schedule:
     # 21:15 JST every day (12:15 UTC), after the daytime result/settlement jobs.
