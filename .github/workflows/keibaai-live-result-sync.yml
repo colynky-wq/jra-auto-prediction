@@ -244,6 +244,14 @@ jobs:
               fi
             fi
 
+            # Audit publication is independent of optional shadow/research builds.
+            # Re-read published main; never project from locally uncommitted results.
+            # A failed audit may publish ONLY an explicit failed/blocked projection.
+            if ! bash production/publish_aligned_audit_from_main.sh; then
+              echo '::warning::Aligned audit publication not verified; retain last checked projection as historical only.'
+              cycle_failed=1
+            fi
+
             now=$(date +%s)
             remaining=$((end_epoch - now))
             if [ "$remaining" -le 0 ]; then break; fi
