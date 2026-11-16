@@ -34,7 +34,7 @@ jobs:
           python -m py_compile production/inspect_frozen_win_probabilities.py
           python production/test_inspect_frozen_win_probabilities.py -v
           python production/inspect_frozen_win_probabilities.py --output /tmp/keibaai-frozen-probability-audit.json
-          python -c 'import json; d=json.load(open("/tmp/keibaai-frozen-probability-audit.json")); print("FROZEN_PROBABILITY_VALIDATED", d["status"], d["coverage"])'
+          python -c 'import json; d=json.load(open("/tmp/keibaai-frozen-probability-audit.json")); print("FROZEN_PROBABILITY_VALIDATED", d["status"], d["coverage"]); [print(c, bet, "AI_BRIER", d["probabilities"][c][bet]["horseProbabilities"]["ai"]["brierScore"], "MARKET_BRIER", d["probabilities"][c][bet]["horseProbabilities"]["market"]["brierScore"]) for c in ("first100", "confirmation101to200") for bet in ("win", "top2", "top3") if d["probabilities"][c][bet]["horseProbabilities"]["ai"] is not None]'
           python production/test_formal_portfolio_capture.py
           python production/test_aligned_portfolio_review.py
           python production/test_formal_portfolio_e2e.py
