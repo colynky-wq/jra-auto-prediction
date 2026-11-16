@@ -100,6 +100,7 @@ def build(root, audit, protocol, load_bundle=capture.load):
     counts = {"matchedAuditedRaces": 0, "pendingOrExcludedRaces": 0,
               "evaluatedRaces": 0, "evaluatedHorses": 0}
     seen = set()
+    unknown_finish_by_kind = defaultdict(list)
 
     for row in rows:
         day, rid = row.get("raceDate"), row.get("raceID")
@@ -120,30 +121,36 @@ def build(root, audit, protocol, load_bundle=capture.load):
         check(isinstance(horses, list) and len(horses) > 2, "missing horses: " + rid)
         positions = row.get("actualFinish")
         check(isinstance(positions, dict), "missing official finishing order: " + rid)
-        try:
-            podium = {int(positions[str(k)]) for k in (1, 2, 3)}
-            winner = int(positions["1"])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise ValueError("FROZEN_PROBABILITY_BLOCKED: incomplete finish: " + rid) from exc
-        check(len(podium) == 3, "ambiguous podium: " + rid)
         numbers = [int(h["number"]) for h in horses]
-        check(len(numbers) == len(set(numbers)) and podium.issubset(numbers),
-              "horse/result identity mismatch: " + rid)
+        check(len(numbers) == len(set(numbers)), "duplicate horse: " + rid)
         group = "first100" if rid in first_ids else "confirmation101to200" if rid in confirm_ids else None
         check(group is not None, "unlocked cohort identity: " + rid)
 
+        # A matched race can still contain a null finishing position. It is
+        # unknown, not a loss. Score the shorter observable place events only.
+        # In particular, a missing 3rd never invalidates an observed 1st.
         for key, (ai_key, market_key, places) in PROBABILITIES.items():
+            raw_podium = [positions.get(str(k)) for k in range(1, places + 1)]
+            if any(v is None for v in raw_podium):
+                unknown_finish_by_kind[key].append(rid)
+                continue
+            try:
+                podium = {int(v) for v in raw_podium}
+            except (TypeError, ValueError) as exc:
+                raise ValueError("FROZEN_PROBABILITY_BLOCKED: invalid finish: " + rid) from exc
+            check(len(podium) == places and podium.issubset(numbers),
+                  "ambiguous horse/result identity: " + rid)
             top_number = max(horses, key=lambda h: prob(h[ai_key], ai_key))["number"]
             top_picks[(group, key)][0] += 1
-            top_picks[(group, key)][1] += int(int(top_number) in
-                                                  {int(positions[str(k)]) for k in range(1, places + 1)})
+            top_picks[(group, key)][1] += int(int(top_number) in podium)
             for horse in horses:
                 number = int(horse["number"])
-                y = int(number in {int(positions[str(k)]) for k in range(1, places + 1)})
+                y = int(number in podium)
                 samples[(group, key)]["all"].append({"source": "ai", "p": prob(horse[ai_key], ai_key), "y": y})
                 samples[(group, key)]["all"].append({"source": "market", "p": prob(horse[market_key], market_key), "y": y})
-        counts["evaluatedRaces"] += 1
-        counts["evaluatedHorses"] += len(horses)
+            if key == "win":
+                counts["evaluatedRaces"] += 1
+                counts["evaluatedHorses"] += len(horses)
 
     check(counts["matchedAuditedRaces"] == aligned.get("matchedResultRaces"),
           "matched-result count mismatch")
@@ -162,19 +169,22 @@ def build(root, audit, protocol, load_bundle=capture.load):
     check(isinstance(issues, list), "missing quality issues ledger")
     return {
         "schemaVersion": 1,
-        "status": "quality_limited_descriptive_only" if issues else "frozen_evidence_descriptive_only",
+        "status": "quality_limited_descriptive_only" if issues or any(unknown_finish_by_kind.values()) else "frozen_evidence_descriptive_only",
         "source": {"file": "AlignedPortfolioReview.json",
                    "generatedAtJST": audit["generatedAtJST"],
                    "protocolVersion": audit["protocolVersion"]},
         "quality": {"existingIssueCount": len(issues),
                     "newAlignedBetaEligible": False,
                     "researchConditionChanges": False},
-        "coverage": counts,
+        "coverage": {**counts,
+                     "unknownFinishRacesByEvent": {key: sorted(set(unknown_finish_by_kind[key]))
+                                                   for key in PROBABILITIES}},
         "probabilities": data,
         "limitations": [
             "Strictly frozen input rows only; no retrospective odds, changes or missing-race rescue.",
             "Past projection timestamp is preserved; this is not a claim of live current results.",
             "Exclude unmatched, dead-heat and changed-entrant outcomes; never count missing as losses.",
+            "For otherwise matched races, an unknown placement excludes only events requiring that rank.",
             "Brier/reliability is descriptive; horses within the same race are correlated.",
             "No threshold fitting, betting changes or beta activation.",
         ],
