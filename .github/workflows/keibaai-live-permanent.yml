@@ -33,6 +33,11 @@ on:
     # Earlier backstop: GitHub scheduled runs can arrive hours late. The first
     # race has a fixed T-12..T-8 window; do not postdate missed captures.
     - cron: '15 20 * * 5,6,0'  # 05:15 JST Sat/Sun/Mon (UTC previous day)
+    # Independent early backstops for GitHub scheduler lag. Existing single
+    # production concurrency prevents simultaneous writers and duplicate freezes.
+    # A delayed run never backfills missed T-10 windows.
+    - cron: '15 21 * * 5,6,0'  # 06:15 JST Sat/Sun/Mon
+    - cron: '15 23 * * 5,6,0'  # 08:15 JST Sat/Sun/Mon
     - cron: '45 22 * * *'  # 07:45 JST
     - cron: '0 3 * * *'    # 12:00 JST; queue early so cron delay cannot miss afternoon T-10 windows
   workflow_dispatch:
