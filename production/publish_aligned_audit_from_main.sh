@@ -10,6 +10,9 @@ git config user.email 'keibaai@users.noreply.github.com'
 for attempt in 1 2 3 4; do
   git fetch --no-tags origin main
   git reset --hard origin/main
+  # Result Sync may have left untracked/ignored local reports after a failed
+  # downstream build. Ignore ALL of them: the audit must read published main.
+  git clean -fdx -- reports >/dev/null
 
   audit_failed=0
   python production/aligned_portfolio_review.py || audit_failed=1
