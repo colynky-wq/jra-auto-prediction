@@ -102,6 +102,47 @@ class FrozenWinProbabilitiesTests(unittest.TestCase):
         self.assertEqual(out["probabilities"]["first100"]["top2"]["topPredictedHorseRaces"], 0)
         self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top2"], ["202603030101"])
 
+    def test_matched_races_beyond_200_do_not_pollute_locked_windows(self):
+        audit, protocol, record = fixture()
+        # Add 198 unmatched observations inside the two locked windows
+        # and one newly matched frozen race outside both windows.
+        more = []
+        for n in range(1000, 1198):
+            rid = "20260303" + str(n)
+            more.append({
+                "raceDate": "2026-11-07", "raceID": rid,
+                "resultState": "awaiting_result", "inputFingerprint": "unused",
+            })
+        beyond_id = "202603039999"
+        beyond = {
+            "raceDate": "2026-11-07", "raceID": beyond_id,
+            "resultState": "matched", "inputFingerprint": "laterfreeze",
+            "actualFinish": {"1": 1, "2": 2, "3": 3},
+        }
+        audit["races"] = audit["races"] + more + [beyond]
+        audit["aligned"]["racesObserved"] = 201
+        audit["aligned"]["matchedResultRaces"] = 2
+        audit["aligned"]["first100"]["raceIDs"] += [
+            r["raceID"] for r in more[:99]]
+        audit["aligned"]["first100"]["races"] = 100
+        audit["aligned"]["confirmation101to200"]["raceIDs"] += [
+            r["raceID"] for r in more[99:]]
+        audit["aligned"]["confirmation101to200"]["races"] = 100
+        after = deepcopy(record)
+        after["fingerprint"] = "laterfreeze"
+        after["prediction"]["raceID"] = beyond_id
+
+        def load(root, day, rid):
+            return after if rid == beyond_id else record
+
+        report = build(Path("."), audit, protocol, load_bundle=load)
+        self.assertEqual(report["coverage"]["matchedOutsideFirst200Races"], 1)
+        self.assertEqual(report["coverage"]["matchedAuditedRaces"], 2)
+        self.assertEqual(report["probabilities"]["first100"]["win"]
+                         ["topPredictedHorseRaces"], 1)
+        self.assertIsNone(report["probabilities"]["confirmation101to200"]
+                          ["win"]["horseProbabilities"]["ai"])
+
     def test_invalid_probability_still_fails_closed(self):
         audit, protocol, record = fixture()
         bad_record = deepcopy(record)
