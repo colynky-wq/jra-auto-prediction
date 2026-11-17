@@ -243,7 +243,8 @@ class IndependentOddsAuditTests(unittest.TestCase):
                      "prospectiveClockCheckPassed":True,
                      "sourceAuthenticityVerified":False,
                      "intakeLagSeconds":15.0,
-                     "intakeAtJST":"2026-11-15T16:04:15+09:00"}
+                     "intakeAtJST":"2026-11-15T16:04:15+09:00",
+                     "observedAtJST":"2026-11-15T16:04:00+09:00"}
             p.with_suffix(".receipt.json").write_text(json.dumps(receipt))
             self.assertEqual(
                 verify_local_intake_receipt(p,sha)["status"],"matched_local_receipt")
@@ -252,6 +253,27 @@ class IndependentOddsAuditTests(unittest.TestCase):
             self.assertEqual(
                 verify_local_intake_receipt(p,"bad-sha")["status"],
                 "invalid_local_receipt")
+
+    def test_inconsistent_prospective_receipt_lag_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"20261115"/"202608050412.json"
+            p.parent.mkdir(parents=True)
+            raw=json.dumps(self.independent).encode()
+            p.write_bytes(raw)
+            sha=hashlib.sha256(raw).hexdigest()
+            receipt={
+                "schemaVersion":1,"raceID":"202608050412",
+                "raceDate":"2026-11-15","observationSha256":sha,
+                "prospectiveClockCheckPassed":True,
+                "sourceAuthenticityVerified":False,
+                "intakeLagSeconds":60,
+                "intakeAtJST":"2026-11-15T16:13:00+09:00",
+                "observedAtJST":"2026-11-15T16:04:00+09:00",
+            }
+            p.with_suffix(".receipt.json").write_text(json.dumps(receipt))
+            got=verify_local_intake_receipt(p,sha,snapshot=self.independent)
+            self.assertEqual(got["status"],"invalid_local_receipt")
+            self.assertEqual(got["reason"],"prospective_intake_clock_mismatch")
 
     def test_missing_receipt_does_not_count_as_prospective(self):
         with tempfile.TemporaryDirectory() as td:
