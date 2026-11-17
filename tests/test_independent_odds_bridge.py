@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"production"))
-from independent_odds_bridge import run_once
+from independent_odds_bridge import run_once, should_log_report
 
 
 class MacOddsBridgeTests(unittest.TestCase):
@@ -84,6 +84,24 @@ class MacOddsBridgeTests(unittest.TestCase):
         self.assertEqual(late["ingestion"]["counts"]["accepted"],0)
         self.assertEqual(late["ingestion"]["counts"]["rejected"],1)
         self.assertFalse((self.accepted/self.date/f"{self.rid}.json").exists())
+
+    def test_mac_bridge_does_not_log_empty_status_every_30_seconds(self):
+        report=self.run_bridge()
+        first,sig=should_log_report(report,None,0,watch_mode=True)
+        later,_=should_log_report(report,sig,30,watch_mode=True)
+        hour,_=should_log_report(report,sig,3601,watch_mode=True)
+        self.assertTrue(first)
+        self.assertFalse(later)
+        self.assertTrue(hour)
+
+    def test_mac_bridge_logs_new_acceptance_without_delay(self):
+        empty=self.run_bridge()
+        _,sig=should_log_report(empty,None,0,watch_mode=True)
+        self.put_csv()
+        changed=self.run_bridge()
+        log,_=should_log_report(changed,sig,1,watch_mode=True)
+        self.assertTrue(log)
+        self.assertEqual(changed["ingestion"]["counts"]["accepted"],1)
 
     def test_empty_folder_fails_closed(self):
         response=self.run_bridge()
