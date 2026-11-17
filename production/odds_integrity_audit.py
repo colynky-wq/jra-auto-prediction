@@ -190,6 +190,48 @@ def audit_wide_references(aligned):
     return {"bins": bins, "highExpectationExamples": examples, "errors": audit_errors}
 
 
+def compare_early_and_formal(early, formal):
+    """Compare separately recorded observations without assuming a feed update."""
+    if (early.get("raceID") != formal.get("raceID")
+            or early.get("raceDate") != formal.get("raceDate")):
+        return {"status": "identity_mismatch"}
+
+    first = parse_jst(early.get("capturedAtJST"))
+    last = parse_jst(formal.get("capturedAtJST"))
+    if first is None or last is None:
+        return {"status": "capture_time_unavailable"}
+    elapsed = round((last - first).total_seconds() / 60.0, 2)
+    if elapsed < -0.01:
+        return {"status": "early_snapshot_after_formal", "elapsedMinutes": elapsed}
+
+    earlier_pairs = {}
+    later_pairs = {}
+    for dest, snapshot in ((earlier_pairs, early), (later_pairs, formal)):
+        for pair in snapshot.get("pairs", []):
+            key = (pair.get("number1"), pair.get("number2"))
+            dest[key] = (pair.get("oddsLow"), pair.get("oddsHigh"),
+                         pair.get("popularity"))
+    if earlier_pairs.keys() != later_pairs.keys():
+        return {"status": "pair_set_mismatch", "elapsedMinutes": elapsed}
+
+    changed = sum(earlier_pairs[k] != later_pairs[k] for k in earlier_pairs)
+    if elapsed < 1.0:
+        status = "same_or_near_capture"
+    elif changed == 0:
+        status = "unchanged_across_separate_captures"
+    else:
+        status = "changed_across_separate_captures"
+    return {
+        "status": status,
+        "elapsedMinutes": elapsed,
+        "pairsCompared": len(earlier_pairs),
+        "changedPairs": changed,
+        "sameSourceTimestamp": early.get("officialDatetime") == formal.get("officialDatetime"),
+        "earlySourceTimestamp": early.get("officialDatetime"),
+        "formalSourceTimestamp": formal.get("officialDatetime"),
+    }
+
+
 def audit_repository(root: Path, *, age_alert_min=30):
     """Read only the registered aligned cohort and its frozen inputs."""
     aligned = read_json(root / ALIGNED_FILE)
@@ -197,6 +239,7 @@ def audit_repository(root: Path, *, age_alert_min=30):
         raise ValueError("aligned source not verified/current; abort instead of trusting counts")
 
     rows = []
+    observation_comparisons = []
     for race in aligned["races"]:
         day = str(race["raceDate"]).replace("-", "")
         race_id = str(race["raceID"])
@@ -211,10 +254,22 @@ def audit_repository(root: Path, *, age_alert_min=30):
             })
             continue
         try:
+            formal_snapshot = read_json(odds_file)
             rows.append(audit_snapshot(
-                read_json(odds_file), read_json(win_file),
+                formal_snapshot, read_json(win_file),
                 age_alert_min=age_alert_min,
             ))
+            early_file = base / "wide_odds" / f"{race_id}.json"
+            if early_file.is_file():
+                comparison = compare_early_and_formal(read_json(early_file), formal_snapshot)
+                observation_comparisons.append({
+                    "raceID": race_id, "raceDate": race["raceDate"], **comparison,
+                })
+            else:
+                observation_comparisons.append({
+                    "raceID": race_id, "raceDate": race["raceDate"],
+                    "status": "early_snapshot_unavailable",
+                })
         except (ValueError, TypeError, KeyError, json.JSONDecodeError) as err:
             rows.append({
                 "raceID": race_id, "raceDate": race["raceDate"],
@@ -223,6 +278,20 @@ def audit_repository(root: Path, *, age_alert_min=30):
             })
 
     cnt = Counter(label for r in rows for label in r["alerts"])
+    cmp_counts = Counter(r["status"] for r in observation_comparisons)
+    separately_captured = [
+        x for x in observation_comparisons if x.get("elapsedMinutes", 0) >= 1
+    ]
+    same_source_same_quotes = sum(
+        x["status"] == "unchanged_across_separate_captures"
+        and x.get("sameSourceTimestamp") is True
+        for x in separately_captured
+    )
+    changed_source_changed_quotes = sum(
+        x["status"] == "changed_across_separate_captures"
+        and x.get("sameSourceTimestamp") is False
+        for x in separately_captured
+    )
     ages = [r["sourceAgeMinutes"] for r in rows if r.get("sourceAgeMinutes") is not None]
     return {
         "schemaVersion": 1,
@@ -238,6 +307,20 @@ def audit_repository(root: Path, *, age_alert_min=30):
             "max": max(ages) if ages else None,
         },
         "alertCounts": dict(sorted(cnt.items())),
+        "earlyVersusFormal": {
+            "statusCounts": dict(sorted(cmp_counts.items())),
+            "separatelyCapturedRaces": len(separately_captured),
+            "sameSourceTimeAndUnchangedQuotes": same_source_same_quotes,
+            "changedSourceTimeAndChangedQuotes": changed_source_changed_quotes,
+            "examples": [
+                x for x in observation_comparisons
+                if x["status"] in {
+                    "unchanged_across_separate_captures",
+                    "changed_across_separate_captures",
+                    "pair_set_mismatch",
+                }
+            ][:15],
+        },
         "favoritePairPriceOutliers": [
             {"raceDate": r["raceDate"], "raceID": r["raceID"],
              "pairs": r["favoritePairPriceOutliers"]}
