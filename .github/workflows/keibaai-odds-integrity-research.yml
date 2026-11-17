@@ -39,6 +39,15 @@ jobs:
       - name: Licensed export folder bridge tests (offline only)
         run: python -m unittest discover -s tests -p 'test_independent_odds_dropwatch.py' -v
 
+      - name: Licensed CSV adapter regression tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_csv_adapter.py' -v
+
+      - name: Mac authorized CSV bridge integration tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_bridge.py' -v
+
+      - name: Research CSV-to-receipt bridge empty-folder dry run
+        run: python production/independent_odds_bridge.py --root . > independent-bridge-dry-run.json
+
       - name: Offline independent-source comparison (missing data remain pending)
         run: python production/independent_odds_audit.py --root . > independent-odds-audit.json
 
@@ -100,5 +109,6 @@ jobs:
             odds-integrity-audit.json
             independent-odds-audit.json
             independent-dropwatch-audit.json
+            independent-bridge-dry-run.json
             final-odds-drift.json
           if-no-files-found: ignore
