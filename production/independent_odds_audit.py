@@ -135,7 +135,8 @@ def compare_observation(snapshot, win_record, formal_wide, *,
             "independentOddsLow":other[0],"independentOddsHigh":other[1],
             "lowRatio":round(other[0]/old[0],4),
             "highRatio":round(other[1]/old[1],4)})
-    if snapshot.get("source")=="jra_official_observation" and not snapshot.get("sourceReference","").startswith("https://www.jra.go.jp/"):
+    ref=snapshot.get("sourceReference")
+    if snapshot.get("source")=="jra_official_observation" and not (isinstance(ref,str) and ref.startswith("https://www.jra.go.jp/")):
         # Warning only, because JRA official pages may use other valid JRA hosts.
         source_warning="Check JRA source hostname and capture evidence manually"
     else:
