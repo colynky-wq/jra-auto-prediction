@@ -6,6 +6,8 @@ on:
     paths:
       - 'production/odds_integrity_audit.py'
       - 'production/final_odds_drift_audit.py'
+      - 'ops/mac_independent_odds_launchd.py'
+      - 'tests/test_mac_independent_odds_launchd.py'
       - 'tests/test_final_odds_drift_audit.py'
       - 'tests/test_odds_integrity_audit.py'
       - '.github/workflows/keibaai-odds-integrity-research.yml'
@@ -47,6 +49,12 @@ jobs:
 
       - name: Research CSV-to-receipt bridge empty-folder dry run
         run: python production/independent_odds_bridge.py --root . > independent-bridge-dry-run.json
+
+      - name: Mac LaunchAgent opt-in generator regression tests
+        run: python -m unittest discover -s tests -p 'test_mac_independent_odds_launchd.py' -v
+
+      - name: Check Mac auto-setup preview does not install anything
+        run: python ops/mac_independent_odds_launchd.py --repo-root . > mac-odds-agent-preview.txt
 
       - name: Offline independent-source comparison (missing data remain pending)
         run: python production/independent_odds_audit.py --root . > independent-odds-audit.json
@@ -110,5 +118,6 @@ jobs:
             independent-odds-audit.json
             independent-dropwatch-audit.json
             independent-bridge-dry-run.json
+            mac-odds-agent-preview.txt
             final-odds-drift.json
           if-no-files-found: ignore
