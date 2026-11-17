@@ -46,6 +46,8 @@ def audit_snapshot(snapshot, win_record, *, age_alert_min=30):
     alerts = []
     prediction = win_record.get("prediction", {})
     horse_numbers = {int(h["number"]) for h in prediction.get("horses", [])}
+    horse_popularity = {int(h["number"]): h.get("popularity") for h in prediction.get("horses", [])}
+    favorite_pair_outliers = []
     race_id = str(prediction.get("raceID", ""))
     if str(snapshot.get("raceID", "")) != race_id:
         alerts.append("race_identity_mismatch")
@@ -97,6 +99,17 @@ def audit_snapshot(snapshot, win_record, *, age_alert_min=30):
         valid_pairs.add((a, b))
         if not (1 <= low <= high < float("inf")):
             alerts.append("invalid_odds_range")
+        # Heuristic warning only: even the most popular pair can have unusual
+        # odds. Do not treat this as proof of incorrectly mapped odds.
+        if (horse_popularity.get(a) in {1, 2, 3}
+                and horse_popularity.get(b) in {1, 2, 3}
+                and low >= 15):
+            alerts.append("favorite_pair_wide_price_alert")
+            favorite_pair_outliers.append({
+                "pair": f"{a:02d}{b:02d}", "oddsLow": low,
+                "horseAPopularity": horse_popularity[a],
+                "horseBPopularity": horse_popularity[b],
+            })
 
     expected_pairs = {
         (a, b) for a in horse_numbers for b in horse_numbers if a < b
@@ -112,6 +125,7 @@ def audit_snapshot(snapshot, win_record, *, age_alert_min=30):
         "sourceAgeMinutes": age,
         "minutesBeforePost": before_post,
         "pairCount": len(snapshot.get("pairs", [])),
+        "favoritePairPriceOutliers": favorite_pair_outliers[:10],
         "alerts": sorted(set(alerts)),
         "sourceTimestampSemantics": "UNVERIFIED",
         "oddsStalenessProven": False,
