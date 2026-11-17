@@ -83,6 +83,10 @@ python production/independent_odds_dropwatch.py --root . --source-dir licensed_o
 python production/independent_odds_audit.py --root . --independent-dir research_independent_odds
 ```
 
+**発走前の証拠の保護（今回追加）**：`--watch` 実行時は、ファイルに申告された `observedAtJST` がMacの実際の受信時刻から180秒以内かを追加確認します。20秒より未来の観測や、3分以上前の観測は研究用フォルダーへ取り込みません。一回のみの確認でも `--prospective` を付けると同じ検査を適用します。
+
+通常の一回実行では過去のデータも研究用として読めますが、受信結果は `prospectiveClockCheckPassed=false` と明記し、発走前に観測された実績であると誤って扱いません。時計のチェックに通っても、出所の真正性やデータの新鮮さを独立して証明できるわけではありません。Macの日時設定が正しいことが前提です。
+
 `--watch`はMacのターミナルが動作している間に限って実行されます。実際の外部データソフトとの接続、Mac起動時の自動起動、契約・認証は**未設定**です。個別の許可されたエクスポート形式が判明したら、保存前の書式変換アダプターを別に実装します。
 
 取り込む際の検査：
