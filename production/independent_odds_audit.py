@@ -20,6 +20,37 @@ ALLOWED_SOURCES = {"jra_official_observation", "licensed_jravan_export",
                    "licensed_odds_provider"}
 QUALITY_GATE = "independent_source_evidence_pending"
 ODDS_STATUS = {"pre_post", "open"}
+MAX_EXTERNAL_BYTES = 2_000_000
+
+
+def strict_json_pairs(pairs):
+    output = {}
+    for key, value in pairs:
+        if key in output:
+            raise ValueError("duplicate JSON key")
+        output[key] = value
+    return output
+
+
+def reject_nonfinite(token):
+    raise ValueError("non-finite JSON numeric token: " + str(token))
+
+
+def parse_independent_json_bytes(raw):
+    if len(raw) > MAX_EXTERNAL_BYTES:
+        raise ValueError("independent observation exceeds size limit")
+    value = json.loads(raw.decode("utf-8"),
+                       object_pairs_hook=strict_json_pairs,
+                       parse_constant=reject_nonfinite)
+    if not isinstance(value, dict) or type(value.get("schemaVersion")) is not int or value["schemaVersion"] != 1:
+        raise ValueError("unsupported independent observation schema")
+    return value
+
+
+def read_independent_snapshot(path):
+    if path.is_symlink():
+        raise ValueError("independent observation must not be a symbolic link")
+    return parse_independent_json_bytes(path.read_bytes())
 
 
 def minutes_between(a, b):
@@ -82,7 +113,8 @@ def build_map(rows, *, wide=False):
 
 
 def compare_observation(snapshot, win_record, formal_wide, *,
-                        max_source_age_minutes=5.0):
+                        max_source_age_minutes=5.0,
+                        max_capture_gap_minutes=2.0):
     """Compare an explicit independent-source observation against frozen T-10.
 
     The maximum allowed quote age is a **research criterion**, not a provider SLA.
@@ -134,6 +166,10 @@ def compare_observation(snapshot, win_record, formal_wide, *,
             errors.append(f"timestamp_without_explicit_offset_{key}")
     observed=parse_jst(snapshot.get("observedAtJST"))
     asof=parse_jst(snapshot.get("asOfJST"))
+    frozen_at=parse_jst(prediction.get("capturedAtJST"))
+    cross_gap=minutes_between(observed,frozen_at)
+    if cross_gap is None or abs(cross_gap) > max_capture_gap_minutes:
+        errors.append("cross_source_capture_gap_too_large")
     try:
         post=parse_jst(f"{prediction['raceDate']}T{prediction['startTime']}:00")
     except (KeyError, TypeError, ValueError):
@@ -191,6 +227,8 @@ def compare_observation(snapshot, win_record, formal_wide, *,
         "sourceReference":snapshot.get("sourceReference"),
         "observedMinutesBeforePost":minutes_before,
         "claimedQuoteAgeMinutes":quote_age,
+        "crossSourceCaptureGapMinutes":cross_gap,
+        "researchRuleMaxCrossCaptureGapMinutes":max_capture_gap_minutes,
         "frozenT10Timestamp":prediction.get("capturedAtJST"),
         "independentObservationTime":snapshot.get("observedAtJST"),
         "independentQuoteAsOf":snapshot.get("asOfJST"),
@@ -311,7 +349,7 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
         result["observationFilesPresent"]+=1
         freeze=root/"reports"/date
         try:
-            snap=read_json(independent_file)
+            snap=read_independent_snapshot(independent_file)
             model=read_json(freeze/"all_bet_v1"/"win"/f"{rid}.json")
             wide=read_json(freeze/"wide_odds_live10"/f"{rid}.json")
             diff=compare_observation(snap,model,wide,
