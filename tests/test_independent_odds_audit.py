@@ -136,6 +136,9 @@ class IndependentOddsAuditTests(unittest.TestCase):
             result=run_audit(root,root/"research_independent_odds")
             self.assertEqual(result["observationFilesPresent"],1)
             self.assertEqual(result["comparableObservations"],1)
+            self.assertEqual(result["prospectiveClockReceipts"],0)
+            self.assertEqual(result["qualityGate"],
+                             "historical_reference_only_provenance_unverified")
             self.assertEqual(result["fullyCoveredWinObservations"],1)
             self.assertEqual(result["fullyCoveredWideObservations"],1)
             self.assertEqual(before,wfile.read_bytes())
