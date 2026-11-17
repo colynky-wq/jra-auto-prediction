@@ -58,3 +58,22 @@ The script reads the existing repository only and prints a JSON report. It does 
 - `production/formal_wide_odds_runtime.py`
 
 All changes in this patch are isolated to read-only research auditing and CI checks.
+
+## Historic final single-win odds drift (post hoc only)
+
+A separate read-only script `production/final_odds_drift_audit.py` compares
+the frozen `reports/YYYYMMDD/all_bet_v1/win/RACEID.json` odds against
+`reports/YYYYMMDD/ResultData.json`'s `horses[].finalOdds`.
+It reports paired horse coverage, median absolute odds changes, and changes
+to the favorite. This is a diagnostic of how far the frozen market quote
+was from the published final quote; it does **not** prove stale feed values,
+and it is **not** a backtest using odds that were known before the race.
+
+Run:
+```bash
+python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
+python production/final_odds_drift_audit.py --root . > final-odds-drift.json
+```
+The report explicitly marks `finalOddsUsedAsPreRace=false`.
+Never use it to promote a shadow ticket, set buy/no-buy gates, or claim
+that a final quote was available before betting ended.
