@@ -55,6 +55,16 @@ class OddsIntegrityAuditTests(unittest.TestCase):
         self.assertIn("duplicate_pair", result["alerts"])
         self.assertIn("incomplete_or_extra_pairs", result["alerts"])
 
+    def test_popular_pair_odds_anomaly_is_research_warning(self):
+        for h, popularity in zip(self.record["prediction"]["horses"], [1, 2, 3]):
+            h["popularity"] = popularity
+        self.snapshot["pairs"][0]["oddsLow"] = 20.0
+        self.snapshot["pairs"][0]["oddsHigh"] = 23.0
+        result = audit_snapshot(self.snapshot, self.record)
+        self.assertIn("favorite_pair_wide_price_alert", result["alerts"])
+        self.assertEqual(result["favoritePairPriceOutliers"][0]["pair"], "0102")
+        self.assertFalse(result["oddsStalenessProven"])
+
     def test_invalid_odds_detected(self):
         self.snapshot["pairs"][0]["oddsLow"] = 8.0
         self.snapshot["pairs"][0]["oddsHigh"] = 3.0
