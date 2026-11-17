@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "production"))
-from independent_odds_audit import compare_observation, run_audit, build_map, reprice_reference_wide
+from independent_odds_audit import (compare_observation, run_audit, build_map,
+    reprice_reference_wide, parse_independent_json_bytes,
+    verify_local_intake_receipt)
 
 
 class IndependentOddsAuditTests(unittest.TestCase):
@@ -207,6 +210,57 @@ class IndependentOddsAuditTests(unittest.TestCase):
         self.independent["winOdds"]={"number":1,"odds":2.1}
         result=compare_observation(self.independent,self.win_record,self.formal_wide)
         self.assertIn("win_invalid_quote_collection",result["errors"])
+
+    def test_cross_source_capture_gap_over_two_minutes_rejected(self):
+        self.independent["observedAtJST"]="2026-11-15T16:06:30+09:00"
+        self.independent["asOfJST"]="2026-11-15T16:05:30+09:00"
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("cross_source_capture_gap_too_large",result["errors"])
+
+    def test_duplicate_json_key_is_rejected(self):
+        raw=b'{"schemaVersion":1,"raceID":"a","raceID":"b"}'
+        with self.assertRaisesRegex(ValueError,"duplicate JSON key"):
+            parse_independent_json_bytes(raw)
+
+    def test_nonfinite_json_number_is_rejected(self):
+        raw=b'{"schemaVersion":1,"odds":NaN}'
+        with self.assertRaisesRegex(ValueError,"non-finite JSON"):
+            parse_independent_json_bytes(raw)
+
+    def test_boolean_schema_version_is_rejected(self):
+        with self.assertRaisesRegex(ValueError,"unsupported independent"):
+            parse_independent_json_bytes(b'{"schemaVersion":true}')
+
+    def test_local_receipt_matches_only_unmodified_raw_bytes(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"20261115"/"202608050412.json"
+            p.parent.mkdir(parents=True)
+            raw=json.dumps(self.independent).encode("utf-8")
+            p.write_bytes(raw)
+            sha=hashlib.sha256(raw).hexdigest()
+            receipt={"schemaVersion":1,"raceID":"202608050412",
+                     "raceDate":"2026-11-15","observationSha256":sha,
+                     "prospectiveClockCheckPassed":True,
+                     "sourceAuthenticityVerified":False,
+                     "intakeLagSeconds":15.0,
+                     "intakeAtJST":"2026-11-15T16:04:15+09:00"}
+            p.with_suffix(".receipt.json").write_text(json.dumps(receipt))
+            self.assertEqual(
+                verify_local_intake_receipt(p,sha)["status"],"matched_local_receipt")
+            self.assertTrue(
+                verify_local_intake_receipt(p,sha)["prospectiveClockCheckPassed"])
+            self.assertEqual(
+                verify_local_intake_receipt(p,"bad-sha")["status"],
+                "invalid_local_receipt")
+
+    def test_missing_receipt_does_not_count_as_prospective(self):
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/"20261115"/"202608050412.json"
+            p.parent.mkdir(parents=True)
+            p.write_bytes(b'{}')
+            receipt=verify_local_intake_receipt(p,"irrelevant")
+            self.assertEqual(receipt["status"],"missing_local_receipt")
+            self.assertFalse(receipt["prospectiveClockCheckPassed"])
 
     def test_unverified_cohort_rejected(self):
         with tempfile.TemporaryDirectory() as td:
