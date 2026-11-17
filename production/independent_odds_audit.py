@@ -286,8 +286,8 @@ def reprice_reference_wide(race, difference):
     return out
 
 
-def verify_local_intake_receipt(observation_path, sha256):
-    """Verify hash-bound local metadata; never claim this authenticates a provider."""
+def verify_local_intake_receipt(observation_path, sha256, *, snapshot=None):
+    """Verify hash-bound clock metadata; never claim this authenticates a provider."""
     receipt_file = observation_path.with_suffix(".receipt.json")
     if receipt_file.is_symlink():
         return {"status": "invalid_local_receipt", "reason": "symlink"}
@@ -304,10 +304,33 @@ def verify_local_intake_receipt(observation_path, sha256):
             and str(receipt.get("raceDate", "")).replace("-", "")
                 == observation_path.parent.name
             and receipt.get("sourceAuthenticityVerified") is False
+            and type(receipt.get("prospectiveClockCheckPassed")) is bool
         )
         if not matched:
             return {"status": "invalid_local_receipt",
                     "reason": "receipt_identity_or_hash_mismatch"}
+        if snapshot is None:
+            snapshot = read_independent_snapshot(observation_path)
+        if receipt.get("observedAtJST") != snapshot.get("observedAtJST"):
+            return {"status": "invalid_local_receipt",
+                    "reason": "receipt_observation_time_mismatch"}
+        observed = parse_jst(snapshot.get("observedAtJST"))
+        intake = parse_jst(receipt.get("intakeAtJST"))
+        measured_lag = (
+            round((intake - observed).total_seconds(), 2)
+            if intake is not None and observed is not None else None
+        )
+        recorded_lag = receipt.get("intakeLagSeconds")
+        if receipt.get("prospectiveClockCheckPassed") is True:
+            if (measured_lag is None or not -20 <= measured_lag <= 180
+                    or type(recorded_lag) not in (int, float)
+                    or abs(measured_lag - recorded_lag) > 1.0):
+                return {"status": "invalid_local_receipt",
+                        "reason": "prospective_intake_clock_mismatch"}
+        else:
+            if recorded_lag is not None:
+                return {"status": "invalid_local_receipt",
+                        "reason": "offline_receipt_must_not_claim_live_lag"}
         return {
             "status": "matched_local_receipt",
             "prospectiveClockCheckPassed": (
@@ -356,7 +379,7 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
                 max_source_age_minutes=max_source_age_minutes)
             diff["observationSha256"]=hashlib.sha256(independent_file.read_bytes()).hexdigest()
             diff["localIntakeReceipt"]=verify_local_intake_receipt(
-                independent_file, diff["observationSha256"])
+                independent_file, diff["observationSha256"], snapshot=snap)
             diff["repricedFrozenWideResearchTickets"]=reprice_reference_wide(race,diff)
         except (ValueError,TypeError,KeyError,json.JSONDecodeError,OSError) as e:
             diff={"raceID":rid,"comparisonStatus":"rejected",
