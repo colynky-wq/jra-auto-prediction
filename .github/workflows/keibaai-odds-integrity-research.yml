@@ -7,6 +7,10 @@ on:
       - 'production/odds_integrity_audit.py'
       - 'production/final_odds_drift_audit.py'
       - 'production/market_logit_feature_audit.py'
+      - 'production/team_nave_tan_history_probe.py'
+      - 'tests/test_team_nave_tan_history_probe.py'
+      - 'research/independent_odds_provider_selection.json'
+      - 'docs/independent-odds-provider-decision-20261118.md'
       - 'tests/test_market_logit_feature_audit.py'
       - 'ops/mac_independent_odds_launchd.py'
       - 'tests/test_mac_independent_odds_launchd.py'
@@ -91,6 +95,28 @@ jobs:
           print('medianAbsWinOddsMovePct:', data['medianAbsPctPriceMovement'])
           print('winOddsMoved20Pct:', data['horsesMovedAtLeast20Pct'])
           print('finalOddsUsedAsPreRace:', data['finalOddsUsedAsPreRace'])
+          PY
+
+      - name: Team-Nave documented TAN history offline parser tests
+        run: python -m unittest discover -s tests -p 'test_team_nave_tan_history_probe.py' -v
+
+      - name: Verify selected provider remains disabled pending user contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('research/independent_odds_provider_selection.json').read_text(encoding='utf-8'))
+          assert x['selectionStatus']=='vendor_selected_pending_contract'
+          assert x['operationalStatus']=='not_connected'
+          assert x['subscriptionActive'] is False
+          assert x['credentialAvailable'] is False
+          assert x['independentEvidenceFilesCollected']==0
+          assert x['formalBettingEnabled'] is False
+          assert x['sourceAuthenticityVerified'] is False
+          assert x['technical']['recommendedOption']=='ALL'
+          assert x['technical']['historicalWideResponseSampleVerified'] is False
+          print('independentOddsVendor:',x['providerDisplayName'])
+          print('providerConnected:',x['subscriptionActive'])
           PY
 
       - name: Inspect LightGBM's actual market-logit usage
