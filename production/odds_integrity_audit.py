@@ -300,6 +300,16 @@ def audit_repository(root: Path, *, age_alert_min=30):
         "alignedProjectionVerified": True,
         "racesAudited": len(rows),
         "sourceTimestampSemantics": "UNVERIFIED; metadata age is not proof of stale odds",
+        "researchOddsReliability": {
+            "status": "unverified",
+            "bettingEdgeValidated": False,
+            "conservativeReason": (
+                "The recorded odds source timestamps precede T-10 capture by "
+                "tens of minutes. No independent T-10 quote attestation is "
+                "available in the frozen aligned cohort."
+            ),
+            "requiresIndependentLiveOddsBeforePromotion": True,
+        },
         "sourceAgeMinutes": {
             "count": len(ages),
             "min": min(ages) if ages else None,
