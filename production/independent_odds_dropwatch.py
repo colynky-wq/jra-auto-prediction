@@ -21,8 +21,11 @@ import tempfile
 import time
 
 from independent_odds_audit import compare_observation, read_json
+from odds_integrity_audit import parse_jst
 
 MAX_BYTES = 2_000_000
+MAX_LIVE_INGEST_LAG_SECONDS = 180
+MAX_CLOCK_SKEW_SECONDS = 20
 JST = timezone(timedelta(hours=9))
 DAY_RE = re.compile(r"^20\d{6}$")
 RACE_RE = re.compile(r"^\d{12}\.json$")
@@ -66,7 +69,32 @@ def safe_atomic_create(path, payload):
             temp.unlink(missing_ok=True)
 
 
-def ingest_one(root, inbox, accepted_dir, candidate):
+def check_prospective_freshness(snapshot, *, now=None,
+                                max_lag_seconds=MAX_LIVE_INGEST_LAG_SECONDS):
+    """Reject delayed/replayed observation timestamps at the intake clock.
+
+    A close timestamp is only a timing plausibility check; it does not
+    authenticate the source, true quote update, or license permission.
+    """
+    observed = parse_jst(snapshot.get("observedAtJST"))
+    reference = now or datetime.now(JST)
+    if reference.tzinfo is None:
+        raise ValueError("now must be timezone-aware")
+    if observed is None:
+        return {"eligible": False, "reason": "observation_timestamp_missing"}
+    age = round((reference - observed).total_seconds(), 2)
+    if age < -MAX_CLOCK_SKEW_SECONDS:
+        return {"eligible": False, "reason": "observation_from_future",
+                "ingestLagSeconds": age}
+    if age > max_lag_seconds:
+        return {"eligible": False, "reason": "observation_not_recent",
+                "ingestLagSeconds": age}
+    return {"eligible": True, "ingestLagSeconds": age,
+            "sourceAuthenticityVerified": False}
+
+
+def ingest_one(root, inbox, accepted_dir, candidate, *,
+               prospective=False, now=None):
     """Return a receipt without copying unverified/late/malformed input."""
     try:
         if candidate.is_symlink() or not candidate.is_file():
@@ -79,6 +107,8 @@ def ingest_one(root, inbox, accepted_dir, candidate):
         if candidate.stat().st_size > MAX_BYTES:
             return {"status": "rejected", "reason": "oversized_input"}
         data = candidate.read_bytes()
+        if len(data) > MAX_BYTES:
+            return {"status": "rejected", "reason": "oversized_input"}
         payload = json.loads(data.decode("utf-8"))
         if not isinstance(payload, dict) or payload.get("schemaVersion") != 1:
             return {"status": "rejected", "reason": "unsupported_schema"}
@@ -92,6 +122,12 @@ def ingest_one(root, inbox, accepted_dir, candidate):
         diff = compare_observation(payload, read_json(win_file), read_json(wide_file))
         if diff["comparisonStatus"] != "structurally_comparable_not_authenticated":
             return {"status": "rejected", "reason": "not_comparable", "errors": diff["errors"]}
+        freshness = (check_prospective_freshness(payload, now=now)
+                     if prospective else {"eligible": False,
+                                         "reason": "historical_or_offline_research"})
+        if prospective and not freshness["eligible"]:
+            return {"status": "rejected", "reason": freshness["reason"],
+                    "ingestLagSeconds": freshness.get("ingestLagSeconds")}
         output = accepted_dir / relative
         if output.is_symlink():
             return {"status": "rejected", "reason": "destination_is_symlink"}
@@ -101,8 +137,14 @@ def ingest_one(root, inbox, accepted_dir, candidate):
                 return {"status": "already_accepted", "raceID": id}
             return {"status": "rejected", "reason": "immutable_capture_conflict"}
         state = safe_atomic_create(output, data)
-        return {"status": "accepted" if state == "created" else "already_accepted",
+        if state == "already_exists":
+            if _sha(output.read_bytes()) != _sha(data):
+                return {"status": "rejected", "reason": "immutable_capture_conflict"}
+            return {"status": "already_accepted", "raceID": id}
+        return {"status": "accepted",
                 "raceID": id, "sha256": _sha(data),
+                "prospectiveClockCheckPassed": bool(prospective),
+                "ingestLagSeconds": freshness.get("ingestLagSeconds"),
                 "sourceAuthenticityVerified": False,
                 "monetizableEdgeValidated": False}
     except (OSError, ValueError, TypeError, UnicodeDecodeError, json.JSONDecodeError, KeyError) as err:
@@ -110,7 +152,7 @@ def ingest_one(root, inbox, accepted_dir, candidate):
                 "errorType": type(err).__name__}
 
 
-def scan_once(root, inbox, accepted_dir):
+def scan_once(root, inbox, accepted_dir, *, prospective=False, now=None):
     """Poll only local files; source may be written by a separately licensed exporter."""
     counts = {"accepted": 0, "already_accepted": 0, "rejected": 0, "pending": 0}
     items = []
@@ -121,7 +163,8 @@ def scan_once(root, inbox, accepted_dir):
             for candidate in sorted(day_dir.iterdir()):
                 if not candidate.name.endswith(".json"):
                     continue
-                receipt = ingest_one(root, inbox, accepted_dir, candidate)
+                receipt = ingest_one(root, inbox, accepted_dir, candidate,
+                                     prospective=prospective, now=now)
                 counts[receipt["status"]] += 1
                 if receipt["status"] != "already_accepted":
                     items.append({"path": candidate.relative_to(inbox).as_posix(), **receipt})
@@ -129,7 +172,8 @@ def scan_once(root, inbox, accepted_dir):
         "mode": "local_offline_only", "networkRequests": 0,
         "existingModelMutations": 0,
         "independentSourceAuthenticated": False,
-        "polledAtJST": datetime.now(JST).isoformat(timespec="seconds"),
+        "prospectiveClockCheckEnabled": bool(prospective),
+        "polledAtJST": (now or datetime.now(JST)).isoformat(timespec="seconds"),
         "counts": counts, "items": items,
     }
 
@@ -140,7 +184,9 @@ def main():
     parser.add_argument("--source-dir", type=Path, default=Path("licensed_odds_drop"))
     parser.add_argument("--accepted-dir", type=Path, default=Path("research_independent_odds"))
     parser.add_argument("--watch", action="store_true",
-                        help="keep polling an operator-authorized local export folder")
+                        help="live-only local polling; require observation within 180 seconds of intake")
+    parser.add_argument("--prospective", action="store_true",
+                        help="apply live clock freshness check in one-shot mode too")
     parser.add_argument("--poll-seconds", type=float, default=30)
     args = parser.parse_args()
     if args.poll_seconds < 5:
@@ -151,8 +197,10 @@ def main():
     if inbox == accepted or inbox in accepted.parents or accepted in inbox.parents:
         parser.error("source and destination must be distinct, non-nested directories")
     while True:
-        print(json.dumps(scan_once(root, inbox, accepted), ensure_ascii=False,
-                         sort_keys=True, allow_nan=False), flush=True)
+        print(json.dumps(scan_once(root, inbox, accepted,
+                                   prospective=args.watch or args.prospective),
+                         ensure_ascii=False, sort_keys=True, allow_nan=False),
+              flush=True)
         if not args.watch:
             break
         time.sleep(args.poll_seconds)
