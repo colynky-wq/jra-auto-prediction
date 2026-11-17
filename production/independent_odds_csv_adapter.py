@@ -188,11 +188,13 @@ def convert_one(input_path, source_dir, dest_dir):
                 "errorType": type(err).__name__}
 
 
-def scan_csv_once(source_dir, dest_dir):
+def scan_csv_once(source_dir, dest_dir, *, only_day=None):
     counts = {"converted":0, "already_converted":0, "rejected":0}
     items = []
     if source_dir.exists():
-        for folder in sorted(source_dir.iterdir()):
+        folders = ([source_dir / only_day] if only_day
+                   else sorted(source_dir.iterdir()))
+        for folder in folders:
             if folder.is_symlink() or not folder.is_dir():
                 continue
             for path in sorted(folder.glob("*.csv")):
