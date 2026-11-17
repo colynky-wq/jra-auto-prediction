@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from odds_integrity_audit import parse_jst, read_json
 
@@ -28,28 +29,47 @@ def minutes_between(a, b):
 
 
 def normalize_quote(value):
+    if type(value) not in (int, float, str):
+        return None
     try:
         v = float(value)
         return v if math.isfinite(v) and v >= 1 else None
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
+
+
+def parse_horse_number(value):
+    """Require an integer or decimal-digit string; never truncate floats/bools."""
+    if type(value) is int:
+        parsed = value
+    elif isinstance(value, str) and value.strip().isascii() and value.strip().isdigit():
+        parsed = int(value.strip())
+    else:
+        raise ValueError("non-integer horse number")
+    if not 1 <= parsed <= 99:
+        raise ValueError("horse number outside 1..99")
+    return parsed
 
 
 def build_map(rows, *, wide=False):
     quotes = {}
     errors = []
+    if not isinstance(rows, list):
+        return quotes, ["invalid_quote_collection"]
     for item in rows:
         try:
+            if not isinstance(item, dict):
+                raise ValueError("quote is not an object")
             if wide:
-                a, b = int(item["number1"]), int(item["number2"])
+                a, b = parse_horse_number(item["number1"]), parse_horse_number(item["number2"])
                 key = tuple(sorted((a, b)))
                 lo = normalize_quote(item.get("oddsLow"))
                 hi = normalize_quote(item.get("oddsHigh"))
-                if a==b or lo is None or hi is None or lo>hi:
+                if a == b or lo is None or hi is None or lo > hi:
                     raise ValueError("bad wide quote")
                 val = (lo, hi)
             else:
-                key = int(item["number"])
+                key = parse_horse_number(item["number"])
                 val = normalize_quote(item.get("odds"))
                 if val is None:
                     raise ValueError("bad win quote")
@@ -78,15 +98,40 @@ def compare_observation(snapshot, win_record, formal_wide, *,
     for key in ("raceDate", "raceID", "startTime"):
         if str(formal_wide.get(key))!=str(prediction.get(key)):
             errors.append(f"formal_input_mismatch_{key}")
-    if snapshot.get("source") not in ALLOWED_SOURCES:
+    source = snapshot.get("source")
+    if not isinstance(source, str) or source not in ALLOWED_SOURCES:
         errors.append("unknown_source_claim")
-    if snapshot.get("status") not in ODDS_STATUS:
+    status = snapshot.get("status")
+    if not isinstance(status, str) or status not in ODDS_STATUS:
         errors.append("not_observed_before_post")
-    if not isinstance(snapshot.get("sourceReference"),str) or not snapshot["sourceReference"].strip():
+    source_ref = snapshot.get("sourceReference")
+    if not isinstance(source_ref, str) or not source_ref.strip():
         errors.append("missing_source_reference")
+    elif source_ref.startswith(("http://", "https://")):
+        try:
+            hostname = (urlsplit(source_ref).hostname or "").lower()
+        except ValueError:
+            hostname = ""
+        if not hostname:
+            errors.append("invalid_source_reference_url")
+        if hostname == "netkeiba.com" or hostname.endswith(".netkeiba.com"):
+            errors.append("nonindependent_netkeiba_source")
+        if source == "jra_official_observation" and not (
+            hostname == "jra.go.jp" or hostname.endswith(".jra.go.jp")
+        ):
+            errors.append("jra_source_hostname_mismatch")
     if snapshot.get("permissionConfirmed") is not True:
         errors.append("permission_not_confirmed")
 
+    for key in ("observedAtJST", "asOfJST"):
+        val = snapshot.get(key)
+        if not isinstance(val, str) or not (
+            val.endswith("Z") or (
+                len(val) >= 6 and val[-6] in "+-" and val[-3] == ":"
+                and val[-5:-3].isdigit() and val[-2:].isdigit()
+            )
+        ):
+            errors.append(f"timestamp_without_explicit_offset_{key}")
     observed=parse_jst(snapshot.get("observedAtJST"))
     asof=parse_jst(snapshot.get("asOfJST"))
     try:
@@ -135,12 +180,10 @@ def compare_observation(snapshot, win_record, formal_wide, *,
             "independentOddsLow":other[0],"independentOddsHigh":other[1],
             "lowRatio":round(other[0]/old[0],4),
             "highRatio":round(other[1]/old[1],4)})
-    ref=snapshot.get("sourceReference")
-    if snapshot.get("source")=="jra_official_observation" and not (isinstance(ref,str) and ref.startswith("https://www.jra.go.jp/")):
-        # Warning only, because JRA official pages may use other valid JRA hosts.
-        source_warning="Check JRA source hostname and capture evidence manually"
-    else:
-        source_warning=None
+    source_warning = (
+        "Source URL/content is an operator assertion; provenance is not authenticated"
+        if source_ref else None
+    )
 
     return {
         "raceID":record_id,"sourceClaim":snapshot.get("source"),
