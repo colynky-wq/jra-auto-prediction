@@ -20,7 +20,8 @@ import re
 import tempfile
 import time
 
-from independent_odds_audit import compare_observation, read_json
+from independent_odds_audit import (compare_observation, read_json,
+                                    parse_independent_json_bytes)
 from odds_integrity_audit import parse_jst
 
 MAX_BYTES = 2_000_000
@@ -130,9 +131,7 @@ def ingest_one(root, inbox, accepted_dir, candidate, *,
         data = candidate.read_bytes()
         if len(data) > MAX_BYTES:
             return {"status": "rejected", "reason": "oversized_input"}
-        payload = json.loads(data.decode("utf-8"))
-        if not isinstance(payload, dict) or payload.get("schemaVersion") != 1:
-            return {"status": "rejected", "reason": "unsupported_schema"}
+        payload = parse_independent_json_bytes(data)
         if str(payload.get("raceID")) != id or str(payload.get("raceDate", "")).replace("-", "") != date:
             return {"status": "rejected", "reason": "filename_race_identity_mismatch"}
         base = root / "reports" / date
