@@ -98,6 +98,26 @@ jobs:
           python -m unittest discover -s tests -p 'test_market_logit_feature_audit.py' -v
           python production/market_logit_feature_audit.py --model production/lightgbm_fixed_2025.txt > market-logit-feature-audit.json
 
+      - name: Verify audited model matches frozen live shadow hashes
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('market-logit-feature-audit.json').read_text())
+          files=[
+              'reports/20261107/ticket_shadow_v1/prediction/202605050101.json',
+              'reports/20261108/ticket_shadow_v1/prediction/202605050204.json',
+              'reports/20261115/ticket_shadow_v1/prediction/202603030407.json',
+          ]
+          for file in files:
+              observed=json.loads(Path(file).read_text())
+              expected=observed['models']['formalAWin']['sha256']
+              if expected!=report['modelSha256']:
+                  raise SystemExit('market model sha mismatch: '+file)
+          print('marketModelLiveShadowHashMatched:',len(files))
+          print('marketModelSha256:',report['modelSha256'])
+          PY
+
       - name: Summarize market feature split statistics
         run: |
           python - <<'PY'
