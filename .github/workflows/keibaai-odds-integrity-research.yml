@@ -6,6 +6,8 @@ on:
     paths:
       - 'production/odds_integrity_audit.py'
       - 'production/final_odds_drift_audit.py'
+      - 'production/market_logit_feature_audit.py'
+      - 'tests/test_market_logit_feature_audit.py'
       - 'ops/mac_independent_odds_launchd.py'
       - 'tests/test_mac_independent_odds_launchd.py'
       - 'tests/test_final_odds_drift_audit.py'
@@ -91,6 +93,22 @@ jobs:
           print('finalOddsUsedAsPreRace:', data['finalOddsUsedAsPreRace'])
           PY
 
+      - name: Inspect LightGBM's actual market-logit usage
+        run: |
+          python -m unittest discover -s tests -p 'test_market_logit_feature_audit.py' -v
+          python production/market_logit_feature_audit.py --model production/lightgbm_fixed_2025.txt > market-logit-feature-audit.json
+
+      - name: Summarize market feature split statistics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('market-logit-feature-audit.json', encoding='utf-8'))
+          print('marketLogitPresent:',x['marketLogitPresent'])
+          print('marketLogitSplitCount:',x['marketLogitSplitCount'])
+          print('marketLogitSplitSharePct:',x['marketLogitSplitSharePct'])
+          print('marketLogitGainSharePct:',x['marketLogitGainSharePct'])
+          PY
+
       - name: Read-only odds provenance and reference-wide audit
         run: python production/odds_integrity_audit.py --root . --strict-structure > odds-integrity-audit.json
 
@@ -120,4 +138,5 @@ jobs:
             independent-bridge-dry-run.json
             mac-odds-agent-preview.txt
             final-odds-drift.json
+            market-logit-feature-audit.json
           if-no-files-found: ignore
