@@ -185,12 +185,15 @@ def ingest_one(root, inbox, accepted_dir, candidate, *,
                 "errorType": type(err).__name__}
 
 
-def scan_once(root, inbox, accepted_dir, *, prospective=False, now=None):
+def scan_once(root, inbox, accepted_dir, *, prospective=False, now=None,
+              only_day=None):
     """Poll only local files; source may be written by a separately licensed exporter."""
     counts = {"accepted": 0, "already_accepted": 0, "rejected": 0, "pending": 0}
     items = []
     if inbox.exists():
-        for day_dir in sorted(inbox.iterdir()):
+        day_dirs = ([inbox / only_day] if only_day
+                    else sorted(inbox.iterdir()))
+        for day_dir in day_dirs:
             if day_dir.is_symlink() or not day_dir.is_dir():
                 continue
             for candidate in sorted(day_dir.iterdir()):
