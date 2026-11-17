@@ -400,11 +400,14 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
             result["fullyCoveredWinObservations"]+=+(win["provided"]==win["expected"])
             result["fullyCoveredWideObservations"]+=+(wide["provided"]==wide["expected"])
         result["results"].append(diff)
-    # This remains a separate audit gate; does not promote archival research EV to truth.
-    result["qualityGate"]=(
-        "structural_comparison_available_provenance_unverified"
-        if result["comparableObservations"] else QUALITY_GATE
-    )
+    # Clock receipts are local evidence only. Even an observed live import
+    # cannot authenticate the underlying odds provider or source rights.
+    if result["prospectiveClockReceipts"] > 0:
+        result["qualityGate"] = "local_clock_evidence_provenance_unverified"
+    elif result["comparableObservations"] > 0:
+        result["qualityGate"] = "historical_reference_only_provenance_unverified"
+    else:
+        result["qualityGate"] = QUALITY_GATE
     return result
 
 
