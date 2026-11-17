@@ -91,3 +91,30 @@ These values mix ordinary in-running pre-close odds movement with any
 underlying quote delay; they **cannot** be decomposed without an independently
 time-stamped market observation. Final published odds remain post-hoc
 research-only diagnostics and must not be substituted for actual T-10 inputs.
+
+## Market-logit feature exposure in the frozen LightGBM model
+
+The 2026-11-18 read-only text-model split audit of
+`production/lightgbm_fixed_2025.txt` found:
+- Market feature name `市場ロジット` exists in the frozen model.
+- **285 tree splits**, **9.602% of all splits** use it.
+- **12.073% of summed split gain** is attributed to those splits.
+- This is descriptive feature use, **not** a causal estimate of prediction
+  quality or a statement that removing the feature would improve ROI.
+- Frozen prospective shadow records use the model hash
+  `ec7a9abd4d5cdcfceec6865590475c173daf50721c3a1cc156341c720f6de6d5`.
+  The CI independently compares this archived hash against the audited local model.
+
+The old market quote therefore has two potential research implications:
+it affects the expected-value pricing comparison **and** could affect model
+inference through a market-logit feature. The correct next test is a
+time-aligned, independently observed quote comparison, followed by a
+versioned out-of-sample market-feature ablation. No production model is
+retrained, and the historical 105-race cohort is not retroactively rewritten.
+
+Script:
+
+```bash
+python -m unittest discover -s tests -p 'test_market_logit_feature_audit.py' -v
+python production/market_logit_feature_audit.py --model production/lightgbm_fixed_2025.txt
+```
