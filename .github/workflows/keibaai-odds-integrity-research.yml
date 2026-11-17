@@ -7,6 +7,9 @@ on:
       - 'production/odds_integrity_audit.py'
       - 'tests/test_odds_integrity_audit.py'
       - '.github/workflows/keibaai-odds-integrity-research.yml'
+      - 'production/independent_odds_*.py'
+      - 'tests/test_independent_odds_*.py'
+      - 'docs/independent-odds-*.md'
       - 'AlignedPortfolioReview.json'
 
 permissions:
@@ -31,8 +34,14 @@ jobs:
       - name: Independent-source comparison regression tests (no network)
         run: python -m unittest discover -s tests -p 'test_independent_odds_audit.py' -v
 
+      - name: Licensed export folder bridge tests (offline only)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_dropwatch.py' -v
+
       - name: Offline independent-source comparison (missing data remain pending)
         run: python production/independent_odds_audit.py --root . > independent-odds-audit.json
+
+      - name: Dry-run empty authorized export folder
+        run: python production/independent_odds_dropwatch.py --root . --source-dir /tmp/keibaai-licensed-odds-drop --accepted-dir /tmp/keibaai-accepted-odds > independent-dropwatch-audit.json
 
       - name: Independent source comparison summary
         run: |
@@ -69,4 +78,5 @@ jobs:
           path: |
             odds-integrity-audit.json
             independent-odds-audit.json
+            independent-dropwatch-audit.json
           if-no-files-found: ignore
