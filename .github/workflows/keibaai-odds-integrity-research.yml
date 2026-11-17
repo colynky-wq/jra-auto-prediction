@@ -1,0 +1,51 @@
+name: KeibaAI Odds Integrity Research Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'production/odds_integrity_audit.py'
+      - 'tests/test_odds_integrity_audit.py'
+      - '.github/workflows/keibaai-odds-integrity-research.yml'
+      - 'AlignedPortfolioReview.json'
+
+permissions:
+  contents: read
+
+jobs:
+  research-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout immutable inputs
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Unit tests (no network required)
+        run: python -m unittest discover -s tests -p 'test_odds_integrity_audit.py' -v
+
+      - name: Read-only odds provenance and reference-wide audit
+        run: python production/odds_integrity_audit.py --root . --strict-structure > odds-integrity-audit.json
+
+      - name: Show summary
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('odds-integrity-audit.json', encoding='utf-8'))
+          print('racesAudited:', data['racesAudited'])
+          print('sourceAgeMinutes:', data['sourceAgeMinutes'])
+          print('alertCounts:', data['alertCounts'])
+          print('wideReferenceResearch:', data['wideReferenceResearch']['bins'])
+          PY
+
+      - name: Upload read-only research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-odds-integrity-research
+          path: odds-integrity-audit.json
+          if-no-files-found: ignore
