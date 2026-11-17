@@ -15,7 +15,8 @@ import json
 from pathlib import Path
 
 from independent_odds_audit import (ALLOWED_SOURCES, normalize_quote,
-                                    parse_horse_number)
+                                    parse_horse_number, minutes_between)
+from odds_integrity_audit import parse_jst
 from independent_odds_dropwatch import (safe_atomic_create,
                                         validate_relative_path)
 
@@ -30,6 +31,35 @@ COMMON_FIELDS = (
 )
 MAX_CSV_BYTES = 2_000_000
 MAX_ROWS = 1000
+
+
+def validate_t10_csv_time(snapshot, *, max_quote_age_minutes=5):
+    """Do not let early morning exports freeze the only T-10 candidate filename."""
+    time_text = snapshot.get("startTime")
+    if not isinstance(time_text, str) or len(time_text) != 5 or time_text[2] != ":":
+        raise ValueError("invalid scheduled start time")
+    post = parse_jst(f"{snapshot['raceDate']}T{time_text}:00")
+    captured_text = snapshot.get("observedAtJST")
+    asof_text = snapshot.get("asOfJST")
+    if any(
+        not isinstance(t, str) or not (
+            t.endswith("Z") or (
+                len(t) >= 6 and t[-6] in "+-" and t[-3] == ":"
+                and t[-5:-3].isdigit() and t[-2:].isdigit()
+            )
+        ) for t in (captured_text, asof_text)
+    ):
+        raise ValueError("independent CSV timestamps require explicit timezone offset")
+    captured, asof = parse_jst(captured_text), parse_jst(asof_text)
+    if post is None or captured is None or asof is None:
+        raise ValueError("missing scheduled/captured/source time")
+    lead = minutes_between(post, captured)
+    source_age = minutes_between(captured, asof)
+    if lead is None or not 8 <= lead <= 12:
+        raise ValueError("outside 8-to-12 minute formal capture window")
+    if source_age is None or not 0 <= source_age <= max_quote_age_minutes:
+        raise ValueError("CSV source quote not recent enough")
+    return {"minutesBeforePost": lead, "quoteAgeMinutes": source_age}
 
 
 def convert_csv_bytes(data, *, race_id=None, date_folder=None):
@@ -107,7 +137,7 @@ def convert_csv_bytes(data, *, race_id=None, date_folder=None):
             raise ValueError("duplicate win or Wide pair")
         seen.add(key)
         dest.append(val)
-    return {
+    result = {
         "schemaVersion": 1,
         "source": common["source"],
         "sourceReference": common["sourceReference"],
@@ -121,6 +151,8 @@ def convert_csv_bytes(data, *, race_id=None, date_folder=None):
         "winOdds": sorted(win, key=lambda x: x["number"]),
         "wideOdds": sorted(wide, key=lambda x: (x["number1"], x["number2"])),
     }
+    validate_t10_csv_time(result)
+    return result
 
 
 def convert_one(input_path, source_dir, dest_dir):
