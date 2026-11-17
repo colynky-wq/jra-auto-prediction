@@ -248,6 +248,42 @@ def reprice_reference_wide(race, difference):
     return out
 
 
+def verify_local_intake_receipt(observation_path, sha256):
+    """Verify hash-bound local metadata; never claim this authenticates a provider."""
+    receipt_file = observation_path.with_suffix(".receipt.json")
+    if receipt_file.is_symlink():
+        return {"status": "invalid_local_receipt", "reason": "symlink"}
+    if not receipt_file.is_file():
+        return {"status": "missing_local_receipt",
+                "prospectiveClockCheckPassed": False}
+    try:
+        receipt = read_json(receipt_file)
+        matched = (
+            isinstance(receipt, dict)
+            and receipt.get("schemaVersion") == 1
+            and receipt.get("observationSha256") == sha256
+            and str(receipt.get("raceID")) == observation_path.stem
+            and str(receipt.get("raceDate", "")).replace("-", "")
+                == observation_path.parent.name
+            and receipt.get("sourceAuthenticityVerified") is False
+        )
+        if not matched:
+            return {"status": "invalid_local_receipt",
+                    "reason": "receipt_identity_or_hash_mismatch"}
+        return {
+            "status": "matched_local_receipt",
+            "prospectiveClockCheckPassed": (
+                receipt.get("prospectiveClockCheckPassed") is True
+            ),
+            "intakeAtJST": receipt.get("intakeAtJST"),
+            "intakeLagSeconds": receipt.get("intakeLagSeconds"),
+            "sourceAuthenticityVerified": False,
+            "proofScope": "local_clock_and_sha_only",
+        }
+    except (ValueError, TypeError, json.JSONDecodeError, OSError):
+        return {"status": "invalid_local_receipt", "reason": "unreadable_receipt"}
+
+
 def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
     aligned=read_json(root/"AlignedPortfolioReview.json")
     if (aligned.get("projectionState")!="verified" or
@@ -259,7 +295,9 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
             "researchRuleMaxQuoteAgeMinutes":max_source_age_minutes,
             "totalAlignedRaces":len(aligned["races"]),
             "observationFilesPresent":0,"comparableObservations":0,
-            "rejectedObservations":0,"fullyCoveredWinObservations":0,
+            "rejectedObservations":0,"matchedLocalIntakeReceipts":0,
+            "prospectiveClockReceipts":0,"missingOrInvalidReceipts":0,
+            "fullyCoveredWinObservations":0,
             "fullyCoveredWideObservations":0,
             "unobservedRaces":0,"qualityGate":QUALITY_GATE,
             "results":[]}
@@ -279,10 +317,19 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
             diff=compare_observation(snap,model,wide,
                 max_source_age_minutes=max_source_age_minutes)
             diff["observationSha256"]=hashlib.sha256(independent_file.read_bytes()).hexdigest()
+            diff["localIntakeReceipt"]=verify_local_intake_receipt(
+                independent_file, diff["observationSha256"])
             diff["repricedFrozenWideResearchTickets"]=reprice_reference_wide(race,diff)
         except (ValueError,TypeError,KeyError,json.JSONDecodeError,OSError) as e:
             diff={"raceID":rid,"comparisonStatus":"rejected",
                   "errors":["file_parse_or_processing_error"],"detail":str(e)[:160]}
+        receipt = diff.get("localIntakeReceipt", {})
+        if receipt.get("status") == "matched_local_receipt":
+            result["matchedLocalIntakeReceipts"] += 1
+            if receipt.get("prospectiveClockCheckPassed") is True:
+                result["prospectiveClockReceipts"] += 1
+        else:
+            result["missingOrInvalidReceipts"] += 1
         if diff["comparisonStatus"]=="rejected":
             result["rejectedObservations"]+=1
         else:
