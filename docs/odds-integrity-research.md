@@ -77,3 +77,17 @@ python production/final_odds_drift_audit.py --root . > final-odds-drift.json
 The report explicitly marks `finalOddsUsedAsPreRace=false`.
 Never use it to promote a shadow ticket, set buy/no-buy gates, or claim
 that a final quote was available before betting ended.
+
+### 2026-11-17 frozen-versus-final actual audit
+
+Read-only GitHub Actions measurement from the registered `AlignedPortfolioReview.json`:
+- 103 matched races and 1,338 racehorse final-vs-frozen single-win odds pairs.
+- Median absolute `abs(finalOdds/frozenOdds - 1)` movement: **36.335%**.
+- At least 20% movement: **930 of 1,338** comparable horse quotes (69.5%).
+- Frozen favorite vs final favorite differs in **27 of 103** races (26.2%).
+- 5 regression tests passed for this specific diagnostic (45 tests total across four suites).
+
+These values mix ordinary in-running pre-close odds movement with any
+underlying quote delay; they **cannot** be decomposed without an independently
+time-stamped market observation. Final published odds remain post-hoc
+research-only diagnostics and must not be substituted for actual T-10 inputs.
