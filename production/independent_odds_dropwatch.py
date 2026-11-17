@@ -93,6 +93,27 @@ def check_prospective_freshness(snapshot, *, now=None,
             "sourceAuthenticityVerified": False}
 
 
+def make_intake_receipt(payload, raw_sha256, *, prospective, now, lag_seconds):
+    """Bind local capture-clock assertion to the exact stored observation hash."""
+    receipt_time = now or datetime.now(JST)
+    if receipt_time.tzinfo is None:
+        raise ValueError("intake receipt clock must be timezone-aware")
+    return {
+        "schemaVersion": 1,
+        "raceID": str(payload["raceID"]),
+        "raceDate": str(payload["raceDate"]),
+        "observationSha256": raw_sha256,
+        "intakeAtJST": receipt_time.astimezone(JST).isoformat(timespec="milliseconds"),
+        "observedAtJST": payload["observedAtJST"],
+        "prospectiveClockCheckPassed": bool(prospective),
+        "intakeLagSeconds": lag_seconds,
+        "sourceAuthenticityVerified": False,
+        "providerIndependenceAuthenticated": False,
+        "monetizableEdgeValidated": False,
+        "proofScope": "local_clock_and_sha_only",
+    }
+
+
 def ingest_one(root, inbox, accepted_dir, candidate, *,
                prospective=False, now=None):
     """Return a receipt without copying unverified/late/malformed input."""
@@ -129,6 +150,8 @@ def ingest_one(root, inbox, accepted_dir, candidate, *,
             return {"status": "rejected", "reason": freshness["reason"],
                     "ingestLagSeconds": freshness.get("ingestLagSeconds")}
         output = accepted_dir / relative
+        if accepted_dir.is_symlink() or output.parent.is_symlink():
+            return {"status": "rejected", "reason": "destination_directory_is_symlink"}
         if output.is_symlink():
             return {"status": "rejected", "reason": "destination_is_symlink"}
         if output.exists():
@@ -141,8 +164,19 @@ def ingest_one(root, inbox, accepted_dir, candidate, *,
             if _sha(output.read_bytes()) != _sha(data):
                 return {"status": "rejected", "reason": "immutable_capture_conflict"}
             return {"status": "already_accepted", "raceID": id}
+        receipt = make_intake_receipt(
+            payload, _sha(data), prospective=prospective, now=now,
+            lag_seconds=freshness.get("ingestLagSeconds"),
+        )
+        receipt_path = output.with_suffix(".receipt.json")
+        receipt_state = safe_atomic_create(
+            receipt_path,
+            (json.dumps(receipt, ensure_ascii=False, sort_keys=True,
+                        allow_nan=False) + "\n").encode("utf-8"),
+        )
         return {"status": "accepted",
                 "raceID": id, "sha256": _sha(data),
+                "receiptStatus": "created" if receipt_state == "created" else "existing",
                 "prospectiveClockCheckPassed": bool(prospective),
                 "ingestLagSeconds": freshness.get("ingestLagSeconds"),
                 "sourceAuthenticityVerified": False,
