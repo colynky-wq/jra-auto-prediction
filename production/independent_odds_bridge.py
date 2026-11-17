@@ -48,6 +48,20 @@ def run_once(root, *, csv_source, json_inbox, accepted, now=None, today_only=Tru
     }
 
 
+def should_log_report(report, previous_signature, seconds_since_log,
+                      *, watch_mode=True):
+    """Prevent noisy 30-second empty loop logs in a long-running Mac agent."""
+    signature = json.dumps({
+        "conversion": report["conversion"],
+        "ingestion": {
+            "counts": report["ingestion"]["counts"],
+            "items": report["ingestion"]["items"],
+        },
+    }, sort_keys=True, ensure_ascii=False)
+    return (not watch_mode or signature != previous_signature
+            or seconds_since_log >= 3600), signature
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("."))
@@ -68,13 +82,21 @@ def main():
     root = args.root.resolve()
     def local_path(p):
         return p.resolve() if p.is_absolute() else (root/p).resolve()
+    last_signature = None
+    last_logged_at = 0.0
     while True:
         report=run_once(root,csv_source=local_path(args.csv_source),
                         json_inbox=local_path(args.json_inbox),
                         accepted=local_path(args.accepted),
                         today_only=not args.include_history)
-        print(json.dumps(report,ensure_ascii=False,sort_keys=True,allow_nan=False),
-              flush=True)
+        now_monotonic=time.monotonic()
+        log, signature=should_log_report(report,last_signature,
+                    now_monotonic-last_logged_at,watch_mode=args.watch)
+        if log:
+            print(json.dumps(report,ensure_ascii=False,sort_keys=True,
+                             allow_nan=False),flush=True)
+            last_signature=signature
+            last_logged_at=now_monotonic
         if not args.watch:
             break
         time.sleep(args.poll_seconds)
