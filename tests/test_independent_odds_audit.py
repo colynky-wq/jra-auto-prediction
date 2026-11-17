@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "production"))
-from independent_odds_audit import compare_observation, run_audit, build_map
+from independent_odds_audit import compare_observation, run_audit, build_map, reprice_reference_wide
 
 
 class IndependentOddsAuditTests(unittest.TestCase):
@@ -137,6 +137,27 @@ class IndependentOddsAuditTests(unittest.TestCase):
             self.assertEqual(result["fullyCoveredWideObservations"],1)
             self.assertEqual(before,wfile.read_bytes())
             self.assertEqual(result["results"][0]["sourceAuthenticityVerified"],False)
+
+    def test_shadow_repricing_uses_independent_low_quote_only(self):
+        difference=compare_observation(self.independent,self.win_record,self.formal_wide)
+        race={"commonWideReference":[{"candidateID":"0102",
+            "probabilityPct":20.0,"oddsLow":6.2,
+            "expectedMultiplierLow":1.24}]}
+        result=reprice_reference_wide(race,difference)
+        self.assertEqual(len(result),1)
+        self.assertEqual(result[0]["frozenEstimatedReturnMultiplier"],1.24)
+        self.assertEqual(result[0]["independentEstimatedReturnMultiplier"],1.1)
+        self.assertTrue(result[0]["independentEdgeAboveBreakEven"])
+        self.assertTrue(result[0]["researchOnly"])
+        self.assertFalse(result[0]["sourceAuthenticityVerified"])
+
+    def test_repricing_rejected_if_independent_quote_is_stale(self):
+        self.independent["asOfJST"]="2026-11-15T15:03:00+09:00"
+        diff=compare_observation(self.independent,self.win_record,self.formal_wide)
+        x=reprice_reference_wide(
+            {"commonWideReference":[{"candidateID":"0102",
+                "probabilityPct":20.0,"oddsLow":6.2}]},diff)
+        self.assertEqual(x,[])
 
     def test_unverified_cohort_rejected(self):
         with tempfile.TemporaryDirectory() as td:
