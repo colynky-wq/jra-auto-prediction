@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"production"))
 from independent_odds_bridge import run_once, should_log_report
+from independent_odds_audit import run_audit as audit_independent_odds
 
 
 class MacOddsBridgeTests(unittest.TestCase):
@@ -69,6 +70,23 @@ class MacOddsBridgeTests(unittest.TestCase):
         receipt=json.loads(accepted.with_suffix(".receipt.json").read_text())
         self.assertTrue(receipt["prospectiveClockCheckPassed"])
         self.assertFalse(receipt["sourceAuthenticityVerified"])
+
+    def test_live_clock_receipt_stays_unverified_as_a_provider(self):
+        self.put_csv()
+        result=self.run_bridge()
+        self.assertEqual(result["ingestion"]["counts"]["accepted"],1)
+        (self.root/"AlignedPortfolioReview.json").write_text(json.dumps({
+            "projectionState":"verified",
+            "aligned":{"countsAreCurrent":True},
+            "races":[{"raceDate":"2026-11-15","raceID":self.rid}],
+        }))
+        report=audit_independent_odds(self.root,self.accepted)
+        self.assertEqual(report["prospectiveClockReceipts"],1)
+        self.assertEqual(report["matchedLocalIntakeReceipts"],1)
+        self.assertEqual(report["qualityGate"],
+                         "local_clock_evidence_provenance_unverified")
+        self.assertFalse(report["results"][0]["sourceAuthenticityVerified"])
+        self.assertFalse(report["results"][0]["monetizableEdgeValidated"])
 
     def test_only_the_active_jst_date_is_processed(self):
         self.put_csv()
