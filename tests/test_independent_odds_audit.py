@@ -159,6 +159,55 @@ class IndependentOddsAuditTests(unittest.TestCase):
                 "probabilityPct":20.0,"oddsLow":6.2}]},diff)
         self.assertEqual(x,[])
 
+    def test_fractional_horse_number_is_never_truncated(self):
+        self.independent["winOdds"][0]["number"]=1.5
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("win_invalid_quote",result["errors"])
+        self.assertEqual(result["comparisonStatus"],"rejected")
+
+    def test_boolean_horse_number_is_invalid(self):
+        self.independent["wideOdds"][0]["number1"]=True
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("wide_invalid_quote",result["errors"])
+
+    def test_boolean_odds_is_invalid(self):
+        self.independent["winOdds"][0]["odds"]=True
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("win_invalid_quote",result["errors"])
+
+    def test_quoted_pair_with_reversed_order_is_accepted(self):
+        self.independent["wideOdds"][0]["number1"]=2
+        self.independent["wideOdds"][0]["number2"]=1
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertEqual(result["comparisonStatus"],"structurally_comparable_not_authenticated")
+        self.assertEqual(result["wideComparison"][0]["pair"],"0102")
+
+    def test_untyped_source_claim_rejected_instead_of_crashing(self):
+        self.independent["source"]=["jra_official_observation"]
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("unknown_source_claim",result["errors"])
+
+    def test_netkeiba_is_not_an_independent_source(self):
+        self.independent["sourceReference"]="https://race.netkeiba.com/odds"
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("nonindependent_netkeiba_source",result["errors"])
+        self.assertIn("jra_source_hostname_mismatch",result["errors"])
+
+    def test_subdomain_spoofing_does_not_pass_as_jra(self):
+        self.independent["sourceReference"]="https://www.jra.go.jp.evil.example/odds"
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("jra_source_hostname_mismatch",result["errors"])
+
+    def test_naive_source_timestamp_is_not_trusted(self):
+        self.independent["asOfJST"]="2026-11-15 16:03:00"
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("timestamp_without_explicit_offset_asOfJST",result["errors"])
+
+    def test_malformed_quote_collection_is_rejected(self):
+        self.independent["winOdds"]={"number":1,"odds":2.1}
+        result=compare_observation(self.independent,self.win_record,self.formal_wide)
+        self.assertIn("win_invalid_quote_collection",result["errors"])
+
     def test_unverified_cohort_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td)
