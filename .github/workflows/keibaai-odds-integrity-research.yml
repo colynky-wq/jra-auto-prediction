@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - 'production/odds_integrity_audit.py'
+      - 'production/final_odds_drift_audit.py'
+      - 'tests/test_final_odds_drift_audit.py'
       - 'tests/test_odds_integrity_audit.py'
       - '.github/workflows/keibaai-odds-integrity-research.yml'
       - 'production/independent_odds_*.py'
@@ -53,6 +55,25 @@ jobs:
           print('unobservedRaces:', data['unobservedRaces'])
           PY
 
+      - name: Test post-hoc frozen versus final odds drift (no lookahead)
+        run: python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
+
+      - name: Measure historical win odds drift (never used in predictions)
+        run: python production/final_odds_drift_audit.py --root . > final-odds-drift.json
+
+      - name: Display final odds movement diagnostic
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('final-odds-drift.json', encoding='utf-8'))
+          print('winOddsMatchedRaces:', data['matchedRacesAudited'])
+          print('winOddsMatchedHorses:', data['totalHorsesCompared'])
+          print('winFavoriteChanged:', data['favoriteChangedRaces'])
+          print('medianAbsWinOddsMovePct:', data['medianAbsPctPriceMovement'])
+          print('winOddsMoved20Pct:', data['horsesMovedAtLeast20Pct'])
+          print('finalOddsUsedAsPreRace:', data['finalOddsUsedAsPreRace'])
+          PY
+
       - name: Read-only odds provenance and reference-wide audit
         run: python production/odds_integrity_audit.py --root . --strict-structure > odds-integrity-audit.json
 
@@ -79,4 +100,5 @@ jobs:
             odds-integrity-audit.json
             independent-odds-audit.json
             independent-dropwatch-audit.json
+            final-odds-drift.json
           if-no-files-found: ignore
