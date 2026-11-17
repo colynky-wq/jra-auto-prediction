@@ -145,6 +145,28 @@ class OddsIntegrityAuditTests(unittest.TestCase):
             result["errors"],
         )
 
+    def test_valid_audit_still_holds_profitability_claims_without_independent_odds(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "AlignedPortfolioReview.json").write_text(json.dumps({
+                "projectionState": "verified",
+                "aligned": {"countsAreCurrent": True},
+                "races": [{"raceDate": "2026-11-15", "raceID": "test-01"}],
+            }), encoding="utf-8")
+            folder = root / "reports" / "20261115"
+            (folder / "wide_odds_live10").mkdir(parents=True)
+            (folder / "all_bet_v1" / "win").mkdir(parents=True)
+            (folder / "wide_odds_live10" / "test-01.json").write_text(
+                json.dumps(self.snapshot), encoding="utf-8")
+            (folder / "all_bet_v1" / "win" / "test-01.json").write_text(
+                json.dumps(self.record), encoding="utf-8")
+            result = audit_repository(root)
+            self.assertEqual(result["racesAudited"], 1)
+            self.assertEqual(result["researchOddsReliability"]["status"], "unverified")
+            self.assertFalse(result["researchOddsReliability"]["bettingEdgeValidated"])
+            self.assertTrue(
+                result["researchOddsReliability"]["requiresIndependentLiveOddsBeforePromotion"])
+
     def test_fails_closed_when_aligned_counts_unverified(self):
         with tempfile.TemporaryDirectory() as td:
             Path(td, "AlignedPortfolioReview.json").write_text(json.dumps({
