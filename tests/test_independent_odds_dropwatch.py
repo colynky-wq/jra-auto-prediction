@@ -4,11 +4,15 @@ from __future__ import annotations
 import json
 import sys
 import tempfile
+from datetime import datetime, timezone, timedelta
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "production"))
-from independent_odds_dropwatch import ingest_one, scan_once, validate_relative_path
+from independent_odds_dropwatch import (
+    ingest_one, scan_once, validate_relative_path,
+    check_prospective_freshness,
+)
 
 
 class OddsDropwatchTests(unittest.TestCase):
@@ -54,6 +58,51 @@ class OddsDropwatchTests(unittest.TestCase):
 
     def save(self):
         self.input.write_text(json.dumps(self.payload),encoding="utf-8")
+
+    def test_prospective_freshness_accepts_recent_snapshot(self):
+        now=datetime.fromisoformat("2026-11-15T16:05:00+09:00")
+        check=check_prospective_freshness(self.payload, now=now)
+        self.assertTrue(check["eligible"])
+        self.assertEqual(check["ingestLagSeconds"],60.0)
+        self.assertFalse(check["sourceAuthenticityVerified"])
+
+    def test_prospective_freshness_rejects_replay(self):
+        now=datetime.fromisoformat("2026-11-15T16:10:00+09:00")
+        check=check_prospective_freshness(self.payload, now=now)
+        self.assertFalse(check["eligible"])
+        self.assertEqual(check["reason"],"observation_not_recent")
+
+    def test_prospective_freshness_rejects_future_clock(self):
+        now=datetime.fromisoformat("2026-11-15T16:03:00+09:00")
+        check=check_prospective_freshness(self.payload, now=now)
+        self.assertFalse(check["eligible"])
+        self.assertEqual(check["reason"],"observation_from_future")
+
+    def test_prospective_ingest_rejects_historical_file(self):
+        self.save()
+        now=datetime.fromisoformat("2026-11-17T20:00:00+09:00")
+        receipt=ingest_one(self.root,self.inbox,self.accepted,self.input,
+                           prospective=True,now=now)
+        self.assertEqual(receipt["status"],"rejected")
+        self.assertEqual(receipt["reason"],"observation_not_recent")
+        self.assertFalse((self.accepted/"20261115"/self.name).exists())
+
+    def test_prospective_ingest_accepts_recent_and_marks_clock_check(self):
+        self.save()
+        now=datetime.fromisoformat("2026-11-15T16:05:00+09:00")
+        receipt=ingest_one(self.root,self.inbox,self.accepted,self.input,
+                           prospective=True,now=now)
+        self.assertEqual(receipt["status"],"accepted")
+        self.assertTrue(receipt["prospectiveClockCheckPassed"])
+        self.assertEqual(receipt["ingestLagSeconds"],60.0)
+        self.assertFalse(receipt["sourceAuthenticityVerified"])
+
+    def test_offline_ingest_never_claims_prospective_proof(self):
+        self.save()
+        receipt=ingest_one(self.root,self.inbox,self.accepted,self.input)
+        self.assertEqual(receipt["status"],"accepted")
+        self.assertFalse(receipt["prospectiveClockCheckPassed"])
+        self.assertIsNone(receipt["ingestLagSeconds"])
 
     def test_accept_valid_authorized_export_once(self):
         self.save()
