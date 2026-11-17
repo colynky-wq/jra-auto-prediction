@@ -168,6 +168,43 @@ def compare_observation(snapshot, win_record, formal_wide, *,
     }
 
 
+def reprice_reference_wide(race, difference):
+    """Shadow-only repricing of frozen tickets; NEVER a live bet recommendation.
+
+    Use independent lower odds only on an accepted, structurally comparable
+    observation. A file alone never certifies the independent source identity.
+    """
+    if difference.get("comparisonStatus") != "structurally_comparable_not_authenticated":
+        return []
+    lookup={x["pair"]: x for x in difference.get("wideComparison", [])}
+    out=[]
+    for bet in race.get("commonWideReference") or []:
+        key=str(bet.get("candidateID",""))
+        observed=lookup.get(key)
+        if not observed:
+            continue
+        try:
+            p=float(bet["probabilityPct"])/100.0
+            frozen_low=float(bet["oddsLow"])
+            independent_low=float(observed["independentOddsLow"])
+        except (ValueError,TypeError,KeyError):
+            continue
+        if not 0 <= p <=1 or frozen_low<1 or independent_low<1:
+            continue
+        out.append({
+            "candidateID":key,
+            "frozenProbabilityPct":round(100*p,3),
+            "frozenLowOdds":frozen_low,
+            "independentLowOdds":independent_low,
+            "frozenEstimatedReturnMultiplier":round(p*frozen_low,4),
+            "independentEstimatedReturnMultiplier":round(p*independent_low,4),
+            "independentEdgeAboveBreakEven":bool(p*independent_low>1),
+            "researchOnly":True,
+            "sourceAuthenticityVerified":False,
+        })
+    return out
+
+
 def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
     aligned=read_json(root/"AlignedPortfolioReview.json")
     if (aligned.get("projectionState")!="verified" or
@@ -199,6 +236,7 @@ def run_audit(root, independent_dir, *, max_source_age_minutes=5.0):
             diff=compare_observation(snap,model,wide,
                 max_source_age_minutes=max_source_age_minutes)
             diff["observationSha256"]=hashlib.sha256(independent_file.read_bytes()).hexdigest()
+            diff["repricedFrozenWideResearchTickets"]=reprice_reference_wide(race,diff)
         except (ValueError,TypeError,KeyError,json.JSONDecodeError,OSError) as e:
             diff={"raceID":rid,"comparisonStatus":"rejected",
                   "errors":["file_parse_or_processing_error"],"detail":str(e)[:160]}
