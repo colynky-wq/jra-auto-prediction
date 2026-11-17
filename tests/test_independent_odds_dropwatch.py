@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import tempfile
 from datetime import datetime, timezone, timedelta
@@ -103,6 +104,41 @@ class OddsDropwatchTests(unittest.TestCase):
         self.assertEqual(receipt["status"],"accepted")
         self.assertFalse(receipt["prospectiveClockCheckPassed"])
         self.assertIsNone(receipt["ingestLagSeconds"])
+
+    def test_intake_receipt_binds_raw_bytes_and_marks_source_unverified(self):
+        self.save()
+        accepted=ingest_one(self.root,self.inbox,self.accepted,self.input)
+        self.assertEqual(accepted["status"],"accepted")
+        receipt=self.accepted/"20261115"/"202608050412.receipt.json"
+        self.assertTrue(receipt.exists())
+        raw=(self.accepted/"20261115"/self.name).read_bytes()
+        data=json.loads(receipt.read_text())
+        self.assertEqual(data["observationSha256"],hashlib.sha256(raw).hexdigest())
+        self.assertFalse(data["prospectiveClockCheckPassed"])
+        self.assertFalse(data["sourceAuthenticityVerified"])
+        self.assertEqual(data["proofScope"],"local_clock_and_sha_only")
+
+    def test_live_intake_receipt_contains_clock_proof(self):
+        self.save()
+        now=datetime.fromisoformat("2026-11-15T16:05:00+09:00")
+        received=ingest_one(self.root,self.inbox,self.accepted,self.input,
+                            prospective=True,now=now)
+        self.assertEqual(received["status"],"accepted")
+        receipt=self.accepted/"20261115"/"202608050412.receipt.json"
+        recorded=json.loads(receipt.read_text())
+        self.assertTrue(recorded["prospectiveClockCheckPassed"])
+        self.assertEqual(recorded["intakeLagSeconds"],60.0)
+
+    def test_rejects_symlinked_destination_day(self):
+        self.save()
+        elsewhere=self.root/"elsewhere"
+        elsewhere.mkdir()
+        self.accepted.mkdir()
+        (self.accepted/"20261115").symlink_to(elsewhere,target_is_directory=True)
+        got=ingest_one(self.root,self.inbox,self.accepted,self.input)
+        self.assertEqual(got["status"],"rejected")
+        self.assertEqual(got["reason"],"destination_directory_is_symlink")
+        self.assertEqual(list(elsewhere.iterdir()),[])
 
     def test_accept_valid_authorized_export_once(self):
         self.save()
