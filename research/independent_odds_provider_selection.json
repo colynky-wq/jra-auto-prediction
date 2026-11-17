@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "decisionDateJST": "2026-11-18",
+  "providerSelection": "team_nave_keiba_odds_api",
+  "providerDisplayName": "Team-Nave KeiBa-ODDS-API",
+  "selectionStatus": "vendor_selected_pending_contract",
+  "operationalStatus": "not_connected",
+  "contractStatus": "not_signed_by_assistant",
+  "subscriptionActive": false,
+  "credentialAvailable": false,
+  "userIPATEligibilityConfirmed": false,
+  "independentEvidenceFilesCollected": 0,
+  "sourceAuthenticityVerified": false,
+  "formalBettingEnabled": false,
+  "productionModelChanged": false,
+  "technical": {
+    "documentedEndpoint": "https://api.gamble-os.net/systems/get-odds",
+    "documentedMethod": "POST",
+    "recommendedOption": "ALL",
+    "marketCodes": {
+      "win": "TAN",
+      "wide": "WIDE"
+    },
+    "documentedTimestampField": "rlsdttm",
+    "latestOnlyTimestampMayBe": "LAST-ODDS",
+    "supportsMac": true,
+    "supportsWinOdds": true,
+    "supportsWideOdds": true,
+    "historicalWinResponseSampleAvailable": true,
+    "historicalWideResponseSampleVerified": false,
+    "concurrentRequestsPerLicense": 1,
+    "devicesPerLicense": 1,
+    "providerMaintenanceJST": "06:00-08:00",
+    "personalPlanYenTaxIncludedPerMonth": 14300
+  },
+  "remainingGates": [
+    "Personal noncommercial KeibaAI storage and ML use confirmed by provider",
+    "IPAT-related eligibility confirmed",
+    "Purchase authorized by user and active",
+    "Historical WIDE response schema verified using provider sample/contract",
+    "Historical timestamp freshness for TAN and WIDE tested prospectively",
+    "Same-race same-time independent snapshot compared with frozen odds"
+  ],
+  "officialDocs": [
+    "https://www.team-nave.com/system/jp/products/kboddsapi/",
+    "https://www.team-nave.com/system/jp/products/kboddsapi/help_function.html",
+    "https://www.team-nave.com/system/jp/products/kboddsapi/help_limit.html",
+    "https://www.team-nave.com/system/jp/products/kboddsapi/help_attention.html"
+  ],
+  "fallbackProvider": "jra_van_datalab_windows_only",
+  "fallbackPersonalPlanYenTaxIncludedPerMonth": 2090
+}
