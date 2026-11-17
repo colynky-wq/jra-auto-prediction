@@ -67,3 +67,43 @@ python production/independent_odds_audit.py --root . > independent-odds-audit.js
 5. 確率校正を別系列で検証する。現行の固定系列は変更しない
 
 GitHub Actionsは独立ソースなしでも**監査ジョブが成功**します。「テスト成功」は「独立した最新オッズ取得に成功」ではありません。
+ 
+## Mac上の自動受信（実装済み・取得元接続は未設定）
+
+正当に利用可能なデータ提供ソフトが `licensed_odds_drop/YYYYMMDD/RACEID.json` に上記の形式のJSONを書き出せる場合、KeibaAIの保存済み予測との照合用に自動取込できます。取得元を決めずに特定サイトをクローリングするものではありません。
+
+```bash
+# まず1回だけ確認（新規の独立オッズがなければ取り込み件数0）
+python production/independent_odds_dropwatch.py --root . --source-dir licensed_odds_drop --accepted-dir research_independent_odds
+
+# 許可された提供元のエクスポート先を監視（30秒間隔でローカルのみ確認）
+python production/independent_odds_dropwatch.py --root . --source-dir licensed_odds_drop --accepted-dir research_independent_odds --watch --poll-seconds 30
+
+# 自動で取り込んだ記録を105レースの正式保存記録と照合
+python production/independent_odds_audit.py --root . --independent-dir research_independent_odds
+```
+
+`--watch`はMacのターミナルが動作している間に限って実行されます。実際の外部データソフトとの接続、Mac起動時の自動起動、契約・認証は**未設定**です。個別の許可されたエクスポート形式が判明したら、保存前の書式変換アダプターを別に実装します。
+
+取り込む際の検査：
+
+- 12桁のレースIDと開催日フォルダー、対応する凍結済みレース入力が存在
+- 発走8〜12分前に観測され、申告元データ時刻が観測から0〜5分以内
+- レースID、開始時刻、馬番・組合せ、単勝・ワイドオッズ範囲が整合
+- `permissionConfirmed=true` かつ `sourceReference` がある
+- 取得元データが追記されても既に受理した同一レースの観測ファイルは**上書きしない**
+- 元データは `licensed_odds_drop/`、受理データは `research_independent_odds/` に保存し、両者ともGit管理対象外
+
+**重要**：`permissionConfirmed`は入力データの自己申告であり、契約、出所、真正性を証明しません。実データ0件の状態でもプログラムのテストは成功します。過去の確定オッズを発走前の観測データとして入力してはいけません。
+
+## 情報源の選定（2026-11-17時点）
+
+- **JRA-VAN Data Lab. / JV-Link**：Windows対応。REST APIではなくWindows用ローカルコンポーネント。契約済みWindows環境の別プロセスから、許された範囲のデータをエクスポートする設計が必要
+  - https://developer.jra-van.jp/t/topic/614
+  - https://jra-van.jp/info/rule.html
+- **KeiBa-ODDS-API（Team-Nave）**：Macにも対応し、単勝・ワイドを含む複数券種のリアルタイムオッズを案内。公表個人向け価格は14,300円/月。ただし料金とデータ利用条件がKeibaAIの用途に合致するか、契約前に直接確認すること
+  - https://www.team-nave.com/system/jp/products/kboddsapi/
+- **JRA公式Web**：オッズの閲覧機能は確認できるが、機械的な収集・保存・二次利用に必要な条件は未確認。許可されない取得方法を実装しない
+  - https://www.jra.go.jp/news/202512/121802.html
+
+選定前の現状は、オッズ源の自動取得が**未接続**であり、期待値の優位性は引き続き未検証です。
