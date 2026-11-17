@@ -238,6 +238,11 @@ def audit_repository(root: Path, *, age_alert_min=30):
             "max": max(ages) if ages else None,
         },
         "alertCounts": dict(sorted(cnt.items())),
+        "favoritePairPriceOutliers": [
+            {"raceDate": r["raceDate"], "raceID": r["raceID"],
+             "pairs": r["favoritePairPriceOutliers"]}
+            for r in rows if r.get("favoritePairPriceOutliers")
+        ],
         "flaggedExamples": [r for r in rows if r["alerts"]][:20],
         "wideReferenceResearch": audit_wide_references(aligned),
         "formalRecommendationsEnabled": False,
