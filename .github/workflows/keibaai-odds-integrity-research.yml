@@ -28,6 +28,22 @@ jobs:
       - name: Unit tests (no network required)
         run: python -m unittest discover -s tests -p 'test_odds_integrity_audit.py' -v
 
+      - name: Independent-source comparison regression tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_audit.py' -v
+
+      - name: Offline independent-source comparison (missing data remain pending)
+        run: python production/independent_odds_audit.py --root . > independent-odds-audit.json
+
+      - name: Independent source comparison summary
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('independent-odds-audit.json', encoding='utf-8'))
+          print('independentObservationFiles:', data['observationFilesPresent'])
+          print('independentSourceQualityGate:', data['qualityGate'])
+          print('unobservedRaces:', data['unobservedRaces'])
+          PY
+
       - name: Read-only odds provenance and reference-wide audit
         run: python production/odds_integrity_audit.py --root . --strict-structure > odds-integrity-audit.json
 
@@ -50,5 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: keibaai-odds-integrity-research
-          path: odds-integrity-audit.json
+          path: |
+            odds-integrity-audit.json
+            independent-odds-audit.json
           if-no-files-found: ignore
