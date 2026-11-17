@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "production"))
 from odds_integrity_audit import (
     age_minutes, audit_repository, audit_snapshot, audit_wide_references,
+    compare_early_and_formal,
 )
 
 
@@ -33,6 +34,31 @@ class OddsIntegrityAuditTests(unittest.TestCase):
                 {"number1": 2, "number2": 3, "oddsLow": 7.0, "oddsHigh": 9.0},
             ],
         }
+
+    def test_separate_snapshots_same_quotes_detected(self):
+        early = json.loads(json.dumps(self.snapshot))
+        early["capturedAtJST"] = "2026-11-15 11:28:00"
+        result = compare_early_and_formal(early, self.snapshot)
+        self.assertEqual(result["status"], "unchanged_across_separate_captures")
+        self.assertEqual(result["changedPairs"], 0)
+        self.assertEqual(result["pairsCompared"], 3)
+        self.assertTrue(result["sameSourceTimestamp"])
+
+    def test_early_and_formal_price_change_with_source_timestamp(self):
+        early = json.loads(json.dumps(self.snapshot))
+        early["capturedAtJST"] = "2026-11-15 11:28:00"
+        early["officialDatetime"] = "2026-11-15 11:25:00"
+        early["pairs"][0]["oddsLow"] = 4.0
+        early["pairs"][0]["oddsHigh"] = 4.5
+        result = compare_early_and_formal(early, self.snapshot)
+        self.assertEqual(result["status"], "changed_across_separate_captures")
+        self.assertEqual(result["changedPairs"], 1)
+        self.assertFalse(result["sameSourceTimestamp"])
+
+    def test_same_capture_not_counted_as_independent_observation(self):
+        early = json.loads(json.dumps(self.snapshot))
+        result = compare_early_and_formal(early, self.snapshot)
+        self.assertEqual(result["status"], "same_or_near_capture")
 
     def test_valid_snapshot_has_no_alerts(self):
         result = audit_snapshot(self.snapshot, self.record)
