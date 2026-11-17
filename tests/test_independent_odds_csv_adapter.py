@@ -93,6 +93,31 @@ class CsvAdapterTests(unittest.TestCase):
         out=convert_one(wrong,self.source,self.output)
         self.assertEqual(out["status"],"rejected")
 
+    def test_morning_csv_cannot_block_later_t10_capture(self):
+        morning=[dict(x,observedAtJST="2026-11-15T10:00:00+09:00",
+                      asOfJST="2026-11-15T09:59:00+09:00")
+                 for x in self.rows]
+        self.source_file.write_bytes(self.data(morning))
+        first=convert_one(self.source_file,self.source,self.output)
+        self.assertEqual(first["status"],"rejected")
+        target=self.output/"20261115"/"202608050412.json"
+        self.assertFalse(target.exists())
+        self.save()
+        later=convert_one(self.source_file,self.source,self.output)
+        self.assertEqual(later["status"],"converted")
+        self.assertTrue(target.exists())
+
+    def test_old_csv_source_quote_time_is_rejected(self):
+        rows=[dict(x,asOfJST="2026-11-15T16:01:00+09:00")
+              for x in self.rows]
+        with self.assertRaisesRegex(ValueError,"not recent enough"):
+            convert_csv_bytes(self.data(rows))
+
+    def test_naive_csv_source_timestamp_rejected(self):
+        rows=[dict(x,asOfJST="2026-11-15 16:13:00") for x in self.rows]
+        with self.assertRaisesRegex(ValueError,"explicit timezone"):
+            convert_csv_bytes(self.data(rows))
+
     def test_never_overwrites_earlier_normalization(self):
         self.save()
         first=convert_one(self.source_file,self.source,self.output)
