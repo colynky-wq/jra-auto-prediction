@@ -96,9 +96,20 @@ def sensitivity(aligned, *, haircuts=HAIRCUTS, thresholds=EV_THRESHOLDS):
             "quotationsAtExactObservationTimeKnown":False,
             "thresholds":threshold_rows,
         })
+    by_day=[]
+    for day in sorted({r["raceDate"] for r in bets}):
+        subset=[r for r in bets if r["raceDate"]==day]
+        by_day.append({
+            "raceDate":day,
+            "candidateCount":len(subset),
+            "raceCount":len({r["raceID"] for r in subset}),
+            "sumFrozenPredictedHits":round(sum(r["probability"] for r in subset),4),
+            "observedHits":sum(r["hit"] for r in subset),
+        })
     return {
         "schemaVersion":1,
         "researchMode":"counterfactual_wide_lower_quote_sensitivity",
+        "byRaceDateCalibrationDiagnostic":by_day,
         "alignedVerified":True,
         "referenceCandidatesSettled":len(bets),
         "referenceCandidatesNotYetSettled":unsettled,
