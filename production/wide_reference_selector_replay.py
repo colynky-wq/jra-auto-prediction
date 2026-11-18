@@ -154,6 +154,66 @@ def summarize_candidates(rows):
     }
 
 
+def settled_qualified_candidates(selection, aligned_race, formal_horses):
+    """Evaluate frozen qualifying choices only after result; never select with results.
+
+    A missing/retired horse position is not zero or a loss. Drop the entire
+    race from this settlement comparison to preserve full-race comparability.
+    """
+    if aligned_race.get("resultState")!="matched":
+        return None, "not_matched"
+    actual=aligned_race.get("actualFinish")
+    if not isinstance(actual,dict) or not isinstance(formal_horses,list):
+        return None, "missing_result_or_entrants"
+    nums=[h.get("number") for h in formal_horses]
+    if (len(nums)<3 or any(type(n) is not int for n in nums)
+            or len(set(nums))!=len(nums)):
+        return None, "invalid_formal_entrants"
+    values=[]
+    for n in nums:
+        position=actual.get(str(n))
+        if type(position) is not int or position<1:
+            return None, "incomplete_actual_finish"
+        values.append(position)
+    if sum(x<=3 for x in values)!=3:
+        return None, "podium_invariant_failed"
+    rows=[]
+    for candidate in selection["qualifiedCandidates"]:
+        key=candidate["candidateID"]
+        a,b=int(key[:2]),int(key[2:])
+        if a not in nums or b not in nums:
+            return None, "candidate_not_in_entrants"
+        item=dict(candidate)
+        item["hit"]=(actual[str(a)]<=3 and actual[str(b)]<=3)
+        item["raceDate"]=selection["raceDate"]
+        item["raceID"]=selection["raceID"]
+        rows.append(item)
+    references={x["candidateID"]:x for x in aligned_race["commonWideReference"]}
+    for item in rows:
+        if not item["inRegisteredReference"]:
+            continue
+        ref=references[item["candidateID"]]
+        if type(ref.get("hit")) is not bool or ref["hit"]!=item["hit"]:
+            return None, "reference_result_mismatch"
+    return rows, None
+
+
+def settlement_metrics(rows):
+    xs=list(rows)
+    if not xs:
+        return {"candidates":0,"expectedHits":0,"actualHits":0,
+                "observedToPredicted":None,"meanProbabilityPct":None}
+    p=math.fsum(numeric(x["probabilityPct"],"probabilityPct")/100 for x in xs)
+    actual=sum(x["hit"] for x in xs)
+    return {
+        "candidates":len(xs),
+        "expectedHits":round(p,4),
+        "actualHits":actual,
+        "observedToPredicted":round(actual/p,4) if p else None,
+        "meanProbabilityPct":round(p*100/len(xs),3),
+    }
+
+
 def audit(root, *, cohort=None):
     aligned=cohort if cohort is not None else read_json(root/"AlignedPortfolioReview.json")
     if aligned.get("projectionState")!="verified" or (
@@ -168,6 +228,9 @@ def audit(root, *, cohort=None):
         raise ValueError("frozen registered reference thresholds changed")
     included=[]
     excluded=[]
+    settled_candidates=[]
+    unsettled_reasons=Counter()
+    settled_race_count=0
     for row in aligned.get("races",[]):
         rid=row["raceID"]
         day=row["raceDate"]
@@ -175,6 +238,13 @@ def audit(root, *, cohort=None):
             saved=capture.load(root,day,rid)
             found=race_selection(saved,row)
             included.append(found)
+            outcome,error=settled_qualified_candidates(
+                found,row,saved["prediction"]["horses"])
+            if error:
+                unsettled_reasons[error]+=1
+            else:
+                settled_race_count+=1
+                settled_candidates.extend(outcome)
         except (ValueError,TypeError,KeyError,FileNotFoundError,
                 json.JSONDecodeError) as err:
             excluded.append({"raceDate":day,"raceID":rid,
@@ -184,6 +254,18 @@ def audit(root, *, cohort=None):
     unselected=[x for r in included for x in r["qualifiedCandidates"]
                 if not x["inRegisteredReference"]]
     chosen_full=[x for r in included for x in r["allPairCounterfactualPairs"]]
+    selected_settled=[x for x in settled_candidates if x["inRegisteredReference"]]
+    not_selected_settled=[x for x in settled_candidates if not x["inRegisteredReference"]]
+    eligible_vs_selected_by_day=[]
+    for day in sorted({x["raceDate"] for x in settled_candidates}):
+        candidates=[x for x in settled_candidates if x["raceDate"]==day]
+        eligible_vs_selected_by_day.append({
+            "raceDate":day,
+            "selected":settlement_metrics(
+                x for x in candidates if x["inRegisteredReference"]),
+            "qualifiedButUnselected":settlement_metrics(
+                x for x in candidates if not x["inRegisteredReference"]),
+        })
     output={
         "schemaVersion":1,"mode":"preregistered_Wide_reference_selector_replay",
         "protocolSha256":"55ee84560014f5f4dec94996da103855c0d6a926f386973934922e894a293d79",
@@ -208,6 +290,17 @@ def audit(root, *, cohort=None):
         "allFieldCounterfactualSelectedReferences":len(chosen_full),
         "selectedCandidateSummary":summarize_candidates(selected),
         "qualifiedButNotSelectedSummary":summarize_candidates(unselected),
+        "resultSettlement":{
+            "settledRaces":settled_race_count,
+            "excludedOrPendingReasons":dict(sorted(unsettled_reasons.items())),
+            "sameFrozenSignalProbabilitySeries":True,
+            "allQualified":settlement_metrics(settled_candidates),
+            "selected":settlement_metrics(selected_settled),
+            "qualifiedButUnselected":settlement_metrics(not_selected_settled),
+            "byRaceDate":eligible_vs_selected_by_day,
+            "selectionCausalEffectEstablished":False,
+            "pricesIndependentlyVerified":False,
+        },
         "metadataAgeMinutesRange":[
             min(x["sourceMetadataAgeMinutes"] for x in included
                 if x["sourceMetadataAgeMinutes"] is not None),
