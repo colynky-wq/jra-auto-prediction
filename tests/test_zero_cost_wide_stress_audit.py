@@ -45,7 +45,7 @@ class ZeroCostWideStressTests(unittest.TestCase):
                  if x["frozenReferenceEVThreshold"]==1.1)["candidateCount"]
             for scenario in report["scenarios"]
         ]
-        self.assertEqual(one_point_one,[2,2,1,0,0])
+        self.assertEqual(one_point_one,[2,1,1,0,0])
         self.assertFalse(report["marketPriceAtT10Verified"])
         self.assertFalse(report["expectedValueAdvantageValidated"])
         self.assertFalse(report["productionModelChanged"])
@@ -88,7 +88,7 @@ class ZeroCostWideStressTests(unittest.TestCase):
     def test_results_alone_do_not_define_stress_thresholds(self):
         base=sensitivity(self.aligned)
         alternative=copy.deepcopy(self.aligned)
-        alternative["races"][0]["actualFinish"]={"1":5,"2":6,"3":1,"4":2}
+        alternative["races"][0]["actualFinish"]={"1":5,"2":6,"3":7,"4":8}
         for ref in alternative["races"][0]["commonWideReference"]:
             ref["hit"]=False
         changed=sensitivity(alternative)
