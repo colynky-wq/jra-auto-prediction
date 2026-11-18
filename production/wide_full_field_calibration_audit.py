@@ -109,8 +109,11 @@ def score(rows):
     ll=-math.fsum(int(x["hit"])*math.log(max(x["probability"],eps))+
                   (1-int(x["hit"]))*math.log(max(1-x["probability"],eps))
                   for x in rows)/n
-    ll0=-math.fsum(int(x["hit"])*math.log(p0)+
-                   (1-int(x["hit"]))*math.log(1-p0) for x in rows)/n
+    ll0=-math.fsum(
+        int(x["hit"])*math.log(max(p0,eps))+
+        (1-int(x["hit"]))*math.log(max(1-p0,eps))
+        for x in rows
+    )/n
     return {"pairs":n,"brier":round(brier,8),
             "uniformBrier":round(baseline,8),
             "logLoss":round(ll,8),"uniformLogLoss":round(ll0,8),
@@ -152,6 +155,7 @@ def audit_repository(root):
                             "observedHits":sum(x["hit"] for x in rows),
                             **score(rows)})
             lookup={x["candidateID"]:x["probability"] for x in rows}
+            outcome_lookup={x["candidateID"]:x["hit"] for x in rows}
             for ref in race.get("commonWideReference",[]):
                 key=str(ref.get("candidateID",""))
                 if key not in lookup:
@@ -167,6 +171,9 @@ def audit_repository(root):
                     "referenceProbabilityPct":round(probability*100,4),
                     "shadowMatrixProbabilityPct":round(lookup[key]*100,4),
                     "absDifferencePercentagePoints":abs(100*(probability-lookup[key])),
+                    "referenceProbability":probability,
+                    "shadowProbability":lookup[key],
+                    "hit":outcome_lookup[key],
                 })
         except (KeyError,ValueError,TypeError,OverflowError,IndexError,json.JSONDecodeError) as err:
             # Remove any partial per-race additions on errors, not just mark as bad.
@@ -204,6 +211,20 @@ def audit_repository(root):
             "racesBrierBetterThanUniform":sum(r["brierBetterThanUniform"] for r in races),
         })
     deviations=sorted(x["absDifferencePercentagePoints"] for x in reference_comparison)
+    matched_selected=len(reference_comparison)
+    ref_expected=math.fsum(x["referenceProbability"] for x in reference_comparison)
+    shadow_selected_expected=math.fsum(x["shadowProbability"] for x in reference_comparison)
+    selected_actual=sum(x["hit"] for x in reference_comparison)
+    ref_brier=(
+        math.fsum((int(x["hit"])-x["referenceProbability"])**2
+                  for x in reference_comparison)/matched_selected
+        if matched_selected else None
+    )
+    shadow_selected_brier=(
+        math.fsum((int(x["hit"])-x["shadowProbability"])**2
+                  for x in reference_comparison)/matched_selected
+        if matched_selected else None
+    )
     return {
         "schemaVersion":1,
         "mode":"full_field_wide_shadow_probabilities_vs_podium",
@@ -229,6 +250,17 @@ def audit_repository(root):
             "matchedPairs":len(reference_comparison),
             "meanAbsProbabilityDifferencePp":round(sum(deviations)/len(deviations),4) if deviations else None,
             "maxAbsProbabilityDifferencePp":round(max(deviations),4) if deviations else None,
+            "matchedReferenceExpectedHits":round(ref_expected,4),
+            "matchedShadowExpectedHits":round(shadow_selected_expected,4),
+            "matchedObservedHits":selected_actual,
+            "referenceExpectedToObservedRatio":(
+                round(selected_actual/ref_expected,4) if ref_expected else None),
+            "shadowExpectedToObservedRatio":(
+                round(selected_actual/shadow_selected_expected,4)
+                if shadow_selected_expected else None),
+            "referenceBrierSamePairs":round(ref_brier,7) if ref_brier is not None else None,
+            "shadowBrierSamePairs":round(shadow_selected_brier,7)
+                  if shadow_selected_brier is not None else None,
             "sameProbabilityModelAssumed":False,
         },
         "noStatisticalSignificanceClaimed":True,
