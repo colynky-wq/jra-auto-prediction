@@ -50,6 +50,15 @@ class ZeroCostWideStressTests(unittest.TestCase):
         self.assertFalse(report["expectedValueAdvantageValidated"])
         self.assertFalse(report["productionModelChanged"])
 
+    def test_daily_probability_calibration_is_diagnostic_only(self):
+        result=sensitivity(self.aligned)
+        days=result["byRaceDateCalibrationDiagnostic"]
+        self.assertEqual(len(days),1)
+        self.assertEqual(days[0]["raceDate"],"2026-11-07")
+        self.assertEqual(days[0]["candidateCount"],3)
+        self.assertEqual(days[0]["observedHits"],1)
+        self.assertAlmostEqual(days[0]["sumFrozenPredictedHits"],0.45)
+
     def test_unsettled_reference_excluded_not_marked_loss(self):
         other=copy.deepcopy(self.aligned["races"][0])
         other["raceID"]="202605050108"
