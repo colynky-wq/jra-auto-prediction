@@ -12,6 +12,8 @@ on:
       - 'tests/test_zero_cost_odds_policy.py'
       - 'production/zero_cost_wide_stress_audit.py'
       - 'production/wide_reference_calibration_audit.py'
+      - 'production/wide_full_field_calibration_audit.py'
+      - 'tests/test_wide_full_field_calibration_audit.py'
       - 'tests/test_wide_reference_calibration_audit.py'
       - 'docs/wide-reference-calibration-race-clusters-20261118.md'
       - 'tests/test_zero_cost_wide_stress_audit.py'
@@ -135,6 +137,34 @@ jobs:
           print('marketOddsFreshnessVerified:',r['marketOddsFreshnessVerified'])
           PY
 
+      - name: Full-field frozen Wide probability conservation and scoring tests
+        run: python -m unittest discover -s tests -p 'test_wide_full_field_calibration_audit.py' -v
+
+      - name: Full-field frozen Wide calibration (all pair combinations, read-only)
+        run: python production/wide_full_field_calibration_audit.py --root . > wide-full-field-calibration.json
+
+      - name: Compare all-pair probability quality to selected reference candidate subset
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('wide-full-field-calibration.json').read_text())
+          print('allPairRacesAudited:',r.get('racesAudited'))
+          print('allPairRacesExcluded:',r.get('racesExcluded'))
+          print('allPairsCompared:',r.get('totalPairsCompared'))
+          print('wideAllPairExpectedHits:',r.get('fullFieldExpectedHits'))
+          print('wideAllPairObservedHits:',r.get('fullFieldObservedHits'))
+          print('expectedEqualsObservedIsTautology:',r.get('fullFieldExpectedHitTotalIsTautology'))
+          print('wideAllPairBrier:',r.get('modelBrier'))
+          print('wideUniformBrier:',r.get('uniformBrier'))
+          print('wideAllPairLogLoss:',r.get('modelLogLoss'))
+          print('wideUniformLogLoss:',r.get('uniformLogLoss'))
+          print('brierBetterThanUniformRaces:',r.get('racesBrierBetterThanUniform'))
+          print('probabilityBands:',r.get('fixedProbabilityBins'))
+          print('referenceVsShadow:',r.get('referenceVsFullField'))
+          print('missingReasons:',r.get('excludedReasons'))
+          PY
+
       - name: Test post-hoc frozen versus final odds drift (no lookahead)
         run: python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
 
@@ -240,4 +270,5 @@ jobs:
             odds-zero-cost-policy.json
             zero-cost-wide-stress.json
             wide-reference-calibration.json
+            wide-full-field-calibration.json
           if-no-files-found: ignore
