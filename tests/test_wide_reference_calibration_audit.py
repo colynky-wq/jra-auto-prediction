@@ -86,6 +86,20 @@ class WideReferenceCalibrationTests(unittest.TestCase):
         self.assertEqual(b["observedToPredictedHitRatioDescriptivePercentiles"],[2.0,2.0])
         self.assertEqual(b["hitRateGapPpDescriptivePercentiles"],[25.0,25.0])
 
+    def test_full_date_block_resampling_has_a_separate_label(self):
+        result=report(self.aligned,reps=50)
+        dates=result["dayBlockBootstrap"]
+        races=result["raceClusterBootstrap"]
+        self.assertEqual(dates["clusterCount"],2)
+        self.assertEqual(races["clusterCount"],2)
+        self.assertIn("entire_race_date",dates["resampleUnit"])
+        self.assertIn("entire_race_keeping",races["resampleUnit"])
+        self.assertFalse(dates["formalConfidenceInterval"])
+
+    def test_unknown_resample_unit_rejected(self):
+        with self.assertRaisesRegex(ValueError,"cluster unit"):
+            bootstrap_by_cluster({},unit="ticket")
+
     def test_bootstrap_is_seeded_and_reproducible(self):
         rows=[
             {"raceDate":"2026-11-07","raceID":"R1","candidateID":"0102",
