@@ -116,6 +116,15 @@ class FullFieldWideCalibrationTests(unittest.TestCase):
             self.assertTrue(r["fullFieldExpectedHitTotalIsTautology"])
             self.assertEqual(r["referenceVsFullField"]["matchedPairs"],1)
             self.assertAlmostEqual(r["referenceVsFullField"]["maxAbsProbabilityDifferencePp"],10.0)
+            self.assertAlmostEqual(
+                r["referenceVsFullField"]["matchedReferenceExpectedHits"],0.8)
+            self.assertAlmostEqual(
+                r["referenceVsFullField"]["matchedShadowExpectedHits"],0.9)
+            self.assertEqual(r["referenceVsFullField"]["matchedObservedHits"],1)
+            self.assertAlmostEqual(
+                r["referenceVsFullField"]["referenceBrierSamePairs"],0.04)
+            self.assertAlmostEqual(
+                r["referenceVsFullField"]["shadowBrierSamePairs"],0.01)
             self.assertFalse(r["referenceVsFullField"]["sameProbabilityModelAssumed"])
             self.assertFalse(r["oddsSourceFreshnessVerified"])
 
