@@ -97,6 +97,7 @@ jobs:
           print('observedWideHits:',x['allReferenceObservedHits'])
           print('sumPredictedWideHits:',x['allReferencePredictedHits'])
           print('actualMarketPricesVerified:',x['marketPriceAtT10Verified'])
+          print('wideCalibrationByRaceDate:',x['byRaceDateCalibrationDiagnostic'])
           for scenario in x['scenarios']:
               at_least_one=next(t['candidateCount'] for t in scenario['thresholds']
                   if t['frozenReferenceEVThreshold']==1.0)
