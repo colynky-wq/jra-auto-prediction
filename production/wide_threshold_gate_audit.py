@@ -21,6 +21,8 @@ from wide_reference_selector_replay import (
 )
 
 GROUP_LABELS=("p>=5_ev>=1.1","p>=5_ev<1.1","p<5_ev>=1.1","p<5_ev<1.1")
+# Fixed before interpreting outcomes; aligned to the previous full-field audit.
+BANDS=((0,5,"<5%"),(5,10,"5-<10%"),(10,20,"10-<20%"),(20,101,">=20%"))
 
 
 def gate_label(probability_pct, conservative_ev):
@@ -98,6 +100,38 @@ def statistics(rows):
     }
 
 
+def ev_comparison_in_strata(rows):
+    """Compare the same price gate within fixed forecast probability bands."""
+    xs=list(rows)
+    result=[]
+    for low,high,label in BANDS:
+        subset=[x for x in xs if low<=100*x["probability"]<high]
+        with_ev=[x for x in subset if x["EV"]>=RULE_MIN_EV]
+        without_ev=[x for x in subset if x["EV"]<RULE_MIN_EV]
+        result.append({
+            "forecastProbabilityBand":label,
+            "priceEVAtLeast1_10":statistics(with_ev),
+            "priceEVBelow1_10":statistics(without_ev),
+        })
+    return result
+
+
+def ev_comparison_by_date(rows):
+    xs=list(rows)
+    result=[]
+    for day in sorted({x["raceDate"] for x in xs}):
+        subset=[x for x in xs if x["raceDate"]==day]
+        result.append({
+            "raceDate":day,
+            "races":len({x["raceID"] for x in subset}),
+            "priceEVAtLeast1_10":statistics(
+                x for x in subset if x["EV"]>=RULE_MIN_EV),
+            "priceEVBelow1_10":statistics(
+                x for x in subset if x["EV"]<RULE_MIN_EV),
+        })
+    return result
+
+
 def report(root, cohort=None):
     aligned=cohort if cohort is not None else read_json(root/"AlignedPortfolioReview.json")
     if aligned.get("projectionState")!="verified" or (
@@ -152,6 +186,8 @@ def report(root, cohort=None):
         "probabilityAtLeastFivePct":statistics(pge),
         "probabilityBelowFivePct":statistics(plo),
         "twoByTwoGates":groups,
+        "withinFixedProbabilityBands":ev_comparison_in_strata(rows),
+        "priceEVAcrossDates":ev_comparison_by_date(rows),
         "byRaceDate":by_date,
         "marketProbabilitySource":"win_derived_proxy_not_independent_Wide_quote",
         "metadataTimestampSemanticsVerified":False,
