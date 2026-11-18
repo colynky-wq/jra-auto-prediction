@@ -9,6 +9,7 @@ import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"production"))
 from wide_reference_selector_replay import (
     validate_signal_pairs,race_selection,selected_ids,summarize_candidates,
+    settled_qualified_candidates,settlement_metrics,
 )
 
 
@@ -77,6 +78,45 @@ class WideSelectorReplayTests(unittest.TestCase):
         self.race["commonWideReference"]=[{"candidateID":"0102"}]
         with self.assertRaisesRegex(ValueError,"does not match saved signal"):
             race_selection({"signal":self.signal},self.race)
+
+    def test_outcome_comparison_drops_missing_finish_race_not_false_loss(self):
+        self.race["resultState"]="matched"
+        self.race["actualFinish"]={str(n):n for n in range(1,9)}
+        self.race["actualFinish"]["4"]=None
+        f=race_selection({"signal":self.signal},self.race)
+        rows,reason=settled_qualified_candidates(f,self.race,
+                           [{"number":n} for n in range(1,9)])
+        self.assertIsNone(rows)
+        self.assertEqual(reason,"incomplete_actual_finish")
+
+    def test_same_candidate_selection_uses_only_predicted_data(self):
+        self.race["resultState"]="matched"
+        self.race["actualFinish"]={str(n):n for n in range(1,9)}
+        f=race_selection({"signal":self.signal},self.race)
+        rows,reason=settled_qualified_candidates(f,self.race,
+                           [{"number":n} for n in range(1,9)])
+        self.assertIsNone(reason)
+        self.assertEqual(len(rows),8)
+        self.assertEqual(sum(row["hit"] for row in rows),0)
+        self.assertEqual(settlement_metrics(rows)["actualHits"],0)
+
+    def test_reference_selected_win_result_must_agree_with_archive(self):
+        rows=deepcopy(self.signal["wideEvaluation"]["validationPairs"])
+        row=rows[0]
+        row["aiWideProbability"]=6.0
+        row["wideOddsLow"]=20.0
+        row["wideOddsHigh"]=21.0
+        row["conservativeExpectedValue"]=1.2
+        self.signal["wideEvaluation"]["validationPairs"]=rows
+        self.signal["wideEvaluation"]["pairs"]=rows[:20]
+        self.race["resultState"]="matched"
+        self.race["actualFinish"]={str(n):n for n in range(1,9)}
+        self.race["commonWideReference"]=[{"candidateID":"0102","hit":False}]
+        f=race_selection({"signal":self.signal},self.race)
+        outcome,reason=settled_qualified_candidates(f,self.race,
+                           [{"number":n} for n in range(1,9)])
+        self.assertIsNone(outcome)
+        self.assertEqual(reason,"reference_result_mismatch")
 
     def test_selected_probability_and_market_ratio_summary(self):
         self.assertEqual(summarize_candidates([]),{"pairs":0})
