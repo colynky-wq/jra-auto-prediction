@@ -13,6 +13,8 @@ on:
       - 'production/zero_cost_wide_stress_audit.py'
       - 'production/wide_reference_calibration_audit.py'
       - 'production/wide_full_field_calibration_audit.py'
+      - 'production/wide_reference_selector_replay.py'
+      - 'tests/test_wide_reference_selector_replay.py'
       - 'tests/test_wide_full_field_calibration_audit.py'
       - 'docs/wide-full-field-calibration-selection-audit-20261118.md'
       - 'tests/test_wide_reference_calibration_audit.py'
@@ -176,6 +178,28 @@ jobs:
           print('missingReasons:',r.get('excludedReasons'))
           PY
 
+      - name: Deterministic preregistered Wide reference selector replay tests
+        run: python -m unittest discover -s tests -p 'test_wide_reference_selector_replay.py' -v
+
+      - name: Replay frozen top-20 and full-rank Wide selector without changes
+        run: python production/wide_reference_selector_replay.py --root . > wide-reference-selector-replay.json
+
+      - name: Quantify selection gates and hidden qualifying pairs
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-reference-selector-replay.json',encoding='utf-8'))
+          for k in ('alignedRaces','racesReplayed','racesExcluded',
+                    'qualifyingPairsInFullSignal','qualifyingPairsOnDisplay',
+                    'qualifyingPairsHiddenBeyondTop20','racesWithHiddenQualifiedPairs',
+                    'racesWhereTop20ChangesReferences','savedSelectedReferences',
+                    'allFieldCounterfactualSelectedReferences','referenceSelectionIdentityVerified',
+                    'selectedCandidateSummary','qualifiedButNotSelectedSummary',
+                    'metadataAgeMinutesRange'):
+              print(k+':',r[k])
+          assert r['referenceSelectionIdentityVerified']
+          PY
+
       - name: Test post-hoc frozen versus final odds drift (no lookahead)
         run: python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
 
@@ -282,4 +306,5 @@ jobs:
             zero-cost-wide-stress.json
             wide-reference-calibration.json
             wide-full-field-calibration.json
+            wide-reference-selector-replay.json
           if-no-files-found: ignore
