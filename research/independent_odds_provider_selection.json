@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 2,
+  "decisionDateJST": "2026-11-18",
+  "userBudgetConstraint": "additional_cost_zero_yen",
+  "monthlyIncrementalCostCapJPY": 0,
+  "providerSelection": null,
+  "providerDisplayName": null,
+  "selectionStatus": "free_only_source_unverified",
+  "operationalStatus": "not_connected",
+  "contractStatus": "paid_provider_excluded",
+  "subscriptionActive": false,
+  "credentialAvailable": false,
+  "userIPATEligibilityConfirmed": false,
+  "independentEvidenceFilesCollected": 0,
+  "sourceAuthenticityVerified": false,
+  "formalBettingEnabled": false,
+  "productionModelChanged": false,
+  "paidProvidersDisallowed": true,
+  "previousPaidCandidateArchived": {
+    "name": "Team-Nave KeiBa-ODDS-API",
+    "reason": "User explicitly rejects any additional payment",
+    "noSubscriptionInitiated": true
+  },
+  "zeroCostCandidates": [
+    {
+      "name": "JRA official odds website",
+      "kind": "free_visual_reference",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": true,
+      "programmaticAcquisitionAuthorized": false,
+      "automatedExportVerified": false,
+      "costJPY": 0,
+      "status": "visual_reference_only_pending_terms"
+    },
+    {
+      "name": "OddsEdge Light",
+      "kind": "free_third_party_windows_app",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": false,
+      "programmaticAcquisitionAuthorized": false,
+      "automatedExportVerified": false,
+      "costJPY": 0,
+      "status": "not_mac_native_export_scope_unverified"
+    },
+    {
+      "name": "Existing netkeiba recorded odds",
+      "kind": "existing_licensed_terms_unknown",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": true,
+      "programmaticAcquisitionAuthorized": null,
+      "automatedExportVerified": true,
+      "costJPY": 0,
+      "status": "existing_source_not_independent_source"
+    },
+    {
+      "name": "nr-odds-view (open-source research implementation)",
+      "kind": "public_source_code_only",
+      "supportsWin": true,
+      "supportsPlace": true,
+      "supportsWide": false,
+      "macBrowser": true,
+      "programmaticAcquisitionAuthorized": null,
+      "automatedExportVerified": true,
+      "timeStampedWinCaptureDocumented": true,
+      "automatedWideExportVerified": false,
+      "sourceLicenseForOddsRedistributionVerified": false,
+      "costJPY": 0,
+      "status": "free_win_place_technical_reference_only_wide_unavailable"
+    }
+  ],
+  "remainingGates": [
+    "Open-source free win/place prototype is not a free time-stamped Wide data source; do not promote it as one",
+    "Identify legally usable zero-cost same-time independent single-win and Wide snapshots",
+    "Verify zero-fee local/exported data format for Mac-based bridge",
+    "Verify provider terms allow private machine access and local research retention",
+    "Verify source quote timestamps against frozen T-10 observation",
+    "Do not infer monetizable edge or promote historical snapshots"
+  ],
+  "referenceUrls": [
+    "https://www.jra.go.jp/faq/pop02/1_1.html",
+    "https://www.jra.go.jp/use/index.html",
+    "https://oddsedge.app/light.html",
+    "https://github.com/Npieju/nr-odds-view"
+  ]
+}
