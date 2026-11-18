@@ -10,6 +10,8 @@ on:
       - 'production/team_nave_tan_history_probe.py'
       - 'production/zero_cost_odds_policy.py'
       - 'tests/test_zero_cost_odds_policy.py'
+      - 'production/zero_cost_wide_stress_audit.py'
+      - 'tests/test_zero_cost_wide_stress_audit.py'
       - 'tests/test_team_nave_tan_history_probe.py'
       - 'research/independent_odds_provider_selection.json'
       - 'docs/independent-odds-provider-decision-20261118.md'
@@ -78,6 +80,28 @@ jobs:
           print('independentObservationFiles:', data['observationFilesPresent'])
           print('independentSourceQualityGate:', data['qualityGate'])
           print('unobservedRaces:', data['unobservedRaces'])
+          PY
+
+      - name: Zero-fee counterfactual Wide quote robustness tests
+        run: python -m unittest discover -s tests -p 'test_zero_cost_wide_stress_audit.py' -v
+
+      - name: Research-only hypothetical quote-haircut sensitivity
+        run: python production/zero_cost_wide_stress_audit.py --root . > zero-cost-wide-stress.json
+
+      - name: Summarize hypothetical Wide quote sensitivity
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('zero-cost-wide-stress.json',encoding='utf-8'))
+          print('settledWideCandidates:',x['referenceCandidatesSettled'])
+          print('observedWideHits:',x['allReferenceObservedHits'])
+          print('sumPredictedWideHits:',x['allReferencePredictedHits'])
+          print('actualMarketPricesVerified:',x['marketPriceAtT10Verified'])
+          for scenario in x['scenarios']:
+              at_least_one=next(t['candidateCount'] for t in scenario['thresholds']
+                  if t['frozenReferenceEVThreshold']==1.0)
+              print(f"hypotheticalHaircut{scenario['assumedQuoteHaircutPct']}pct:",
+                    at_least_one)
           PY
 
       - name: Test post-hoc frozen versus final odds drift (no lookahead)
@@ -183,4 +207,5 @@ jobs:
             final-odds-drift.json
             market-logit-feature-audit.json
             odds-zero-cost-policy.json
+            zero-cost-wide-stress.json
           if-no-files-found: ignore
