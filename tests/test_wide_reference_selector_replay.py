@@ -57,7 +57,7 @@ class WideSelectorReplayTests(unittest.TestCase):
 
     def test_display_window_mismatch_rejected(self):
         bad=deepcopy(self.signal["wideEvaluation"])
-        bad["pairs"][0]["number1"]=7
+        bad["pairs"][0]["number2"]=3
         with self.assertRaisesRegex(ValueError,"display window"):
             validate_signal_pairs(bad)
 
