@@ -168,6 +168,10 @@ jobs:
           print('sameSelectedPairsObservedHits:',matched.get('matchedObservedHits'))
           print('selectedReferenceBrier:',matched.get('referenceBrierSamePairs'))
           print('sameSelectedPairsShadowBrier:',matched.get('shadowBrierSamePairs'))
+          selection=r.get('selectedReferenceVsOtherWidePairs',{})
+          print('selectedInFullMatrix:',selection.get('selected'))
+          print('notSelectedInFullMatrix:',selection.get('notSelected'))
+          print('selectionDifferenceByProbabilityBand:',selection.get('byProbabilityBand'))
           print('missingReasons:',r.get('excludedReasons'))
           PY
 
