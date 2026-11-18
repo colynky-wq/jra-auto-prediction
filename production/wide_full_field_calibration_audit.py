@@ -121,6 +121,23 @@ def score(rows):
             "logLossBetterThanUniform":ll<ll0}
 
 
+def subset_metrics(rows):
+    """Candidate-conditional calibration only, not a new betting rule."""
+    n=len(rows)
+    expected=math.fsum(x["probability"] for x in rows)
+    actual=sum(x["hit"] for x in rows)
+    return {
+        "pairs":n,
+        "expectedHits":round(expected,4),
+        "observedHits":actual,
+        "observedToExpected":round(actual/expected,4) if expected else None,
+        "meanForecastProbabilityPct":round(100*expected/n,3) if n else None,
+        "observedHitRatePct":round(100*actual/n,3) if n else None,
+        "brier":(round(math.fsum((int(x["hit"])-x["probability"])**2
+                     for x in rows)/n,7) if n else None),
+    }
+
+
 def audit_repository(root):
     aligned=read_json(root/"AlignedPortfolioReview.json")
     if (aligned.get("projectionState")!="verified"
@@ -210,6 +227,23 @@ def audit_repository(root):
             "uniformBrier":round(sum(r["uniformBrier"]*r["pairs"] for r in races)/n,6),
             "racesBrierBetterThanUniform":sum(r["brierBetterThanUniform"] for r in races),
         })
+    selected_keys={(x["raceDate"],x["raceID"],x["candidateID"])
+                   for x in reference_comparison}
+    selected_rows=[x for x in included if (x["raceDate"],x["raceID"],
+                                         x["candidateID"]) in selected_keys]
+    other_rows=[x for x in included if (x["raceDate"],x["raceID"],
+                                      x["candidateID"]) not in selected_keys]
+    if len(selected_rows)!=len(reference_comparison):
+        raise ValueError("selected/reference pair identity is inconsistent")
+    selection_by_band=[]
+    for low,high,label in BINS:
+        selected_band=[x for x in selected_rows if low<=x["probability"]<high]
+        other_band=[x for x in other_rows if low<=x["probability"]<high]
+        selection_by_band.append({
+            "probabilityBand":label,
+            "selectedReferencePairs":subset_metrics(selected_band),
+            "notSelectedPairs":subset_metrics(other_band),
+        })
     deviations=sorted(x["absDifferencePercentagePoints"] for x in reference_comparison)
     matched_selected=len(reference_comparison)
     ref_expected=math.fsum(x["referenceProbability"] for x in reference_comparison)
@@ -245,6 +279,14 @@ def audit_repository(root):
         "racesBrierBetterThanUniform":sum(x["brierBetterThanUniform"] for x in by_race),
         "racesLogLossBetterThanUniform":sum(x["logLossBetterThanUniform"] for x in by_race),
         "fixedProbabilityBins":bucket,
+        "selectedReferenceVsOtherWidePairs":{
+            "selected":subset_metrics(selected_rows),
+            "notSelected":subset_metrics(other_rows),
+            "sameForecastSeriesUsed":True,
+            "selectionMayDependOnUnverifiedOdds":True,
+            "selectionCausalityEstablished":False,
+            "byProbabilityBand":selection_by_band,
+        },
         "byRaceDate":per_date,
         "referenceVsFullField":{
             "matchedPairs":len(reference_comparison),
