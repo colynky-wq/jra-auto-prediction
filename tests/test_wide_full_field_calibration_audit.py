@@ -125,6 +125,18 @@ class FullFieldWideCalibrationTests(unittest.TestCase):
                 r["referenceVsFullField"]["referenceBrierSamePairs"],0.04)
             self.assertAlmostEqual(
                 r["referenceVsFullField"]["shadowBrierSamePairs"],0.01)
+            selection=r["selectedReferenceVsOtherWidePairs"]
+            self.assertEqual(selection["selected"]["pairs"],1)
+            self.assertEqual(selection["selected"]["observedHits"],1)
+            self.assertEqual(selection["selected"]["expectedHits"],0.9)
+            self.assertEqual(selection["notSelected"]["pairs"],5)
+            self.assertAlmostEqual(selection["notSelected"]["expectedHits"],2.1)
+            self.assertEqual(selection["notSelected"]["observedHits"],2)
+            self.assertFalse(selection["selectionCausalityEstablished"])
+            self.assertTrue(selection["selectionMayDependOnUnverifiedOdds"])
+            self.assertEqual(
+                sum(x["selectedReferencePairs"]["pairs"]
+                    for x in selection["byProbabilityBand"]),1)
             self.assertFalse(r["referenceVsFullField"]["sameProbabilityModelAssumed"])
             self.assertFalse(r["oddsSourceFreshnessVerified"])
 
