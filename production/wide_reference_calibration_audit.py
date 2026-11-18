@@ -79,8 +79,10 @@ def percentile(values, q):
     return values[lower]*(1-weight)+values[upper]*weight
 
 
-def bootstrap_by_cluster(groups, *, reps=REPS, seed=SEED):
-    """Bootstrap entire race blocks (never individual overlapping pairs)."""
+def bootstrap_by_cluster(groups, *, reps=REPS, seed=SEED, unit="race"):
+    """Bootstrap intact race or full-day blocks (never individual pairs)."""
+    if unit not in {"race", "day"}:
+        raise ValueError("cluster unit must be race or day")
     if not groups:
         return {"clusterCount":0,"resamples":0,"description":"no data"}
     if type(reps) is not int or not 1<=reps<=100000:
@@ -105,13 +107,16 @@ def bootstrap_by_cluster(groups, *, reps=REPS, seed=SEED):
     return {
         "clusterCount":len(keys),
         "resamples":reps,"fixedSeed":seed,
-        "resampleUnit":"entire_race_keeping_all_correlated_tickets",
+        "resampleUnit":("entire_race_keeping_all_correlated_tickets"
+                        if unit=="race" else
+                        "entire_race_date_keeping_all_races_and_tickets_together"),
         "observedToPredictedHitRatioDescriptivePercentiles":interval(ratios),
         "hitRateGapPpDescriptivePercentiles":interval(gaps),
         "brierDescriptivePercentiles":interval(brier),
         "formalConfidenceInterval":False,
         "preregisteredCalibrationTest":False,
-        "caveat":"Resampling assumes races representative; day-level drift and selection bias remain",
+        "caveat":("Descriptive only: selected references, nonrandom races, "
+                  "only four observed dates, and possible day dependence"),
     }
 
 
@@ -141,6 +146,7 @@ def report(aligned, *, reps=REPS, seed=SEED):
     # Unlike a naive per-ticket binomial test, the resampling unit here is
     # the race. With only four dates even race-block percentiles must not
     # be represented as robust time-series calibration inference.
+    dates_as_groups={day:[x for x in rows if x["raceDate"]==day] for day in dates}
     result = {
         "schemaVersion":1, "version":VERSION,
         "cohortGate":"verified_and_counts_current",
@@ -153,7 +159,9 @@ def report(aligned, *, reps=REPS, seed=SEED):
         "leaveOneDayOut":leave_out,
         "fixedProbabilityBins":buckets,
         "raceClusterBootstrap":bootstrap_by_cluster(
-            clusters,reps=reps,seed=seed),
+            clusters,reps=reps,seed=seed,unit="race"),
+        "dayBlockBootstrap":bootstrap_by_cluster(
+            dates_as_groups,reps=reps,seed=seed,unit="day"),
         "candidateEventsIndependentAssumption":False,
         "historicalResultsUsedToSelectThresholds":False,
         "formalStatisticalSignificanceEstablished":False,
