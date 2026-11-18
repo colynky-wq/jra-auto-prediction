@@ -11,6 +11,8 @@ on:
       - 'production/zero_cost_odds_policy.py'
       - 'tests/test_zero_cost_odds_policy.py'
       - 'production/zero_cost_wide_stress_audit.py'
+      - 'production/wide_reference_calibration_audit.py'
+      - 'tests/test_wide_reference_calibration_audit.py'
       - 'tests/test_zero_cost_wide_stress_audit.py'
       - 'tests/test_team_nave_tan_history_probe.py'
       - 'research/independent_odds_provider_selection.json'
@@ -103,6 +105,30 @@ jobs:
                   if t['frozenReferenceEVThreshold']==1.0)
               print(f"hypotheticalHaircut{scenario['assumedQuoteHaircutPct']}pct:",
                     at_least_one)
+          PY
+
+      - name: Race-cluster-aware Wide calibration unit tests (offline)
+        run: python -m unittest discover -s tests -p 'test_wide_reference_calibration_audit.py' -v
+
+      - name: Read-only Wide event calibration with race-block resampling
+        run: python production/wide_reference_calibration_audit.py --root . > wide-reference-calibration.json
+
+      - name: Summarize Wide calibration, race-block range and leave-one-date-out
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-reference-calibration.json',encoding='utf-8'))
+          print('referenceWideCandidates:',r['allCandidateStatistics']['candidateCount'])
+          print('referenceRaces:',r['settledReferenceRaceCount'])
+          print('referenceDays:',r['settledReferenceDayCount'])
+          print('sumFrozenPredictedHits:',r['allCandidateStatistics']['predictedHitCount'])
+          print('observedWideHits:',r['allCandidateStatistics']['observedHitCount'])
+          print('observedToPredictedHitRatio:',r['allCandidateStatistics']['observedToPredictedHitRatio'])
+          print('raceBlockDescriptiveHitRateGapPp:',r['raceClusterBootstrap']['hitRateGapPpDescriptivePercentiles'])
+          print('raceBlockDescriptiveRatio:',r['raceClusterBootstrap']['observedToPredictedHitRatioDescriptivePercentiles'])
+          print('fixedProbabilityBins:',r['fixedProbabilityBins'])
+          print('leaveOneDayOut:',r['leaveOneDayOut'])
+          print('marketOddsFreshnessVerified:',r['marketOddsFreshnessVerified'])
           PY
 
       - name: Test post-hoc frozen versus final odds drift (no lookahead)
@@ -209,4 +235,5 @@ jobs:
             market-logit-feature-audit.json
             odds-zero-cost-policy.json
             zero-cost-wide-stress.json
+            wide-reference-calibration.json
           if-no-files-found: ignore
