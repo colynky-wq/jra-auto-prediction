@@ -14,6 +14,8 @@ on:
       - 'production/wide_reference_calibration_audit.py'
       - 'production/wide_full_field_calibration_audit.py'
       - 'production/wide_reference_selector_replay.py'
+      - 'production/wide_threshold_gate_audit.py'
+      - 'tests/test_wide_threshold_gate_audit.py'
       - 'tests/test_wide_reference_selector_replay.py'
       - 'tests/test_wide_full_field_calibration_audit.py'
       - 'docs/wide-full-field-calibration-selection-audit-20261118.md'
@@ -200,6 +202,27 @@ jobs:
           assert r['referenceSelectionIdentityVerified']
           PY
 
+      - name: Registered probability versus EV threshold-gate regression tests
+        run: python -m unittest discover -s tests -p 'test_wide_threshold_gate_audit.py' -v
+
+      - name: Compare all Wide pairs under registered probability and EV gates
+        run: python production/wide_threshold_gate_audit.py --root . > wide-threshold-gates.json
+
+      - name: Summarize threshold gate outcomes without optimizing cutoffs
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-threshold-gates.json',encoding='utf-8'))
+          print('gateRacesAudited:',r['racesAudited'])
+          print('gateRacesExcluded:',r['racesExcluded'])
+          print('gateAllPairs:',r['allPairs'])
+          print('gateProbabilityAtLeastFive:',r['probabilityAtLeastFivePct'])
+          print('gateProbabilityBelowFive:',r['probabilityBelowFivePct'])
+          print('twoByTwoGateGroups:',r['twoByTwoGates'])
+          print('gateByRaceDate:',r['byRaceDate'])
+          print('marketPriceFreshnessVerified:',r['sourcePriceFreshnessVerified'])
+          PY
+
       - name: Test post-hoc frozen versus final odds drift (no lookahead)
         run: python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
 
@@ -307,4 +330,5 @@ jobs:
             wide-reference-calibration.json
             wide-full-field-calibration.json
             wide-reference-selector-replay.json
+            wide-threshold-gates.json
           if-no-files-found: ignore
