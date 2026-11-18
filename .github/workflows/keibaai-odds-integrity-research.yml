@@ -8,6 +8,8 @@ on:
       - 'production/final_odds_drift_audit.py'
       - 'production/market_logit_feature_audit.py'
       - 'production/team_nave_tan_history_probe.py'
+      - 'production/zero_cost_odds_policy.py'
+      - 'tests/test_zero_cost_odds_policy.py'
       - 'tests/test_team_nave_tan_history_probe.py'
       - 'research/independent_odds_provider_selection.json'
       - 'docs/independent-odds-provider-decision-20261118.md'
@@ -100,23 +102,18 @@ jobs:
       - name: Team-Nave documented TAN history offline parser tests
         run: python -m unittest discover -s tests -p 'test_team_nave_tan_history_probe.py' -v
 
-      - name: Verify selected provider remains disabled pending user contract
+      - name: Enforce zero-cost-only independent odds sourcing
         run: |
+          python -m unittest discover -s tests -p 'test_zero_cost_odds_policy.py' -v
+          python production/zero_cost_odds_policy.py --config research/independent_odds_provider_selection.json > odds-zero-cost-policy.json
           python - <<'PY'
           import json
-          from pathlib import Path
-          x=json.loads(Path('research/independent_odds_provider_selection.json').read_text(encoding='utf-8'))
-          assert x['selectionStatus']=='vendor_selected_pending_contract'
-          assert x['operationalStatus']=='not_connected'
-          assert x['subscriptionActive'] is False
-          assert x['credentialAvailable'] is False
-          assert x['independentEvidenceFilesCollected']==0
-          assert x['formalBettingEnabled'] is False
-          assert x['sourceAuthenticityVerified'] is False
-          assert x['technical']['recommendedOption']=='ALL'
-          assert x['technical']['historicalWideResponseSampleVerified'] is False
-          print('independentOddsVendor:',x['providerDisplayName'])
-          print('providerConnected:',x['subscriptionActive'])
+          x=json.load(open('odds-zero-cost-policy.json',encoding='utf-8'))
+          assert x['policyPass'] is True
+          assert x['spendCapJPY'] == 0
+          assert x['independentFreshOddsVerified'] is False
+          print('zeroCostOnly:',x['policyPass'])
+          print('budgetCapJPY:',x['spendCapJPY'])
           PY
 
       - name: Inspect LightGBM's actual market-logit usage
@@ -185,4 +182,5 @@ jobs:
             mac-odds-agent-preview.txt
             final-odds-drift.json
             market-logit-feature-audit.json
+            odds-zero-cost-policy.json
           if-no-files-found: ignore
