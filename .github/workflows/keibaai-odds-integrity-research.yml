@@ -126,6 +126,8 @@ jobs:
           print('observedToPredictedHitRatio:',r['allCandidateStatistics']['observedToPredictedHitRatio'])
           print('raceBlockDescriptiveHitRateGapPp:',r['raceClusterBootstrap']['hitRateGapPpDescriptivePercentiles'])
           print('raceBlockDescriptiveRatio:',r['raceClusterBootstrap']['observedToPredictedHitRatioDescriptivePercentiles'])
+          print('dayBlockDescriptiveRatio:',r['dayBlockBootstrap']['observedToPredictedHitRatioDescriptivePercentiles'])
+          print('dayBlockDescriptiveGapPp:',r['dayBlockBootstrap']['hitRateGapPpDescriptivePercentiles'])
           print('fixedProbabilityBins:',r['fixedProbabilityBins'])
           print('leaveOneDayOut:',r['leaveOneDayOut'])
           print('marketOddsFreshnessVerified:',r['marketOddsFreshnessVerified'])
