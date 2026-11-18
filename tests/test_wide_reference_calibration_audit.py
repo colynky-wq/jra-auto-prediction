@@ -96,6 +96,33 @@ class WideReferenceCalibrationTests(unittest.TestCase):
         self.assertIn("entire_race_keeping",races["resampleUnit"])
         self.assertFalse(dates["formalConfidenceInterval"])
 
+    def test_forward_only_date_factor_never_reads_current_outcome(self):
+        result=report(self.aligned,reps=25)
+        dates=result["forwardOnlyPriorDateDriftDiagnostic"]
+        self.assertEqual(len(dates),2)
+        self.assertIsNone(dates[0]["historicalObservedToPredictedRatio"])
+        self.assertEqual(dates[0]["precedingDays"],0)
+        self.assertEqual(dates[1]["precedingDays"],1)
+        self.assertAlmostEqual(dates[1]["historicalObservedToPredictedRatio"],2.2222,
+                               places=4)
+        self.assertAlmostEqual(dates[1]["hypotheticalExpectedHitsUsingOnlyPriorDays"],
+                               0.8444,places=4)
+        self.assertFalse(dates[1]["actualPredictionChanged"])
+
+    def test_forward_only_indicator_does_not_use_later_day_hit_to_set_prior(self):
+        baseline=report(self.aligned,reps=5)["forwardOnlyPriorDateDriftDiagnostic"]
+        changed=copy.deepcopy(self.aligned)
+        # Date two outcome is still a loss, but change its predicted odds
+        # and frozen probability while maintaining strict EV equality.
+        bet=changed["races"][1]["commonWideReference"][0]
+        bet["probabilityPct"]=40.0
+        bet["expectedMultiplierLow"]=2.0
+        later=report(changed,reps=5)["forwardOnlyPriorDateDriftDiagnostic"]
+        self.assertEqual(baseline[1]["historicalObservedToPredictedRatio"],
+                         later[1]["historicalObservedToPredictedRatio"])
+        self.assertNotEqual(baseline[1]["hypotheticalExpectedHitsUsingOnlyPriorDays"],
+                            later[1]["hypotheticalExpectedHitsUsingOnlyPriorDays"])
+
     def test_unknown_resample_unit_rejected(self):
         with self.assertRaisesRegex(ValueError,"cluster unit"):
             bootstrap_by_cluster({},unit="ticket")
