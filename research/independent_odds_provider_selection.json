@@ -1,11 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "decisionDateJST": "2026-11-18",
-  "providerSelection": "team_nave_keiba_odds_api",
-  "providerDisplayName": "Team-Nave KeiBa-ODDS-API",
-  "selectionStatus": "vendor_selected_pending_contract",
+  "userBudgetConstraint": "additional_cost_zero_yen",
+  "monthlyIncrementalCostCapJPY": 0,
+  "providerSelection": null,
+  "providerDisplayName": null,
+  "selectionStatus": "free_only_source_unverified",
   "operationalStatus": "not_connected",
-  "contractStatus": "not_signed_by_assistant",
+  "contractStatus": "paid_provider_excluded",
   "subscriptionActive": false,
   "credentialAvailable": false,
   "userIPATEligibilityConfirmed": false,
@@ -13,40 +15,57 @@
   "sourceAuthenticityVerified": false,
   "formalBettingEnabled": false,
   "productionModelChanged": false,
-  "technical": {
-    "documentedEndpoint": "https://api.gamble-os.net/systems/get-odds",
-    "documentedMethod": "POST",
-    "recommendedOption": "ALL",
-    "marketCodes": {
-      "win": "TAN",
-      "wide": "WIDE"
-    },
-    "documentedTimestampField": "rlsdttm",
-    "latestOnlyTimestampMayBe": "LAST-ODDS",
-    "supportsMac": true,
-    "supportsWinOdds": true,
-    "supportsWideOdds": true,
-    "historicalWinResponseSampleAvailable": true,
-    "historicalWideResponseSampleVerified": false,
-    "concurrentRequestsPerLicense": 1,
-    "devicesPerLicense": 1,
-    "providerMaintenanceJST": "06:00-08:00",
-    "personalPlanYenTaxIncludedPerMonth": 14300
+  "paidProvidersDisallowed": true,
+  "previousPaidCandidateArchived": {
+    "name": "Team-Nave KeiBa-ODDS-API",
+    "reason": "User explicitly rejects any additional payment",
+    "noSubscriptionInitiated": true
   },
+  "zeroCostCandidates": [
+    {
+      "name": "JRA official odds website",
+      "kind": "free_visual_reference",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": true,
+      "programmaticAcquisitionAuthorized": false,
+      "automatedExportVerified": false,
+      "costJPY": 0,
+      "status": "visual_reference_only_pending_terms"
+    },
+    {
+      "name": "OddsEdge Light",
+      "kind": "free_third_party_windows_app",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": false,
+      "programmaticAcquisitionAuthorized": false,
+      "automatedExportVerified": false,
+      "costJPY": 0,
+      "status": "not_mac_native_export_scope_unverified"
+    },
+    {
+      "name": "Existing netkeiba recorded odds",
+      "kind": "existing_licensed_terms_unknown",
+      "supportsWin": true,
+      "supportsWide": true,
+      "macBrowser": true,
+      "programmaticAcquisitionAuthorized": null,
+      "automatedExportVerified": true,
+      "costJPY": 0,
+      "status": "existing_source_not_independent_source"
+    }
+  ],
   "remainingGates": [
-    "Personal noncommercial KeibaAI storage and ML use confirmed by provider",
-    "IPAT-related eligibility confirmed",
-    "Purchase authorized by user and active",
-    "Historical WIDE response schema verified using provider sample/contract",
-    "Historical timestamp freshness for TAN and WIDE tested prospectively",
-    "Same-race same-time independent snapshot compared with frozen odds"
+    "Identify legally usable zero-cost same-time independent single-win and Wide snapshots",
+    "Verify zero-fee local/exported data format for Mac-based bridge",
+    "Verify provider terms allow private machine access and local research retention",
+    "Verify source quote timestamps against frozen T-10 observation",
+    "Do not infer monetizable edge or promote historical snapshots"
   ],
-  "officialDocs": [
-    "https://www.team-nave.com/system/jp/products/kboddsapi/",
-    "https://www.team-nave.com/system/jp/products/kboddsapi/help_function.html",
-    "https://www.team-nave.com/system/jp/products/kboddsapi/help_limit.html",
-    "https://www.team-nave.com/system/jp/products/kboddsapi/help_attention.html"
-  ],
-  "fallbackProvider": "jra_van_datalab_windows_only",
-  "fallbackPersonalPlanYenTaxIncludedPerMonth": 2090
+  "referenceUrls": [
+    "https://www.jra.go.jp/faq/pop02/1_1.html",
+    "https://www.jra.go.jp/use/index.html",
+    "https://oddsedge.app/light.html"
+  ]
 }
