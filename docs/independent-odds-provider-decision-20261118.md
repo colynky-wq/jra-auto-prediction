@@ -1,3 +1,5 @@
+> **更新（2026-11-18 13時台 JST）:** ユーザーが追加費用0円を指定したため、この文書のTeam-Nave選定は**撤回・過去の検討記録**となりました。現在有効な判断は `docs/independent-odds-zero-cost-plan.md` と `research/independent_odds_provider_selection.json` を参照してください。Team-Nave / JRA-VANの契約、購入、接続は実施しません。
+
 # KeibaAI 独立オッズ提供元の選定（2026-11-18）
 
 ## 結論
