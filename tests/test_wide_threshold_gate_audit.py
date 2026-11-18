@@ -8,6 +8,7 @@ import unittest
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"production"))
 from wide_threshold_gate_audit import (
     gate_label,qualified_pair_outcomes,statistics,GROUP_LABELS,
+    ev_comparison_in_strata,ev_comparison_by_date,
 )
 
 
@@ -77,6 +78,27 @@ class WideThresholdGateTests(unittest.TestCase):
         self.signal["wideEvaluation"]["pairs"].pop()
         with self.assertRaisesRegex(ValueError,"full Wide signal pair coverage"):
             qualified_pair_outcomes(self.signal,self.result,self.horses)
+
+    def test_ev_gate_comparison_within_fixed_forecast_bands(self):
+        rows,_=qualified_pair_outcomes(self.signal,self.result,self.horses)
+        groups=ev_comparison_in_strata(rows)
+        self.assertEqual(len(groups),4)
+        over_five_under_ten=groups[1]
+        self.assertEqual(over_five_under_ten["forecastProbabilityBand"],"5-<10%")
+        self.assertEqual(over_five_under_ten["priceEVAtLeast1_10"]["pairs"],1)
+        self.assertEqual(over_five_under_ten["priceEVBelow1_10"]["pairs"],0)
+        above_ten=groups[2]
+        self.assertEqual(above_ten["priceEVAtLeast1_10"]["pairs"],1)
+        self.assertEqual(above_ten["priceEVBelow1_10"]["pairs"],1)
+
+    def test_date_groups_do_not_interchange_price_gate(self):
+        rows,_=qualified_pair_outcomes(self.signal,self.result,self.horses)
+        grouped=ev_comparison_by_date(rows)
+        self.assertEqual(len(grouped),1)
+        self.assertEqual(grouped[0]["priceEVAtLeast1_10"]["pairs"],3)
+        self.assertEqual(grouped[0]["priceEVBelow1_10"]["pairs"],3)
+        self.assertEqual(grouped[0]["priceEVAtLeast1_10"]["observedHits"],2)
+        self.assertEqual(grouped[0]["priceEVBelow1_10"]["observedHits"],1)
 
     def test_stats_no_price_or_probability_authentication_claim(self):
         self.assertEqual(statistics([])["pairs"],0)
