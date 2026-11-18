@@ -120,6 +120,39 @@ def bootstrap_by_cluster(groups, *, reps=REPS, seed=SEED, unit="race"):
     }
 
 
+def forward_only_reference_diagnostic(by_day):
+    """No future-date leakage; historical raw rate ratio is NOT a deployable calibrator.
+
+    The first date has no prior observations. Later dates use only earlier
+    settled dates; no test-date outcomes enter its prior calibration ratio.
+    """
+    seen_predicted=0.0
+    seen_observed=0
+    result=[]
+    for entry in sorted(by_day,key=lambda row:row["raceDate"]):
+        day_predicted=entry["predictedHitCount"]
+        day_observed=entry["observedHitCount"]
+        prior_ratio=(seen_observed/seen_predicted if seen_predicted>0 else None)
+        hypothetical=(prior_ratio*day_predicted
+                      if prior_ratio is not None else None)
+        result.append({
+            "raceDate":entry["raceDate"],
+            "precedingDays":len(result),
+            "historicalObservedToPredictedRatio":(
+                round(prior_ratio,4) if prior_ratio is not None else None),
+            "thisDayFrozenPredictedHits":day_predicted,
+            "thisDayObservedHits":day_observed,
+            "hypotheticalExpectedHitsUsingOnlyPriorDays":(
+                round(hypothetical,4) if hypothetical is not None else None),
+            "actualPredictionChanged":False,
+            "modelRecalibrated":False,
+            "sampleSizeSufficientForPromotion":False,
+        })
+        seen_predicted+=day_predicted
+        seen_observed+=day_observed
+    return result
+
+
 def report(aligned, *, reps=REPS, seed=SEED):
     rows,unsettled=collect_frozen_wide_reference(aligned)
     clusters=group_by_race(rows)
@@ -157,6 +190,7 @@ def report(aligned, *, reps=REPS, seed=SEED):
         "unsettledReferenceCandidatesExcluded":unsettled,
         "byDay":by_day,
         "leaveOneDayOut":leave_out,
+        "forwardOnlyPriorDateDriftDiagnostic":forward_only_reference_diagnostic(by_day),
         "fixedProbabilityBins":buckets,
         "raceClusterBootstrap":bootstrap_by_cluster(
             clusters,reps=reps,seed=seed,unit="race"),
