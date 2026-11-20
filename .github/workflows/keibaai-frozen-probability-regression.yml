@@ -1,0 +1,33 @@
+name: KeibaAI Frozen Probability Regression
+
+on:
+  pull_request:
+    paths:
+      - 'production/inspect_frozen_win_probabilities.py'
+      - 'production/test_inspect_frozen_win_probabilities.py'
+      - '.github/workflows/keibaai-frozen-probability-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/inspect_frozen_win_probabilities.py'
+      - 'production/test_inspect_frozen_win_probabilities.py'
+      - '.github/workflows/keibaai-frozen-probability-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-probability-tests:
+    name: Frozen result identity / probability diagnostics
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax verification
+        run: python -m py_compile production/inspect_frozen_win_probabilities.py production/test_inspect_frozen_win_probabilities.py
+      - name: Network-free regression tests
+        run: python production/test_inspect_frozen_win_probabilities.py -v
