@@ -43,6 +43,31 @@ def bucket(p):
     raise ValueError("invalid probability bin")
 
 
+def official_podium(positions, horse_numbers, places, rid):
+    """Convert audit actualFinish {horse_number: finish_rank} to Top-K horse IDs.
+
+    The audit maps horse number -> finishing position, NOT position -> horse
+    number. Non-podium dead heats are harmless; ambiguous podium ranks are not.
+    An unknown rank excludes only events needing that finishing position.
+    """
+    expected = {str(number) for number in horse_numbers}
+    check(set(positions) == expected, "finish/entrant identity mismatch: " + rid)
+    by_rank = defaultdict(list)
+    for number in horse_numbers:
+        rank = positions[str(number)]
+        if rank is None:
+            continue
+        check(type(rank) is int and rank >= 1,
+              "invalid official finishing position: " + rid)
+        if rank <= places:
+            by_rank[rank].append(number)
+    for rank in range(1, places + 1):
+        check(len(by_rank[rank]) <= 1, "ambiguous podium dead heat: " + rid)
+        if not by_rank[rank]:
+            return None
+    return {by_rank[rank][0] for rank in range(1, places + 1)}
+
+
 def summarize(samples):
     result = {}
     for source in ("ai", "market"):
@@ -138,16 +163,10 @@ def build(root, audit, protocol, load_bundle=capture.load):
         # unknown, not a loss. Score the shorter observable place events only.
         # In particular, a missing 3rd never invalidates an observed 1st.
         for key, (ai_key, market_key, places) in PROBABILITIES.items():
-            raw_podium = [positions.get(str(k)) for k in range(1, places + 1)]
-            if any(v is None for v in raw_podium):
+            podium = official_podium(positions, numbers, places, rid)
+            if podium is None:
                 unknown_finish_by_kind[key].append(rid)
                 continue
-            try:
-                podium = {int(v) for v in raw_podium}
-            except (TypeError, ValueError) as exc:
-                raise ValueError("FROZEN_PROBABILITY_BLOCKED: invalid finish: " + rid) from exc
-            check(len(podium) == places and podium.issubset(numbers),
-                  "ambiguous horse/result identity: " + rid)
             top_number = max(horses, key=lambda h: prob(h[ai_key], ai_key))["number"]
             top_picks[(group, key)][0] += 1
             top_picks[(group, key)][1] += int(int(top_number) in podium)
