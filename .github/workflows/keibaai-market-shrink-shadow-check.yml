@@ -5,6 +5,8 @@ on:
     paths:
       - 'production/market_shrink_shadow.py'
       - 'production/test_market_shrink_shadow.py'
+      - 'production/evaluate_market_shrink_shadow.py'
+      - 'production/test_evaluate_market_shrink_shadow.py'
       - 'production/live_monitor_topk_publish.py'
       - '.github/workflows/keibaai-live-permanent.yml'
       - '.github/workflows/keibaai-market-shrink-shadow-check.yml'
@@ -16,6 +18,8 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - '.github/workflows/keibaai-market-shrink-shadow-check.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '30 14 * * *'  # 23:30 JST, read-only after daily result workflows
 
 permissions:
   contents: read
@@ -31,5 +35,8 @@ jobs:
           python-version: '3.11'
       - name: Syntax and network-free immutable capture tests
         run: |
-          python -m py_compile production/market_shrink_shadow.py production/test_market_shrink_shadow.py production/live_monitor_topk_publish.py
+          python -m py_compile production/market_shrink_shadow.py production/test_market_shrink_shadow.py production/live_monitor_topk_publish.py production/evaluate_market_shrink_shadow.py production/test_evaluate_market_shrink_shadow.py
           python production/test_market_shrink_shadow.py -v
+          python production/test_evaluate_market_shrink_shadow.py -v
+      - name: Analyze only separately frozen forward evidence (read-only)
+        run: python production/evaluate_market_shrink_shadow.py
