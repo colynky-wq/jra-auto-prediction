@@ -1,0 +1,35 @@
+name: KeibaAI Prospective Market Shrink Research Checks
+
+on:
+  pull_request:
+    paths:
+      - 'production/market_shrink_shadow.py'
+      - 'production/test_market_shrink_shadow.py'
+      - 'production/live_monitor_topk_publish.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-market-shrink-shadow-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/market_shrink_shadow.py'
+      - 'production/test_market_shrink_shadow.py'
+      - 'production/live_monitor_topk_publish.py'
+      - '.github/workflows/keibaai-market-shrink-shadow-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  first-capture-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Syntax and network-free immutable capture tests
+        run: |
+          python -m py_compile production/market_shrink_shadow.py production/test_market_shrink_shadow.py production/live_monitor_topk_publish.py
+          python production/test_market_shrink_shadow.py -v
