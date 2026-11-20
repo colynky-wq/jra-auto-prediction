@@ -96,11 +96,52 @@ class FrozenWinProbabilitiesTests(unittest.TestCase):
         self.assertEqual(out["probabilities"]["first100"]["top3"]["topPredictedHorseRaces"], 0)
         self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top3"], ["202603030101"])
 
-        bad["races"][0]["actualFinish"]["2"] = None
+        # Horse #1 finished second; keep the winner (#2) known.
+        bad = deepcopy(audit)
+        bad["races"][0]["actualFinish"]["1"] = None
         out = build(Path("."), bad, protocol, load_bundle=lambda *_: record)
         self.assertEqual(out["probabilities"]["first100"]["win"]["topPredictedHorseRaces"], 1)
         self.assertEqual(out["probabilities"]["first100"]["top2"]["topPredictedHorseRaces"], 0)
         self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top2"], ["202603030101"])
+
+    def test_actual_finish_is_horse_to_rank_not_rank_to_horse(self):
+        audit, protocol, record = fixture()
+        # Winner is horse #4, but horse #1 finished second. Reversing the
+        # mapping would falsely declare horse #2 the winner.
+        audit["races"][0]["actualFinish"] = {"1": 2, "2": 3, "3": 4, "4": 1}
+        for key, value in (("aiProbability", 75),
+                           ("aiTop2Probability", 85),
+                           ("aiTop3Probability", 95)):
+            record["prediction"]["horses"][3][key] = value
+        out = build(Path("."), audit, protocol, load_bundle=lambda *_: record)
+        for event in ("win", "top2", "top3"):
+            stats = out["probabilities"]["first100"][event]
+            self.assertEqual(stats["topPredictedHorsePlaced"], 1)
+            self.assertEqual(stats["horseProbabilities"]["ai"]["observedHits"],
+                             {"win": 1, "top2": 2, "top3": 3}[event])
+
+    def test_unknown_non_podium_horse_does_not_remove_known_podium(self):
+        audit, protocol, record = fixture()
+        audit["races"][0]["actualFinish"] = {"1": 2, "2": 1, "3": None, "4": 3}
+        out = build(Path("."), audit, protocol, load_bundle=lambda *_: record)
+        for event in ("win", "top2", "top3"):
+            self.assertEqual(out["probabilities"]["first100"][event]
+                             ["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["coverage"]["unknownFinishRacesByEvent"]["top3"], [])
+
+    def test_top_podium_dead_heat_is_rejected_but_later_tie_is_allowed(self):
+        audit, protocol, record = fixture()
+        audit["races"][0]["actualFinish"] = {"1": 1, "2": 1, "3": 3, "4": 4}
+        with self.assertRaisesRegex(ValueError, "ambiguous podium"):
+            build(Path("."), audit, protocol, load_bundle=lambda *_: record)
+        audit["races"][0]["actualFinish"] = {"1": 2, "2": 1, "3": 4, "4": 4}
+        out = build(Path("."), audit, protocol, load_bundle=lambda *_: record)
+        self.assertEqual(out["probabilities"]["first100"]["win"]
+                         ["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["probabilities"]["first100"]["top2"]
+                         ["topPredictedHorseRaces"], 1)
+        self.assertEqual(out["probabilities"]["first100"]["top3"]
+                         ["topPredictedHorseRaces"], 0)
 
     def test_matched_races_beyond_200_do_not_pollute_locked_windows(self):
         audit, protocol, record = fixture()
