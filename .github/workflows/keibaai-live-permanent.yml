@@ -9,6 +9,8 @@ on:
       - '.github/scripts/keibaai-race-day-check.sh'
       - 'production/test_race_day_check.sh'
       - 'production/live_monitor_topk_publish.py'
+      - 'production/market_shrink_shadow.py'
+      - 'production/test_market_shrink_shadow.py'
       - 'production/live_bundle_publisher.py'
       - 'production/race_simulator_v02.py'
       - 'production/race_simulator_v02_adapter.py'
@@ -126,6 +128,8 @@ jobs:
           bash -n .github/scripts/keibaai-race-day-check.sh
           bash production/test_race_day_check.sh
           python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/market_shrink_shadow.py production/test_market_shrink_shadow.py
+          python production/test_market_shrink_shadow.py -v
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py
           python -m unittest discover -s production -p test_race_simulator_learning.py
