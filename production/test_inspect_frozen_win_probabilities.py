@@ -120,6 +120,25 @@ class FrozenWinProbabilitiesTests(unittest.TestCase):
             self.assertEqual(stats["horseProbabilities"]["ai"]["observedHits"],
                              {"win": 1, "top2": 2, "top3": 3}[event])
 
+    def test_research_blend_is_separate_and_market_comparison_is_paired(self):
+        audit, protocol, record = fixture()
+        audit["races"][0]["actualFinish"] = {"1": 2, "2": 3, "3": 4, "4": 1}
+        for horse in record["prediction"]["horses"]:
+            horse["marketProbability"] = 85 if horse["number"] == 4 else 5
+        out = build(Path("."), audit, protocol, load_bundle=lambda *_: record)
+        win = out["probabilities"]["first100"]["win"]
+        self.assertEqual(win["topPredictedHorsePlaced"], 0)
+        self.assertEqual(win["topPredictedMarketHorsePlaced"], 1)
+        self.assertEqual(win["topPredictedMarketBlend50HorsePlaced"], 1)
+        stats = win["horseProbabilities"]
+        self.assertEqual(stats["ai"]["horses"], 4)
+        self.assertEqual(stats["market"]["horses"], 4)
+        self.assertEqual(stats["marketBlend50"]["horses"], 4)
+        self.assertEqual(stats["marketBlend50"]["observedHits"], 1)
+        self.assertAlmostEqual(win["brierDeltaAgainstMarket"]["ai"],
+                               round(stats["ai"]["brierScore"] -
+                                     stats["market"]["brierScore"], 6))
+
     def test_unknown_non_podium_horse_does_not_remove_known_podium(self):
         audit, protocol, record = fixture()
         audit["races"][0]["actualFinish"] = {"1": 2, "2": 1, "3": None, "4": 3}
