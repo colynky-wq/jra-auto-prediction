@@ -4,7 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import unittest
 
-from inspect_frozen_win_probabilities import build
+from inspect_frozen_win_probabilities import build, paired_race_uncertainty
 
 
 def fixture():
@@ -66,6 +66,28 @@ class FrozenWinProbabilitiesTests(unittest.TestCase):
         self.assertIsNone(out["probabilities"]["confirmation101to200"]["win"]
                           ["horseProbabilities"]["ai"])
         self.assertFalse(out["quality"]["newAlignedBetaEligible"])
+        paired = out["probabilities"]["first100"]["win"]["pairedRaceUncertainty"]["ai"]
+        self.assertEqual(paired["pairedRaces"], 1)
+        self.assertIsNone(paired["bootstrap95Pct"])
+        self.assertGreater(paired["meanBrierDelta"], 0)
+
+    def test_brier_bootstrap_samples_whole_races_and_is_deterministic(self):
+        # With a constant pairwise race difference, a race-resampled 95% interval
+        # must be that same difference. With n<30, uncertainty is not estimated.
+        report = paired_race_uncertainty([0.05] * 40)
+        self.assertEqual(report["pairedRaces"], 40)
+        self.assertEqual(report["worseRaces"], 40)
+        self.assertEqual(report["betterRaces"], 0)
+        self.assertEqual(report["bootstrap95Pct"], [0.05, 0.05])
+        self.assertEqual(report, paired_race_uncertainty([0.05] * 40))
+        mixed = paired_race_uncertainty([-0.1, 0.1] * 15)
+        self.assertEqual(mixed["pairedRaces"], 30)
+        self.assertEqual(mixed["betterRaces"], 15)
+        self.assertEqual(mixed["worseRaces"], 15)
+        self.assertTrue(mixed["bootstrap95Pct"][0] < 0 <
+                        mixed["bootstrap95Pct"][1])
+        self.assertIsNone(paired_race_uncertainty([0.1] * 29)["bootstrap95Pct"])
+        self.assertEqual(paired_race_uncertainty([])["pairedRaces"], 0)
 
     def test_unverified_stale_lock_and_fingerprint_fail_closed(self):
         audit, protocol, record = fixture()

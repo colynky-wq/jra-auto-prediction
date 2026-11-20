@@ -56,7 +56,25 @@ jobs:
                           for src in ('ai', 'market', 'marketBlend50')]
                   lines.append('| ' + cohort + ' | ' + kind + ' | ' +
                                ' | '.join('n/a' if v is None else str(v) for v in vals) + ' |')
-          lines += ['', 'Descriptive only. No optimization on these outcomes, no model rollout or wagers.']
+          lines += [
+              '',
+              '### Race-paired uncertainty (mean AI minus market Brier; lower is better)',
+              '| Cohort | Event | Variant | Paired races | Delta | Race-bootstrap 95% interval |',
+              '| --- | --- | --- | ---: | ---: | --- |',
+          ]
+          for cohort in ('first100', 'confirmation101to200'):
+              for kind in ('win', 'top2', 'top3'):
+                  pairs = report['probabilities'][cohort][kind]['pairedRaceUncertainty']
+                  for name in ('ai', 'marketBlend50'):
+                      item = pairs[name]
+                      interval = item['bootstrap95Pct']
+                      label = 'not estimated (<30 races)' if interval is None else str(interval)
+                      lines.append('| ' + cohort + ' | ' + kind + ' | ' + name +
+                                   ' | ' + str(item['pairedRaces']) +
+                                   ' | ' + str(item['meanBrierDelta']) +
+                                   ' | ' + label + ' |')
+          lines += ['', 'Historical descriptive bootstrap over races, not horses. '
+                       'Do not optimize coefficients, claim significance or activate bets.']
           print('\n'.join(lines))
           import os
           if os.environ.get('GITHUB_STEP_SUMMARY'):

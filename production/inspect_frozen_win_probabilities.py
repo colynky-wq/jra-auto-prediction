@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import random
 from collections import defaultdict
 from pathlib import Path
 
@@ -95,6 +96,35 @@ def summarize(samples):
     return result
 
 
+def paired_race_uncertainty(per_race, *, seed=20261121, draws=2000):
+    """Descriptive CI by resampling whole races, not dependent horses.
+
+    A new sample has only one sign per race. The fixed bootstrap seed makes
+    repeated reports reproducible. Never use this CI for parameter selection.
+    """
+    values = tuple(float(value) for value in per_race)
+    n = len(values)
+    if n == 0:
+        return {"pairedRaces": 0, "meanBrierDelta": None,
+                "betterRaces": 0, "worseRaces": 0,
+                "bootstrap95Pct": None}
+    if any(not math.isfinite(v) for v in values):
+        raise ValueError("invalid Brier difference")
+    mean = sum(values) / n
+    interval = None
+    if n >= 30:
+        rng = random.Random(seed)
+        boot = sorted(sum(values[rng.randrange(n)] for _ in range(n)) / n
+                      for _ in range(draws))
+        interval = [round(boot[int(draws * 0.025)], 8),
+                    round(boot[min(draws - 1, int(draws * 0.975))], 8)]
+    return {"pairedRaces": n,
+            "meanBrierDelta": round(mean, 8),
+            "betterRaces": sum(v < 0 for v in values),
+            "worseRaces": sum(v > 0 for v in values),
+            "bootstrap95Pct": interval}
+
+
 def build(root, audit, protocol, load_bundle=capture.load):
     check(isinstance(audit, dict) and isinstance(protocol, dict), "invalid inputs")
     aligned = audit.get("aligned") or {}
@@ -127,6 +157,8 @@ def build(root, audit, protocol, load_bundle=capture.load):
                   (quality.get("resultExclusions") or [])}
     samples = defaultdict(lambda: defaultdict(list))
     top_picks = defaultdict(lambda: [0, 0])
+    # Per-race paired deltas; do not bootstrap correlated horse rows as IID.
+    paired_by_race = defaultdict(list)
     counts = {"matchedAuditedRaces": 0, "pendingOrExcludedRaces": 0,
               "evaluatedRaces": 0, "evaluatedHorses": 0,
               "matchedOutsideFirst200Races": 0}
@@ -180,12 +212,17 @@ def build(root, audit, protocol, load_bundle=capture.load):
                 top_number = max(forecast, key=lambda v: v[index])[0]
                 top_picks[(group, key, source)][0] += 1
                 top_picks[(group, key, source)][1] += int(top_number in podium)
+            squared = {"ai": 0.0, "market": 0.0, "marketBlend50": 0.0}
             for number, ai, market, blend in forecast:
                 y = int(number in podium)
                 for source, p in (("ai", ai), ("market", market),
                                   ("marketBlend50", blend)):
                     samples[(group, key)]["all"].append(
                         {"source": source, "p": p, "y": y})
+                    squared[source] += (p - y) ** 2
+            for source in ("ai", "marketBlend50"):
+                paired_by_race[(group, key, source)].append(
+                    (squared[source] - squared["market"]) / len(forecast))
             if key == "win":
                 counts["evaluatedRaces"] += 1
                 counts["evaluatedHorses"] += len(horses)
@@ -214,6 +251,11 @@ def build(root, audit, protocol, load_bundle=capture.load):
                     "marketBlend50": round(blend["brierScore"] - market["brierScore"], 6) if blend else None,
                     "meaning": "Negative means lower Brier (better) than market; descriptive only.",
                 },
+                "pairedRaceUncertainty": {
+                    name: paired_race_uncertainty(
+                        paired_by_race[(cohort, key, name)])
+                    for name in ("ai", "marketBlend50")
+                },
             }
 
     issues = quality.get("issues")
@@ -237,6 +279,8 @@ def build(root, audit, protocol, load_bundle=capture.load):
             "Exclude unmatched, dead-heat and changed-entrant outcomes; never count missing as losses.",
             "For otherwise matched races, an unknown placement excludes only events requiring that rank.",
             "Brier/reliability is descriptive; horses within the same race are correlated.",
+            "Uncertainty uses whole-race paired resampling, only with >=30 races; CI excludes zero is not prospective proof.",
+            "No tuning or winner-selection based on these historical confidence intervals.",
             "Only registered first100 and confirmation101to200 races enter the fixed-window comparison.",
             "A 50:50 AI/market blend is a post-hoc descriptive research reference, not a frozen prospective challenger.",
             "No threshold fitting, betting changes or beta activation.",
