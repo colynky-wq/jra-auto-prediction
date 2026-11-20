@@ -31,3 +31,35 @@ jobs:
         run: python -m py_compile production/inspect_frozen_win_probabilities.py production/test_inspect_frozen_win_probabilities.py
       - name: Network-free regression tests
         run: python production/test_inspect_frozen_win_probabilities.py -v
+      - name: Offline research-only benchmark from existing frozen evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python production/inspect_frozen_win_probabilities.py --output /tmp/keibaai-frozen-probabilities.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/keibaai-frozen-probabilities.json').read_text())
+          lines = [
+              '## Frozen T-10 probability diagnostics (research only)',
+              'Status: ' + report['status'],
+              'Evidence generation: ' + report['source']['generatedAtJST'],
+              'Scored races: ' + str(report['coverage']['evaluatedRaces']),
+              '',
+              '| Cohort | Event | AI Brier | Market Brier | Fixed 50:50 Brier |',
+              '| --- | --- | ---: | ---: | ---: |',
+          ]
+          for cohort in ('first100', 'confirmation101to200'):
+              for kind in ('win', 'top2', 'top3'):
+                  data = report['probabilities'][cohort][kind]['horseProbabilities']
+                  vals = [data[src]['brierScore'] if data[src] else None
+                          for src in ('ai', 'market', 'marketBlend50')]
+                  lines.append('| ' + cohort + ' | ' + kind + ' | ' +
+                               ' | '.join('n/a' if v is None else str(v) for v in vals) + ' |')
+          lines += ['', 'Descriptive only. No optimization on these outcomes, no model rollout or wagers.']
+          print('\n'.join(lines))
+          import os
+          if os.environ.get('GITHUB_STEP_SUMMARY'):
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as fh:
+                  fh.write('\n'.join(lines) + '\n')
+          PY
