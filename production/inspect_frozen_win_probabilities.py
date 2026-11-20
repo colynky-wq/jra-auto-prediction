@@ -43,9 +43,34 @@ def bucket(p):
     raise ValueError("invalid probability bin")
 
 
+def official_podium(positions, horse_numbers, places, rid):
+    """Convert audit actualFinish {horse_number: finish_rank} to Top-K horse IDs.
+
+    The audit maps horse number -> finishing position, NOT position -> horse
+    number. Non-podium dead heats are harmless; ambiguous podium ranks are not.
+    An unknown rank excludes only events needing that finishing position.
+    """
+    expected = {str(number) for number in horse_numbers}
+    check(set(positions) == expected, "finish/entrant identity mismatch: " + rid)
+    by_rank = defaultdict(list)
+    for number in horse_numbers:
+        rank = positions[str(number)]
+        if rank is None:
+            continue
+        check(type(rank) is int and rank >= 1,
+              "invalid official finishing position: " + rid)
+        if rank <= places:
+            by_rank[rank].append(number)
+    for rank in range(1, places + 1):
+        check(len(by_rank[rank]) <= 1, "ambiguous podium dead heat: " + rid)
+        if not by_rank[rank]:
+            return None
+    return {by_rank[rank][0] for rank in range(1, places + 1)}
+
+
 def summarize(samples):
     result = {}
-    for source in ("ai", "market"):
+    for source in ("ai", "market", "marketBlend50"):
         ss = [r for r in samples if r["source"] == source]
         if not ss:
             result[source] = None
@@ -138,24 +163,29 @@ def build(root, audit, protocol, load_bundle=capture.load):
         # unknown, not a loss. Score the shorter observable place events only.
         # In particular, a missing 3rd never invalidates an observed 1st.
         for key, (ai_key, market_key, places) in PROBABILITIES.items():
-            raw_podium = [positions.get(str(k)) for k in range(1, places + 1)]
-            if any(v is None for v in raw_podium):
+            podium = official_podium(positions, numbers, places, rid)
+            if podium is None:
                 unknown_finish_by_kind[key].append(rid)
                 continue
-            try:
-                podium = {int(v) for v in raw_podium}
-            except (TypeError, ValueError) as exc:
-                raise ValueError("FROZEN_PROBABILITY_BLOCKED: invalid finish: " + rid) from exc
-            check(len(podium) == places and podium.issubset(numbers),
-                  "ambiguous horse/result identity: " + rid)
-            top_number = max(horses, key=lambda h: prob(h[ai_key], ai_key))["number"]
-            top_picks[(group, key)][0] += 1
-            top_picks[(group, key)][1] += int(int(top_number) in podium)
+            # Predefined, research-only 50:50 shrinkage to the same
+            # frozen pre-race market baseline. Not a prospective challenger
+            # until separately snapshotted before future post times.
+            forecast = []
             for horse in horses:
-                number = int(horse["number"])
+                ai = prob(horse[ai_key], ai_key)
+                market = prob(horse[market_key], market_key)
+                forecast.append((int(horse["number"]), ai, market,
+                                 (ai + market) / 2))
+            for source, index in (("ai", 1), ("market", 2), ("marketBlend50", 3)):
+                top_number = max(forecast, key=lambda v: v[index])[0]
+                top_picks[(group, key, source)][0] += 1
+                top_picks[(group, key, source)][1] += int(top_number in podium)
+            for number, ai, market, blend in forecast:
                 y = int(number in podium)
-                samples[(group, key)]["all"].append({"source": "ai", "p": prob(horse[ai_key], ai_key), "y": y})
-                samples[(group, key)]["all"].append({"source": "market", "p": prob(horse[market_key], market_key), "y": y})
+                for source, p in (("ai", ai), ("market", market),
+                                  ("marketBlend50", blend)):
+                    samples[(group, key)]["all"].append(
+                        {"source": source, "p": p, "y": y})
             if key == "win":
                 counts["evaluatedRaces"] += 1
                 counts["evaluatedHorses"] += len(horses)
@@ -166,11 +196,24 @@ def build(root, audit, protocol, load_bundle=capture.load):
     for cohort in ("first100", "confirmation101to200"):
         data[cohort] = {}
         for key in PROBABILITIES:
-            n, hits = top_picks[(cohort, key)]
+            n, hits = top_picks[(cohort, key, "ai")]
+            probability_stats = summarize(samples[(cohort, key)]["all"])
+            market = probability_stats["market"]
+            ai = probability_stats["ai"]
+            blend = probability_stats["marketBlend50"]
             data[cohort][key] = {
                 "topPredictedHorsePlaced": hits,
                 "topPredictedHorseRaces": n,
-                "horseProbabilities": summarize(samples[(cohort, key)]["all"]),
+                "topPredictedMarketHorsePlaced": top_picks[(cohort, key, "market")][1],
+                "topPredictedMarketHorseRaces": top_picks[(cohort, key, "market")][0],
+                "topPredictedMarketBlend50HorsePlaced": top_picks[(cohort, key, "marketBlend50")][1],
+                "topPredictedMarketBlend50HorseRaces": top_picks[(cohort, key, "marketBlend50")][0],
+                "horseProbabilities": probability_stats,
+                "brierDeltaAgainstMarket": {
+                    "ai": round(ai["brierScore"] - market["brierScore"], 6) if ai else None,
+                    "marketBlend50": round(blend["brierScore"] - market["brierScore"], 6) if blend else None,
+                    "meaning": "Negative means lower Brier (better) than market; descriptive only.",
+                },
             }
 
     issues = quality.get("issues")
@@ -195,6 +238,7 @@ def build(root, audit, protocol, load_bundle=capture.load):
             "For otherwise matched races, an unknown placement excludes only events requiring that rank.",
             "Brier/reliability is descriptive; horses within the same race are correlated.",
             "Only registered first100 and confirmation101to200 races enter the fixed-window comparison.",
+            "A 50:50 AI/market blend is a post-hoc descriptive research reference, not a frozen prospective challenger.",
             "No threshold fitting, betting changes or beta activation.",
         ],
     }
