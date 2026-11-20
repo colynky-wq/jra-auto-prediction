@@ -249,6 +249,20 @@ def publish_race_to_racedata(race, out):
             "recommendation disabled pending formal odds",
         )
 
+    # Research-only market-shrink challenger is captured exactly once alongside
+    # the first formal T-10 forecast. Late recovery and resumed missing shadows
+    # are NEVER retroactively reconstructed. It cannot affect Formal A or bets.
+    try:
+        from market_shrink_shadow import record_best_effort as record_market_shrink
+        market_shrink_status = record_market_shrink(
+            RACEDATA_PATH.parent,
+            published_race,
+            first_formal_capture=first_formal_capture,
+        )
+        print("MARKET_SHRINK_SHADOW_STATUS", rid, market_shrink_status)
+    except Exception as exc:
+        print("WARNING: optional market-shrink research failed:", type(exc).__name__)
+
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
     from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort
