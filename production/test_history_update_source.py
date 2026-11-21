@@ -146,6 +146,48 @@ class HistorySourceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             source.completed_meeting_dates(session, "20260101", "20261108")
 
+    def test_push_backfill_never_targets_unfinished_current_day(self):
+        early = datetime.fromisoformat("2026-11-22T02:19:00+09:00")
+        late = datetime.fromisoformat("2026-11-22T21:30:00+09:00")
+        self.assertEqual(source.target_date("", "", "push", early), "20261121")
+        self.assertEqual(source.target_date("", "", "push", late), "20261122")
+        # A direct manual dispatch retains its previously agreed semantics.
+        self.assertEqual(source.target_date("", "2026-11-21T17:19:00Z",
+                                            "workflow_dispatch", early), "20261122")
+
+    def test_verified_saved_jra_route_preserves_exact_race_identity(self):
+        import update_production_history as updater
+        date8 = "20261107"
+        race_id = "202603030101"
+        correct = ("https://www.jra.go.jp/JRADB/accessS.html?CNAME="
+                   "pw01sde0103202603010120261107/A9")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "reports" / date8 / "ResultData.json"
+            path.parent.mkdir(parents=True)
+            record = {"raceID": race_id, "raceDate": "2026-11-07",
+                      "raceLap": {"sourceURL": correct}}
+            path.write_text(json.dumps([record]), encoding="utf-8")
+            with patch.object(updater, "REPO", root):
+                self.assertEqual(updater.verified_result_url_from_report(race_id, date8), correct)
+                self.assertEqual(updater.resolve_result_url(race_id, date8), correct)
+                self.assertIsNone(updater.verified_result_url_from_report("202603030102", date8))
+                for tampered in [
+                    correct.replace("www.jra.go.jp", "example.org"),
+                    correct.replace("20261107", "20261108"),
+                    correct.replace("030101", "030102"),
+                    correct.replace("/A9", "/"),
+                ]:
+                    record["raceLap"]["sourceURL"] = tampered
+                    path.write_text(json.dumps([record]), encoding="utf-8")
+                    with self.subTest(tampered=tampered), self.assertRaises(ValueError):
+                        updater.verified_result_url_from_report(race_id, date8)
+                record["raceLap"]["sourceURL"] = correct
+                record["raceDate"] = "2026-11-08"
+                path.write_text(json.dumps([record]), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    updater.verified_result_url_from_report(race_id, date8)
+
     def test_saved_monitoring_schedule_blocks_false_no_meeting_without_history_write(self):
         import update_production_history as updater
         import pandas as pd
