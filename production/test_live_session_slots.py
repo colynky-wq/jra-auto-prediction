@@ -84,6 +84,16 @@ class LiveSessionSlotTests(unittest.TestCase):
             ("0 3 * * *", "12:50", "17:30"),
         ])
 
+    def test_staggered_heartbeats_serve_rest_of_day_without_replaying(self):
+        morning = "7,22,37,52 22-23 * * 5,6,0"
+        daytime = "7,22,37,52 0-7 * * 0,1,6"
+        self.assertEqual(choose("schedule", morning, DAY, clock(7, 7))["minutes"], 335)
+        self.assertEqual(choose("schedule", daytime, DAY, clock(10, 35))["minutes"], 335)
+        self.assertEqual(choose("schedule", daytime, DAY, clock(16, 15))["minutes"], 75)
+        self.assertFalse(choose("schedule", morning, DAY, clock(17, 29))["active"])
+        self.assertFalse(choose("schedule", daytime, DAY, clock(17, 30))["active"])
+        self.assertFalse(choose("schedule", daytime, DAY, clock(12, 0, date=16))["active"])
+
     def test_push_cannot_run_live_session(self):
         self.assertFalse(choose("push", "", "", clock(9, 30))["active"])
 

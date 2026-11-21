@@ -7,11 +7,13 @@ JST = timezone(timedelta(hours=9))
 REPOSITORY = 'colynky-wq/jra-auto-prediction'
 WORKFLOW = 'KeibaAI Live Permanent'
 MONITOR_STEP = 'Monitor races and publish one consistent bundle'
-DAY_STEP = 'Check whether JRA races exist today'
+DAY_STEP = 'Decide CI or live race day'
+NO_RACES_STEP = 'Confirm no races on schedule'
 STATES = {
     'active': ('自動監視を実行中', '開催確認・予測保存・公開を自動処理しています。', False),
     'completed': ('自動監視が終了', 'この監視処理は正常に終了しました。レース別の記録状況は一覧で確認できます。', False),
     'no_races': ('対象の開催なし', 'この監視日の開催一覧に対象レースがありません。', False),
+    'not_started': ('自動監視が未実行', 'ジョブは成功表示ですが、実際のレース監視は起動されていません。予測保存済みとみなさないでください。', True),
     'startup_failed': ('自動監視の開始に失敗', '開催確認または開始準備を完了できませんでした。開催なしと判断した状態ではありません。', True),
     'failed': ('自動監視・公開が未完了', '監視または公開を完了できませんでした。未送信データがある場合は復旧用の成果物に保持します。', True),
     'interrupted': ('自動監視が中断', '監視処理が途中で停止しました。保存・公開できた内容はレース別の一覧で確認してください。', True),
@@ -55,8 +57,15 @@ def health_from_event(event, jobs, now):
         status = 'interrupted'
     elif conclusion == 'success':
         monitor = next((s for s in steps if s['name'] == MONITOR_STEP), None)
-        day = next((s for s in steps if s['name'] == DAY_STEP), None)
-        status = 'no_races' if monitor and monitor.get('conclusion') == 'skipped' and day and day.get('conclusion') == 'success' else 'completed'
+        no_races = next((s for s in steps if s['name'] == NO_RACES_STEP), None)
+        if monitor and monitor.get('conclusion') == 'success':
+            status = 'completed'
+        elif no_races and no_races.get('conclusion') == 'success':
+            status = 'no_races'
+        else:
+            # A green Actions run can have skipped every capture step after a
+            # delayed cron misses its JST phase cutoff. Never mark it complete.
+            status = 'not_started'
     else:
         monitor = next((s for s in steps if s['name'] == MONITOR_STEP), None)
         status = 'startup_failed' if steps and (monitor is None or monitor.get('conclusion') == 'skipped') else 'failed'

@@ -381,7 +381,10 @@ class TestLiveBundlePublisher(unittest.TestCase):
         from monitor_health_runtime import health_from_event
         from test_monitor_health import event, NOW
         path = 'reports/20261017/monitor_sessions/123.json'
-        complete = health_from_event(event(conclusion='success'), [], NOW)
+        complete = health_from_event(event(conclusion='success'), [
+            {'status': 'completed', 'conclusion': 'success',
+             'steps': [{'name': 'Monitor races and publish one consistent bundle',
+                        'conclusion': 'success'}]}], NOW)
         self.advance_peer(path, complete)
         active = health_from_event(event(status='in_progress', conclusion=None), [], NOW)
         active['observedAtJST'] = '2026-10-17 18:00:00'

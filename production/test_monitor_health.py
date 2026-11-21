@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from monitor_health_runtime import (DAY_STEP, JST, MONITOR_STEP, REPOSITORY, WORKFLOW,
+from monitor_health_runtime import (DAY_STEP, NO_RACES_STEP, JST, MONITOR_STEP, REPOSITORY, WORKFLOW,
                                     apply_health, choose_health, health_from_event, load_health)
 
 NOW = datetime(2026, 10, 17, 17, 0, tzinfo=JST)
@@ -45,11 +45,22 @@ class TestMonitorHealth(unittest.TestCase):
 
     def test_no_races_and_actual_monitor_success_are_distinct(self):
         absent = self.health('success', [{'name': DAY_STEP, 'conclusion': 'success'},
+                                         {'name': NO_RACES_STEP, 'conclusion': 'success'},
                                          {'name': MONITOR_STEP, 'conclusion': 'skipped'}])
         complete = self.health('success', [{'name': MONITOR_STEP, 'conclusion': 'success'}])
         self.assertEqual(absent['status'], 'no_races')
         self.assertEqual(complete['status'], 'completed')
         self.assertFalse(apply_health(baseline(), absent)['warnings'])
+
+    def test_green_workflow_with_skipped_monitor_is_not_capture_success(self):
+        skipped = self.health('success', [
+            {'name': DAY_STEP, 'conclusion': 'success'},
+            {'name': MONITOR_STEP, 'conclusion': 'skipped'}])
+        self.assertEqual(skipped['status'], 'not_started')
+        self.assertTrue(skipped['needsAttention'])
+        self.assertTrue(apply_health(baseline(), skipped)['warnings'])
+        # Missing job details must not be mistaken for a completed monitor.
+        self.assertEqual(self.health('success')['status'], 'not_started')
 
     def test_failure_does_not_discard_saved_rows(self):
         board = baseline([{'raceID': '202605040601', 'recordingState': 'saved'}])
@@ -84,7 +95,7 @@ class TestMonitorHealth(unittest.TestCase):
         self.assertIn('自動監視', rendered)
 
     def test_completed_state_cannot_be_downgraded_by_delayed_start_event(self):
-        complete = self.health('success')
+        complete = self.health('success', [{'name': MONITOR_STEP, 'conclusion': 'success'}])
         active = health_from_event(event(status='in_progress', conclusion=None), [], NOW)
         active['observedAtJST'] = '2026-10-17 18:00:00'
         active['runStartedAtJST'] = '2026-10-17 09:01:00'

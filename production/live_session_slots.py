@@ -23,6 +23,11 @@ CUTOFFS = {
     "45 22 * * *": "12:50",      # 07:45 JST primary
     "15 23 * * 5,6,0": "12:50",  # 08:15 JST fallback
     "0 3 * * *": "17:30",        # 12:00 JST primary
+    # Frequent staggered watches survive GitHub's delayed/dropped cron events.
+    # The newest queued heartbeat may assume the remaining session; it never
+    # fabricates old T-10 captures (the capture engine still checks race time).
+    "7,22,37,52 22-23 * * 5,6,0": "17:30",  # 07:07-08:52 JST
+    "7,22,37,52 0-7 * * 0,1,6": "17:30",    # 09:07-16:52 JST
 }
 MAX_RUNTIME_MINUTES = 335
 MIN_USEFUL_REMAINING_SECONDS = 120
