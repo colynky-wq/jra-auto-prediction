@@ -50,10 +50,11 @@ HISTORY_PATH = HERE / "production_history.parquet"
 REPORT_ROOT = REPO / "reports" / "history_updates"
 
 NOW_JST = datetime.now(JST)
+AUTO_BACKFILL = os.environ.get("KEIBAAI_HISTORY_AUTO_BACKFILL", "").lower() == "true"
 TARGET_DATE8 = target_date(
     os.environ.get("KEIBAAI_HISTORY_DATE", "").strip(),
     os.environ.get("KEIBAAI_HISTORY_RUN_CREATED_AT", "").strip(),
-    os.environ.get("GITHUB_EVENT_NAME", ""), NOW_JST,
+    "push" if AUTO_BACKFILL else os.environ.get("GITHUB_EVENT_NAME", ""), NOW_JST,
 )
 RACE_LIST_EVIDENCE = {}
 APPLY = os.environ.get("KEIBAAI_HISTORY_APPLY", "false").strip().lower() in {
@@ -734,7 +735,7 @@ def main() -> None:
     # When scheduled runs are delayed, do not leap over completed meeting days.
     # Use the official JRA calendar to append the oldest missing meeting first.
     # Manual dispatch with an explicit date retains its exact-date semantics.
-    if (os.environ.get("GITHUB_EVENT_NAME") in {"schedule", "push"}
+    if ((os.environ.get("GITHUB_EVENT_NAME") in {"schedule", "push"} or AUTO_BACKFILL)
             and not os.environ.get("KEIBAAI_HISTORY_DATE", "").strip()):
         backlog = completed_meeting_dates(
             SESSION, old_latest.strftime("%Y%m%d"), TARGET_DATE8
