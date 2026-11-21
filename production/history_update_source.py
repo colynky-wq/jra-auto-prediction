@@ -7,7 +7,7 @@ error, not evidence that no meeting took place.
 from __future__ import annotations
 
 import calendar
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time as datetime_time
 import hashlib
 import re
 import time
@@ -27,11 +27,16 @@ def target_date(explicit, run_created_at, event_name, now):
             raise ValueError("history target must be YYYYMMDD")
         return explicit
     if event_name in {"schedule", "workflow_dispatch"}:
-        # created_at belongs to the original run, including retries after midnight.
+        # created_at is the actual enqueue time, not the cron's intended
+        # execution time. A 21:15 JST scheduled job can be queued until the
+        # next morning; targeting that new day would request future results.
         created = datetime.fromisoformat(run_created_at.replace("Z", "+00:00"))
         if created.tzinfo is None or created > now:
             raise ValueError("scheduled history run creation time is invalid")
-        return created.astimezone(JST).strftime("%Y%m%d")
+        day = created.astimezone(JST)
+        if event_name == "schedule" and day.time() < datetime_time(21, 15):
+            day -= timedelta(days=1)
+        return day.strftime("%Y%m%d")
     return now.astimezone(JST).strftime("%Y%m%d")
 
 
