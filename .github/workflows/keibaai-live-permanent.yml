@@ -94,7 +94,8 @@ jobs:
 
       - name: Confirm no races on schedule
         if: github.event_name == 'schedule' && steps.day.outputs.has_races == 'false'
-        run: echo 'Verified non-race day: live monitor not required.'
+        run: |
+          echo 'Verified non-race day: live monitor not required.'
 
       - name: Select bounded JST session slot before expensive setup
         id: runtime
