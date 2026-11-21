@@ -34,6 +34,20 @@ class HistorySourceTests(unittest.TestCase):
         for event in ["schedule", "workflow_dispatch"]:
             self.assertEqual(source.target_date("", "2026-10-18T12:38:56Z", event, now), "20261018")
 
+    def test_delayed_scheduled_history_uses_last_completed_evening(self):
+        now = datetime.fromisoformat("2026-11-21T05:04:38+09:00")
+        self.assertEqual(source.target_date("", "2026-11-20T20:04:38Z", "schedule", now),
+                         "20261120")
+        self.assertEqual(source.target_date("", "2026-11-21T11:59:59Z", "schedule",
+                                             datetime.fromisoformat("2026-11-21T21:05:00+09:00")),
+                         "20261120")
+        self.assertEqual(source.target_date("", "2026-11-21T12:15:00Z", "schedule",
+                                             datetime.fromisoformat("2026-11-21T21:30:00+09:00")),
+                         "20261121")
+        # Manual runs keep explicit-day semantics (do not silently go backwards).
+        self.assertEqual(source.target_date("", "2026-11-20T20:04:38Z", "workflow_dispatch", now),
+                         "20261121")
+
     def test_explicit_recovery_date_wins(self):
         self.assertEqual(source.target_date("20261018", "", "workflow_dispatch",
             datetime.fromisoformat("2026-10-19T01:00:00+09:00")), "20261018")

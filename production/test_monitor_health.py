@@ -6,7 +6,8 @@ import tempfile
 import unittest
 
 from monitor_health_runtime import (DAY_STEP, NO_RACES_STEP, JST, MONITOR_STEP, REPOSITORY, WORKFLOW,
-                                    apply_health, choose_health, health_from_event, load_health)
+                                    apply_health, choose_health, expire_waiting_races,
+                                    health_from_event, load_health)
 
 NOW = datetime(2026, 10, 17, 17, 0, tzinfo=JST)
 
@@ -31,6 +32,39 @@ class TestMonitorHealth(unittest.TestCase):
     def health(self, status='failure', steps=None, run_id=123):
         jobs = [{'status': 'completed', 'conclusion': status, 'steps': steps or []}]
         return health_from_event(event(run_id, conclusion=status), jobs, NOW)
+
+    def test_health_refresh_expires_only_past_waiting_races(self):
+        board = baseline([
+            {'raceID': '202605040601', 'raceDate': '2026-10-17',
+             'startTime': '09:50', 'recordingState': 'waiting',
+             'recordingLabel': '記録待ち', 'reason': '発走前の記録を待っています。',
+             'resultState': 'no_prediction', 'needsAttention': False},
+            {'raceID': '202605040602', 'raceDate': '2026-10-17',
+             'startTime': '17:50', 'recordingState': 'waiting',
+             'resultState': 'no_prediction', 'needsAttention': False},
+            {'raceID': '202605040603', 'raceDate': '2026-10-17',
+             'startTime': '09:10', 'recordingState': 'saved',
+             'resultState': 'awaiting_result', 'needsAttention': False},
+        ])
+        board['counts'].update(waiting=2, missing=0, needsAttention=0)
+        original = copy.deepcopy(board)
+        now = datetime(2026, 10, 17, 10, 10, tzinfo=JST)
+        fixed = expire_waiting_races(board, now)
+        self.assertEqual([r['recordingState'] for r in fixed['races']],
+                         ['missing', 'waiting', 'saved'])
+        self.assertEqual((fixed['counts']['waiting'], fixed['counts']['missing'],
+                          fixed['counts']['needsAttention']), (1, 1, 1))
+        self.assertEqual(fixed['races'][0]['resultState'], 'no_prediction')
+        self.assertEqual(board, original)  # no in-place modification
+        self.assertIs(expire_waiting_races(fixed, now), fixed)
+
+    def test_previous_day_unknown_start_time_is_not_waiting(self):
+        board = baseline([{'raceID': '202605040601', 'raceDate': '2026-10-16',
+                           'startTime': None, 'recordingState': 'waiting',
+                           'resultState': 'no_prediction', 'needsAttention': False}])
+        fixed = expire_waiting_races(board, NOW)
+        self.assertEqual(fixed['races'][0]['recordingState'], 'missing')
+        self.assertEqual(fixed['counts']['needsAttention'], 1)
 
     def test_startup_failure_does_not_invent_failed_races(self):
         health = self.health(steps=[{'name': DAY_STEP, 'conclusion': 'failure'},
