@@ -123,6 +123,34 @@ def program_race_ids(text, date8, meetings):
     return sorted(ids)
 
 
+def completed_meeting_dates(session, after_date8, through_date8):
+    """Return official meeting days still absent from the production history.
+
+    Calendar requests are monthly and fail closed; this is date discovery,
+    never permission to invent outcome rows for a missing result.
+    """
+    after = datetime.strptime(after_date8, "%Y%m%d").date()
+    through = datetime.strptime(through_date8, "%Y%m%d").date()
+    if through <= after:
+        return []
+    if (through - after).days > 93:
+        raise ValueError("history backlog exceeds three months; manual audit required")
+    calendar_by_month = {}
+    found = []
+    day = after + timedelta(days=1)
+    while day <= through:
+        date8 = day.strftime("%Y%m%d")
+        month = date8[:6]
+        if month not in calendar_by_month:
+            evidence = []
+            url = f"https://www.jra.go.jp/keiba/common/calendar/json/{month}.json"
+            calendar_by_month[month] = fetch(session, url, evidence).json()
+        if calendar_meetings(calendar_by_month[month], date8):
+            found.append(date8)
+        day += timedelta(days=1)
+    return found
+
+
 def fetch_day(session, date8):
     day = datetime.strptime(date8, "%Y%m%d").date()
     evidence = []
