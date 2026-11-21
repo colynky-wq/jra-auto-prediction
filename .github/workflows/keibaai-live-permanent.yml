@@ -37,12 +37,17 @@ on:
     # Earlier backstop: GitHub scheduled runs can arrive hours late. The first
     # race has a fixed T-12..T-8 window; do not postdate missed captures.
     - cron: '15 20 * * 5,6,0'  # 05:15 JST Sat/Sun/Mon (UTC previous day)
-    # Backup starts are serialized with queue:max below and have strict
+    # Backup starts are serialized with the queue below and have strict
     # JST phase cutoffs. A delayed run never backfills missed T-10 windows.
     - cron: '15 21 * * 5,6,0'  # 06:15 JST Sat/Sun/Mon
     - cron: '15 23 * * 5,6,0'  # 08:15 JST Sat/Sun/Mon
     - cron: '45 22 * * *'  # 07:45 JST
     - cron: '0 3 * * *'    # 12:00 JST; queue early so cron delay cannot miss afternoon T-10 windows
+    # GitHub cron is not punctual (on 2026-11-21 runs arrived hours late).
+    # Staggered heartbeat launches mean the newest pending runner can take over
+    # from a time-expired session without reconstructing missed T-10 records.
+    - cron: '7,22,37,52 22-23 * * 5,6,0'  # 07:07-08:52 JST Sat/Sun/Mon
+    - cron: '7,22,37,52 0-7 * * 0,1,6'    # 09:07-16:52 JST Sat/Sun/Mon
   workflow_dispatch:
     inputs:
       max_minutes:
@@ -53,10 +58,10 @@ permissions:
   contents: write
 concurrency:
   group: keibaai-live-${{ github.event_name == 'push' && github.sha || 'production' }}
-  # Preserve all pending scheduled slots in FIFO order. The default queue:single
-  # silently replaces the 07:45 primary with a later 08:15 backup.
-  # Only one production writer may run, and no running session is canceled.
-  queue: max
+  # Keep the running production writer; replace a stale pending heartbeat with
+  # the newest one. Never accumulate dozens of delayed, obsolete cron launches.
+  # Any replacement can cover the remaining day via the heartbeat JST cutoff.
+  queue: single
   cancel-in-progress: false
 jobs:
   monitor:
@@ -86,6 +91,10 @@ jobs:
             exit 0
           fi
           bash startup-guard/.github/scripts/keibaai-race-day-check.sh "$date8"
+
+      - name: Confirm no races on schedule
+        if: github.event_name == 'schedule' && steps.day.outputs.has_races == 'false'
+        run: echo 'Verified non-race day: live monitor not required.'
 
       - name: Select bounded JST session slot before expensive setup
         id: runtime
