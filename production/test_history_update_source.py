@@ -121,6 +121,31 @@ class HistorySourceTests(unittest.TestCase):
         ids, evidence = source.fetch_day(session, "20261019")
         self.assertEqual(ids, []); self.assertEqual(evidence["status"], "no_scheduled_meetings")
 
+    def test_history_backlog_discovers_completed_meetings_in_order(self):
+        session = Mock()
+        october = month()
+        november = [{"month": "11", "data": [
+            {"date": str(n), "info": [{"race": [{"name": "4回東京"}]}]}
+            for n in [7, 8, 22, 29]]}]
+        session.get.side_effect = [
+            response(json.dumps(october).encode()),
+            response(json.dumps(november).encode()),
+        ]
+        days = source.completed_meeting_dates(session, "20261018", "20261108")
+        self.assertEqual(days, ["20261025", "20261107", "20261108"])
+        self.assertEqual(session.get.call_count, 2)
+        session.get.assert_any_call(
+            "https://www.jra.go.jp/keiba/common/calendar/json/202611.json", timeout=30
+        )
+
+    def test_history_backlog_empty_and_excessive_gap_are_safe(self):
+        session = Mock()
+        self.assertEqual(source.completed_meeting_dates(session, "20261108", "20261108"), [])
+        self.assertEqual(source.completed_meeting_dates(session, "20261108", "20261107"), [])
+        session.get.assert_not_called()
+        with self.assertRaises(ValueError):
+            source.completed_meeting_dates(session, "20260101", "20261108")
+
     def test_saved_monitoring_schedule_blocks_false_no_meeting_without_history_write(self):
         import update_production_history as updater
         import pandas as pd
