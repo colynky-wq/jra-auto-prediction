@@ -188,6 +188,42 @@ class HistorySourceTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     updater.verified_result_url_from_report(race_id, date8)
 
+    def test_missing_results_use_only_three_consistent_official_peer_routes(self):
+        import update_production_history as updater
+        date8 = "20261107"
+        meeting = "2026030301"
+        def result(n, suffix):
+            race_id = f"{meeting}{n:02d}"
+            url = ("https://www.jra.go.jp/JRADB/accessS.html?CNAME="
+                   f"pw01sde010320260301{n:02d}20261107/{suffix}")
+            return {"raceID": race_id, "raceDate": "2026-11-07",
+                    "raceLap": {"sourceURL": url}}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "reports/20261107/ResultData.json"
+            path.parent.mkdir(parents=True)
+            peers = [result(1, "A9"), result(2, "5E"), result(10, "46")]
+            path.write_text(json.dumps(peers), encoding="utf-8")
+            with patch.object(updater, "REPO", root):
+                # Race 4 has no saved route, but all three independently
+                # observed official routes agree with the exact checksum.
+                expected = updater.build_known_result_url(meeting+"04", date8, "C8")
+                self.assertEqual(
+                    updater.inferred_result_url_from_official_peers(meeting+"04", date8),
+                    expected)
+                self.assertEqual(updater.resolve_result_url(meeting+"04", date8), expected)
+                self.assertIsNone(
+                    updater.inferred_result_url_from_official_peers("202608050104", date8))
+                # Two peers are insufficient to infer a missing JRA route.
+                path.write_text(json.dumps(peers[:2]), encoding="utf-8")
+                self.assertIsNone(
+                    updater.inferred_result_url_from_official_peers(meeting+"04", date8))
+                # Contradictory official-route evidence must block inference.
+                peers[1] = result(2, "5F")
+                path.write_text(json.dumps(peers), encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    updater.inferred_result_url_from_official_peers(meeting+"04", date8)
+
     def test_saved_monitoring_schedule_blocks_false_no_meeting_without_history_write(self):
         import update_production_history as updater
         import pandas as pd
