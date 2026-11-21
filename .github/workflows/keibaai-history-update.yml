@@ -23,6 +23,14 @@ on:
         description: 'JST date YYYYMMDD. Leave blank to use today.'
         required: false
         default: ''
+      auto_backfill:
+        description: 'Continue the next missing official meeting after a verified update?'
+        required: false
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+        default: 'false'
       apply_changes:
         description: 'Replace production_history.parquet after all validation passes?'
         required: true
@@ -102,6 +110,7 @@ jobs:
       - name: Validate / update 23-column production history
         env:
           KEIBAAI_HISTORY_DATE: ${{ inputs.target_date }}
+          KEIBAAI_HISTORY_AUTO_BACKFILL: ${{ inputs.auto_backfill || 'false' }}
           KEIBAAI_HISTORY_RUN_CREATED_AT: ${{ steps.context.outputs.created_at }}
           KEIBAAI_HISTORY_APPLY: ${{ (github.event_name == 'schedule' || github.event_name == 'push') && 'true' || inputs.apply_changes }}
           PYTHONDONTWRITEBYTECODE: '1'
@@ -129,6 +138,12 @@ jobs:
           git commit -m "Update KeibaAI production history"
           git pull --rebase origin main
           git push origin HEAD:main
+
+      - name: Continue oldest-first history backfill after a validated commit
+        if: steps.publish_history.outputs.history_changed == 'true' && (github.event_name == 'schedule' || github.event_name == 'push' || inputs.auto_backfill == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run keibaai-history-update.yml --ref main -f auto_backfill=true -f apply_changes=true
 
       - name: Refresh app research display after history changes
         if: steps.publish_history.outputs.history_changed == 'true'
