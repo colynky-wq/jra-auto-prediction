@@ -37,6 +37,14 @@ def target_date(explicit, run_created_at, event_name, now):
         if event_name == "schedule" and day.time() < datetime_time(21, 15):
             day -= timedelta(days=1)
         return day.strftime("%Y%m%d")
+    if event_name == "push":
+        # Self-draining history backfill can run any time after a file push.
+        # Before the regular 21:15 JST settlement window, only yesterday's
+        # completed results are eligible for ingestion.
+        day = now.astimezone(JST)
+        if day.time() < datetime_time(21, 15):
+            day -= timedelta(days=1)
+        return day.strftime("%Y%m%d")
     return now.astimezone(JST).strftime("%Y%m%d")
 
 
