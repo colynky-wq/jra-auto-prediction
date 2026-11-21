@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "status": "recording_active",
-  "generatedAtJST": "2026-11-21 13:01:44",
+  "generatedAtJST": "2026-11-21 19:30:46",
   "recordingStartDate": "2026-10-13",
   "counts": {
     "totalRaces": 346,
@@ -6249,7 +6249,9 @@
       "needsAttention": false
     }
   ],
-  "warnings": [],
+  "warnings": [
+    "2026-11-21：自動監視が未実行。ジョブは成功表示ですが、実際のレース監視は起動されていません。予測保存済みとみなさないでください。"
+  ],
   "emptyMessage": "研究記録の対象となる開催予定はまだ保存されていません。次の自動監視で一覧を作成します。",
   "paceForecastEnabled": false,
   "formalSignalsChanged": false,
@@ -6257,15 +6259,17 @@
   "monitoring": {
     "schemaVersion": 1,
     "raceDate": "2026-11-21",
-    "runID": 44863738112,
-    "status": "completed",
-    "label": "自動監視が終了",
-    "message": "この監視処理は正常に終了しました。レース別の記録状況は一覧で確認できます。",
-    "needsAttention": false,
+    "runID": 44894545417,
+    "status": "not_started",
+    "label": "自動監視が未実行",
+    "message": "ジョブは成功表示ですが、実際のレース監視は起動されていません。予測保存済みとみなさないでください。",
+    "needsAttention": true,
     "phaseRank": 2,
-    "runStartedAtJST": "2026-11-21 12:58:09",
-    "observedAtJST": "2026-11-21 13:01:44",
-    "detailsURL": "https://github.com/colynky-wq/jra-auto-prediction/actions/runs/44863738112"
+    "runStartedAtJST": "2026-11-21 19:29:02",
+    "observedAtJST": "2026-11-21 19:30:46",
+    "detailsURL": "https://github.com/colynky-wq/jra-auto-prediction/actions/runs/44894545417"
   },
-  "monitorWarnings": []
+  "monitorWarnings": [
+    "2026-11-21：自動監視が未実行。ジョブは成功表示ですが、実際のレース監視は起動されていません。予測保存済みとみなさないでください。"
+  ]
 }
