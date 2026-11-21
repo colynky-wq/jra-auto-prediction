@@ -734,7 +734,7 @@ def main() -> None:
     # When scheduled runs are delayed, do not leap over completed meeting days.
     # Use the official JRA calendar to append the oldest missing meeting first.
     # Manual dispatch with an explicit date retains its exact-date semantics.
-    if (os.environ.get("GITHUB_EVENT_NAME") == "schedule"
+    if (os.environ.get("GITHUB_EVENT_NAME") in {"schedule", "push"}
             and not os.environ.get("KEIBAAI_HISTORY_DATE", "").strip()):
         backlog = completed_meeting_dates(
             SESSION, old_latest.strftime("%Y%m%d"), TARGET_DATE8
