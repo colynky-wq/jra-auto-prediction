@@ -9,7 +9,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from live_bundle_publisher import Outbox, atomic
 from monitor_health_runtime import (JST, REPOSITORY, apply_health, choose_health,
-                                    health_from_event, validate_event)
+                                    expire_waiting_races, health_from_event, validate_event)
 from pace_recording_display import markdown
 
 
@@ -43,8 +43,12 @@ def main():
     atomic(path, (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode())
     status_path = root/'PaceRecordingStatus.json'
     status = json.loads(status_path.read_text())
+    # The last display snapshot may predate the races. A workflow health
+    # event must not refresh its timestamp while leaving past races "waiting".
+    now = datetime.now(JST)
+    status = expire_waiting_races(status, now)
     status = apply_health(status, choose_health(status.get('monitoring'), health))
-    status['generatedAtJST'] = datetime.now(JST).strftime('%Y-%m-%d %H:%M:%S')
+    status['generatedAtJST'] = now.strftime('%Y-%m-%d %H:%M:%S')
     atomic(status_path, (json.dumps(status, ensure_ascii=False, indent=2)+'\n').encode())
     atomic(root/'reports/PaceRecordingStatus.md', markdown(status).encode())
     folder = Path(os.environ['RUNNER_TEMP'])/'keibaai-monitor-health-outbox'
