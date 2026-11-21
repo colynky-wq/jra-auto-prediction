@@ -28,7 +28,7 @@ import sys
 import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 import numpy as np
 import pandas as pd
@@ -358,10 +358,49 @@ def build_known_result_url(race_id: str, date8: str, suffix: str) -> str:
     return ACCESS_S + "?" + urlencode({"CNAME": cname})
 
 
+def verified_result_url_from_report(race_id: str, date8: str) -> str | None:
+    """Reuse *only* a JRA route attested by a matching saved result record.
+
+    The result report is a URL hint, never evidence that horse result rows
+    are correct. fetch_completed_race still fetches JRA and validates the
+    entire official table, odds, and 23-column history schema independently.
+    """
+    path = REPO / "reports" / date8 / "ResultData.json"
+    if not path.exists():
+        return None
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(rows, list):
+        raise ValueError("saved result report must be a list")
+    matches = [row for row in rows if isinstance(row, dict) and row.get("raceID") == race_id]
+    if not matches:
+        return None
+    if len(matches) != 1 or matches[0].get("raceDate") != datetime.strptime(date8, "%Y%m%d").date().isoformat():
+        raise ValueError(f"saved result record identity ambiguous: {race_id}")
+    lap = matches[0].get("raceLap")
+    if not isinstance(lap, dict) or not isinstance(lap.get("sourceURL"), str):
+        return None
+    url = lap["sourceURL"]
+    parsed = urlsplit(url)
+    cname = parse_qs(parsed.query, strict_parsing=True)
+    expected_prefix = "pw01sde01" + race_id[4:6] + race_id[:4] + race_id[6:] + date8
+    if (parsed.scheme != "https" or parsed.netloc != "www.jra.go.jp"
+            or parsed.path != "/JRADB/accessS.html"
+            or set(cname) != {"CNAME"} or len(cname["CNAME"]) != 1
+            or not re.fullmatch(re.escape(expected_prefix) + r"/[A-Fa-f0-9]{2}", cname["CNAME"][0])
+            or parsed.fragment):
+        raise ValueError(f"saved JRA result URL identity mismatch: {race_id}")
+    return url
+
+
 def resolve_result_url(race_id: str, date8: str) -> str:
     known = KNOWN_RESULT_ROUTES.get(date8, {}).get(race_id)
     if known:
         return build_known_result_url(race_id, date8, known)
+
+    documented = verified_result_url_from_report(race_id, date8)
+    if documented:
+        print("JRA result route from validated stored JRA source URL:", race_id)
+        return documented
 
     # Future dates: reuse the enhanced automatic result-route discovery
     # already used by the forward-result aggregator.
