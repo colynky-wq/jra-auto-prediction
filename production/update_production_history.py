@@ -36,7 +36,7 @@ import pandas as pd
 from horse_identity_runtime import assign_horse_keys
 import requests
 from bs4 import BeautifulSoup
-from history_update_source import fetch_day, target_date
+from history_update_source import completed_meeting_dates, fetch_day, target_date
 
 
 # ============================================================
@@ -650,6 +650,7 @@ def build_target_rows(hist: pd.DataFrame, race_ids: list[str], date8: str) -> pd
 # ============================================================
 
 def main() -> None:
+    global TARGET_DATE8
     print("=" * 110)
     print("KeibaAI Production History Update")
     print("JST:", NOW_JST.strftime("%Y-%m-%d %H:%M:%S"))
@@ -690,6 +691,23 @@ def main() -> None:
 
     if old_dups:
         fail("existing history already contains duplicate raceID+horseNo")
+
+    # When scheduled runs are delayed, do not leap over completed meeting days.
+    # Use the official JRA calendar to append the oldest missing meeting first.
+    # Manual dispatch with an explicit date retains its exact-date semantics.
+    if (os.environ.get("GITHUB_EVENT_NAME") == "schedule"
+            and not os.environ.get("KEIBAAI_HISTORY_DATE", "").strip()):
+        backlog = completed_meeting_dates(
+            SESSION, old_latest.strftime("%Y%m%d"), TARGET_DATE8
+        )
+        if not backlog:
+            print("HISTORY_BACKLOG_CLEAR: no unfinished official meetings through", TARGET_DATE8)
+            return
+        requested_date8 = TARGET_DATE8
+        TARGET_DATE8 = backlog[0]
+        target_date = pd.Timestamp(datetime.strptime(TARGET_DATE8, "%Y%m%d").date())
+        print("HISTORY_BACKLOG_NEXT", TARGET_DATE8, "remaining=", len(backlog),
+              "scheduled_through=", requested_date8)
 
     existing_target = hist.loc[hist["日付"].dt.normalize() == target_date]
     if not existing_target.empty:
