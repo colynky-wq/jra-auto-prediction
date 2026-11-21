@@ -1,6 +1,16 @@
 name: KeibaAI Production History Update
 
 on:
+  # Kick off the first oldest-first catch-up when code is deployed, and
+  # schedule the next missing meeting automatically only after an atomic,
+  # validated parquet update lands on main.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-history-update.yml'
+      - 'production/history_update_source.py'
+      - 'production/update_production_history.py'
+      - 'production/production_history.parquet'
   pull_request:
     paths:
       - 'production/history_update_source.py'
@@ -93,7 +103,7 @@ jobs:
         env:
           KEIBAAI_HISTORY_DATE: ${{ inputs.target_date }}
           KEIBAAI_HISTORY_RUN_CREATED_AT: ${{ steps.context.outputs.created_at }}
-          KEIBAAI_HISTORY_APPLY: ${{ github.event_name == 'schedule' && 'true' || inputs.apply_changes }}
+          KEIBAAI_HISTORY_APPLY: ${{ (github.event_name == 'schedule' || github.event_name == 'push') && 'true' || inputs.apply_changes }}
           PYTHONDONTWRITEBYTECODE: '1'
         run: python production/update_production_history.py
 
