@@ -129,6 +129,53 @@ def load_health(reports, today, start='2026-10-13'):
     return choose_health(*found), warnings
 
 
+def expire_waiting_races(data, now):
+    """Correct stale unobserved race rows without inventing pre-race evidence.
+
+    Workflow-run health events can arrive hours after a status board was built.
+    Waiting means a race has not started; once its advertised post time passes,
+    an unsaved prediction is missing, not still waiting. Preserve all frozen
+    records and result fields: this is a display-only status transition.
+    """
+    if now.tzinfo is None:
+        raise ValueError('aware current time required')
+    now = now.astimezone(JST)
+    changed = False
+    rows = []
+    for original in data.get('races', []):
+        row = dict(original)
+        if row.get('recordingState') == 'waiting':
+            try:
+                day = datetime.strptime(row['raceDate'], '%Y-%m-%d').date()
+                start = row.get('startTime')
+                if day < now.date():
+                    expired = True
+                elif day == now.date() and isinstance(start, str):
+                    post = datetime.strptime(row['raceDate']+' '+start, '%Y-%m-%d %H:%M').replace(tzinfo=JST)
+                    expired = now >= post
+                else:
+                    expired = False
+                if expired:
+                    row.update(recordingState='missing', recordingLabel='記録なし',
+                               reason='発走時刻を過ぎましたが、発走前の研究予測が見つかりません。',
+                               needsAttention=True)
+                    changed = True
+            except (KeyError, TypeError, ValueError):
+                # Never guess the deadline for a corrupt or incomplete record.
+                pass
+        rows.append(row)
+    if not changed:
+        return data
+    result = dict(data)
+    result['races'] = rows
+    counts = dict(data.get('counts', {}))
+    counts['waiting'] = sum(r.get('recordingState') == 'waiting' for r in rows)
+    counts['missing'] = sum(r.get('recordingState') == 'missing' for r in rows)
+    counts['needsAttention'] = sum(bool(r.get('needsAttention')) for r in rows)
+    result['counts'] = counts
+    return result
+
+
 def apply_health(data, health):
     """Global warning is separate from the count of real race-level failures."""
     health = validated(health)
