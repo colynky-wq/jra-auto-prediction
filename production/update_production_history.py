@@ -393,6 +393,54 @@ def verified_result_url_from_report(race_id: str, date8: str) -> str | None:
     return url
 
 
+def inferred_result_url_from_official_peers(race_id: str, date8: str) -> str | None:
+    """Derive a URL candidate only when peer JRA routes independently agree.
+
+    Verified official URLs for 14 meetings on Nov 7/8/14/15/21 conform to
+    the routed suffix sequence: -0x4B per race and +0x40 from race 10.
+    At least three *independently saved, identity-verified* URLs from the
+    same meeting must agree. The candidate is NOT trusted result evidence;
+    fetch_completed_race still requests the JRA page and validates its
+    completed results and odds before any history mutation.
+    """
+    path = REPO / "reports" / date8 / "ResultData.json"
+    if not path.exists():
+        return None
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(rows, list):
+        raise ValueError("saved result report must be a list")
+    meeting_id = race_id[:10]
+    attestations = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        peer_id = row.get("raceID")
+        if not isinstance(peer_id, str) or not re.fullmatch(r"\d{12}", peer_id):
+            continue
+        if peer_id[:10] != meeting_id:
+            continue
+        peer_url = verified_result_url_from_report(peer_id, date8)
+        if not peer_url:
+            continue
+        suffix = int(parse_qs(urlsplit(peer_url).query)["CNAME"][0].rsplit("/", 1)[1], 16)
+        peer_number = int(peer_id[-2:])
+        baseline = (suffix + 0x4B * (peer_number - 1) -
+                    (0x40 if peer_number >= 10 else 0)) % 256
+        attestations.append((peer_id, baseline))
+    if len({peer for peer, _ in attestations}) < 3:
+        return None
+    baselines = {baseline for _, baseline in attestations}
+    if len(baselines) != 1:
+        raise ValueError(f"independent JRA route suffixes disagree: {meeting_id}")
+    base = baselines.pop()
+    number = int(race_id[-2:])
+    if not 1 <= number <= 12:
+        raise ValueError("invalid race number for JRA route inference")
+    suffix = (base - 0x4B * (number - 1) +
+              (0x40 if number >= 10 else 0)) % 256
+    return build_known_result_url(race_id, date8, f"{suffix:02X}")
+
+
 def resolve_result_url(race_id: str, date8: str) -> str:
     known = KNOWN_RESULT_ROUTES.get(date8, {}).get(race_id)
     if known:
@@ -402,6 +450,11 @@ def resolve_result_url(race_id: str, date8: str) -> str:
     if documented:
         print("JRA result route from validated stored JRA source URL:", race_id)
         return documented
+
+    candidate = inferred_result_url_from_official_peers(race_id, date8)
+    if candidate:
+        print("JRA result route candidate agreed by >=3 official peers:", race_id)
+        return candidate
 
     # Future dates: reuse the enhanced automatic result-route discovery
     # already used by the forward-result aggregator.
