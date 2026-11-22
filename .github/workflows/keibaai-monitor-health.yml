@@ -41,7 +41,8 @@ jobs:
           git config user.email 'keibaai@users.noreply.github.com'
       - name: Test monitoring state reconciliation without external calls
         run: |
-          python -m unittest discover -s production -p 'test_monitor_health.py'
+          # The full integration suite (pandas) runs in Recording Status CI.
+          # Keep the production health publisher lightweight and dependency-free.
           python -m unittest discover -s production -p 'test_monitor_health_reconciliation.py'
           python -m unittest discover -s production -p 'test_health_outbox_correction.py'
       - name: Publish monitor health independently

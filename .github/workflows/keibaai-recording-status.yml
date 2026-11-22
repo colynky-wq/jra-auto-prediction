@@ -18,6 +18,9 @@ on:
       - 'production/monitor_health_runtime.py'
       - 'production/sync_monitor_health.py'
       - 'production/test_monitor_health.py'
+      - 'production/monitor_health_reconciliation.py'
+      - 'production/test_monitor_health_reconciliation.py'
+      - 'production/test_health_outbox_correction.py'
       - '.github/workflows/keibaai-monitor-health.yml'
       - '.github/scripts/keibaai-race-day-check.sh'
       - '.github/workflows/keibaai-live-permanent.yml'
@@ -60,6 +63,8 @@ jobs:
           python -m unittest discover -s production -p 'test_live_bundle_publisher.py' -v
           python -m unittest discover -s production -p 'test_inspect_live_outbox.py' -v
           python -m unittest discover -s production -p 'test_monitor_health.py' -v
+          python -m unittest discover -s production -p 'test_monitor_health_reconciliation.py' -v
+          python -m unittest discover -s production -p 'test_health_outbox_correction.py' -v
           python -m unittest discover -s production -p 'test_pace_recording_status.py' -v
           python -m unittest discover -s production -p 'test_prerace_recording_chain.py' -v
           python -m unittest discover -s production -p 'test_pace_prospective.py' -v

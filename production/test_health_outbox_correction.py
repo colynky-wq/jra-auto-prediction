@@ -27,7 +27,8 @@ class HealthOutboxCorrection(unittest.TestCase):
         actual = health_from_event(event(44973990350, "in_progress", None,
              "2026-11-22T01:59:50Z"),
              [{"status": "in_progress", "steps": [{"name": MONITOR_STEP}]}], now)
-        source = {"races": [{"raceID": "foo", "recordingState": "saved"}],
+        source = {"generatedAtJST": "2026-11-22 14:47:00",
+                  "races": [{"raceID": "foo", "recordingState": "saved"}],
                   "warnings": [], "monitorWarnings": [], "monitoring": actual}
         prior = {"races": [{"raceID": "foo", "recordingState": "saved"}],
                  "warnings": ["stale"], "monitorWarnings": ["stale"],
