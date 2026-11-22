@@ -1,0 +1,95 @@
+name: KeibaAI Wide Axis Post-day Reconciliation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/keibaai-wide-axis-postday-reconcile.yml'
+      - 'production/validate_wide_axis_snapshot.py'
+      - 'production/test_validate_wide_axis_snapshot.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-wide-axis-postday-reconcile.yml'
+  schedule:
+    - cron: '35 10 * * 0,1,6' # 19:35 JST Sat/Sun/Mon
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-wide-axis-postday-reconcile
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m py_compile production/validate_wide_axis_snapshot.py
+          python -m unittest discover -s production -p 'test_validate_wide_axis_snapshot.py'
+
+  reconcile:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Preserve live T-10 priority
+        id: guard
+        shell: bash
+        run: |
+          if python3 production/app_research_publish_window.py; then
+            echo 'active=false' >> "$GITHUB_OUTPUT"
+            echo 'WIDE_AXIS_DEFERRED_UNTIL_LIVE_FINISH'
+          else
+            echo 'active=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v6
+        if: steps.guard.outputs.active == 'true'
+        with:
+          python-version: '3.13'
+      - name: Install immutable-archive verification dependencies
+        if: steps.guard.outputs.active == 'true'
+        run: |
+          pip install -r production/requirements.txt
+      - name: Build and publish only verified shadow summary
+        if: steps.guard.outputs.active == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s production -p 'test_validate_wide_axis_snapshot.py'
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            python production/wide_axis_shadow.py > /tmp/keibaai-wide-axis-reconcile.log
+            python production/validate_wide_axis_snapshot.py
+            if [ -z "$(git status --porcelain -- reports/WideAxisShadow.json)" ]; then
+              echo 'WIDE_AXIS_SUMMARY_UNCHANGED'
+              exit 0
+            fi
+            git add -- reports/WideAxisShadow.json
+            git commit -m 'Refresh validated Wide-axis shadow summary from frozen records'
+            if git push origin HEAD:main; then
+              echo 'WIDE_AXIS_SUMMARY_REPUBLISHED'
+              exit 0
+            fi
+            echo "::warning::Other live publisher advanced main; rebuilding from actual frozen records ($attempt/5)"
+            sleep $((attempt * 2))
+          done
+          echo '::error::Wide-axis snapshot publication exhausted retries.' >&2
+          exit 1
