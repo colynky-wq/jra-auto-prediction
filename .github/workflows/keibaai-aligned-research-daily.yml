@@ -8,6 +8,8 @@ on:
     paths:
       - 'production/aligned_daily_research.py'
       - 'production/test_aligned_daily_research.py'
+      - 'production/parallel_prediction_research.py'
+      - 'production/test_parallel_prediction_research.py'
       - '.github/workflows/keibaai-aligned-research-daily.yml'
   push:
     branches: [main]
@@ -17,10 +19,18 @@ on:
       - 'production/test_aligned_daily_research.py'
       - 'production/inspect_frozen_win_probabilities.py'
       - 'production/test_inspect_frozen_win_probabilities.py'
+      - 'production/parallel_prediction_research.py'
+      - 'production/test_parallel_prediction_research.py'
+      - 'production/evaluate_market_shrink_shadow.py'
   workflow_dispatch:
   schedule:
     # 21:15 JST every day (12:15 UTC), after the daytime result/settlement jobs.
     - cron: '15 12 * * *'
+  workflow_run:
+    # Catch up once the strict audit has refreshed after late settlements.
+    workflows: ['KeibaAI Aligned Audit Night Catch-up']
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -31,6 +41,14 @@ concurrency:
 
 jobs:
   research:
+    if: >-
+      ${{ github.event_name != 'workflow_run' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           (github.event.workflow_run.event == 'schedule' ||
+            github.event.workflow_run.event == 'push' ||
+            github.event.workflow_run.event == 'workflow_run') &&
+           github.event.workflow_run.head_repository.full_name == github.repository &&
+           github.event.workflow_run.head_branch == 'main') }}
     name: Validate frozen research inputs and publish H1-H4 daily diagnostics
     runs-on: ubuntu-24.04
     timeout-minutes: 12
@@ -55,6 +73,8 @@ jobs:
           set -euo pipefail
           python -m py_compile production/inspect_frozen_win_probabilities.py production/test_inspect_frozen_win_probabilities.py
           python production/test_inspect_frozen_win_probabilities.py -v
+          python production/test_evaluate_market_shrink_shadow.py -v
+          python production/test_parallel_prediction_research.py -v
           # Quality-limited, descriptive data may be printed without weakening
           # the separate H1-H4 full-cohort integrity gate below.
           python production/inspect_frozen_win_probabilities.py
@@ -71,7 +91,8 @@ jobs:
             # The script fails closed on stale, failed, inconsistent, or
             # nonfrozen cohorts and never writes a misleading report.
             python -u production/aligned_daily_research.py
-            git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md
+            python -u production/parallel_prediction_research.py
+            git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md research/ParallelPredictionResearch.json research/ParallelPredictionResearch.md
             if git diff --cached --quiet; then
               echo 'ALIGNED_RESEARCH_UNCHANGED: source material unchanged'
               exit 0
