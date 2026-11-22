@@ -143,19 +143,31 @@ def fit(train, valid=None, num_boost_round=None):
     return model, rounds
 
 
-def probability(data, model, strength):
+def infer_without_results(frame, baseline_top3, model, strength):
+    """Infer from only frozen pre-race inputs, with zero result/label access."""
     ensure(strength in WEIGHTS, "unregistered prevalidated residual strength")
     ensure(model.feature_name() == list(FEATURES),
            "feature mismatch for underdog candidate")
-    y, baseline = training_targets(data)
-    residual = np.asarray(model.predict(
-        verify_features(data),raw_score=True,validate_features=True),dtype=float)
-    ensure(len(residual) == len(y) and np.isfinite(residual).all(),
+    x = verify_features(frame)
+    baseline = np.asarray(baseline_top3, dtype=float)
+    ensure(len(baseline) == len(x) and
+           np.isfinite(baseline).all() and
+           ((baseline > 0) & (baseline < 1)).all(),
+           "incomplete T10 market Top3 baseline")
+    raw = np.asarray(model.predict(
+        x, raw_score=True, validate_features=True), dtype=float)
+    ensure(len(raw) == len(x) and np.isfinite(raw).all(),
            "invalid model residual")
-    calibrated = sigmoid(logit(baseline)+strength*residual)
+    calibrated = sigmoid(logit(baseline) + strength*raw)
     ensure(np.isfinite(calibrated).all() and
-           ((calibrated>0)&(calibrated<1)).all(), "invalid Top3 probabilities")
+           ((calibrated > 0) & (calibrated < 1)).all(),
+           "invalid Top3 probability output")
     return calibrated
+
+
+def probability(data, model, strength):
+    _, baseline = training_targets(data)
+    return infer_without_results(data, baseline, model, strength)
 
 
 def choose_multiplier(validation, provisional):
