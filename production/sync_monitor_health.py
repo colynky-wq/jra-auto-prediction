@@ -32,7 +32,9 @@ def main():
     try:
         jobs = fetch_jobs(run['id'], os.environ['GITHUB_TOKEN'])
     except (OSError, ValueError, KeyError):
-        jobs = []
+        # None means unverified jobs API data: never mistake it for an
+        # observed zero-job queue replacement.
+        jobs = None
         print('::warning::監視の詳細を取得できないため、実行結果だけを使います。')
     health = health_from_event(event, jobs, datetime.now(JST))
     root = Path(__file__).resolve().parent.parent
