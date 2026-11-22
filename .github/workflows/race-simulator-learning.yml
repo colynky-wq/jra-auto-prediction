@@ -57,7 +57,7 @@ jobs:
           python-version: '3.12'
       - name: Test capture, isolation, result pairing and promotion gates
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher test_app_research_publish_window
       - name: Evaluate and safely publish the latest verified simulator evidence
         if: github.event_name != 'pull_request'
         shell: bash
