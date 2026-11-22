@@ -195,7 +195,26 @@ class Outbox:
             from monitor_health_runtime import apply_health, choose_health
             local = json.loads(data)
             prior = json.loads(remote) if remote is not None else None
-            health = choose_health(local.get('monitoring'), prior.get('monitoring') if prior else None)
+            corrections = []
+            if self.role == 'health':
+                from monitor_health_runtime import validated
+                for journal, digest in getattr(self, 'state', {}).get('pending', {}).items():
+                    if (not journal.startswith(f'reports/{self.date8}/monitor_sessions/')
+                            or not journal.endswith('.json')):
+                        continue
+                    blob = (self.folder/'blobs'/digest).read_bytes()
+                    if hashlib.sha256(blob).hexdigest() != digest:
+                        raise PublishError('monitor journal correction checksum mismatch')
+                    entry = validated(json.loads(blob))
+                    if entry['raceDate'] != self.day or Path(journal).stem != str(entry['runID']):
+                        raise PublishError('monitor journal correction identity mismatch')
+                    corrections.append(entry)
+            # Include verified same-run corrections from pending journals.
+            # Otherwise a stale remote "interrupted" event can wrongly beat
+            # the actual active worker when choosing between just two boards.
+            health = choose_health(local.get('monitoring'),
+                                   prior.get('monitoring') if prior else None,
+                                   *corrections)
             source = prior if self.role == 'health' and prior is not None else local
             merged = apply_health(source, health)
             if self.role == 'health':
