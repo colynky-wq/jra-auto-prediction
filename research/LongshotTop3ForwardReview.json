@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-top3-forward-review-v1",
+  "status": "insufficient_first_frozen_evidence",
+  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "modelVersion": "longshot-top3-market-residual-v1-20261123",
+  "modelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
+  "cohortActivationDate": "2026-11-23",
+  "longshotDefinition": "popularity >= 6 AND win odds >= 10.0",
+  "qualityIssuesInStrictAudit": 28,
+  "counts": {
+    "firstFrozenShadowRaces": 0,
+    "eligibleAlignedFormalRacesAfterActivation": 0,
+    "missingShadowRaces": 0,
+    "candidateCaptureCoveragePct": null,
+    "matchedScorableRaces": 0,
+    "matchedUnderdogHorseRows": 0,
+    "matchedUnderdogTop3Rows": 0,
+    "unmatchedOrExcludedShadows": 0,
+    "noQualifyingLongshots": 0,
+    "unscorablePodium": 0
+  },
+  "missingShadowRaceIDs": [],
+  "top3BrierEqualRace": {
+    "formalAI": null,
+    "T10Market": null,
+    "longshotCandidate": null
+  },
+  "pairedRaceCandidateMinusMarket": {
+    "pairedRaces": 0,
+    "meanBrierDelta": null,
+    "betterRaces": 0,
+    "worseRaces": 0,
+    "bootstrap95Pct": null
+  },
+  "pairedRaceCandidateMinusFormalAI": {
+    "pairedRaces": 0,
+    "meanBrierDelta": null,
+    "betterRaces": 0,
+    "worseRaces": 0,
+    "bootstrap95Pct": null
+  },
+  "topRankedLongshotTop3Hits": {
+    "formalAI": 0,
+    "T10Market": 0,
+    "longshotCandidate": 0
+  },
+  "raceCountAtLeastOneLongshotInTop3": 0,
+  "top3OutcomesByOdds": {
+    "10-29.9": {
+      "n": 0,
+      "hits": 0
+    },
+    "30+": {
+      "n": 0,
+      "hits": 0
+    }
+  },
+  "positiveFeatureAssociationsAmongActualLongshotTop3": [],
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "limitations": [
+    "Only independently first-frozen formal T10 candidates, never historical replays.",
+    "Candidates are defined by T10 odds and popularity; historical training used closing odds.",
+    "This report shows predictive association, NOT why a horse actually outran expectations.",
+    "Actual successful horse associations are post-outcome descriptive analysis.",
+    "Risk/profit/payout across ticket types not measured or proven.",
+    "No new automated picks, bets or model promotion."
+  ]
+}
