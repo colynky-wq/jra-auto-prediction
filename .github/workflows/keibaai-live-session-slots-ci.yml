@@ -1,0 +1,31 @@
+name: KeibaAI Live Session Slots CI
+
+on:
+  pull_request:
+    paths:
+      - 'production/live_session_slots.py'
+      - 'production/test_live_session_slots.py'
+      - '.github/workflows/keibaai-live-session-slots-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/live_session_slots.py'
+      - 'production/test_live_session_slots.py'
+      - '.github/workflows/keibaai-live-session-slots-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Validate bounded JST live session timing
+        run: |
+          python -m py_compile production/live_session_slots.py production/test_live_session_slots.py
+          python production/test_live_session_slots.py -v
