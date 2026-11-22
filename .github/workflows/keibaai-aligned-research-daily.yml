@@ -35,10 +35,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
-      - name: Checkout main
+      - name: Checkout event commit (PR checks must exercise proposed code)
         uses: actions/checkout@v5
         with:
-          ref: main
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
