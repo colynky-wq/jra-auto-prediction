@@ -1,0 +1,147 @@
+{
+  "version": "longshot-position-v1-20261123",
+  "researchOnly": true,
+  "historySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "positionTrainThrough": "2024-12-31",
+  "positionTreeCounts": {
+    "horseOnly": 180,
+    "withRivals": 180
+  },
+  "position": {
+    "2025": {
+      "horses": 27496,
+      "methods": {
+        "last3FrontRate": {
+          "brier": 0.19563971370021951,
+          "auc": 0.6950188785077419,
+          "frontHits": 1807,
+          "racePicks": 3122
+        },
+        "horseOnly": {
+          "brier": 0.18684019642368602,
+          "auc": 0.7327322984863872,
+          "frontHits": 1934,
+          "racePicks": 3122
+        },
+        "withRivals": {
+          "brier": 0.18456198023381154,
+          "auc": 0.7413107192063131,
+          "frontHits": 1931,
+          "racePicks": 3122
+        }
+      }
+    },
+    "2026": {
+      "horses": 24343,
+      "methods": {
+        "last3FrontRate": {
+          "brier": 0.19440914137103324,
+          "auc": 0.6963120300259998,
+          "frontHits": 1550,
+          "racePicks": 2806
+        },
+        "horseOnly": {
+          "brier": 0.18556579476666799,
+          "auc": 0.7355305951555412,
+          "frontHits": 1699,
+          "racePicks": 2806
+        },
+        "withRivals": {
+          "brier": 0.183714869525979,
+          "auc": 0.7418924325346462,
+          "frontHits": 1696,
+          "racePicks": 2806
+        }
+      }
+    }
+  },
+  "top3Addon": {
+    "center": 0.3592380649696345,
+    "chosenSlope": 0.0,
+    "2025LogLossGrid": {
+      "0.0": 0.26887966770110205,
+      "0.25": 0.26901584533713935,
+      "0.5": 0.26937584734016695,
+      "1.0": 0.2707973977807587,
+      "2.0": 0.27666896902846616
+    },
+    "2026": {
+      "races": 2826,
+      "horses": 24567,
+      "v2Hits": 598,
+      "adjustedHits": 598,
+      "changedSelections": 0,
+      "newOnlyHits": 0,
+      "oldOnlyHits": 0,
+      "pairedRaceDifference95": [
+        0.0,
+        0.0
+      ],
+      "v2Brier": 0.0759513095933624,
+      "adjustedBrier": 0.0759513095933624
+    },
+    "2026ExploratoryForcedCorrections": {
+      "0.25": {
+        "races": 2826,
+        "horses": 24567,
+        "v2Hits": 598,
+        "adjustedHits": 590,
+        "changedSelections": 217,
+        "newOnlyHits": 28,
+        "oldOnlyHits": 36,
+        "pairedRaceDifference95": [
+          -0.00813871196036801,
+          0.0028308563340410475
+        ],
+        "v2Brier": 0.0759513095933624,
+        "adjustedBrier": 0.07594267409890272
+      },
+      "0.5": {
+        "races": 2826,
+        "horses": 24567,
+        "v2Hits": 598,
+        "adjustedHits": 588,
+        "changedSelections": 387,
+        "newOnlyHits": 57,
+        "oldOnlyHits": 67,
+        "pairedRaceDifference95": [
+          -0.011155343241330502,
+          0.0046001415428167025
+        ],
+        "v2Brier": 0.0759513095933624,
+        "adjustedBrier": 0.07599414449899936
+      },
+      "1.0": {
+        "races": 2826,
+        "horses": 24567,
+        "v2Hits": 598,
+        "adjustedHits": 589,
+        "changedSelections": 680,
+        "newOnlyHits": 107,
+        "oldOnlyHits": 116,
+        "pairedRaceDifference95": [
+          -0.014154281670205236,
+          0.0074309978768577496
+        ],
+        "v2Brier": 0.0759513095933624,
+        "adjustedBrier": 0.07630348296648862
+      },
+      "2.0": {
+        "races": 2826,
+        "horses": 24567,
+        "v2Hits": 598,
+        "adjustedHits": 532,
+        "changedSelections": 1076,
+        "newOnlyHits": 141,
+        "oldOnlyHits": 207,
+        "pairedRaceDifference95": [
+          -0.03573956121726822,
+          -0.010969568294409059
+        ],
+        "v2Brier": 0.0759513095933624,
+        "adjustedBrier": 0.07795552835203698
+      }
+    }
+  },
+  "positionModelSha256": "72e709ef731bf25235d1eaaaca3a76d9f3f89ce9bb89357a8a2ebd5a31597f07"
+}
