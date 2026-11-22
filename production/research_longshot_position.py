@@ -137,12 +137,15 @@ def add_top3_scores(history, positions, meta):
         if (not replay.index.equals(archived.index) or not (replay["馬番"].to_numpy() == archived["馬番"].to_numpy()).all()
                 or not np.allclose(replay["v2Top3"], archived["probability"], atol=1e-8, rtol=0)):
             raise ValueError(f"{year} V2 replay and preserved predictions disagree")
-        known = data.merge(positions[["レースID", "馬番", "observedFront", "straight", "horseOnly",
-                                      "withRivals", "last3FrontRate"]], on=["レースID", "馬番"], validate="one_to_one")
-        if len(known) != len(data):
-            raise ValueError("position outputs dropped specialist runners")
-        known["top3"] = known["着順"].le(3).astype(int)
-        dated[year] = known
+        if positions is not None:
+            joined = data.merge(positions[["レースID", "馬番", "observedFront", "straight", "horseOnly",
+                                           "withRivals", "last3FrontRate"]],
+                                on=["レースID", "馬番"], validate="one_to_one")
+            if len(joined) != len(data):
+                raise ValueError("position outputs dropped specialist runners")
+            data = joined
+        data["top3"] = data["着順"].le(3).astype(int)
+        dated[year] = data
     return dated
 
 
