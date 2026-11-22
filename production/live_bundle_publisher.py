@@ -226,6 +226,10 @@ class Outbox:
             if Path(path).stem != str(health['runID']) or health['raceDate'] != self.day:
                 raise PublishError('monitor journal identity mismatch')
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
+        if path.startswith(f'reports/{self.date8}/longshot_top3_v2/') and remote is not None:
+            # The optional prediction remains immutable across monitor sessions.
+            # The result audit verifies its link to the original race prediction.
+            return remote
         if '/race_simulator_v02/' in path:
             # Overlapping live sessions may finish the same race at different
             # times. Preserve the first complete forecast, never a later rewrite.

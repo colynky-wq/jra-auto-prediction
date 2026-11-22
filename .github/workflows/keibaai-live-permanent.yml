@@ -15,6 +15,12 @@ on:
       - 'production/longshot_top3_shadow.py'
       - 'production/test_longshot_top3_shadow.py'
       - 'production/evaluate_longshot_top3_forward.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/research_longshot_top3_v2.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - 'research/model_candidates/longshot_top3_v2/model_through2025.txt'
+      - 'research/model_candidates/longshot_top3_v2/research.json'
       - 'production/test_evaluate_longshot_top3_forward.py'
       - 'research/model_candidates/longshot_top3_v1/metadata.json'
       - 'production/test_market_anchor_shadow.py'
@@ -161,6 +167,7 @@ jobs:
           python -m py_compile production/longshot_top3_shadow.py production/test_longshot_top3_shadow.py production/evaluate_longshot_top3_forward.py production/test_evaluate_longshot_top3_forward.py
           python production/test_longshot_top3_shadow.py -v
           python production/test_evaluate_longshot_top3_forward.py -v
+          python production/test_longshot_top3_v2_runtime.py -v
           python production/test_evaluate_market_anchor_forward.py -v
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py

@@ -153,7 +153,7 @@ def _save_late_recovery(published_race: dict) -> Path:
     return path
 
 
-def publish_race_to_racedata(race, out):
+def publish_race_to_racedata(race, out, *, history=None):
     target_date = _target_date_text()
     timing, trigger_minutes = _capture_timing(race)
     formal = timing == FORMAL_TIMING_MARKER
@@ -305,6 +305,18 @@ def publish_race_to_racedata(race, out):
     except Exception as exc:
         print("WARNING: optional longshot research failed:", type(exc).__name__)
 
+    if history is not None:
+        try:
+            from longshot_top3_v2_runtime import record_first as record_longshot_v2
+            status = record_longshot_v2(
+                RACEDATA_PATH.parent, published_race,
+                out.attrs.get("noCurrentOddsFeatures"), out.attrs.get("longshotTop3Context"), history,
+                first_formal_capture=first_formal_capture,
+            )
+            print("LONGSHOT_TOP3_V2_STATUS", rid, status)
+        except Exception as exc:
+            print("WARNING: optional longshot v2 capture failed:", rid, type(exc).__name__, str(exc))
+
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
     from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort
@@ -356,7 +368,7 @@ _original_predict = topk.predict_live_race_topk
 def predict_live_race_topk_and_publish(race, hist, target_date):
     out = _original_predict(race, hist, target_date)
     if PUBLISH_TO_APP:
-        publish_race_to_racedata(race, out)
+        publish_race_to_racedata(race, out, history=hist)
     else:
         print("App publish disabled: RaceData.json remains read-only.")
     return out
