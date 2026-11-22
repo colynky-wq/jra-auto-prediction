@@ -222,6 +222,7 @@ def main():
     OUTPUT.write_text(json.dumps(report,ensure_ascii=False,indent=2,
                                  allow_nan=False)+"\n",encoding="utf-8")
     c=report["counts"]
+    top_hits=report["topRankedLongshotTop3Hits"]
     lines=[
         "# Longshot Top3: first-frozen T10 future evaluation", "",
         "Status: "+report["status"],
@@ -241,7 +242,7 @@ def main():
         f"{report['top3BrierEqualRace']['formalAI']} | "
         f"{report['top3BrierEqualRace']['longshotCandidate']} |",
         f"| Top longshot finishing Top3 | "
-        f"{top_hits['T10Market'] if (top_hits:=report['topRankedLongshotTop3Hits']) else 0} | "
+        f"{top_hits['T10Market']} | "
         f"{top_hits['formalAI']} | "
         f"{top_hits['longshotCandidate']} |",
         "", "Paired candidate minus T10 market: "
