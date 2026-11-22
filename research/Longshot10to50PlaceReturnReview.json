@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-10to50-place-return-research-v1-20261123",
+  "generatedAtJST": "2026-11-23T01:45:12.395670+09:00",
+  "status": "retrospective_exploratory_not_bettable",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "modelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "definition": {
+    "popularityMinimum": 6,
+    "winOddsFrom": 10.0,
+    "winOddsStrictlyBelow": 50.0,
+    "upliftRatioAtLeast": 1.2,
+    "selection": "observed 2026 result-independent, but retrospective FINAL odds",
+    "placeUnitStakeYen": 100
+  },
+  "cohortQuality2025And2026": {
+    "2025": {
+      "entire10to50": {
+        "horseRows": 12262,
+        "races": 3040,
+        "top3Count": 1937,
+        "observedTop3Rate": 0.15796770510520305,
+        "marketExpectedTop3Rate": 0.12633867976561888,
+        "candidateExpectedTop3Rate": 0.15386342966368108,
+        "marketBrier": 0.13136874364830847,
+        "candidateBrier": 0.130041546808473,
+        "candidateMinusMarketBrier": -0.0013271968398354725
+      },
+      "aiAtLeast20PctAboveMarket": {
+        "horseRows": 7247,
+        "races": 2725,
+        "top3Count": 1203,
+        "observedTop3Rate": 0.16599972402373395,
+        "marketExpectedTop3Rate": 0.12030828853812932,
+        "candidateExpectedTop3Rate": 0.1570981236045641,
+        "marketBrier": 0.13747648277614435,
+        "candidateBrier": 0.13532738098695074,
+        "candidateMinusMarketBrier": -0.0021491017891936484
+      },
+      "aiLessThan20PctAboveMarket": {
+        "horseRows": 5015,
+        "races": 2399,
+        "top3Count": 734,
+        "observedTop3Rate": 0.14636091724825523,
+        "marketExpectedTop3Rate": 0.13505298589236203,
+        "candidateExpectedTop3Rate": 0.1491890872928776,
+        "marketBrier": 0.12254266479298906,
+        "candidateBrier": 0.12240317386900579,
+        "candidateMinusMarketBrier": -0.0001394909239832899
+      }
+    },
+    "2026": {
+      "entire10to50": {
+        "horseRows": 11050,
+        "races": 2740,
+        "top3Count": 1739,
+        "observedTop3Rate": 0.15737556561085972,
+        "marketExpectedTop3Rate": 0.12814412141860024,
+        "candidateExpectedTop3Rate": 0.15681170022031982,
+        "marketBrier": 0.130746236187896,
+        "candidateBrier": 0.12976791962805187,
+        "candidateMinusMarketBrier": -0.0009783165598440781
+      },
+      "aiAtLeast20PctAboveMarket": {
+        "horseRows": 6787,
+        "races": 2496,
+        "top3Count": 1077,
+        "observedTop3Rate": 0.15868572270517164,
+        "marketExpectedTop3Rate": 0.12265813443331076,
+        "candidateExpectedTop3Rate": 0.1606039113750953,
+        "marketBrier": 0.13239079000725154,
+        "candidateBrier": 0.13120683609274603,
+        "candidateMinusMarketBrier": -0.0011839539145055205
+      },
+      "aiLessThan20PctAboveMarket": {
+        "horseRows": 4263,
+        "races": 2095,
+        "top3Count": 662,
+        "observedTop3Rate": 0.15528970208773166,
+        "marketExpectedTop3Rate": 0.13687820391195227,
+        "candidateExpectedTop3Rate": 0.15077422963447382,
+        "marketBrier": 0.1281279892322388,
+        "candidateBrier": 0.12747706200527936,
+        "candidateMinusMarketBrier": -0.0006509272269594406
+      }
+    }
+  },
+  "2026PlacePayoutEvidence": {
+    "archivedRacePayoutFiles": 293,
+    "eligibleCompleteMatching10to50Races": 251,
+    "excludedCounts": {
+      "notInHistoricalEvaluation": 19,
+      "noQualifying10to50Longshot": 9,
+      "payoutAndFinishDisagree": 0,
+      "incompleteFinishOrEntrants": 14
+    },
+    "subsetDateBoundariesNotFullSeason": true,
+    "payoutSource": "archived netkeiba race/result page place payouts per ¥100",
+    "noInferredOrSynthesizedPayouts": true,
+    "grossReturnSimulationByMethod": {
+      "marketPick": {
+        "bets": 251,
+        "grossStakeYen": 25100,
+        "grossPayoutYen": 21970,
+        "netYen": -3130,
+        "grossReturnPct": 87.52988047808765,
+        "top3Hits": 61,
+        "top3HitRate": 0.24302788844621515,
+        "returnPctRaceBootstrap95": [
+          69.12051792828684,
+          108.72609561752988
+        ],
+        "largestSinglePlacePayoutYenPer100": 670
+      },
+      "aiPick": {
+        "bets": 251,
+        "grossStakeYen": 25100,
+        "grossPayoutYen": 20600,
+        "netYen": -4500,
+        "grossReturnPct": 82.07171314741036,
+        "top3Hits": 57,
+        "top3HitRate": 0.22709163346613545,
+        "returnPctRaceBootstrap95": [
+          62.90537848605579,
+          102.39043824701196
+        ],
+        "largestSinglePlacePayoutYenPer100": 610
+      },
+      "uplift20PctPick": {
+        "bets": 227,
+        "grossStakeYen": 22700,
+        "grossPayoutYen": 17310,
+        "netYen": -5390,
+        "grossReturnPct": 76.25550660792952,
+        "top3Hits": 30,
+        "top3HitRate": 0.13215859030837004,
+        "returnPctRaceBootstrap95": [
+          47.92290748898679,
+          105.59471365638767
+        ],
+        "largestSinglePlacePayoutYenPer100": 1980
+      }
+    },
+    "sameRaceAiVsMarketPlaceReturn": {
+      "sameRaces": 251,
+      "sameHorseSelections": 214,
+      "meanExtraYenPer100Bet": -5.45816733067729,
+      "aiMinusMarketGrossReturnPct": -5.45816733067729,
+      "pairedRaceBootstrap95ForExtraReturnPct": [
+        -16.69521912350598,
+        5.381474103585655
+      ],
+      "candidateOnlyPlaceHits": 4,
+      "marketOnlyPlaceHits": 8
+    }
+  },
+  "limitations": [
+    "Selection uses retrospective FINAL win odds and popularity; not a reproducible first-frozen T-10 bet and not a realized trade.",
+    "10-50 odds and 1.2x uplift cohorts arose from prior research, so analyses here are exploratory and potentially selected on 2025/26 outcomes.",
+    "Payout evidence covers only archived late-2026 subset of race result extracts. No 2025 payouts; the sample is not the full season.",
+    "Only races with validated independent place payouts and matching complete 2026 result rows are scored. Missing payouts never treated as zero or fabricated.",
+    "All place return examples are ¥100 fixed stake per selected qualifying race, paid using actual archived place winnings, with no taxes, liquidity or price drift modeled.",
+    "A large historical positive return does not establish future profitability; race-level bootstrap cannot correct data-selection bias.",
+    "Model 2026 was frozen through 2025; models and current recommendation/bet policy are unmodified.",
+    "No automatic betting, bankroll suggestions, or promotion of experimental criteria."
+  ]
+}
