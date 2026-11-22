@@ -65,6 +65,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      - name: Install pinned dependencies for the optional candidate
+        run: pip install -r production/requirements.txt
       - name: Verify offline research contract and safety
         shell: bash
         run: |
