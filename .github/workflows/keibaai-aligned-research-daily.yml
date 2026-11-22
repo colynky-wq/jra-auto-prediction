@@ -60,7 +60,9 @@ jobs:
       - name: Checkout event commit (PR checks must exercise proposed code)
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          # This research only reads frozen archives and published main inputs;
+          # full Git history is unnecessary and significantly slows the runner.
+          fetch-depth: 1
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
