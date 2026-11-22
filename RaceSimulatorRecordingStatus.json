@@ -14,12 +14,13 @@
     "2026-10-17"
   ],
   "counts": {
-    "pending": 19,
+    "pending": 18,
+    "failed": 1,
     "missed": 1,
     "local_saved": 4
   },
   "expectedScheduleAvailable": true,
-  "generatedAt": "2026-11-22T02:04:25.775465+00:00",
+  "generatedAt": "2026-11-22T02:04:42.371887+00:00",
   "history": [
     {
       "durableConfirmed": false,
@@ -275,15 +276,15 @@
     },
     {
       "durableConfirmed": false,
-      "label": "発走前の保存待ち",
+      "label": "保存失敗",
       "raceDate": "2026-11-22",
       "raceID": "202608050603",
       "raceName": "2歳未勝利",
       "raceNumber": 3,
-      "reason": "正式10分前の入力と発走前の保存を待っています。",
+      "reason": "保存処理に失敗しました。発走前は再試行し、発走後の作り直しは実績に含めません。",
       "recordedAt": null,
       "startTime": "11:05",
-      "state": "pending",
+      "state": "failed",
       "venue": "京都",
       "verificationCheckedAt": null
     },
@@ -5464,15 +5465,15 @@
     },
     {
       "durableConfirmed": false,
-      "label": "発走前の保存待ち",
+      "label": "保存失敗",
       "raceDate": "2026-11-22",
       "raceID": "202608050603",
       "raceName": "2歳未勝利",
       "raceNumber": 3,
-      "reason": "正式10分前の入力と発走前の保存を待っています。",
+      "reason": "保存処理に失敗しました。発走前は再試行し、発走後の作り直しは実績に含めません。",
       "recordedAt": null,
       "startTime": "11:05",
-      "state": "pending",
+      "state": "failed",
       "venue": "京都",
       "verificationCheckedAt": null
     },
