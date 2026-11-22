@@ -16,7 +16,12 @@ on:
       - '.github/workflows/keibaai-settled-research-publish.yml'
   workflow_dispatch:
   schedule:
-    - cron: '35 10 * * 0,1,6' # 19:35 JST on Saturday/Sunday/Monday
+    - cron: '35 10,11,12 * * 0,1,6' # 19:35/20:35/21:35 JST on race days
+  workflow_run:
+    # Backup when GitHub drops the publication cron; never trust a PR run.
+    workflows: ['KeibaAI Bet Performance Summary', 'KeibaAI Live Result Sync']
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
@@ -39,9 +44,16 @@ jobs:
           python -m py_compile production/after_race_result_gate.py
           python -m unittest discover -s production -p 'test_after_race_result_gate.py' -v
           python -m unittest discover -s production -p 'test_validate_wide_axis_snapshot.py' -v
+          python production/test_nightly_research_recovery.py
 
   publish:
-    if: github.event_name != 'pull_request'
+    if: >-
+      ${{ github.event_name != 'pull_request' &&
+          (github.event_name != 'workflow_run' ||
+           (github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.event == 'schedule' &&
+            github.event.workflow_run.head_repository.full_name == github.repository &&
+            github.event.workflow_run.head_branch == 'main')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
