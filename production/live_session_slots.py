@@ -15,17 +15,20 @@ import os
 from pathlib import Path
 
 JST = timezone(timedelta(hours=9))
-# Each primary and its fallback share a fixed phase deadline. Original
-# primary cutoffs are unchanged: 05:15+320min, 07:45+305min, 12:00+330min.
+# 2026-11-22: an actual gap from 10:35 to 10:59 JST caused two missed
+# early race captures. GitHub cron runs queued for hours cannot be relied upon
+# to start on a strict handoff minute. Allow any *already running* live session
+# to continue until the day's final 17:30 cutoff, subject to the 335-minute
+# per-worker cap and the one-writer concurrency lock.
+#
+# Expanding a worker's runtime does not authorize retroactive T-10 evidence:
+# the existing live capture timestamp validation remains unchanged.
 CUTOFFS = {
-    "15 20 * * 5,6,0": "10:35",  # 05:15 JST primary
-    "15 21 * * 5,6,0": "10:35",  # 06:15 JST fallback
-    "45 22 * * *": "12:50",      # 07:45 JST primary
-    "15 23 * * 5,6,0": "12:50",  # 08:15 JST fallback
-    "0 3 * * *": "17:30",        # 12:00 JST primary
-    # Frequent staggered watches survive GitHub's delayed/dropped cron events.
-    # The newest queued heartbeat may assume the remaining session; it never
-    # fabricates old T-10 captures (the capture engine still checks race time).
+    "15 20 * * 5,6,0": "17:30",  # 05:15 JST early primary
+    "15 21 * * 5,6,0": "17:30",  # 06:15 JST redundant start
+    "45 22 * * *": "17:30",      # 07:45 JST primary
+    "15 23 * * 5,6,0": "17:30",  # 08:15 JST redundant start
+    "0 3 * * *": "17:30",        # 12:00 JST afternoon primary
     "7,22,37,52 22-23 * * 5,6,0": "17:30",  # 07:07-08:52 JST
     "7,22,37,52 0-7 * * 0,1,6": "17:30",    # 09:07-16:52 JST
 }
