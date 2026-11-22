@@ -32,6 +32,7 @@ from train_no_current_odds_challenger import (
 )
 from evaluate_no_current_odds_2026_history import prepare_2026
 from train_top2_top3_models import BASE_COLS
+from train_top2_top3_models import BASE_COLS
 
 REPORT = ROOT / "research/LongshotFactorRobustnessReview.json"
 REPORT_MD = REPORT.with_suffix(".md")
@@ -86,8 +87,13 @@ def partition(data: pd.DataFrame, candidate, market) -> pd.DataFrame:
            np.all((candidate > 0) & (candidate < 1)) and
            np.all((market > 0) & (market < 1)),
            "invalid prediction values")
-    out = data[["レースID", "馬番", "馬名", "着順", "人気", "単勝オッズ",
-                "芝ダ", "距離", *PRIOR_FEATURES]].copy()
+    # Retain the full 36-dimensional frozen inputs only to explain selected
+    # examples; per-group results are calculated without outcome leakage.
+    required = list(dict.fromkeys([
+        "レースID", "馬番", "馬名", "着順", "人気", "単勝オッズ",
+        "芝ダ", "距離", *FEATURES
+    ]))
+    out = data[required].copy()
     out["actual"] = (out["着順"] <= 3).astype(int)
     out["pMarket"] = market
     out["pCandidate"] = candidate
