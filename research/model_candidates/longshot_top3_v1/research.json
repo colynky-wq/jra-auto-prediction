@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-top3-market-residual-v1-20261123",
+  "generatedAtJST": "2026-11-23T01:15:02.158947+09:00",
+  "status": "retrospective_research_only",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "candidateModelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
+  "selection2024": {
+    "selected": {
+      "residualMultiplier": 1.0,
+      "brier": 0.07622227951021401
+    },
+    "grid": [
+      {
+        "residualMultiplier": 0.0,
+        "brier": 0.07686157466082903
+      },
+      {
+        "residualMultiplier": 0.25,
+        "brier": 0.07662259614467873
+      },
+      {
+        "residualMultiplier": 0.5,
+        "brier": 0.07642963984195182
+      },
+      {
+        "residualMultiplier": 1.0,
+        "brier": 0.07622227951021401
+      }
+    ],
+    "underdogs": 27027,
+    "races": 3132
+  },
+  "holdout2025": {
+    "period": "2025-historical-holdout-trained-through-2023",
+    "races": 3143,
+    "underdogHorseRows": 27728,
+    "underdogPodiumRows": 2494,
+    "underdogTop3BaseRate": 0.08994518176572418,
+    "chosenResidualMultiplier": 1.0,
+    "brier": {
+      "closingMarketTop3": 0.07714716914158642,
+      "residualUnshrunk": 0.0764741978807024,
+      "selectedCandidate": 0.0764741978807024
+    },
+    "logloss": {
+      "closingMarketTop3": 0.27233015285238693,
+      "selectedCandidate": 0.26886686423329226
+    },
+    "candidateMinusMarketHorseBrier": -0.000672971260884031,
+    "candidateMinusMarketEqualRaceBrier": -0.0008217814521460654,
+    "pairedRaceBootstrap95": [
+      -0.0010578956617910854,
+      -0.0005924876644303842
+    ],
+    "raceCountWithAtLeastOneLongshotTop3": 1967,
+    "topRankedLongshotPodiumHits": {
+      "market": 645,
+      "candidate": 683
+    },
+    "qualifyingStartsPerRace": 8.822144447979637
+  },
+  "retrospective2026": {
+    "period": "2026-out-of-model-training-retrospective",
+    "races": 2826,
+    "underdogHorseRows": 24567,
+    "underdogPodiumRows": 2196,
+    "underdogTop3BaseRate": 0.08938820368787398,
+    "chosenResidualMultiplier": 1.0,
+    "brier": {
+      "closingMarketTop3": 0.07652973569839872,
+      "residualUnshrunk": 0.0760219374246158,
+      "selectedCandidate": 0.0760219374246158
+    },
+    "logloss": {
+      "closingMarketTop3": 0.2703044329225368,
+      "selectedCandidate": 0.2675137543639868
+    },
+    "candidateMinusMarketHorseBrier": -0.0005077982737829168,
+    "candidateMinusMarketEqualRaceBrier": -0.0006414542834024027,
+    "pairedRaceBootstrap95": [
+      -0.0009267512530936145,
+      -0.00036449789603070377
+    ],
+    "raceCountWithAtLeastOneLongshotTop3": 1719,
+    "topRankedLongshotPodiumHits": {
+      "market": 582,
+      "candidate": 600
+    },
+    "qualifyingStartsPerRace": 8.6932059447983
+  },
+  "featureImportanceGainTop15": [
+    {
+      "feature": "前走着順率f",
+      "gain": 1994.8972163200378
+    },
+    {
+      "feature": "同芝ダ平均",
+      "gain": 1880.3298659324646
+    },
+    {
+      "feature": "同芝ダ回数c",
+      "gain": 1713.7285997867584
+    },
+    {
+      "feature": "log間隔",
+      "gain": 1410.8728885650635
+    },
+    {
+      "feature": "点数差",
+      "gain": 1134.338717699051
+    },
+    {
+      "feature": "脚質初角",
+      "gain": 1131.7230587005615
+    },
+    {
+      "feature": "平均着順",
+      "gain": 1125.815871477127
+    },
+    {
+      "feature": "前走秒差f",
+      "gain": 1091.91055893898
+    },
+    {
+      "feature": "馬体重f",
+      "gain": 1041.8883619308472
+    },
+    {
+      "feature": "前走人気f",
+      "gain": 898.9347710609436
+    },
+    {
+      "feature": "距離変化",
+      "gain": 825.3338122367859
+    },
+    {
+      "feature": "調教師勝率",
+      "gain": 803.734512090683
+    },
+    {
+      "feature": "騎手勝率",
+      "gain": 711.1504085063934
+    },
+    {
+      "feature": "内枠先行",
+      "gain": 601.3593950271606
+    },
+    {
+      "feature": "調教師複勝率",
+      "gain": 550.2231698036194
+    }
+  ],
+  "limitations": [
+    "The historical odds are closing odds, not frozen T10 values.",
+    "Horse popularity and qualifying odds are from closing odds in retrospective data.",
+    "Only 2024 outcomes choose rounds and residual weight; no 2025/26 tuning.",
+    "2025 scoring uses <=2023 model; refit <=2025 is scored ONLY on 2026.",
+    "2025/26 already studied elsewhere in this project, not pristine project-wide holdouts.",
+    "Feature contributions and gain show ASSOCIATION, not a causal explanation for an upset.",
+    "The market Top3 baseline is the approximate Plackett-Luce win-odds implied probability.",
+    "Selection among unpopular horses is NOT a real-money profit or payout claim.",
+    "Only separately first-frozen future T10 data can test genuine operational usefulness.",
+    "Never auto-replace formal AI, beta policy, buying signals or model thresholds."
+  ]
+}
