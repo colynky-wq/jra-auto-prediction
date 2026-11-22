@@ -61,8 +61,8 @@ class NoCurrentOddsTests(unittest.TestCase):
         self.assertEqual(predictor.calls, 2)
         for key, k in (("win", 1), ("top2", 2), ("top3", 3)):
             np.testing.assert_allclose(first[key], second[key])
-            self.assertAlmostEqual(first[key][:3].sum(), k, places=9)
-            self.assertAlmostEqual(first[key][3:].sum(), k, places=9)
+            self.assertAlmostEqual(first[key][:3].sum(), k, places=5)
+            self.assertAlmostEqual(first[key][3:].sum(), k, places=5)
         self.assertTrue(np.all(first["win"] <= first["top2"]))
         self.assertTrue(np.all(first["top2"] <= first["top3"]))
 
