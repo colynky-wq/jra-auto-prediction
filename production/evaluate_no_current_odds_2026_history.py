@@ -95,9 +95,23 @@ def score(data: pd.DataFrame, model: lgb.Booster) -> dict:
         "top2": (data["着順"] <= 2).to_numpy(dtype=float),
         "top3": (data["着順"] <= 3).to_numpy(dtype=float),
     }
-    return {event: evaluate_event(data, label[event], benchmarks[event],
-                                   candidate[event], event)
-            for event in ("win", "top2", "top3")}
+    output = {}
+    for event in ("win", "top2", "top3"):
+        details = evaluate_event(data, label[event], benchmarks[event],
+                                 candidate[event], event)
+        # The pooled horse-level Brier delta and the mean equally weighted
+        # *race-level* delta are different estimands when field sizes vary.
+        # The supplied bootstrap interval resamples races and belongs only
+        # to this paired-race mean, NOT the pooled horse-level mean.
+        delta = ((candidate[event] - label[event]) ** 2 -
+                 (benchmarks[event] - label[event]) ** 2)
+        race_deltas = pd.DataFrame({
+            "race": data["レースID"].to_numpy(),
+            "delta": delta,
+        }).groupby("race", sort=False)["delta"].mean()
+        details["pairedRaceMeanBrierDelta"] = float(race_deltas.mean())
+        output[event] = details
+    return output
 
 
 def build_report(meta, hist, data, evaluations, model_sha):
@@ -149,8 +163,8 @@ def markdown(report):
         f"2026 races: {report['scoredRaces']:,} / horses: {report['scoredHorseRows']:,}",
         f"Evaluation dates: {report['validationPeriod']['start']} to {report['validationPeriod']['end']}",
         "",
-        "| Event | Candidate Brier | Closing-market Brier | Candidate minus market | Paired-race bootstrap 95% |",
-        "|---|---:|---:|---:|---|",
+        "| Event | Candidate Brier | Closing-market Brier | Pooled horse-level delta | Equal-race mean delta | Equal-race bootstrap 95% |",
+        "|---|---:|---:|---:|---:|---|",
     ]
     for e in ("win", "top2", "top3"):
         r = report["results"][e]
@@ -158,11 +172,14 @@ def markdown(report):
             f"| {e} | {r['candidateNoCurrentOddsBrier']:.6f} | "
             f"{r['marketFinalOddsBrier']:.6f} | "
             f"{r['candidateMinusFinalMarketBrier']:+.6f} | "
+            f"{r['pairedRaceMeanBrierDelta']:+.6f} | "
             f"{r['pairedRaceBootstrap95']} |"
         )
     lines += [
         "",
         "Lower Brier is better. Positive delta means the final market is better.",
+        "Pooled delta weights horses equally; equal-race delta weights races equally.",
+        "The bootstrap CI corresponds to the equal-race delta, not the pooled horse-level delta.",
         "Final odds are a *later* benchmark; they cannot be directly compared with T-10.",
         "These 2026 records are reconstructed offline and may NOT be counted as first-frozen future shadows.",
         "No betting or automatic promotion.", "",

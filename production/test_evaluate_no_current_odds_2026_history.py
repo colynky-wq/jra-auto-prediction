@@ -70,6 +70,11 @@ class NoOdds2026RetrospectiveTests(unittest.TestCase):
         self.assertEqual(events["top3"]["raceCount"], 2)
         self.assertEqual(events["win"]["horseRows"], 6)
         self.assertIsNone(events["win"]["pairedRaceBootstrap95"])
+        self.assertIn("pairedRaceMeanBrierDelta", events["win"])
+        self.assertAlmostEqual(
+            events["win"]["pairedRaceMeanBrierDelta"],
+            events["win"]["candidateMinusFinalMarketBrier"], places=9
+        )
 
     def test_report_never_claims_prospective_validation(self):
         data = fixture()
