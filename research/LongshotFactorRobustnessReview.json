@@ -1,0 +1,1392 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-factor-robustness-research-v1-20261123",
+  "generatedAtJST": "2026-11-23T01:29:27.980338+09:00",
+  "researchOnly": true,
+  "autoBetEnabled": false,
+  "formalPredictionAIChanged": false,
+  "candidatePromotionApproved": false,
+  "status": "exploratory_retrospective_model_diagnostics",
+  "modelVersion": "longshot-top3-market-residual-v1-20261123",
+  "modelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "target": "Top3 on popularity>=6 and closing win odds>=10",
+  "selection": {
+    "2025ModelTrainThrough": "2023-12-31",
+    "2024ValidationOnly": true,
+    "2026ModelRefitThrough": "2025-12-31",
+    "2026ModelHyperparametersFrozen": true,
+    "selectedResidualMultiplier": 1.0,
+    "binBoundariesFixedBeforeScoring": true,
+    "subgroupsCannotChangeLiveEligibility": true
+  },
+  "2025": {
+    "races": 3143,
+    "underdogHorseRows": 27728,
+    "segments": {
+      "ALL": {
+        "horseRows": 27728,
+        "distinctRaces": 3143,
+        "top3ActualCount": 2494,
+        "top3ActualRate": 0.08994518176572418,
+        "marketExpectedRate": 0.07153691699451506,
+        "candidateExpectedRate": 0.0875441732450312,
+        "marketBrier": 0.07714716914158642,
+        "candidateBrier": 0.0764741978807024,
+        "candidateMinusMarketPooledBrier": -0.000672971260884042,
+        "candidateMinusMarketEqualRaceBrier": -0.0008217814521460654,
+        "equalRaceBootstrap95": [
+          -0.0010551333877959687,
+          -0.0005924876644303842
+        ],
+        "adequateSample": true
+      },
+      "単勝オッズ帯": {
+        "100+": {
+          "horseRows": 9722,
+          "distinctRaces": 2852,
+          "top3ActualCount": 189,
+          "top3ActualRate": 0.019440444353013783,
+          "marketExpectedRate": 0.01767082183132684,
+          "candidateExpectedRate": 0.021477201751231273,
+          "marketBrier": 0.018862353169337744,
+          "candidateBrier": 0.018810359528800683,
+          "candidateMinusMarketPooledBrier": -5.199364053705718e-05,
+          "candidateMinusMarketEqualRaceBrier": -6.317135750158687e-05,
+          "equalRaceBootstrap95": [
+            -0.00012852948161550442,
+            -8.17922969234625e-06
+          ],
+          "adequateSample": true
+        },
+        "10–19.9": {
+          "horseRows": 3939,
+          "distinctRaces": 2088,
+          "top3ActualCount": 868,
+          "top3ActualRate": 0.22036049758822035,
+          "marketExpectedRate": 0.18471164460652914,
+          "candidateExpectedRate": 0.22088303761605876,
+          "marketBrier": 0.17198954481975287,
+          "candidateBrier": 0.17026512450730677,
+          "candidateMinusMarketPooledBrier": -0.0017244203124460707,
+          "candidateMinusMarketEqualRaceBrier": -0.0017096043863620838,
+          "equalRaceBootstrap95": [
+            -0.0029383174555446525,
+            -0.0005035719171820814
+          ],
+          "adequateSample": true
+        },
+        "20–49.9": {
+          "horseRows": 8323,
+          "distinctRaces": 2930,
+          "top3ActualCount": 1069,
+          "top3ActualRate": 0.12843926468821337,
+          "marketExpectedRate": 0.09871269051795031,
+          "candidateExpectedRate": 0.12214527085983441,
+          "marketBrier": 0.1121442649970626,
+          "candidateBrier": 0.11100506085921115,
+          "candidateMinusMarketPooledBrier": -0.0011392041378514351,
+          "candidateMinusMarketEqualRaceBrier": -0.0013026577470100426,
+          "equalRaceBootstrap95": [
+            -0.001816551978605481,
+            -0.0008458635361599972
+          ],
+          "adequateSample": true
+        },
+        "50–99.9": {
+          "horseRows": 5744,
+          "distinctRaces": 2694,
+          "top3ActualCount": 368,
+          "top3ActualRate": 0.06406685236768803,
+          "marketExpectedRate": 0.04571988392996787,
+          "candidateExpectedRate": 0.05779075657672318,
+          "marketBrier": 0.06004759293698616,
+          "candidateBrier": 0.05972019438224575,
+          "candidateMinusMarketPooledBrier": -0.0003273985547404037,
+          "candidateMinusMarketEqualRaceBrier": -0.0003608114261255621,
+          "equalRaceBootstrap95": [
+            -0.0005962778641108898,
+            -0.00013122403819487382
+          ],
+          "adequateSample": true
+        }
+      },
+      "人気順位帯": {
+        "13+": {
+          "horseRows": 7778,
+          "distinctRaces": 2238,
+          "top3ActualCount": 170,
+          "top3ActualRate": 0.021856518385188994,
+          "marketExpectedRate": 0.019458556559829986,
+          "candidateExpectedRate": 0.0238883230039809,
+          "marketBrier": 0.02111634707405637,
+          "candidateBrier": 0.021065252218641677,
+          "candidateMinusMarketPooledBrier": -5.109485541469165e-05,
+          "candidateMinusMarketEqualRaceBrier": -3.803107413082828e-05,
+          "equalRaceBootstrap95": [
+            -0.0001059645099400812,
+            2.58626281005255e-05
+          ],
+          "adequateSample": true
+        },
+        "6–8": {
+          "horseRows": 9066,
+          "distinctRaces": 3143,
+          "top3ActualCount": 1517,
+          "top3ActualRate": 0.1673284800352967,
+          "marketExpectedRate": 0.13608132312200552,
+          "candidateExpectedRate": 0.16476393425735122,
+          "marketBrier": 0.13675043678899665,
+          "candidateBrier": 0.1352247140450186,
+          "candidateMinusMarketPooledBrier": -0.0015257227439780445,
+          "candidateMinusMarketEqualRaceBrier": -0.0015386415520254972,
+          "equalRaceBootstrap95": [
+            -0.002101816055981289,
+            -0.0009952486637741732
+          ],
+          "adequateSample": true
+        },
+        "9–12": {
+          "horseRows": 10884,
+          "distinctRaces": 2950,
+          "top3ActualCount": 807,
+          "top3ActualRate": 0.07414553472987873,
+          "marketExpectedRate": 0.054990233928468774,
+          "candidateExpectedRate": 0.0687129393087207,
+          "marketBrier": 0.06754082125017037,
+          "candidateBrier": 0.06713375317414388,
+          "candidateMinusMarketPooledBrier": -0.0004070680760264877,
+          "candidateMinusMarketEqualRaceBrier": -0.0003910940812040181,
+          "equalRaceBootstrap95": [
+            -0.0005787807251053848,
+            -0.0002009895610981369
+          ],
+          "adequateSample": true
+        }
+      },
+      "芝ダ区分": {
+        "ダート": {
+          "horseRows": 14276,
+          "distinctRaces": 1546,
+          "top3ActualCount": 1267,
+          "top3ActualRate": 0.08875035023816195,
+          "marketExpectedRate": 0.07000386782422219,
+          "candidateExpectedRate": 0.0860659554561842,
+          "marketBrier": 0.07634680320182315,
+          "candidateBrier": 0.0756475648297639,
+          "candidateMinusMarketPooledBrier": -0.0006992383720592426,
+          "candidateMinusMarketEqualRaceBrier": -0.0008370106101397545,
+          "equalRaceBootstrap95": [
+            -0.0011408431821385162,
+            -0.0005457618956096079
+          ],
+          "adequateSample": true
+        },
+        "芝": {
+          "horseRows": 13452,
+          "distinctRaces": 1597,
+          "top3ActualCount": 1227,
+          "top3ActualRate": 0.09121320249776985,
+          "marketExpectedRate": 0.07316387283417465,
+          "candidateExpectedRate": 0.08911293901618643,
+          "marketBrier": 0.07799656136252463,
+          "candidateBrier": 0.07735146620029783,
+          "candidateMinusMarketPooledBrier": -0.000645095162226804,
+          "candidateMinusMarketEqualRaceBrier": -0.0008070386354533646,
+          "equalRaceBootstrap95": [
+            -0.001140934867095632,
+            -0.0004834438896796115
+          ],
+          "adequateSample": true
+        }
+      },
+      "距離帯": {
+        "1401–1800m": {
+          "horseRows": 11723,
+          "distinctRaces": 1380,
+          "top3ActualCount": 1054,
+          "top3ActualRate": 0.08990872643521283,
+          "marketExpectedRate": 0.07095699069721322,
+          "candidateExpectedRate": 0.08666433866733735,
+          "marketBrier": 0.07680559603500968,
+          "candidateBrier": 0.07609312819237803,
+          "candidateMinusMarketPooledBrier": -0.0007124678426316414,
+          "candidateMinusMarketEqualRaceBrier": -0.0008269161562436167,
+          "equalRaceBootstrap95": [
+            -0.001183104238384445,
+            -0.0004803401077894341
+          ],
+          "adequateSample": true
+        },
+        "1801–2200m": {
+          "horseRows": 3871,
+          "distinctRaces": 476,
+          "top3ActualCount": 344,
+          "top3ActualRate": 0.08886592611728236,
+          "marketExpectedRate": 0.07100452985370254,
+          "candidateExpectedRate": 0.08658753050766899,
+          "marketBrier": 0.07633879317176698,
+          "candidateBrier": 0.07579608818754141,
+          "candidateMinusMarketPooledBrier": -0.00054270498422557,
+          "candidateMinusMarketEqualRaceBrier": -0.0007186400420086047,
+          "equalRaceBootstrap95": [
+            -0.0013298922940590506,
+            -0.00010483636778016433
+          ],
+          "adequateSample": true
+        },
+        ">2200m": {
+          "horseRows": 1032,
+          "distinctRaces": 136,
+          "top3ActualCount": 101,
+          "top3ActualRate": 0.09786821705426356,
+          "marketExpectedRate": 0.07690593354504137,
+          "candidateExpectedRate": 0.09310866785597952,
+          "marketBrier": 0.08267751974606156,
+          "candidateBrier": 0.08157778033090583,
+          "candidateMinusMarketPooledBrier": -0.0010997394151557398,
+          "candidateMinusMarketEqualRaceBrier": -0.001465336238916619,
+          "equalRaceBootstrap95": [
+            -0.002820126587097638,
+            -0.0001558264751265213
+          ],
+          "adequateSample": true
+        },
+        "≤1400m": {
+          "horseRows": 11102,
+          "distinctRaces": 1151,
+          "top3ActualCount": 995,
+          "top3ActualRate": 0.08962349126283553,
+          "marketExpectedRate": 0.07183582903966114,
+          "candidateExpectedRate": 0.08828952600598743,
+          "marketBrier": 0.0772756291563362,
+          "candidateBrier": 0.07663861379583864,
+          "candidateMinusMarketPooledBrier": -0.000637015360497575,
+          "candidateMinusMarketEqualRaceBrier": -0.0007822384187577208,
+          "equalRaceBootstrap95": [
+            -0.0011642287093946344,
+            -0.0004279275214201019
+          ],
+          "adequateSample": true
+        }
+      },
+      "同馬場経験": {
+        "0走": {
+          "horseRows": 4929,
+          "distinctRaces": 1530,
+          "top3ActualCount": 353,
+          "top3ActualRate": 0.07161696084398458,
+          "marketExpectedRate": 0.06360124684168318,
+          "candidateExpectedRate": 0.07241140418608573,
+          "marketBrier": 0.06306553720258173,
+          "candidateBrier": 0.0629355783683311,
+          "candidateMinusMarketPooledBrier": -0.00012995883425064302,
+          "candidateMinusMarketEqualRaceBrier": -0.00010790442712468202,
+          "equalRaceBootstrap95": [
+            -0.0003881282174367999,
+            0.00014293300459516502
+          ],
+          "adequateSample": true
+        },
+        "1–2走": {
+          "horseRows": 6264,
+          "distinctRaces": 1839,
+          "top3ActualCount": 421,
+          "top3ActualRate": 0.06720945083014049,
+          "marketExpectedRate": 0.05926449868457893,
+          "candidateExpectedRate": 0.06834564873473654,
+          "marketBrier": 0.05898476565225199,
+          "candidateBrier": 0.05872715517948005,
+          "candidateMinusMarketPooledBrier": -0.0002576104727719331,
+          "candidateMinusMarketEqualRaceBrier": -0.00028344607936078733,
+          "equalRaceBootstrap95": [
+            -0.0006962114167855798,
+            8.577681989417046e-05
+          ],
+          "adequateSample": true
+        },
+        "3走以上": {
+          "horseRows": 16535,
+          "distinctRaces": 2655,
+          "top3ActualCount": 1720,
+          "top3ActualRate": 0.10402177199879044,
+          "marketExpectedRate": 0.07855169452561565,
+          "candidateExpectedRate": 0.09932820567466703,
+          "marketBrier": 0.08822534629819635,
+          "candidateBrier": 0.08723315349345925,
+          "candidateMinusMarketPooledBrier": -0.0009921928047370975,
+          "candidateMinusMarketEqualRaceBrier": -0.0012262407314959083,
+          "equalRaceBootstrap95": [
+            -0.001642040932260522,
+            -0.0007818102100871731
+          ],
+          "adequateSample": true
+        }
+      },
+      "前走着順位置": {
+        "25–50%": {
+          "horseRows": 9404,
+          "distinctRaces": 2776,
+          "top3ActualCount": 954,
+          "top3ActualRate": 0.10144619310931519,
+          "marketExpectedRate": 0.08189333700657979,
+          "candidateExpectedRate": 0.10156443177497933,
+          "marketBrier": 0.08696499009440883,
+          "candidateBrier": 0.08631767674257748,
+          "candidateMinusMarketPooledBrier": -0.0006473133518313435,
+          "candidateMinusMarketEqualRaceBrier": -0.001042990056281284,
+          "equalRaceBootstrap95": [
+            -0.0016283658655008896,
+            -0.0004847456521528812
+          ],
+          "adequateSample": true
+        },
+        "上位25%": {
+          "horseRows": 3478,
+          "distinctRaces": 1636,
+          "top3ActualCount": 532,
+          "top3ActualRate": 0.15296147211040828,
+          "marketExpectedRate": 0.11972665100740139,
+          "candidateExpectedRate": 0.14000058944096969,
+          "marketBrier": 0.1251722108139818,
+          "candidateBrier": 0.12368348629810239,
+          "candidateMinusMarketPooledBrier": -0.0014887245158794308,
+          "candidateMinusMarketEqualRaceBrier": -0.0015167543717131487,
+          "equalRaceBootstrap95": [
+            -0.0024329556233590745,
+            -0.0006015497001690541
+          ],
+          "adequateSample": true
+        },
+        "下位50%": {
+          "horseRows": 14846,
+          "distinctRaces": 2814,
+          "top3ActualCount": 1008,
+          "top3ActualRate": 0.06789707665364408,
+          "marketExpectedRate": 0.0536872828378213,
+          "candidateExpectedRate": 0.06637416605487186,
+          "marketBrier": 0.05967728613088099,
+          "candidateBrier": 0.05917917024141971,
+          "candidateMinusMarketPooledBrier": -0.0004981158894612758,
+          "candidateMinusMarketEqualRaceBrier": -0.0007789706560990116,
+          "equalRaceBootstrap95": [
+            -0.001092348245114441,
+            -0.0005020513928454489
+          ],
+          "adequateSample": true
+        }
+      },
+      "AI市場比": {
+        "0.8–1.0x": {
+          "horseRows": 2180,
+          "distinctRaces": 1421,
+          "top3ActualCount": 105,
+          "top3ActualRate": 0.0481651376146789,
+          "marketExpectedRate": 0.0483144592604302,
+          "candidateExpectedRate": 0.04505958796194561,
+          "marketBrier": 0.04241438258422758,
+          "candidateBrier": 0.042436744172710726,
+          "candidateMinusMarketPooledBrier": 2.2361588483147173e-05,
+          "candidateMinusMarketEqualRaceBrier": -1.2197169318267957e-05,
+          "equalRaceBootstrap95": [
+            -0.0001863101895215943,
+            0.00017714476723265017
+          ],
+          "adequateSample": true
+        },
+        "1.0–1.2x": {
+          "horseRows": 8454,
+          "distinctRaces": 2806,
+          "top3ActualCount": 805,
+          "top3ActualRate": 0.0952211970664774,
+          "marketExpectedRate": 0.08484555481464019,
+          "candidateExpectedRate": 0.0954754728019407,
+          "marketBrier": 0.0815009973475105,
+          "candidateBrier": 0.0813912220863011,
+          "candidateMinusMarketPooledBrier": -0.00010977526120938732,
+          "candidateMinusMarketEqualRaceBrier": -9.033484574678256e-05,
+          "equalRaceBootstrap95": [
+            -0.0004436826929420211,
+            0.0002535211972839708
+          ],
+          "adequateSample": true
+        },
+        "<0.8x": {
+          "horseRows": 830,
+          "distinctRaces": 684,
+          "top3ActualCount": 6,
+          "top3ActualRate": 0.007228915662650603,
+          "marketExpectedRate": 0.01903079655906235,
+          "candidateExpectedRate": 0.013750198227484323,
+          "marketBrier": 0.0073959453474621364,
+          "candidateBrier": 0.007168752069280009,
+          "candidateMinusMarketPooledBrier": -0.00022719327818212777,
+          "candidateMinusMarketEqualRaceBrier": -0.00022528975159456026,
+          "equalRaceBootstrap95": [
+            -0.0004595351038318474,
+            1.4597210504612606e-05
+          ],
+          "adequateSample": true
+        },
+        "≥1.2x": {
+          "horseRows": 16264,
+          "distinctRaces": 3079,
+          "top3ActualCount": 1578,
+          "top3ActualRate": 0.0970241023118544,
+          "marketExpectedRate": 0.07041135216977287,
+          "candidateExpectedRate": 0.09288198612793688,
+          "marketBrier": 0.08309919366146366,
+          "candidateBrier": 0.08201752341395194,
+          "candidateMinusMarketPooledBrier": -0.0010816702475117223,
+          "candidateMinusMarketEqualRaceBrier": -0.0013486783470211118,
+          "equalRaceBootstrap95": [
+            -0.0017919865607145544,
+            -0.0009445508371911448
+          ],
+          "adequateSample": true
+        }
+      }
+    }
+  },
+  "2026": {
+    "races": 2826,
+    "underdogHorseRows": 24567,
+    "segments": {
+      "ALL": {
+        "horseRows": 24567,
+        "distinctRaces": 2826,
+        "top3ActualCount": 2196,
+        "top3ActualRate": 0.08938820368787398,
+        "marketExpectedRate": 0.07314584020031319,
+        "candidateExpectedRate": 0.08989485100634871,
+        "marketBrier": 0.07652973569839872,
+        "candidateBrier": 0.0760219374246158,
+        "candidateMinusMarketPooledBrier": -0.0005077982737829153,
+        "candidateMinusMarketEqualRaceBrier": -0.0006414542834024027,
+        "equalRaceBootstrap95": [
+          -0.0009291729042724514,
+          -0.00034825174429659197
+        ],
+        "adequateSample": true
+      },
+      "単勝オッズ帯": {
+        "100+": {
+          "horseRows": 8488,
+          "distinctRaces": 2538,
+          "top3ActualCount": 161,
+          "top3ActualRate": 0.018967954759660698,
+          "marketExpectedRate": 0.017817458502470254,
+          "candidateExpectedRate": 0.021762409625768156,
+          "marketBrier": 0.018514240656354947,
+          "candidateBrier": 0.018450434521843275,
+          "candidateMinusMarketPooledBrier": -6.38061345116746e-05,
+          "candidateMinusMarketEqualRaceBrier": -7.980584382418023e-05,
+          "equalRaceBootstrap95": [
+            -0.00015513506094671405,
+            -1.0362710704797105e-05
+          ],
+          "adequateSample": true
+        },
+        "10–19.9": {
+          "horseRows": 3735,
+          "distinctRaces": 1937,
+          "top3ActualCount": 815,
+          "top3ActualRate": 0.2182061579651941,
+          "marketExpectedRate": 0.18536618745746275,
+          "candidateExpectedRate": 0.22274809941236878,
+          "marketBrier": 0.17082980266885364,
+          "candidateBrier": 0.1697105706183914,
+          "candidateMinusMarketPooledBrier": -0.0011192320504622402,
+          "candidateMinusMarketEqualRaceBrier": -0.0009822298433377105,
+          "equalRaceBootstrap95": [
+            -0.002442871993216504,
+            0.0002860184731210796
+          ],
+          "adequateSample": true
+        },
+        "20–49.9": {
+          "horseRows": 7315,
+          "distinctRaces": 2620,
+          "top3ActualCount": 924,
+          "top3ActualRate": 0.12631578947368421,
+          "marketExpectedRate": 0.09892683957920839,
+          "candidateExpectedRate": 0.12314492633347043,
+          "marketBrier": 0.11027978084867832,
+          "candidateBrier": 0.10937341498705143,
+          "candidateMinusMarketPooledBrier": -0.0009063658616268758,
+          "candidateMinusMarketEqualRaceBrier": -0.0010084757121212062,
+          "equalRaceBootstrap95": [
+            -0.0015916488387951605,
+            -0.0004335543633184309
+          ],
+          "adequateSample": true
+        },
+        "50–99.9": {
+          "horseRows": 5029,
+          "distinctRaces": 2397,
+          "top3ActualCount": 296,
+          "top3ActualRate": 0.05885862000397694,
+          "marketExpectedRate": 0.04568437597068874,
+          "candidateExpectedRate": 0.057856071651404856,
+          "marketBrier": 0.05532138244883083,
+          "candidateBrier": 0.055098058580067104,
+          "candidateMinusMarketPooledBrier": -0.00022332386876371558,
+          "candidateMinusMarketEqualRaceBrier": -0.00018564736969652954,
+          "equalRaceBootstrap95": [
+            -0.0004712075020240035,
+            5.325367556587408e-05
+          ],
+          "adequateSample": true
+        }
+      },
+      "人気順位帯": {
+        "13+": {
+          "horseRows": 6682,
+          "distinctRaces": 1921,
+          "top3ActualCount": 163,
+          "top3ActualRate": 0.02439389404369949,
+          "marketExpectedRate": 0.02004960951785826,
+          "candidateExpectedRate": 0.024758869436945753,
+          "marketBrier": 0.02344997791686112,
+          "candidateBrier": 0.023359334886126272,
+          "candidateMinusMarketPooledBrier": -9.064303073484812e-05,
+          "candidateMinusMarketEqualRaceBrier": -6.545934500948941e-05,
+          "equalRaceBootstrap95": [
+            -0.0001482068147465335,
+            1.8739628586796852e-05
+          ],
+          "adequateSample": true
+        },
+        "6–8": {
+          "horseRows": 8153,
+          "distinctRaces": 2825,
+          "top3ActualCount": 1344,
+          "top3ActualRate": 0.16484729547405863,
+          "marketExpectedRate": 0.13785906171896248,
+          "candidateExpectedRate": 0.16771631074293228,
+          "marketBrier": 0.13491361375334948,
+          "candidateBrier": 0.1340559333173696,
+          "candidateMinusMarketPooledBrier": -0.0008576804359798873,
+          "candidateMinusMarketEqualRaceBrier": -0.0009126177515852899,
+          "equalRaceBootstrap95": [
+            -0.0015387640500031622,
+            -0.0002634725256495584
+          ],
+          "adequateSample": true
+        },
+        "9–12": {
+          "horseRows": 9732,
+          "distinctRaces": 2658,
+          "top3ActualCount": 689,
+          "top3ActualRate": 0.0707973695026716,
+          "marketExpectedRate": 0.055388145829024245,
+          "candidateExpectedRate": 0.06942221101604712,
+          "marketBrier": 0.06406314956134784,
+          "candidateBrier": 0.0635620465130422,
+          "candidateMinusMarketPooledBrier": -0.0005011030483056522,
+          "candidateMinusMarketEqualRaceBrier": -0.0005060206540440685,
+          "equalRaceBootstrap95": [
+            -0.000753760078672569,
+            -0.00025584767292070496
+          ],
+          "adequateSample": true
+        }
+      },
+      "芝ダ区分": {
+        "ダート": {
+          "horseRows": 12358,
+          "distinctRaces": 1380,
+          "top3ActualCount": 1066,
+          "top3ActualRate": 0.08625991260721799,
+          "marketExpectedRate": 0.07126398199977482,
+          "candidateExpectedRate": 0.0880198818589676,
+          "marketBrier": 0.07374957099049756,
+          "candidateBrier": 0.07324592053272569,
+          "candidateMinusMarketPooledBrier": -0.0005036504577718629,
+          "candidateMinusMarketEqualRaceBrier": -0.0005227135647144001,
+          "equalRaceBootstrap95": [
+            -0.000838970671139822,
+            -0.0001861894299126451
+          ],
+          "adequateSample": true
+        },
+        "芝": {
+          "horseRows": 12209,
+          "distinctRaces": 1446,
+          "top3ActualCount": 1130,
+          "top3ActualRate": 0.09255467278237366,
+          "marketExpectedRate": 0.07505066480857372,
+          "candidateExpectedRate": 0.09179270248667765,
+          "marketBrier": 0.0793438298469975,
+          "candidateBrier": 0.07883183313679352,
+          "candidateMinusMarketPooledBrier": -0.0005119967102039646,
+          "candidateMinusMarketEqualRaceBrier": -0.0007547753012374262,
+          "equalRaceBootstrap95": [
+            -0.0011825379053825324,
+            -0.0003174452967672659
+          ],
+          "adequateSample": true
+        }
+      },
+      "距離帯": {
+        "1401–1800m": {
+          "horseRows": 10319,
+          "distinctRaces": 1240,
+          "top3ActualCount": 918,
+          "top3ActualRate": 0.08896210873146623,
+          "marketExpectedRate": 0.07288660654664338,
+          "candidateExpectedRate": 0.08967378202437438,
+          "marketBrier": 0.0763241201451686,
+          "candidateBrier": 0.07579537183993279,
+          "candidateMinusMarketPooledBrier": -0.0005287483052358171,
+          "candidateMinusMarketEqualRaceBrier": -0.000469685942122252,
+          "equalRaceBootstrap95": [
+            -0.000855611789096015,
+            -8.826658129516005e-05
+          ],
+          "adequateSample": true
+        },
+        "1801–2200m": {
+          "horseRows": 3535,
+          "distinctRaces": 442,
+          "top3ActualCount": 366,
+          "top3ActualRate": 0.10353606789250354,
+          "marketExpectedRate": 0.07489395012332924,
+          "candidateExpectedRate": 0.09166252851651938,
+          "marketBrier": 0.0880713347940226,
+          "candidateBrier": 0.08707000196120959,
+          "candidateMinusMarketPooledBrier": -0.0010013328328130097,
+          "candidateMinusMarketEqualRaceBrier": -0.0017228586405110906,
+          "equalRaceBootstrap95": [
+            -0.002799328403289219,
+            -0.0007381022046745892
+          ],
+          "adequateSample": true
+        },
+        ">2200m": {
+          "horseRows": 959,
+          "distinctRaces": 124,
+          "top3ActualCount": 85,
+          "top3ActualRate": 0.0886339937434828,
+          "marketExpectedRate": 0.07866145951439628,
+          "candidateExpectedRate": 0.09579151481475211,
+          "marketBrier": 0.07604380352864253,
+          "candidateBrier": 0.07612083448338834,
+          "candidateMinusMarketPooledBrier": 7.703095474579818e-05,
+          "candidateMinusMarketEqualRaceBrier": 0.00025511682044180364,
+          "equalRaceBootstrap95": [
+            -0.000836379871881823,
+            0.0013882653198595831
+          ],
+          "adequateSample": true
+        },
+        "≤1400m": {
+          "horseRows": 9754,
+          "distinctRaces": 1020,
+          "top3ActualCount": 827,
+          "top3ActualRate": 0.08478572893172032,
+          "marketExpectedRate": 0.07224425977916814,
+          "candidateExpectedRate": 0.08890833985546508,
+          "marketBrier": 0.07261218423659305,
+          "candidateBrier": 0.07224791444451761,
+          "candidateMinusMarketPooledBrier": -0.0003642697920754274,
+          "candidateMinusMarketEqualRaceBrier": -0.0004906570620514503,
+          "equalRaceBootstrap95": [
+            -0.0008871404408017183,
+            -0.00011582807317599103
+          ],
+          "adequateSample": true
+        }
+      },
+      "同馬場経験": {
+        "0走": {
+          "horseRows": 4259,
+          "distinctRaces": 1385,
+          "top3ActualCount": 318,
+          "top3ActualRate": 0.0746654144165297,
+          "marketExpectedRate": 0.06454461875759882,
+          "candidateExpectedRate": 0.07351340153498832,
+          "marketBrier": 0.06461274947341668,
+          "candidateBrier": 0.06410992005491847,
+          "candidateMinusMarketPooledBrier": -0.0005028294184982159,
+          "candidateMinusMarketEqualRaceBrier": -0.00040866356043724417,
+          "equalRaceBootstrap95": [
+            -0.0008515885662461458,
+            -7.697111273890151e-05
+          ],
+          "adequateSample": true
+        },
+        "1–2走": {
+          "horseRows": 5499,
+          "distinctRaces": 1642,
+          "top3ActualCount": 368,
+          "top3ActualRate": 0.06692125841062012,
+          "marketExpectedRate": 0.05955101687653139,
+          "candidateExpectedRate": 0.06888977067716753,
+          "marketBrier": 0.05791367733854753,
+          "candidateBrier": 0.05751353114713825,
+          "candidateMinusMarketPooledBrier": -0.00040014619140928457,
+          "candidateMinusMarketEqualRaceBrier": -0.0004587890870854116,
+          "equalRaceBootstrap95": [
+            -0.0009201544621140839,
+            -3.256149881930877e-05
+          ],
+          "adequateSample": true
+        },
+        "3走以上": {
+          "horseRows": 14809,
+          "distinctRaces": 2390,
+          "top3ActualCount": 1510,
+          "top3ActualRate": 0.1019650212708488,
+          "marketExpectedRate": 0.08066765366388239,
+          "candidateExpectedRate": 0.10240585985425818,
+          "marketBrier": 0.086869674198839,
+          "candidateBrier": 0.08632047264626413,
+          "candidateMinusMarketPooledBrier": -0.0005492015525748752,
+          "candidateMinusMarketEqualRaceBrier": -0.0008160469065701885,
+          "equalRaceBootstrap95": [
+            -0.0012696307620081273,
+            -0.0003307366476543267
+          ],
+          "adequateSample": true
+        }
+      },
+      "前走着順位置": {
+        "25–50%": {
+          "horseRows": 8311,
+          "distinctRaces": 2535,
+          "top3ActualCount": 863,
+          "top3ActualRate": 0.10383828660810973,
+          "marketExpectedRate": 0.08271860703364142,
+          "candidateExpectedRate": 0.10295390282746271,
+          "marketBrier": 0.08845754135588281,
+          "candidateBrier": 0.08771597576734694,
+          "candidateMinusMarketPooledBrier": -0.000741565588535871,
+          "candidateMinusMarketEqualRaceBrier": -0.0008618472426960916,
+          "equalRaceBootstrap95": [
+            -0.0015067169359656077,
+            -0.0002271110296548134
+          ],
+          "adequateSample": true
+        },
+        "上位25%": {
+          "horseRows": 3046,
+          "distinctRaces": 1422,
+          "top3ActualCount": 456,
+          "top3ActualRate": 0.14970453053184504,
+          "marketExpectedRate": 0.1241319848032938,
+          "candidateExpectedRate": 0.14619868572496814,
+          "marketBrier": 0.12271391673320539,
+          "candidateBrier": 0.12160077207940496,
+          "candidateMinusMarketPooledBrier": -0.001113144653800426,
+          "candidateMinusMarketEqualRaceBrier": -0.0010199730279273828,
+          "equalRaceBootstrap95": [
+            -0.002095222518664207,
+            0.00010918009346099886
+          ],
+          "adequateSample": true
+        },
+        "下位50%": {
+          "horseRows": 13210,
+          "distinctRaces": 2547,
+          "top3ActualCount": 877,
+          "top3ActualRate": 0.0663890991672975,
+          "marketExpectedRate": 0.0553666530986879,
+          "candidateExpectedRate": 0.06869611821011909,
+          "marketBrier": 0.05837613931298075,
+          "candidateBrier": 0.05815499699880761,
+          "candidateMinusMarketPooledBrier": -0.00022114231417313867,
+          "candidateMinusMarketEqualRaceBrier": -0.0001865443126914691,
+          "equalRaceBootstrap95": [
+            -0.0004659662735270718,
+            0.00010310764485778731
+          ],
+          "adequateSample": true
+        }
+      },
+      "AI市場比": {
+        "0.8–1.0x": {
+          "horseRows": 1866,
+          "distinctRaces": 1251,
+          "top3ActualCount": 85,
+          "top3ActualRate": 0.04555198285101822,
+          "marketExpectedRate": 0.05195724097275564,
+          "candidateExpectedRate": 0.04856416149353612,
+          "marketBrier": 0.039883321358588124,
+          "candidateBrier": 0.03981113426989794,
+          "candidateMinusMarketPooledBrier": -7.218708869017957e-05,
+          "candidateMinusMarketEqualRaceBrier": -4.708202784606062e-05,
+          "equalRaceBootstrap95": [
+            -0.00022095033139663307,
+            0.00013968490095752408
+          ],
+          "adequateSample": true
+        },
+        "1.0–1.2x": {
+          "horseRows": 7290,
+          "distinctRaces": 2444,
+          "top3ActualCount": 684,
+          "top3ActualRate": 0.09382716049382717,
+          "marketExpectedRate": 0.08383901211192975,
+          "candidateExpectedRate": 0.09420401984457033,
+          "marketBrier": 0.07891378645584303,
+          "candidateBrier": 0.07854098209557198,
+          "candidateMinusMarketPooledBrier": -0.000372804360271072,
+          "candidateMinusMarketEqualRaceBrier": -0.0004264116782752999,
+          "equalRaceBootstrap95": [
+            -0.0007649904480969533,
+            -7.965220616269004e-05
+          ],
+          "adequateSample": true
+        },
+        "<0.8x": {
+          "horseRows": 659,
+          "distinctRaces": 555,
+          "top3ActualCount": 11,
+          "top3ActualRate": 0.01669195751138088,
+          "marketExpectedRate": 0.019306477182056584,
+          "candidateExpectedRate": 0.013917470266128466,
+          "marketBrier": 0.01537943272526705,
+          "candidateBrier": 0.015491346971214084,
+          "candidateMinusMarketPooledBrier": 0.00011191424594703407,
+          "candidateMinusMarketEqualRaceBrier": 0.00015227308114167503,
+          "equalRaceBootstrap95": [
+            -0.0002771861606864945,
+            0.0005971375183977332
+          ],
+          "adequateSample": true
+        },
+        "≥1.2x": {
+          "horseRows": 14752,
+          "distinctRaces": 2793,
+          "top3ActualCount": 1416,
+          "top3ActualRate": 0.09598698481561822,
+          "marketExpectedRate": 0.0729468734942373,
+          "candidateExpectedRate": 0.09638741606248198,
+          "marketBrier": 0.0827187628672986,
+          "candidateBrier": 0.08206146983677856,
+          "candidateMinusMarketPooledBrier": -0.0006572930305200643,
+          "candidateMinusMarketEqualRaceBrier": -0.000854575589515617,
+          "equalRaceBootstrap95": [
+            -0.0012934043435906474,
+            -0.0004674701462604485
+          ],
+          "adequateSample": true
+        }
+      }
+    }
+  },
+  "crossYearDescriptiveReplications": [
+    {
+      "dimension": "単勝オッズ帯",
+      "group": "100+",
+      "2025HorseRows": 9722,
+      "2026HorseRows": 8488,
+      "2025Delta": -5.199364053705718e-05,
+      "2026Delta": -6.38061345116746e-05,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "単勝オッズ帯",
+      "group": "10–19.9",
+      "2025HorseRows": 3939,
+      "2026HorseRows": 3735,
+      "2025Delta": -0.0017244203124460707,
+      "2026Delta": -0.0011192320504622402,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "単勝オッズ帯",
+      "group": "20–49.9",
+      "2025HorseRows": 8323,
+      "2026HorseRows": 7315,
+      "2025Delta": -0.0011392041378514351,
+      "2026Delta": -0.0009063658616268758,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "単勝オッズ帯",
+      "group": "50–99.9",
+      "2025HorseRows": 5744,
+      "2026HorseRows": 5029,
+      "2025Delta": -0.0003273985547404037,
+      "2026Delta": -0.00022332386876371558,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "人気順位帯",
+      "group": "13+",
+      "2025HorseRows": 7778,
+      "2026HorseRows": 6682,
+      "2025Delta": -5.109485541469165e-05,
+      "2026Delta": -9.064303073484812e-05,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "人気順位帯",
+      "group": "6–8",
+      "2025HorseRows": 9066,
+      "2026HorseRows": 8153,
+      "2025Delta": -0.0015257227439780445,
+      "2026Delta": -0.0008576804359798873,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "人気順位帯",
+      "group": "9–12",
+      "2025HorseRows": 10884,
+      "2026HorseRows": 9732,
+      "2025Delta": -0.0004070680760264877,
+      "2026Delta": -0.0005011030483056522,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "芝ダ区分",
+      "group": "ダート",
+      "2025HorseRows": 14276,
+      "2026HorseRows": 12358,
+      "2025Delta": -0.0006992383720592426,
+      "2026Delta": -0.0005036504577718629,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "芝ダ区分",
+      "group": "芝",
+      "2025HorseRows": 13452,
+      "2026HorseRows": 12209,
+      "2025Delta": -0.000645095162226804,
+      "2026Delta": -0.0005119967102039646,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "距離帯",
+      "group": "1401–1800m",
+      "2025HorseRows": 11723,
+      "2026HorseRows": 10319,
+      "2025Delta": -0.0007124678426316414,
+      "2026Delta": -0.0005287483052358171,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "距離帯",
+      "group": "1801–2200m",
+      "2025HorseRows": 3871,
+      "2026HorseRows": 3535,
+      "2025Delta": -0.00054270498422557,
+      "2026Delta": -0.0010013328328130097,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "距離帯",
+      "group": ">2200m",
+      "2025HorseRows": 1032,
+      "2026HorseRows": 959,
+      "2025Delta": -0.0010997394151557398,
+      "2026Delta": 7.703095474579818e-05,
+      "direction": "mixed_direction",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "距離帯",
+      "group": "≤1400m",
+      "2025HorseRows": 11102,
+      "2026HorseRows": 9754,
+      "2025Delta": -0.000637015360497575,
+      "2026Delta": -0.0003642697920754274,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "同馬場経験",
+      "group": "0走",
+      "2025HorseRows": 4929,
+      "2026HorseRows": 4259,
+      "2025Delta": -0.00012995883425064302,
+      "2026Delta": -0.0005028294184982159,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "同馬場経験",
+      "group": "1–2走",
+      "2025HorseRows": 6264,
+      "2026HorseRows": 5499,
+      "2025Delta": -0.0002576104727719331,
+      "2026Delta": -0.00040014619140928457,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "同馬場経験",
+      "group": "3走以上",
+      "2025HorseRows": 16535,
+      "2026HorseRows": 14809,
+      "2025Delta": -0.0009921928047370975,
+      "2026Delta": -0.0005492015525748752,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "前走着順位置",
+      "group": "25–50%",
+      "2025HorseRows": 9404,
+      "2026HorseRows": 8311,
+      "2025Delta": -0.0006473133518313435,
+      "2026Delta": -0.000741565588535871,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "前走着順位置",
+      "group": "上位25%",
+      "2025HorseRows": 3478,
+      "2026HorseRows": 3046,
+      "2025Delta": -0.0014887245158794308,
+      "2026Delta": -0.001113144653800426,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "前走着順位置",
+      "group": "下位50%",
+      "2025HorseRows": 14846,
+      "2026HorseRows": 13210,
+      "2025Delta": -0.0004981158894612758,
+      "2026Delta": -0.00022114231417313867,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "AI市場比",
+      "group": "0.8–1.0x",
+      "2025HorseRows": 2180,
+      "2026HorseRows": 1866,
+      "2025Delta": 2.2361588483147173e-05,
+      "2026Delta": -7.218708869017957e-05,
+      "direction": "mixed_direction",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "AI市場比",
+      "group": "1.0–1.2x",
+      "2025HorseRows": 8454,
+      "2026HorseRows": 7290,
+      "2025Delta": -0.00010977526120938732,
+      "2026Delta": -0.000372804360271072,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "AI市場比",
+      "group": "<0.8x",
+      "2025HorseRows": 830,
+      "2026HorseRows": 659,
+      "2025Delta": -0.00022719327818212777,
+      "2026Delta": 0.00011191424594703407,
+      "direction": "mixed_direction",
+      "researchOnlyNotAnEligibilityRule": true
+    },
+    {
+      "dimension": "AI市場比",
+      "group": "≥1.2x",
+      "2025HorseRows": 16264,
+      "2026HorseRows": 14752,
+      "2025Delta": -0.0010816702475117223,
+      "2026Delta": -0.0006572930305200643,
+      "direction": "candidate_better_both",
+      "researchOnlyNotAnEligibilityRule": true
+    }
+  ],
+  "illustrative2026SurprisesAndFalsePositives": [
+    {
+      "raceID": "202607010305",
+      "horseNumber": 12,
+      "horseName": "カパルア",
+      "closingWinOdds": 40.2,
+      "finalPopularityRank": 7,
+      "finishPosition": 3,
+      "actuallyTop3": true,
+      "closingMarketTop3": 0.1494244532410215,
+      "candidateTop3": 0.22167053027048578,
+      "candidateMinusMarket": 0.07224607702946428,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": 0.04856779106275643
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.040311806067783715
+        },
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": 0.037694325473427055
+        },
+        {
+          "feature": "前走秒差f",
+          "logOddsContribution": 0.03643210324786308
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "調教師勝率",
+          "logOddsContribution": -0.011610260276301588
+        },
+        {
+          "feature": "乗り替わり",
+          "logOddsContribution": -0.008447752440666553
+        },
+        {
+          "feature": "頭数f",
+          "logOddsContribution": -0.007620038833474905
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    },
+    {
+      "raceID": "202609040603",
+      "horseNumber": 4,
+      "horseName": "ドーンレーサー",
+      "closingWinOdds": 53.6,
+      "finalPopularityRank": 6,
+      "finishPosition": 3,
+      "actuallyTop3": true,
+      "closingMarketTop3": 0.1831108265948521,
+      "candidateTop3": 0.24973622716973892,
+      "candidateMinusMarket": 0.06662540057488683,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": 0.04342448139713407
+        },
+        {
+          "feature": "前走秒差f",
+          "logOddsContribution": 0.03333969405214969
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.03209216055218728
+        },
+        {
+          "feature": "頭数f",
+          "logOddsContribution": 0.03129975117672742
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": -0.057599009784857866
+        },
+        {
+          "feature": "前走上がり差f",
+          "logOddsContribution": -0.011526443398495897
+        },
+        {
+          "feature": "脚質初角",
+          "logOddsContribution": -0.011059507514455995
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    },
+    {
+      "raceID": "202609010902",
+      "horseNumber": 6,
+      "horseName": "ナツノオジョウサマ",
+      "closingWinOdds": 39.7,
+      "finalPopularityRank": 6,
+      "finishPosition": 3,
+      "actuallyTop3": true,
+      "closingMarketTop3": 0.21884819379408693,
+      "candidateTop3": 0.27493670014822813,
+      "candidateMinusMarket": 0.0560885063541412,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": 0.03959711423700099
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.03557529494949252
+        },
+        {
+          "feature": "点数差",
+          "logOddsContribution": 0.027368673389810007
+        },
+        {
+          "feature": "前走秒差f",
+          "logOddsContribution": 0.022125840653254986
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": -0.06939602042124926
+        },
+        {
+          "feature": "同芝ダ平均",
+          "logOddsContribution": -0.019360330027344993
+        },
+        {
+          "feature": "出走数c",
+          "logOddsContribution": -0.01656479260321503
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    },
+    {
+      "raceID": "202608030603",
+      "horseNumber": 3,
+      "horseName": "トコトコクマチ",
+      "closingWinOdds": 30.4,
+      "finalPopularityRank": 6,
+      "finishPosition": 9,
+      "actuallyTop3": false,
+      "closingMarketTop3": 0.1531470287942522,
+      "candidateTop3": 0.23381853002446185,
+      "candidateMinusMarket": 0.08067150123020964,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": 0.05245372144488201
+        },
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": 0.042082215442841304
+        },
+        {
+          "feature": "前走秒差f",
+          "logOddsContribution": 0.03390188087666886
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.03287824370595934
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "騎手勝率",
+          "logOddsContribution": -0.016780140506391105
+        },
+        {
+          "feature": "脚質初角",
+          "logOddsContribution": -0.010012838006230746
+        },
+        {
+          "feature": "調教師log数",
+          "logOddsContribution": -0.0023994788912311037
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    },
+    {
+      "raceID": "202607020111",
+      "horseNumber": 4,
+      "horseName": "アウクソー",
+      "closingWinOdds": 30.3,
+      "finalPopularityRank": 6,
+      "finishPosition": 6,
+      "actuallyTop3": false,
+      "closingMarketTop3": 0.1479679613728902,
+      "candidateTop3": 0.21602542433004582,
+      "candidateMinusMarket": 0.06805746295715562,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": 0.06396291693529112
+        },
+        {
+          "feature": "頭数f",
+          "logOddsContribution": 0.03220022464597038
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.029275840182083387
+        },
+        {
+          "feature": "距離変化",
+          "logOddsContribution": 0.022561185333786565
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": -0.009699915265319192
+        },
+        {
+          "feature": "前走秒差f",
+          "logOddsContribution": -0.005918423872179689
+        },
+        {
+          "feature": "年齢",
+          "logOddsContribution": -0.004261126547340369
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    },
+    {
+      "raceID": "202607020704",
+      "horseNumber": 8,
+      "horseName": "ハピネスサンライズ",
+      "closingWinOdds": 31.0,
+      "finalPopularityRank": 7,
+      "finishPosition": 4,
+      "actuallyTop3": false,
+      "closingMarketTop3": 0.1265885951914796,
+      "candidateTop3": 0.19401077105426742,
+      "candidateMinusMarket": 0.06742217586278781,
+      "positiveFeatureContributionsToLogOdds": [
+        {
+          "feature": "同芝ダ回数c",
+          "logOddsContribution": 0.0647879795597528
+        },
+        {
+          "feature": "平均着順",
+          "logOddsContribution": 0.051267619156856195
+        },
+        {
+          "feature": "同芝ダ平均",
+          "logOddsContribution": 0.03513421239322318
+        },
+        {
+          "feature": "前走着順率f",
+          "logOddsContribution": 0.02821943874497731
+        }
+      ],
+      "negativeFeatureContributionsToLogOdds": [
+        {
+          "feature": "頭数f",
+          "logOddsContribution": -0.007184521461217694
+        },
+        {
+          "feature": "年齢",
+          "logOddsContribution": -0.00313449664718849
+        },
+        {
+          "feature": "騎手勝率",
+          "logOddsContribution": -0.0027830394364330214
+        }
+      ],
+      "selectionUsesKnownOutcomeForIllustration": true
+    }
+  ],
+  "limitations": [
+    "The historical win odds and popularity used for all bins are final odds, not genuine T-10.",
+    "2025 and 2026 have been examined in this project; cross-year stable-looking groups are exploratory, not a new pristine test.",
+    "Feature attribution shows association in the frozen model, not real-life causes.",
+    "Examples are selected AFTER observing 2026 outcomes, for interpretation only.",
+    "Every subgroup test is descriptive; no cutoff, eligibility policy, wager, or new model is selected using 2025/2026 results.",
+    "No payout data or return on investment are measured here; lower Brier does not prove profitable betting.",
+    "Formal and candidate first-frozen T-10 head-to-head comparisons must be evaluated prospectively."
+  ]
+}
