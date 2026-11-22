@@ -1,0 +1,264 @@
+{
+  "type": "retrospective_final_odds_going_by_official_result",
+  "historySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "lapArchiveSha256": "6206aad18ceb2e57e130af9057276845a8f8637046f6e744701c05da509c503b",
+  "method": "prior-day same-surface wet vs dry normalized positions gained against market rank; per-condition shrinkage 3",
+  "wetGoing": [
+    "稍重",
+    "重",
+    "不良"
+  ],
+  "trainingYear": 2025,
+  "testYear": 2026,
+  "trainingRaces": 3119,
+  "data": {
+    "all": {
+      "frozenV2": {
+        "horses": 21111,
+        "races": 2423,
+        "baselineBrier": 0.07538389682702792,
+        "candidateBrier": 0.07545335386016977,
+        "deltaBrier95": [
+          1.516564090606726e-05,
+          0.0001248728613141352
+        ],
+        "baselineLogLoss": 0.26553207500400183,
+        "candidateLogLoss": 0.2657610815508056,
+        "basePickHits": 516,
+        "candidatePickHits": 513,
+        "changedSelections": 43
+      },
+      "vsGoingAndExperience": {
+        "horses": 21111,
+        "races": 2423,
+        "baselineBrier": 0.07543251611315882,
+        "candidateBrier": 0.07545335386016977,
+        "deltaBrier95": [
+          -2.4710840579761496e-06,
+          4.5960226472426804e-05
+        ],
+        "baselineLogLoss": 0.2656942403176183,
+        "candidateLogLoss": 0.2657610815508056,
+        "basePickHits": 516,
+        "candidatePickHits": 513,
+        "changedSelections": 29
+      },
+      "horsesWithBothConditions": 3259,
+      "racesWithBothConditions": 585,
+      "aptitudeGroups": {
+        "above": {
+          "horses": 983,
+          "actualTop3": 99,
+          "expectedTop3UnderControl": 110.26298247762979
+        },
+        "below": {
+          "horses": 1094,
+          "actualTop3": 100,
+          "expectedTop3UnderControl": 120.93949462815753
+        },
+        "near": {
+          "horses": 1182,
+          "actualTop3": 112,
+          "expectedTop3UnderControl": 132.34207878940305
+        }
+      }
+    },
+    "wet": {
+      "frozenV2": {
+        "horses": 5947,
+        "races": 666,
+        "baselineBrier": 0.07548900412104519,
+        "candidateBrier": 0.07574742128358136,
+        "deltaBrier95": [
+          7.762810591471933e-05,
+          0.0004387639031044429
+        ],
+        "baselineLogLoss": 0.2655824871194692,
+        "candidateLogLoss": 0.26634444465229123,
+        "basePickHits": 130,
+        "candidatePickHits": 127,
+        "changedSelections": 43
+      },
+      "vsGoingAndExperience": {
+        "horses": 5947,
+        "races": 666,
+        "baselineBrier": 0.07567345026001518,
+        "candidateBrier": 0.07574742128358136,
+        "deltaBrier95": [
+          -8.051727490909175e-06,
+          0.00015682958080717345
+        ],
+        "baselineLogLoss": 0.26610716782804056,
+        "candidateLogLoss": 0.26634444465229123,
+        "basePickHits": 130,
+        "candidatePickHits": 127,
+        "changedSelections": 29
+      },
+      "horsesWithBothConditions": 3259,
+      "racesWithBothConditions": 585,
+      "aptitudeGroups": {
+        "above": {
+          "horses": 983,
+          "actualTop3": 99,
+          "expectedTop3UnderControl": 110.26298247762979
+        },
+        "below": {
+          "horses": 1094,
+          "actualTop3": 100,
+          "expectedTop3UnderControl": 120.93949462815753
+        },
+        "near": {
+          "horses": 1182,
+          "actualTop3": 112,
+          "expectedTop3UnderControl": 132.34207878940305
+        }
+      }
+    },
+    "芝": {
+      "frozenV2": {
+        "horses": 2055,
+        "races": 236,
+        "baselineBrier": 0.085337017267792,
+        "candidateBrier": 0.08561947181117278,
+        "deltaBrier95": [
+          -7.47045498496308e-05,
+          0.000673343708310264
+        ],
+        "baselineLogLoss": 0.29437595703916086,
+        "candidateLogLoss": 0.2950660686168742,
+        "basePickHits": 48,
+        "candidatePickHits": 49,
+        "changedSelections": 11
+      },
+      "vsGoingAndExperience": {
+        "horses": 2055,
+        "races": 236,
+        "baselineBrier": 0.08562528622903762,
+        "candidateBrier": 0.08561947181117278,
+        "deltaBrier95": [
+          -0.00013141673047681391,
+          0.00013612811786920274
+        ],
+        "baselineLogLoss": 0.29504959113953627,
+        "candidateLogLoss": 0.2950660686168742,
+        "basePickHits": 48,
+        "candidatePickHits": 49,
+        "changedSelections": 7
+      },
+      "horsesWithBothConditions": 988,
+      "racesWithBothConditions": 189,
+      "aptitudeGroups": {
+        "above": {
+          "horses": 298,
+          "actualTop3": 31,
+          "expectedTop3UnderControl": 38.23661923249492
+        },
+        "below": {
+          "horses": 343,
+          "actualTop3": 37,
+          "expectedTop3UnderControl": 42.13981913415729
+        },
+        "near": {
+          "horses": 347,
+          "actualTop3": 37,
+          "expectedTop3UnderControl": 42.73681310153916
+        }
+      }
+    },
+    "ダ": {
+      "frozenV2": {
+        "horses": 3892,
+        "races": 430,
+        "baselineBrier": 0.07028919245183533,
+        "candidateBrier": 0.07053491772905915,
+        "deltaBrier95": [
+          6.7173175237388535e-06,
+          0.0004458925191196227
+        ],
+        "baselineLogLoss": 0.25037935744707296,
+        "candidateLogLoss": 0.25117925008723,
+        "basePickHits": 82,
+        "candidatePickHits": 78,
+        "changedSelections": 32
+      },
+      "vsGoingAndExperience": {
+        "horses": 3892,
+        "races": 430,
+        "baselineBrier": 0.07041881950042084,
+        "candidateBrier": 0.07053491772905915,
+        "deltaBrier95": [
+          1.2630789599979751e-05,
+          0.000226862439172803
+        ],
+        "baselineLogLoss": 0.25082538984625136,
+        "candidateLogLoss": 0.25117925008723,
+        "basePickHits": 82,
+        "candidatePickHits": 78,
+        "changedSelections": 22
+      },
+      "horsesWithBothConditions": 2271,
+      "racesWithBothConditions": 396,
+      "aptitudeGroups": {
+        "above": {
+          "horses": 685,
+          "actualTop3": 68,
+          "expectedTop3UnderControl": 72.02636324513487
+        },
+        "below": {
+          "horses": 751,
+          "actualTop3": 63,
+          "expectedTop3UnderControl": 78.79967549400024
+        },
+        "near": {
+          "horses": 835,
+          "actualTop3": 75,
+          "expectedTop3UnderControl": 89.60526568786388
+        }
+      }
+    }
+  },
+  "reference": {
+    "intercept": 0.07243014559135554,
+    "terms": {
+      "surfaceGoing": {
+        "ダ/不良": 0.08875902441311147,
+        "ダ/稍重": -0.023839260381381767,
+        "ダ/良": 0.021406110739999117,
+        "ダ/重": -0.12689375012846255,
+        "芝/不良": 0.025038636089869736,
+        "芝/稍重": 0.021521731466766985,
+        "芝/良": -0.005218903542473978,
+        "芝/重": 0.00284469137651454
+      },
+      "wetExperience": {
+        "hasBoth": 0.05751007646976225,
+        "skip": -0.053891796435814765
+      }
+    }
+  },
+  "adjustment": {
+    "intercept": 0.08124161152045306,
+    "terms": {
+      "surfaceGoing": {
+        "ダ/不良": 0.08621527351028681,
+        "ダ/稍重": -0.02403498041706962,
+        "ダ/良": 0.022780315614971028,
+        "ダ/重": -0.12611070897644194,
+        "芝/不良": 0.025494066897246617,
+        "芝/稍重": 0.021897537665375184,
+        "芝/良": -0.003841933314401612,
+        "芝/重": 0.0016350364491662568
+      },
+      "wetExperience": {
+        "hasBoth": 0.03609196629983001,
+        "skip": -0.03205735887069994
+      },
+      "wetAptitude": {
+        "above": -0.07866641134313512,
+        "below": 0.05488575177711961,
+        "near": 0.059872625865845366,
+        "skip": -0.03205735887069994
+      }
+    }
+  }
+}
