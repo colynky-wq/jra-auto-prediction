@@ -1,0 +1,116 @@
+name: KeibaAI Settled Research Publication
+
+# Independently republish strictly research-only summaries after the last
+# official result; never contend with the live T-10 writer during racing.
+on:
+  pull_request:
+    paths:
+      - 'production/after_race_result_gate.py'
+      - 'production/test_after_race_result_gate.py'
+      - '.github/workflows/keibaai-settled-research-publish.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-settled-research-publish.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '35 10 * * 0,1,6' # 19:35 JST on Saturday/Sunday/Monday
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-settled-research-publish
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Verify strict result completeness gate
+        run: |
+          python -m py_compile production/after_race_result_gate.py
+          python -m unittest discover -s production -p 'test_after_race_result_gate.py' -v
+
+  publish:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install official-result research dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Verify after-racing source guard
+        run: python -m unittest discover -s production -p 'test_after_race_result_gate.py' -v
+      - name: Refresh and publish only derived, completed-result research
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          for attempt in 1 2 3 4 5; do
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            git clean -fd -- reports >/dev/null 2>&1 || true
+            if python production/after_race_result_gate.py; then
+              :
+            else
+              rc=$?
+              if [ "$rc" -eq 10 ]; then
+                echo 'Research refresh not yet eligible; source results unchanged.'
+                exit 0
+              fi
+              exit "$rc"
+            fi
+            python -u production/same_day_shadow_runtime.py
+            python -u production/evaluate_same_day_shadow.py
+            python -u production/same_day_shadow_portfolio_review.py
+            python -u production/build_performance_data.py
+            python -u production/wide_forward_validation.py
+            python -u production/wide_validation_summary.py
+            python -u production/ticket_plan_shadow.py
+            python -u production/wide_axis_shadow.py
+            date8="$(TZ=Asia/Tokyo date +%Y%m%d)"
+            paths=(
+              PerformanceData.json
+              SameDayTrackBiasShadow.json
+              SameDayShadowEvaluation.json
+              SameDayShadowPortfolioReview.json
+              reports/WideForwardSummary.json
+              reports/TicketPlanShadow.json
+              reports/WideAxisShadow.json
+              "reports/$date8/SameDayTrackBiasShadow.json"
+              "reports/$date8/WideValidation.json"
+            )
+            for p in "${paths[@]}"; do
+              if [ -f "$p" ]; then git add -f -- "$p"; fi
+            done
+            if git diff --cached --quiet; then
+              echo 'SETTLED_RESEARCH_CURRENT'
+              exit 0
+            fi
+            git commit -m 'Publish completed-day verified research-only summaries'
+            if git push origin HEAD:main; then
+              echo 'SETTLED_RESEARCH_PUBLISHED'
+              exit 0
+            fi
+            echo "::warning::Main advanced; refetch and revalidate source data ($attempt/5)"
+            sleep "$((attempt * 2))"
+          done
+          echo '::error::Settled research publication exhausted bounded retries' >&2
+          exit 1
