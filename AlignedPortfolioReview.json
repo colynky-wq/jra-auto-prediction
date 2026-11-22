@@ -3,7 +3,7 @@
   "version": "aligned-portfolio-review-v1",
   "inputPolicy": "formal-portfolio-inputs-v1",
   "projectionState": "verified",
-  "generatedAtJST": "2026-11-22T16:24:47+09:00",
+  "generatedAtJST": "2026-11-22T16:35:34+09:00",
   "startDate": "2026-11-03",
   "protocolVersion": "aligned-portfolio-confirmation-v1-20261102",
   "protocolFingerprint": "55ee84560014f5f4dec94996da103855c0d6a926f386973934922e894a293d79",
@@ -39,7 +39,7 @@
   "aligned": {
     "countsAreCurrent": true,
     "racesObserved": 128,
-    "matchedResultRaces": 123,
+    "matchedResultRaces": 124,
     "overall": {
       "races": 128,
       "selectedRaces": 38,
@@ -757,17 +757,17 @@
         "sameWideRuleSkipped": {
           "races": 23,
           "racesWithCandidates": 17,
-          "fullySettledRaces": 21,
+          "fullySettledRaces": 22,
           "committedStakeYen": 3100,
           "tickets": 31,
-          "settledTickets": 29,
-          "pendingTickets": 2,
+          "settledTickets": 31,
+          "pendingTickets": 0,
           "hitTickets": 2,
-          "stakeYen": 2900,
+          "stakeYen": 3100,
           "returnYen": 980,
-          "profitYen": -1920,
-          "returnIndex": 0.337931,
-          "sumPredictedHits": 3.00713
+          "profitYen": -2120,
+          "returnIndex": 0.316129,
+          "sumPredictedHits": 3.24473
         },
         "battleWide": [
           {
@@ -1395,7 +1395,7 @@
   "betaDecision": {
     "minimumRaces": 300,
     "verifiedAlignedRaces": 128,
-    "matchedResultRaces": 123,
+    "matchedResultRaces": 124,
     "eligibleForResearchBeta": false,
     "blockReasons": [
       "aligned_capture_count_below_300",
@@ -11125,8 +11125,22 @@
       "torigami": null,
       "inputFingerprint": "caba12289dbf207444a1d8b40e6aa2f935b398c1f9364074c5f630a6fcd0f55f",
       "inputRecordedAtJST": "2026-11-22T16:08:26.204581+09:00",
-      "resultState": "awaiting_results",
-      "actualFinish": {},
+      "resultState": "matched",
+      "actualFinish": {
+        "1": 7,
+        "2": 13,
+        "3": 2,
+        "4": 11,
+        "5": 8,
+        "6": 9,
+        "7": 10,
+        "8": 6,
+        "9": 4,
+        "10": 5,
+        "11": 1,
+        "12": 3,
+        "13": 12
+      },
       "commonWideReference": [
         {
           "betType": "wide",
@@ -11137,8 +11151,8 @@
           "oddsHigh": 6.9,
           "expectedMultiplierLow": 1.102,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         },
         {
           "betType": "wide",
@@ -11149,11 +11163,11 @@
           "oddsHigh": 33.4,
           "expectedMultiplierLow": 1.47,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
-      "referenceSettled": false
+      "referenceSettled": true
     }
   ],
   "interpretation": "Legacy, aligned, post-hoc reconstruction and shadow variants must not be combined. ROI is descriptive; 300 races permits research beta review only."
