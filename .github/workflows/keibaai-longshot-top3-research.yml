@@ -1,0 +1,103 @@
+name: KeibaAI Longshot Top3 Research
+
+# Isolated underdog research. Live models and ticket rules remain unchanged.
+on:
+  pull_request:
+    paths:
+      - 'production/train_longshot_top3.py'
+      - 'production/test_train_longshot_top3.py'
+      - '.github/workflows/keibaai-longshot-top3-research.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/train_longshot_top3.py'
+      - 'production/test_train_longshot_top3.py'
+      - '.github/workflows/keibaai-longshot-top3-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+concurrency:
+  group: keibaai-longshot-top3-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install pinned existing dependencies
+        run: pip install -r production/requirements.txt
+      - name: Verify old and longshot learning contract
+        run: |
+          python -m py_compile production/train_longshot_top3.py production/test_train_longshot_top3.py
+          python -m unittest discover -s production -p 'test_train_longshot_top3.py' -v
+      - name: Fit 2014-2023, choose 2024, score 2025 and 2026
+        if: github.event_name != 'pull_request'
+        env:
+          OMP_NUM_THREADS: '2'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -u production/train_longshot_top3.py
+      - name: Fail closed on inconsistent data or hidden model promotion
+        if: github.event_name != 'pull_request'
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          base=Path('research/model_candidates/longshot_top3_v1')
+          meta=json.loads((base/'metadata.json').read_text(encoding='utf-8'))
+          report=json.loads((base/'research.json').read_text(encoding='utf-8'))
+          model=(base/meta['modelName']).read_bytes()
+          assert meta['modelSha256']==hashlib.sha256(model).hexdigest()
+          assert meta['popularityMinimum']==6 and meta['winOddsMinimum']==10
+          assert meta['yearUsedForEarlyStoppingAndMultiplier']==2024
+          assert meta['trainThroughFor2025Test']=='2023-12-31'
+          assert meta['refitThroughFor2026Test']=='2025-12-31'
+          assert meta['featureCount']==36
+          assert '市場ロジット' not in meta['features']
+          assert meta['selectedResidualMultiplier'] in [0.0,0.25,0.5,1.0]
+          assert report['holdout2025']['races']>1000
+          assert report['retrospective2026']['races']>1000
+          for d in (meta,report):
+              assert d['researchOnly'] is True
+              assert d['formalPredictionAIChanged'] is False
+              assert d['candidatePromotionApproved'] is False
+              assert d['autoBetEnabled'] is False
+          print('LONGSHOT_TOP3_RESEARCH_VERIFIED',meta['training'],report['selection2024'])
+          PY
+      - name: Preserve immutable trained research candidate
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: longshot-top3-research-candidate
+          path: research/model_candidates/longshot_top3_v1
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish only isolated versioned research candidate
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add -f research/model_candidates/longshot_top3_v1
+          if git diff --cached --quiet; then
+            echo 'LONGSHOT_TOP3_RESEARCH_UNCHANGED'
+            exit 0
+          fi
+          git commit -m 'Publish 2024-selected longshot Top3 research model'
+          for attempt in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo 'LONGSHOT_TOP3_RESEARCH_PUBLISHED'
+              exit 0
+            fi
+            sleep $((2*attempt))
+          done
+          echo '::error::Failed to publish candidate; workflow artifact preserved' >&2
+          exit 1
