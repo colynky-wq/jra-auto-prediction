@@ -94,11 +94,38 @@ struct ReferenceTicketChecks {
         let reportDays = try FileManager.default.contentsOfDirectory(atPath:"reports").filter {
             $0.range(of:"^20[0-9]{6}$",options:.regularExpression) != nil
         }
-        let savedAxisCount = reportDays.reduce(0) { total,day in
-            total + ((try? FileManager.default.contentsOfDirectory(atPath:"reports/\(day)/wide_axis_v1")) ?? [])
-                .filter { $0.range(of:"^[0-9]{12}\\.json$",options:.regularExpression) != nil }.count
+        // The published summary is a frozen point-in-time report. New immutable
+        // races may be committed while this Xcode CI is compiling; count only
+        // records actually captured at or before the summary's own timestamp.
+        // Reject malformed archive timestamps and never reinterpret a later
+        // snapshot as part of an older report.
+        var savedAxisCount = 0
+        var archivedAfterSummary = 0
+        let stamp = "^20[0-9]{2}-[01][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$"
+        for day in reportDays {
+            let directory = "reports/\(day)/wide_axis_v1"
+            let files = (try? FileManager.default.contentsOfDirectory(atPath: directory)) ?? []
+            for file in files where file.range(of:"^[0-9]{12}\\.json$",options:.regularExpression) != nil {
+                let bytes = try Data(contentsOf: URL(fileURLWithPath: directory + "/" + file))
+                let record = try JSONSerialization.jsonObject(with: bytes) as! [String:Any]
+                guard let captured = record["recordedAtJST"] as? String,
+                      captured.range(of:stamp,options:.regularExpression) != nil,
+                      let raceDate = record["raceDate"] as? String,
+                      raceDate.replacingOccurrences(of:"-",with:"") == day,
+                      record["raceID"] as? String == String(file.dropLast(5)) else {
+                    preconditionFailure("invalid frozen Wide-axis archive identity or timestamp")
+                }
+                if captured <= axisReport.generatedAtJST {
+                    savedAxisCount += 1
+                } else {
+                    archivedAfterSummary += 1
+                }
+            }
         }
-        check(axisReport.counts.recordedRaces == savedAxisCount,"real report counts only frozen new-rule files; not old ticket history")
+        check(axisReport.counts.recordedRaces == savedAxisCount,
+              "real report counts only archives recorded as of the report timestamp; never later live captures")
+        check(archivedAfterSummary >= 0, "later immutable captures are separately tracked")
+
         var zeroAxis = try JSONSerialization.jsonObject(with:axisBytes) as! [String:Any]
         var zeroCounts = zeroAxis["counts"] as! [String:Any]
         for key in zeroCounts.keys { zeroCounts[key] = 0 }

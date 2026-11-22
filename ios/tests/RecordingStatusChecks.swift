@@ -22,6 +22,27 @@ struct RecordingStatusChecks {
                                      "label": "自動監視の開始に失敗", "message": "開催確認を完了できませんでした。",
                                      "needsAttention": true, "observedAtJST": "2026-10-17 09:00:00",
                                      "detailsURL": "https://github.com/colynky-wq/jra-auto-prediction/actions/runs/123"]
+        // Live status now distinguishes a pending zero-worker heartbeat
+        // from a true interrupted monitor. Both must decode in the released
+        // iOS model without inventing a failure or a completed capture.
+        for (status, label) in [("queued", "自動監視が待機中"),
+                                ("superseded", "待機中の監視要求が置換")] {
+            var pending = health
+            pending["status"] = status
+            pending["label"] = label
+            pending["needsAttention"] = false
+            var pendingBoard = original
+            pendingBoard["monitoring"] = pending
+            let decoded = try decode(pendingBoard)
+            check(decoded.monitoring?.status == status &&
+                  decoded.monitoring?.needsAttention == false,
+                  "new queued/superseded health is safely decoded")
+            check(!decoded.isTargetCountUnconfirmed,
+                  "benign zero-job heartbeat cannot pretend capture failed")
+            check(decoded.monitoring?.safeDetailsURL != nil,
+                  "new status retains trusted GitHub execution link")
+        }
+
         var modern = original
         modern["monitoring"] = health
         modern["warnings"] = ["監視エラー", "索引に不整合があります。"]
