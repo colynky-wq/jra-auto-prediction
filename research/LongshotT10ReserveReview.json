@@ -1,0 +1,586 @@
+{
+  "auditSha256": "f2cf30bc5a0b0a072a7f87d8380975ff2b56b8d3c3fa533e757a7e67faaaef59",
+  "auditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "historySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "trainingRaces": 3143,
+  "thresholdsFrom2025Only": {
+    "marketRisk": 0.6153935336772195,
+    "longshotProbability": 0.19758554346302418,
+    "fourthGain": 0.18014506373943104
+  },
+  "matchedT10Races": 124,
+  "missingPodiumRaceIDs": [],
+  "ineligibleT10RaceIDs": [],
+  "T10Days": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22"
+  ],
+  "t10Base": "saved formal AI top 3",
+  "historicalBase": "final win-market top 3",
+  "t10": {
+    "event": {
+      "races": 124,
+      "events": 77,
+      "marketBrier": 0.20016325875601731,
+      "constantRateBaselineBrier": 0.23536680541103017,
+      "marketAUC": 0.7457861287648522,
+      "meanForecast": 0.6877992945789212
+    },
+    "eventHighRisk": {
+      "races": 89,
+      "events": 65,
+      "marketBrier": 0.18784118668191044,
+      "constantRateBaselineBrier": 0.19694483019820733,
+      "marketAUC": 0.6634615384615384,
+      "meanForecast": 0.7728478085476032
+    },
+    "eventOther": {
+      "races": 35,
+      "events": 12,
+      "marketBrier": 0.23149652774446033,
+      "constantRateBaselineBrier": 0.22530612244897957,
+      "marketAUC": 0.6123188405797102,
+      "meanForecast": 0.47153307334427297
+    },
+    "racesWithLongshotOutsideMainThree": 124,
+    "gates": {
+      "allEligible": {
+        "addedRaces": 124,
+        "actualLongshotEventOnAddedRaces": 77,
+        "mainOnlyAllThreeCovered": 5,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 124,
+            "placed": 41,
+            "completed": 17,
+            "allThreeCovered": 22
+          },
+          "marketLongshot": {
+            "added": 124,
+            "placed": 17,
+            "completed": 5,
+            "allThreeCovered": 10
+          },
+          "aiLongshot": {
+            "added": 124,
+            "placed": 16,
+            "completed": 4,
+            "allThreeCovered": 9
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -24,
+              "betterRaces": 12,
+              "worseRaces": 36,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -12,
+              "betterRaces": 5,
+              "worseRaces": 17,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -25,
+              "betterRaces": 11,
+              "worseRaces": 36,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -13,
+              "betterRaces": 4,
+              "worseRaces": 17,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 17.0,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 17.0
+      },
+      "highMarketRisk": {
+        "addedRaces": 89,
+        "actualLongshotEventOnAddedRaces": 65,
+        "mainOnlyAllThreeCovered": 5,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 89,
+            "placed": 25,
+            "completed": 7,
+            "allThreeCovered": 12
+          },
+          "marketLongshot": {
+            "added": 89,
+            "placed": 11,
+            "completed": 2,
+            "allThreeCovered": 7
+          },
+          "aiLongshot": {
+            "added": 89,
+            "placed": 9,
+            "completed": 0,
+            "allThreeCovered": 5
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -14,
+              "betterRaces": 8,
+              "worseRaces": 22,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -5,
+              "betterRaces": 2,
+              "worseRaces": 7,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -16,
+              "betterRaces": 6,
+              "worseRaces": 22,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -7,
+              "betterRaces": 0,
+              "worseRaces": 7,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 12.311902285357665,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 11.900763767125325
+      },
+      "highLongshotProbability": {
+        "addedRaces": 59,
+        "actualLongshotEventOnAddedRaces": 39,
+        "mainOnlyAllThreeCovered": 5,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 59,
+            "placed": 16,
+            "completed": 5,
+            "allThreeCovered": 10
+          },
+          "marketLongshot": {
+            "added": 59,
+            "placed": 7,
+            "completed": 2,
+            "allThreeCovered": 7
+          },
+          "aiLongshot": {
+            "added": 59,
+            "placed": 8,
+            "completed": 2,
+            "allThreeCovered": 7
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -9,
+              "betterRaces": 6,
+              "worseRaces": 15,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -3,
+              "betterRaces": 2,
+              "worseRaces": 5,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -8,
+              "betterRaces": 6,
+              "worseRaces": 14,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -3,
+              "betterRaces": 2,
+              "worseRaces": 5,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 7.716853398317928,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 7.829492704092246
+      },
+      "highFourthCoverageGain": {
+        "addedRaces": 14,
+        "actualLongshotEventOnAddedRaces": 2,
+        "mainOnlyAllThreeCovered": 5,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 14,
+            "placed": 10,
+            "completed": 6,
+            "allThreeCovered": 11
+          },
+          "marketLongshot": {
+            "added": 14,
+            "placed": 1,
+            "completed": 0,
+            "allThreeCovered": 5
+          },
+          "aiLongshot": {
+            "added": 14,
+            "placed": 1,
+            "completed": 0,
+            "allThreeCovered": 5
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -9,
+              "betterRaces": 0,
+              "worseRaces": 9,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -6,
+              "betterRaces": 0,
+              "worseRaces": 6,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -9,
+              "betterRaces": 0,
+              "worseRaces": 9,
+              "perRaceDeltaDateBootstrap95": null
+            },
+            "completed": {
+              "net": -6,
+              "betterRaces": 0,
+              "worseRaces": 6,
+              "perRaceDeltaDateBootstrap95": null
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 2.178561027073613,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 2.225195399566109
+      }
+    }
+  },
+  "2026JanToOctFinalOdds": {
+    "event": {
+      "races": 2648,
+      "events": 1605,
+      "marketBrier": 0.21512046378384814,
+      "constantRateBaselineBrier": 0.23873900726535904,
+      "marketAUC": 0.7001287324187656,
+      "meanForecast": 0.5271526462471845
+    },
+    "eventHighRisk": {
+      "races": 891,
+      "events": 694,
+      "marketBrier": 0.17825719992050398,
+      "constantRateBaselineBrier": 0.1722147273961715,
+      "marketAUC": 0.5520267996898726,
+      "meanForecast": 0.6959731850733134
+    },
+    "eventOther": {
+      "races": 1757,
+      "events": 911,
+      "marketBrier": 0.23381435570316497,
+      "constantRateBaselineBrier": 0.2496578447572423,
+      "marketAUC": 0.6609913507874599,
+      "meanForecast": 0.4415413200695629
+    },
+    "racesWithLongshotOutsideMainThree": 2648,
+    "gates": {
+      "allEligible": {
+        "addedRaces": 2648,
+        "actualLongshotEventOnAddedRaces": 1605,
+        "mainOnlyAllThreeCovered": 255,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 2648,
+            "placed": 896,
+            "completed": 375,
+            "allThreeCovered": 630
+          },
+          "marketLongshot": {
+            "added": 2648,
+            "placed": 544,
+            "completed": 167,
+            "allThreeCovered": 422
+          },
+          "aiLongshot": {
+            "added": 2648,
+            "placed": 544,
+            "completed": 167,
+            "allThreeCovered": 422
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -352,
+              "betterRaces": 419,
+              "worseRaces": 771,
+              "perRaceDeltaDateBootstrap95": [
+                -0.15811552610522384,
+                -0.10723628966473019
+              ]
+            },
+            "completed": {
+              "net": -208,
+              "betterRaces": 167,
+              "worseRaces": 375,
+              "perRaceDeltaDateBootstrap95": [
+                -0.09570767823434252,
+                -0.061050320997381384
+              ]
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -352,
+              "betterRaces": 419,
+              "worseRaces": 771,
+              "perRaceDeltaDateBootstrap95": [
+                -0.15811552610522384,
+                -0.10723628966473019
+              ]
+            },
+            "completed": {
+              "net": -208,
+              "betterRaces": 167,
+              "worseRaces": 375,
+              "perRaceDeltaDateBootstrap95": [
+                -0.09570767823434252,
+                -0.061050320997381384
+              ]
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 375.0,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 544.0
+      },
+      "highMarketRisk": {
+        "addedRaces": 891,
+        "actualLongshotEventOnAddedRaces": 694,
+        "mainOnlyAllThreeCovered": 255,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 891,
+            "placed": 261,
+            "completed": 79,
+            "allThreeCovered": 334
+          },
+          "marketLongshot": {
+            "added": 891,
+            "placed": 201,
+            "completed": 48,
+            "allThreeCovered": 303
+          },
+          "aiLongshot": {
+            "added": 891,
+            "placed": 201,
+            "completed": 48,
+            "allThreeCovered": 303
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -60,
+              "betterRaces": 161,
+              "worseRaces": 221,
+              "perRaceDeltaDateBootstrap95": [
+                -0.11024082387808427,
+                -0.023895856052344625
+              ]
+            },
+            "completed": {
+              "net": -31,
+              "betterRaces": 48,
+              "worseRaces": 79,
+              "perRaceDeltaDateBootstrap95": [
+                -0.05861673088279627,
+                -0.011908290707972656
+              ]
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -60,
+              "betterRaces": 161,
+              "worseRaces": 221,
+              "perRaceDeltaDateBootstrap95": [
+                -0.11024082387808427,
+                -0.023895856052344625
+              ]
+            },
+            "completed": {
+              "net": -31,
+              "betterRaces": 48,
+              "worseRaces": 79,
+              "perRaceDeltaDateBootstrap95": [
+                -0.05861673088279627,
+                -0.011908290707972656
+              ]
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 126.96299835655067,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 182.65053518847603
+      },
+      "highLongshotProbability": {
+        "addedRaces": 925,
+        "actualLongshotEventOnAddedRaces": 639,
+        "mainOnlyAllThreeCovered": 255,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 925,
+            "placed": 310,
+            "completed": 101,
+            "allThreeCovered": 356
+          },
+          "marketLongshot": {
+            "added": 925,
+            "placed": 243,
+            "completed": 63,
+            "allThreeCovered": 318
+          },
+          "aiLongshot": {
+            "added": 925,
+            "placed": 243,
+            "completed": 63,
+            "allThreeCovered": 318
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -67,
+              "betterRaces": 187,
+              "worseRaces": 254,
+              "perRaceDeltaDateBootstrap95": [
+                -0.11093031414643754,
+                -0.03572904721368222
+              ]
+            },
+            "completed": {
+              "net": -38,
+              "betterRaces": 63,
+              "worseRaces": 101,
+              "perRaceDeltaDateBootstrap95": [
+                -0.06869795465355955,
+                -0.013655341315503059
+              ]
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -67,
+              "betterRaces": 187,
+              "worseRaces": 254,
+              "perRaceDeltaDateBootstrap95": [
+                -0.11093031414643754,
+                -0.03572904721368222
+              ]
+            },
+            "completed": {
+              "net": -38,
+              "betterRaces": 63,
+              "worseRaces": 101,
+              "perRaceDeltaDateBootstrap95": [
+                -0.06869795465355955,
+                -0.013655341315503059
+              ]
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 128.84748477033074,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 190.67553712092976
+      },
+      "highFourthCoverageGain": {
+        "addedRaces": 922,
+        "actualLongshotEventOnAddedRaces": 413,
+        "mainOnlyAllThreeCovered": 255,
+        "policies": {
+          "ordinaryFourth": {
+            "added": 922,
+            "placed": 354,
+            "completed": 196,
+            "allThreeCovered": 451
+          },
+          "marketLongshot": {
+            "added": 922,
+            "placed": 169,
+            "completed": 70,
+            "allThreeCovered": 325
+          },
+          "aiLongshot": {
+            "added": 922,
+            "placed": 169,
+            "completed": 70,
+            "allThreeCovered": 325
+          }
+        },
+        "pairedVsOrdinary": {
+          "marketLongshot": {
+            "placed": {
+              "net": -185,
+              "betterRaces": 126,
+              "worseRaces": 311,
+              "perRaceDeltaDateBootstrap95": [
+                -0.24159214747369911,
+                -0.15810899609286705
+              ]
+            },
+            "completed": {
+              "net": -126,
+              "betterRaces": 70,
+              "worseRaces": 196,
+              "perRaceDeltaDateBootstrap95": [
+                -0.17233931615946937,
+                -0.1020184843887356
+              ]
+            }
+          },
+          "aiLongshot": {
+            "placed": {
+              "net": -185,
+              "betterRaces": 126,
+              "worseRaces": 311,
+              "perRaceDeltaDateBootstrap95": [
+                -0.24159214747369911,
+                -0.15810899609286705
+              ]
+            },
+            "completed": {
+              "net": -126,
+              "betterRaces": 70,
+              "worseRaces": 196,
+              "perRaceDeltaDateBootstrap95": [
+                -0.17233931615946937,
+                -0.1020184843887356
+              ]
+            }
+          }
+        },
+        "matchedDailyBudgetRandomFourthExpectedCompletions": 130.5753495511448,
+        "matchedDailyBudgetRandomLongshotExpectedPlaced": 191.6462668533892
+      }
+    }
+  }
+}
