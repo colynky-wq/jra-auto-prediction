@@ -6,6 +6,7 @@ on:
       - 'production/app_research_runtime.py'
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
+      - 'production/validate_app_research_publish.py'
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
@@ -18,6 +19,7 @@ on:
       - 'production/app_research_runtime.py'
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
+      - 'production/validate_app_research_publish.py'
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
@@ -58,37 +60,7 @@ jobs:
       - name: Build research display and evaluate 2025
         run: python production/build_app_research_data.py --evaluate
       - name: Validate display outputs
-        run: |
-          python - <<'PY'
-          import json
-          payload = json.load(open('AppResearchData.json', encoding='utf-8'))
-          assert payload['status'] == 'research_display_only'
-          assert payload['stakeSizingEnabled'] is False
-          assert payload['formalSignalsChanged'] is False
-          assert payload['evaluation2025']['rows'] > 0
-          assert payload['formationValidation']['status'] == 'research_reference_only'
-          assert payload['formationValidation']['paceForecastValidated'] is False
-          for race in payload['races']:
-              formation = race['formation']
-              assert formation['paceForecast']['status'] == 'unavailable'
-              if formation['status'] == 'reference_order':
-                  assert formation['coveragePct'] >= 80
-                  assert len(formation['orderedHorseNumbers']) == formation['knownHorses']
-                  assert set(formation['orderedHorseNumbers']) <= {h['number'] for h in race['horses']}
-              else:
-                  assert formation['orderedHorseNumbers'] == []
-              for horse in race['horses']:
-                  stat = horse['styleTendency']
-                  if stat:
-                      assert stat['latestHistoryDate'] < race['raceDate']
-                      assert 1 <= stat['sampleRaces'] <= 6
-                      assert abs(sum(stat['distributionPct'].values()) - 100) < 0.3
-                  position = horse['initialPositionHistory']
-                  if position:
-                      assert position['latestHistoryDate'] < race['raceDate']
-                      assert 0 <= position['meanRelativePosition'] <= 1
-          print('APP_RESEARCH_DISPLAY_OK')
-          PY
+        run: python production/validate_app_research_publish.py
       - uses: actions/upload-artifact@v4
         with:
           name: keibaai-app-research-display
@@ -99,12 +71,52 @@ jobs:
           retention-days: 14
       - name: Publish research display
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add AppResearchData.json reports/RunningStyleValidation.json reports/FormationValidation.json reports/*/AppResearchData.json
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Update app research display'
-          git pull --rebase origin main
-          git push origin HEAD:main
+
+          stage_outputs() {
+            git add AppResearchData.json reports/RunningStyleValidation.json reports/FormationValidation.json
+            for file in reports/*/AppResearchData.json; do
+              [ -f "$file" ] || continue
+              git add "$file"
+            done
+          }
+
+          rebuild_from_current_main() {
+            # Never rebase competing generated JSON. Rebuild derived outputs from
+            # the latest committed inputs and validate the same safety contract.
+            git reset --hard origin/main
+            python -m unittest discover -s production -p 'test_app_research_data.py'
+            python -m unittest discover -s production -p 'test_formation_reference.py'
+            python production/research_formation.py
+            python production/build_app_research_data.py --evaluate
+            python production/validate_app_research_publish.py
+          }
+
+          for attempt in 1 2 3 4; do
+            git fetch --no-tags origin main
+            if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+              echo "Main advanced; rebuilding app research from current inputs (${attempt}/4)."
+              rebuild_from_current_main
+            fi
+
+            stage_outputs
+            if git diff --cached --quiet; then
+              echo 'APP_RESEARCH_UNCHANGED: no derived output changed.'
+              exit 0
+            fi
+
+            git commit -m 'Update app research display'
+            if git push origin HEAD:main; then
+              echo 'APP_RESEARCH_PUBLISHED'
+              exit 0
+            fi
+
+            echo "::warning::Concurrent main update; retry from current source (${attempt}/4)."
+            sleep $((attempt * 2))
+          done
+          echo '::error::App research publication exhausted bounded retries.' >&2
+          exit 1
