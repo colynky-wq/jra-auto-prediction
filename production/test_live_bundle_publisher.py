@@ -77,6 +77,18 @@ class TestLiveBundlePublisher(unittest.TestCase):
         self.assertFalse(publisher.publish())
         self.assertEqual(json.loads(self.remote_read(path)),{'frozen':1})
 
+    def test_longshot_research_keeps_first_remote_capture_and_publishes_other_files(self):
+        path = 'reports/20261017/longshot_top3_v2/202605040601.json'
+        self.advance_peer(path, {'frozen': 1})
+        self.write(path, {'frozen': 2})
+        self.write('RaceData.json', [self.race()])
+        publisher = self.publisher()
+        publisher.capture()
+        self.assertTrue(publisher.publish())
+        self.assertFalse(publisher.state['pending'])
+        self.assertEqual(json.loads(self.remote_read(path)), {'frozen': 1})
+        self.assertEqual(json.loads(self.remote_read('RaceData.json'))[0]['raceDate'], DAY)
+
     def test_added_pool_first_capture_conflict_does_not_block_prediction(self):
         path='reports/20261017/all_bet_v1/place/202605040601.json'
         self.write(path,{'frozen':1});publisher=self.publisher();publisher.capture()

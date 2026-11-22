@@ -248,6 +248,9 @@ def predict_live_race_topk(
         "horseNumbers": pred["馬番"].astype(int).tolist(),
         "rows": pred[no_market_fields].astype(float).to_numpy().tolist(),
     }
+    out.attrs["longshotTop3Context"] = {
+        "surface": race["surface"], "distance": int(race["distance"]), "class": race["class"],
+    }
 
     p1 = ai_win
     p2 = topk["ai_top2"]

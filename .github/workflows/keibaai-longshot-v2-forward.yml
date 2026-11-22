@@ -1,0 +1,83 @@
+name: KeibaAI Longshot V2 Forward Validation
+
+on:
+  pull_request:
+    paths:
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/research_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - 'production/test_research_longshot_top3_v2.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'research/model_candidates/longshot_top3_v2/**'
+      - '.github/workflows/keibaai-longshot-v2-forward.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/research_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - 'research/model_candidates/longshot_top3_v2/**'
+      - '.github/workflows/keibaai-longshot-v2-forward.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '25 12 * * *'
+  workflow_run:
+    workflows: ['KeibaAI Aligned Audit Night Catch-up']
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: longshot-v2-forward-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: >-
+      ${{ github.event_name != 'workflow_run' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.head_repository.full_name == github.repository &&
+           github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install pinned runtime dependencies
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Verify prospective capture and calibration
+        run: |
+          python production/test_research_longshot_top3_v2.py -v
+          python production/test_longshot_top3_v2_runtime.py -v
+          python production/test_formal_portfolio_e2e.py -v
+          python production/test_live_bundle_publisher.py -v
+      - name: Publish comparison from the current verified result audit
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          for attempt in 1 2 3 4 5 6; do
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            python -u production/evaluate_longshot_top3_v2.py
+            git add -f research/LongshotTop3V2ForwardReview.json research/LongshotTop3V2ForwardReview.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Publish frozen longshot V2 comparison and probability calibration'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 2))
+          done
+          exit 1
