@@ -1,0 +1,96 @@
+name: KeibaAI 2026 Offline No-Odds Holdout
+
+# Run a historical 2026 check using the already trained <=2025 candidate.
+# Does not tune the candidate using 2026 or modify formal forecasts/bets.
+on:
+  pull_request:
+    paths:
+      - 'production/evaluate_no_current_odds_2026_history.py'
+      - 'production/test_evaluate_no_current_odds_2026_history.py'
+      - '.github/workflows/keibaai-no-odds-2026-offline.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/evaluate_no_current_odds_2026_history.py'
+      - 'production/test_evaluate_no_current_odds_2026_history.py'
+      - '.github/workflows/keibaai-no-odds-2026-offline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-no-odds-2026-offline
+  cancel-in-progress: false
+
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+        # PR checks must exercise the proposed commit, not the current main.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - run: pip install -r production/requirements.txt
+      - name: Test 2026 data and candidate provenance gates
+        run: |
+          python -m py_compile production/evaluate_no_current_odds_2026_history.py production/test_evaluate_no_current_odds_2026_history.py
+          python -m unittest discover -s production -p 'test_evaluate_no_current_odds_2026_history.py' -v
+      - name: Score frozen model on 2026 historical results without retraining
+        if: github.event_name != 'pull_request'
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python -u production/evaluate_no_current_odds_2026_history.py
+      - name: Check report independence from formal AI
+        if: github.event_name != 'pull_request'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/NoCurrentOdds2026Retrospective.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['status']=='retrospective_research_only'
+          assert d['scoredRaces'] > 80
+          assert d['candidateTrainingThrough']=='2025-12-31'
+          assert d['formalPredictionAIChanged'] is False
+          assert d['candidatePromotionApproved'] is False
+          assert d['autoBetEnabled'] is False
+          print('2026_OFFLINE_HOLDOUT_OK',d['scoredRaces'],
+                {k:round(v['candidateMinusFinalMarketBrier'],6)
+                 for k,v in d['results'].items()})
+          PY
+      - name: Upload 2026 result as isolated research artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: no-odds-2026-retrospective
+          path: |
+            research/NoCurrentOdds2026Retrospective.json
+            research/NoCurrentOdds2026Retrospective.md
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish read-only research report
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add -f research/NoCurrentOdds2026Retrospective.json research/NoCurrentOdds2026Retrospective.md
+          if git diff --cached --quiet; then
+            echo 'OFFLINE_2026_REPORT_UNCHANGED'
+            exit 0
+          fi
+          git commit -m 'Publish independent 2026 no-odds retrospective comparison'
+          for attempt in 1 2 3 4; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo 'NO_ODDS_2026_REPORT_PUBLISHED'
+              exit 0
+            fi
+            sleep $((2 * attempt))
+          done
+          exit 1
