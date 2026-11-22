@@ -168,6 +168,46 @@ class TestMonitorHealth(unittest.TestCase):
         self.assertEqual(generic['status'], 'failed')
         self.assertTrue(generic['needsAttention'])
 
+    def test_cancelled_pending_heartbeat_has_no_worker_and_cannot_hide_running_monitor(self):
+        # Reproduces Nov 22: run 44977082119 was cancelled with zero jobs
+        # when a later queued heartbeat replaced it. Run 44973990350
+        # still had an actual monitor job in progress.
+        active = health_from_event(
+            event(run_id=44973990350, status='in_progress', conclusion=None,
+                  started='2026-11-22T01:59:50Z'),
+            [{'status': 'in_progress', 'conclusion': None,
+              'started_at': '2026-11-22T01:59:50Z',
+              'steps': [{'name': MONITOR_STEP, 'status': 'in_progress'}]}],
+            datetime(2026, 11, 22, 13, 8, tzinfo=JST))
+        pending = health_from_event(
+            event(run_id=44977082119, conclusion='cancelled',
+                  started='2026-11-22T02:39:11Z'), [],
+            datetime(2026, 11, 22, 13, 9, tzinfo=JST))
+        self.assertEqual(pending['status'], 'superseded')
+        self.assertFalse(pending['needsAttention'])
+        self.assertEqual(choose_health(active, pending)['runID'], 44973990350)
+        board = apply_health(baseline(), choose_health(active, pending))
+        self.assertFalse(board['monitorWarnings'])
+        self.assertEqual(choose_health(pending)['status'], 'superseded')
+        self.assertEqual(choose_health(active, pending, active)['status'], 'active')
+
+    def test_cancelled_run_with_unavailable_jobs_fails_closed(self):
+        event_data = event(run_id=223, conclusion='cancelled')
+        uncertain = health_from_event(event_data, None, NOW)
+        actual = health_from_event(event_data, [
+            {'status': 'completed', 'conclusion': 'cancelled',
+             'steps': [{'name': MONITOR_STEP, 'status': 'in_progress'}]}], NOW)
+        self.assertEqual(uncertain['status'], 'interrupted')
+        self.assertTrue(uncertain['needsAttention'])
+        self.assertEqual(actual['status'], 'interrupted')
+
+    def test_pending_replacement_only_hides_other_runs_on_same_date(self):
+        old = health_from_event(event(1, 'in_progress', None,
+                                      '2026-10-16T00:00:00Z'), [], NOW)
+        newer = health_from_event(event(run_id=2, conclusion='cancelled',
+                                        started='2026-10-17T00:00:00Z'), [], NOW)
+        self.assertEqual(choose_health(old, newer)['status'], 'superseded')
+
     def test_delayed_queue_uses_actual_job_start_day(self):
         sample = event(started='2026-10-16T14:00:00Z')
         jobs = [{'status': 'completed', 'conclusion': 'success',
