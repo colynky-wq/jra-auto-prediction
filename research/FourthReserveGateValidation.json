@@ -1,0 +1,1467 @@
+{
+  "auditSha256": "f2cf30bc5a0b0a072a7f87d8380975ff2b56b8d3c3fa533e757a7e67faaaef59",
+  "auditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "matchedAuditedRaces": 124,
+  "missingPodiumRaceIDs": [],
+  "historicalSource": {
+    "commit": "308570d685f6e8d182b4e001eaeba018395c701e",
+    "commitAt": "2026-11-22T19:31:25Z",
+    "sha256": "a8d0036f1d4683ae4db8706e48dc292fae753a393eea8b2bf0fdda08469fee13"
+  },
+  "thresholdsFitOn2025Races": 3143,
+  "fixedThresholds": {
+    "jointCoverage": 0.18014506373943104,
+    "fourthTop3": 0.3604629551679616,
+    "smallThirdFourthGap": -0.052504851777565205,
+    "marketChaos": 0.6153935336772195
+  },
+  "finalOdds2026JanJunMarketOrder": {
+    "races": 1586,
+    "raceDates": 54,
+    "from": "2026-01-04",
+    "through": "2026-06-28",
+    "mainCoversAll": 166,
+    "allFourthCoverage": {
+      "adds": 1586,
+      "fourthPlaced": 538,
+      "newlyCovered": 218,
+      "coverageGainPerAdd": 0.13745271122320302,
+      "finalCoverage": 384
+    },
+    "marketJointScoreAUC": 0.6214825097912978,
+    "marketJointScoreBrier": 0.1172309689580125,
+    "fixedThresholds": {
+      "jointCoverage": {
+        "adds": 552,
+        "fourthPlaced": 201,
+        "newlyCovered": 108,
+        "coverageGainPerAdd": 0.1956521739130435,
+        "finalCoverage": 274
+      },
+      "fourthTop3": {
+        "adds": 533,
+        "fourthPlaced": 214,
+        "newlyCovered": 84,
+        "coverageGainPerAdd": 0.1575984990619137,
+        "finalCoverage": 250
+      },
+      "smallThirdFourthGap": {
+        "adds": 542,
+        "fourthPlaced": 184,
+        "newlyCovered": 60,
+        "coverageGainPerAdd": 0.11070110701107011,
+        "finalCoverage": 226
+      },
+      "marketChaos": {
+        "adds": 535,
+        "fourthPlaced": 167,
+        "newlyCovered": 53,
+        "coverageGainPerAdd": 0.09906542056074766,
+        "finalCoverage": 219
+      }
+    },
+    "matchedDailyAddCounts": {
+      "jointCoverage": {
+        "adds": 552,
+        "fourthPlaced": 201,
+        "newlyCovered": 108,
+        "coverageGainPerAdd": 0.1956521739130435,
+        "finalCoverage": 274
+      },
+      "fourthTop3": {
+        "adds": 552,
+        "fourthPlaced": 222,
+        "newlyCovered": 91,
+        "coverageGainPerAdd": 0.16485507246376813,
+        "finalCoverage": 257,
+        "deltaJointMinusComparator": 17,
+        "deltaPerRace95ByDate": [
+          0.001974467771575188,
+          0.01903677149110304
+        ]
+      },
+      "smallThirdFourthGap": {
+        "adds": 552,
+        "fourthPlaced": 199,
+        "newlyCovered": 65,
+        "coverageGainPerAdd": 0.11775362318840579,
+        "finalCoverage": 231,
+        "deltaJointMinusComparator": 43,
+        "deltaPerRace95ByDate": [
+          0.01679301304113939,
+          0.03843312960239033
+        ]
+      },
+      "marketChaos": {
+        "adds": 552,
+        "fourthPlaced": 176,
+        "newlyCovered": 55,
+        "coverageGainPerAdd": 0.09963768115942029,
+        "finalCoverage": 221,
+        "deltaJointMinusComparator": 53,
+        "deltaPerRace95ByDate": [
+          0.02090457255299707,
+          0.04588031600567825
+        ]
+      }
+    },
+    "sameDayRandomExpectedNewCoverage": 75.96037862620724,
+    "dailyJointRule": {
+      "2026-01-04": {
+        "races": 23,
+        "adds": 7,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-01-05": {
+        "races": 22,
+        "adds": 9,
+        "fourthPlaced": 2,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-01-10": {
+        "races": 22,
+        "adds": 7,
+        "fourthPlaced": 4,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.5714285714285714,
+        "finalCoverage": 6
+      },
+      "2026-01-11": {
+        "races": 22,
+        "adds": 3,
+        "fourthPlaced": 2,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-01-12": {
+        "races": 21,
+        "adds": 4,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 2
+      },
+      "2026-01-17": {
+        "races": 22,
+        "adds": 9,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 4
+      },
+      "2026-01-18": {
+        "races": 22,
+        "adds": 10,
+        "fourthPlaced": 5,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.3,
+        "finalCoverage": 5
+      },
+      "2026-01-24": {
+        "races": 33,
+        "adds": 17,
+        "fourthPlaced": 6,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.23529411764705882,
+        "finalCoverage": 6
+      },
+      "2026-01-25": {
+        "races": 33,
+        "adds": 13,
+        "fourthPlaced": 6,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.38461538461538464,
+        "finalCoverage": 8
+      },
+      "2026-01-31": {
+        "races": 31,
+        "adds": 11,
+        "fourthPlaced": 4,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.2727272727272727,
+        "finalCoverage": 6
+      },
+      "2026-02-01": {
+        "races": 35,
+        "adds": 14,
+        "fourthPlaced": 5,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.2857142857142857,
+        "finalCoverage": 6
+      },
+      "2026-02-07": {
+        "races": 29,
+        "adds": 9,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 3
+      },
+      "2026-02-08": {
+        "races": 10,
+        "adds": 1,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-02-10": {
+        "races": 24,
+        "adds": 9,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.1111111111111111,
+        "finalCoverage": 4
+      },
+      "2026-02-14": {
+        "races": 34,
+        "adds": 6,
+        "fourthPlaced": 3,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 4
+      },
+      "2026-02-15": {
+        "races": 34,
+        "adds": 13,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.15384615384615385,
+        "finalCoverage": 5
+      },
+      "2026-02-21": {
+        "races": 34,
+        "adds": 8,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 2
+      },
+      "2026-02-22": {
+        "races": 35,
+        "adds": 12,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 7
+      },
+      "2026-02-28": {
+        "races": 32,
+        "adds": 9,
+        "fourthPlaced": 4,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.3333333333333333,
+        "finalCoverage": 5
+      },
+      "2026-03-01": {
+        "races": 29,
+        "adds": 7,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.14285714285714285,
+        "finalCoverage": 5
+      },
+      "2026-03-07": {
+        "races": 21,
+        "adds": 11,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.09090909090909091,
+        "finalCoverage": 5
+      },
+      "2026-03-08": {
+        "races": 21,
+        "adds": 12,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 7
+      },
+      "2026-03-14": {
+        "races": 35,
+        "adds": 11,
+        "fourthPlaced": 5,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 4
+      },
+      "2026-03-15": {
+        "races": 33,
+        "adds": 11,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 6
+      },
+      "2026-03-21": {
+        "races": 33,
+        "adds": 14,
+        "fourthPlaced": 7,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 7
+      },
+      "2026-03-22": {
+        "races": 33,
+        "adds": 12,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 3
+      },
+      "2026-03-28": {
+        "races": 33,
+        "adds": 14,
+        "fourthPlaced": 6,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 15
+      },
+      "2026-03-29": {
+        "races": 34,
+        "adds": 11,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 6
+      },
+      "2026-04-04": {
+        "races": 23,
+        "adds": 7,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.14285714285714285,
+        "finalCoverage": 4
+      },
+      "2026-04-05": {
+        "races": 21,
+        "adds": 5,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 7
+      },
+      "2026-04-11": {
+        "races": 34,
+        "adds": 12,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.3333333333333333,
+        "finalCoverage": 8
+      },
+      "2026-04-12": {
+        "races": 34,
+        "adds": 10,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.1,
+        "finalCoverage": 3
+      },
+      "2026-04-18": {
+        "races": 33,
+        "adds": 8,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 8
+      },
+      "2026-04-19": {
+        "races": 35,
+        "adds": 13,
+        "fourthPlaced": 5,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.15384615384615385,
+        "finalCoverage": 4
+      },
+      "2026-04-25": {
+        "races": 33,
+        "adds": 11,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.09090909090909091,
+        "finalCoverage": 4
+      },
+      "2026-04-26": {
+        "races": 33,
+        "adds": 11,
+        "fourthPlaced": 3,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.2727272727272727,
+        "finalCoverage": 4
+      },
+      "2026-05-02": {
+        "races": 33,
+        "adds": 13,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.3076923076923077,
+        "finalCoverage": 8
+      },
+      "2026-05-03": {
+        "races": 33,
+        "adds": 10,
+        "fourthPlaced": 2,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 4
+      },
+      "2026-05-09": {
+        "races": 32,
+        "adds": 13,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.07692307692307693,
+        "finalCoverage": 5
+      },
+      "2026-05-10": {
+        "races": 33,
+        "adds": 11,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 9
+      },
+      "2026-05-16": {
+        "races": 33,
+        "adds": 16,
+        "fourthPlaced": 9,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 6
+      },
+      "2026-05-17": {
+        "races": 29,
+        "adds": 15,
+        "fourthPlaced": 5,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.26666666666666666,
+        "finalCoverage": 7
+      },
+      "2026-05-23": {
+        "races": 32,
+        "adds": 4,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 1
+      },
+      "2026-05-24": {
+        "races": 33,
+        "adds": 9,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.1111111111111111,
+        "finalCoverage": 4
+      },
+      "2026-05-30": {
+        "races": 21,
+        "adds": 6,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 4
+      },
+      "2026-05-31": {
+        "races": 23,
+        "adds": 12,
+        "fourthPlaced": 7,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 5
+      },
+      "2026-06-06": {
+        "races": 23,
+        "adds": 8,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.125,
+        "finalCoverage": 5
+      },
+      "2026-06-07": {
+        "races": 22,
+        "adds": 9,
+        "fourthPlaced": 6,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2222222222222222,
+        "finalCoverage": 5
+      },
+      "2026-06-13": {
+        "races": 35,
+        "adds": 10,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 2
+      },
+      "2026-06-14": {
+        "races": 35,
+        "adds": 15,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.26666666666666666,
+        "finalCoverage": 5
+      },
+      "2026-06-20": {
+        "races": 35,
+        "adds": 12,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.08333333333333333,
+        "finalCoverage": 5
+      },
+      "2026-06-21": {
+        "races": 33,
+        "adds": 11,
+        "fourthPlaced": 2,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 5
+      },
+      "2026-06-27": {
+        "races": 33,
+        "adds": 13,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.07692307692307693,
+        "finalCoverage": 8
+      },
+      "2026-06-28": {
+        "races": 32,
+        "adds": 14,
+        "fourthPlaced": 6,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.14285714285714285,
+        "finalCoverage": 5
+      }
+    },
+    "jointThresholdSensitivity": {
+      "0.5": {
+        "floor": 0.15198520289309803,
+        "adds": 802,
+        "fourthPlaced": 282,
+        "newlyCovered": 143,
+        "coverageGainPerAdd": 0.17830423940149626,
+        "finalCoverage": 309
+      },
+      "0.8": {
+        "floor": 0.21614415764120148,
+        "adds": 309,
+        "fourthPlaced": 122,
+        "newlyCovered": 71,
+        "coverageGainPerAdd": 0.2297734627831715,
+        "finalCoverage": 237
+      },
+      "0.9": {
+        "floor": 0.2580261287635854,
+        "adds": 144,
+        "fourthPlaced": 56,
+        "newlyCovered": 33,
+        "coverageGainPerAdd": 0.22916666666666666,
+        "finalCoverage": 199
+      }
+    }
+  },
+  "finalOdds2026JulOctMarketOrder": {
+    "races": 1062,
+    "raceDates": 37,
+    "from": "2026-07-04",
+    "through": "2026-10-31",
+    "mainCoversAll": 89,
+    "allFourthCoverage": {
+      "adds": 1062,
+      "fourthPlaced": 358,
+      "newlyCovered": 157,
+      "coverageGainPerAdd": 0.147834274952919,
+      "finalCoverage": 246
+    },
+    "marketJointScoreAUC": 0.6836893408874969,
+    "marketJointScoreBrier": 0.11804033440164083,
+    "fixedThresholds": {
+      "jointCoverage": {
+        "adds": 370,
+        "fourthPlaced": 153,
+        "newlyCovered": 88,
+        "coverageGainPerAdd": 0.23783783783783785,
+        "finalCoverage": 177
+      },
+      "fourthTop3": {
+        "adds": 337,
+        "fourthPlaced": 143,
+        "newlyCovered": 70,
+        "coverageGainPerAdd": 0.20771513353115728,
+        "finalCoverage": 159
+      },
+      "smallThirdFourthGap": {
+        "adds": 354,
+        "fourthPlaced": 118,
+        "newlyCovered": 45,
+        "coverageGainPerAdd": 0.1271186440677966,
+        "finalCoverage": 134
+      },
+      "marketChaos": {
+        "adds": 356,
+        "fourthPlaced": 94,
+        "newlyCovered": 26,
+        "coverageGainPerAdd": 0.07303370786516854,
+        "finalCoverage": 115
+      }
+    },
+    "matchedDailyAddCounts": {
+      "jointCoverage": {
+        "adds": 370,
+        "fourthPlaced": 153,
+        "newlyCovered": 88,
+        "coverageGainPerAdd": 0.23783783783783785,
+        "finalCoverage": 177
+      },
+      "fourthTop3": {
+        "adds": 370,
+        "fourthPlaced": 152,
+        "newlyCovered": 74,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 163,
+        "deltaJointMinusComparator": 14,
+        "deltaPerRace95ByDate": [
+          0.003823912477207606,
+          0.022727272727272728
+        ]
+      },
+      "smallThirdFourthGap": {
+        "adds": 370,
+        "fourthPlaced": 120,
+        "newlyCovered": 47,
+        "coverageGainPerAdd": 0.12702702702702703,
+        "finalCoverage": 136,
+        "deltaJointMinusComparator": 41,
+        "deltaPerRace95ByDate": [
+          0.025787965616045846,
+          0.05083958778600659
+        ]
+      },
+      "marketChaos": {
+        "adds": 370,
+        "fourthPlaced": 96,
+        "newlyCovered": 27,
+        "coverageGainPerAdd": 0.07297297297297298,
+        "finalCoverage": 116,
+        "deltaJointMinusComparator": 61,
+        "deltaPerRace95ByDate": [
+          0.03992480502530509,
+          0.0760567379388672
+        ]
+      }
+    },
+    "sameDayRandomExpectedNewCoverage": 54.614970924937616,
+    "dailyJointRule": {
+      "2026-07-04": {
+        "races": 33,
+        "adds": 12,
+        "fourthPlaced": 8,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 3
+      },
+      "2026-07-05": {
+        "races": 31,
+        "adds": 11,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 6
+      },
+      "2026-07-11": {
+        "races": 33,
+        "adds": 10,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 3
+      },
+      "2026-07-12": {
+        "races": 33,
+        "adds": 13,
+        "fourthPlaced": 7,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.38461538461538464,
+        "finalCoverage": 5
+      },
+      "2026-07-18": {
+        "races": 32,
+        "adds": 15,
+        "fourthPlaced": 6,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 10
+      },
+      "2026-07-19": {
+        "races": 32,
+        "adds": 11,
+        "fourthPlaced": 6,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.36363636363636365,
+        "finalCoverage": 5
+      },
+      "2026-07-25": {
+        "races": 35,
+        "adds": 18,
+        "fourthPlaced": 8,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.2777777777777778,
+        "finalCoverage": 10
+      },
+      "2026-07-26": {
+        "races": 34,
+        "adds": 15,
+        "fourthPlaced": 7,
+        "newlyCovered": 6,
+        "coverageGainPerAdd": 0.4,
+        "finalCoverage": 8
+      },
+      "2026-08-01": {
+        "races": 34,
+        "adds": 13,
+        "fourthPlaced": 6,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.38461538461538464,
+        "finalCoverage": 6
+      },
+      "2026-08-02": {
+        "races": 33,
+        "adds": 6,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 3
+      },
+      "2026-08-08": {
+        "races": 32,
+        "adds": 14,
+        "fourthPlaced": 5,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.07142857142857142,
+        "finalCoverage": 5
+      },
+      "2026-08-09": {
+        "races": 35,
+        "adds": 14,
+        "fourthPlaced": 7,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 9
+      },
+      "2026-08-15": {
+        "races": 31,
+        "adds": 12,
+        "fourthPlaced": 6,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 3
+      },
+      "2026-08-16": {
+        "races": 34,
+        "adds": 11,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 0
+      },
+      "2026-08-22": {
+        "races": 34,
+        "adds": 8,
+        "fourthPlaced": 4,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 4
+      },
+      "2026-08-23": {
+        "races": 33,
+        "adds": 8,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 4
+      },
+      "2026-08-29": {
+        "races": 34,
+        "adds": 10,
+        "fourthPlaced": 6,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 3
+      },
+      "2026-08-30": {
+        "races": 34,
+        "adds": 12,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.08333333333333333,
+        "finalCoverage": 7
+      },
+      "2026-09-05": {
+        "races": 34,
+        "adds": 14,
+        "fourthPlaced": 4,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.21428571428571427,
+        "finalCoverage": 8
+      },
+      "2026-09-06": {
+        "races": 33,
+        "adds": 6,
+        "fourthPlaced": 2,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.3333333333333333,
+        "finalCoverage": 5
+      },
+      "2026-09-12": {
+        "races": 21,
+        "adds": 5,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 3
+      },
+      "2026-09-13": {
+        "races": 21,
+        "adds": 8,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 3
+      },
+      "2026-09-19": {
+        "races": 22,
+        "adds": 10,
+        "fourthPlaced": 3,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.3,
+        "finalCoverage": 7
+      },
+      "2026-09-20": {
+        "races": 22,
+        "adds": 7,
+        "fourthPlaced": 2,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 1
+      },
+      "2026-09-21": {
+        "races": 11,
+        "adds": 5,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 2
+      },
+      "2026-09-22": {
+        "races": 11,
+        "adds": 3,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.3333333333333333,
+        "finalCoverage": 1
+      },
+      "2026-09-26": {
+        "races": 23,
+        "adds": 7,
+        "fourthPlaced": 5,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.42857142857142855,
+        "finalCoverage": 8
+      },
+      "2026-09-27": {
+        "races": 21,
+        "adds": 11,
+        "fourthPlaced": 7,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.18181818181818182,
+        "finalCoverage": 3
+      },
+      "2026-10-03": {
+        "races": 23,
+        "adds": 6,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 2
+      },
+      "2026-10-04": {
+        "races": 22,
+        "adds": 5,
+        "fourthPlaced": 3,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 2
+      },
+      "2026-10-11": {
+        "races": 23,
+        "adds": 8,
+        "fourthPlaced": 4,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 5
+      },
+      "2026-10-12": {
+        "races": 23,
+        "adds": 6,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.16666666666666666,
+        "finalCoverage": 5
+      },
+      "2026-10-17": {
+        "races": 33,
+        "adds": 14,
+        "fourthPlaced": 2,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.14285714285714285,
+        "finalCoverage": 7
+      },
+      "2026-10-18": {
+        "races": 33,
+        "adds": 10,
+        "fourthPlaced": 6,
+        "newlyCovered": 6,
+        "coverageGainPerAdd": 0.6,
+        "finalCoverage": 10
+      },
+      "2026-10-24": {
+        "races": 34,
+        "adds": 10,
+        "fourthPlaced": 3,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 4
+      },
+      "2026-10-25": {
+        "races": 32,
+        "adds": 10,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.1,
+        "finalCoverage": 5
+      },
+      "2026-10-31": {
+        "races": 23,
+        "adds": 12,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.08333333333333333,
+        "finalCoverage": 2
+      }
+    },
+    "jointThresholdSensitivity": {
+      "0.5": {
+        "floor": 0.15198520289309803,
+        "adds": 550,
+        "fourthPlaced": 218,
+        "newlyCovered": 114,
+        "coverageGainPerAdd": 0.20727272727272728,
+        "finalCoverage": 203
+      },
+      "0.8": {
+        "floor": 0.21614415764120148,
+        "adds": 211,
+        "fourthPlaced": 101,
+        "newlyCovered": 67,
+        "coverageGainPerAdd": 0.3175355450236967,
+        "finalCoverage": 156
+      },
+      "0.9": {
+        "floor": 0.2580261287635854,
+        "adds": 112,
+        "fourthPlaced": 65,
+        "newlyCovered": 48,
+        "coverageGainPerAdd": 0.42857142857142855,
+        "finalCoverage": 137
+      }
+    }
+  },
+  "finalOddsNovDistinctFromAuditMarketOrder": {
+    "races": 77,
+    "raceDates": 6,
+    "from": "2026-11-01",
+    "through": "2026-11-22",
+    "mainCoversAll": 11,
+    "allFourthCoverage": {
+      "adds": 77,
+      "fourthPlaced": 25,
+      "newlyCovered": 6,
+      "coverageGainPerAdd": 0.07792207792207792,
+      "finalCoverage": 17
+    },
+    "marketJointScoreAUC": 0.7535211267605634,
+    "marketJointScoreBrier": 0.07391176510870665,
+    "fixedThresholds": {
+      "jointCoverage": {
+        "adds": 20,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 15
+      },
+      "fourthTop3": {
+        "adds": 17,
+        "fourthPlaced": 4,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.11764705882352941,
+        "finalCoverage": 13
+      },
+      "smallThirdFourthGap": {
+        "adds": 23,
+        "fourthPlaced": 10,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.043478260869565216,
+        "finalCoverage": 12
+      },
+      "marketChaos": {
+        "adds": 29,
+        "fourthPlaced": 11,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.034482758620689655,
+        "finalCoverage": 12
+      }
+    },
+    "matchedDailyAddCounts": {
+      "jointCoverage": {
+        "adds": 20,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 15
+      },
+      "fourthTop3": {
+        "adds": 20,
+        "fourthPlaced": 5,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.1,
+        "finalCoverage": 13,
+        "deltaJointMinusComparator": 2,
+        "deltaPerRace95ByDate": null
+      },
+      "smallThirdFourthGap": {
+        "adds": 20,
+        "fourthPlaced": 7,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.05,
+        "finalCoverage": 12,
+        "deltaJointMinusComparator": 3,
+        "deltaPerRace95ByDate": null
+      },
+      "marketChaos": {
+        "adds": 20,
+        "fourthPlaced": 8,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 11,
+        "deltaJointMinusComparator": 4,
+        "deltaPerRace95ByDate": null
+      }
+    },
+    "sameDayRandomExpectedNewCoverage": 1.2285714285714284,
+    "dailyJointRule": {
+      "2026-11-01": {
+        "races": 21,
+        "adds": 8,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 6
+      },
+      "2026-11-08": {
+        "races": 10,
+        "adds": 3,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-11-14": {
+        "races": 12,
+        "adds": 2,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 1
+      },
+      "2026-11-15": {
+        "races": 11,
+        "adds": 5,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-11-21": {
+        "races": 20,
+        "adds": 2,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 2
+      },
+      "2026-11-22": {
+        "races": 3,
+        "adds": 0,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": null,
+        "finalCoverage": 2
+      }
+    },
+    "jointThresholdSensitivity": {
+      "0.5": {
+        "floor": 0.15198520289309803,
+        "adds": 30,
+        "fourthPlaced": 8,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.13333333333333333,
+        "finalCoverage": 15
+      },
+      "0.8": {
+        "floor": 0.21614415764120148,
+        "adds": 12,
+        "fourthPlaced": 4,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.25,
+        "finalCoverage": 14
+      },
+      "0.9": {
+        "floor": 0.2580261287635854,
+        "adds": 7,
+        "fourthPlaced": 3,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.2857142857142857,
+        "finalCoverage": 13
+      }
+    }
+  },
+  "priorT10FormalAIOrder": {
+    "races": 124,
+    "raceDates": 6,
+    "from": "2026-11-07",
+    "through": "2026-11-22",
+    "mainCoversAll": 5,
+    "allFourthCoverage": {
+      "adds": 124,
+      "fourthPlaced": 41,
+      "newlyCovered": 17,
+      "coverageGainPerAdd": 0.13709677419354838,
+      "finalCoverage": 22
+    },
+    "marketJointScoreAUC": 0.7581088510170423,
+    "marketJointScoreBrier": 0.10961460954535376,
+    "fixedThresholds": {
+      "jointCoverage": {
+        "adds": 14,
+        "fourthPlaced": 10,
+        "newlyCovered": 6,
+        "coverageGainPerAdd": 0.42857142857142855,
+        "finalCoverage": 11
+      },
+      "fourthTop3": {
+        "adds": 15,
+        "fourthPlaced": 8,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.26666666666666666,
+        "finalCoverage": 9
+      },
+      "smallThirdFourthGap": {
+        "adds": 78,
+        "fourthPlaced": 24,
+        "newlyCovered": 7,
+        "coverageGainPerAdd": 0.08974358974358974,
+        "finalCoverage": 12
+      },
+      "marketChaos": {
+        "adds": 89,
+        "fourthPlaced": 25,
+        "newlyCovered": 7,
+        "coverageGainPerAdd": 0.07865168539325842,
+        "finalCoverage": 12
+      }
+    },
+    "matchedDailyAddCounts": {
+      "jointCoverage": {
+        "adds": 14,
+        "fourthPlaced": 10,
+        "newlyCovered": 6,
+        "coverageGainPerAdd": 0.42857142857142855,
+        "finalCoverage": 11
+      },
+      "fourthTop3": {
+        "adds": 14,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.2857142857142857,
+        "finalCoverage": 9,
+        "deltaJointMinusComparator": 2,
+        "deltaPerRace95ByDate": null
+      },
+      "smallThirdFourthGap": {
+        "adds": 14,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.07142857142857142,
+        "finalCoverage": 6,
+        "deltaJointMinusComparator": 5,
+        "deltaPerRace95ByDate": null
+      },
+      "marketChaos": {
+        "adds": 14,
+        "fourthPlaced": 3,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 5,
+        "deltaJointMinusComparator": 6,
+        "deltaPerRace95ByDate": null
+      }
+    },
+    "sameDayRandomExpectedNewCoverage": 2.178561027073613,
+    "dailyJointRule": {
+      "2026-11-07": {
+        "races": 35,
+        "adds": 6,
+        "fourthPlaced": 5,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.6666666666666666,
+        "finalCoverage": 5
+      },
+      "2026-11-08": {
+        "races": 23,
+        "adds": 2,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 3
+      },
+      "2026-11-14": {
+        "races": 22,
+        "adds": 3,
+        "fourthPlaced": 2,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.3333333333333333,
+        "finalCoverage": 2
+      },
+      "2026-11-15": {
+        "races": 23,
+        "adds": 1,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 0
+      },
+      "2026-11-21": {
+        "races": 2,
+        "adds": 1,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 1
+      },
+      "2026-11-22": {
+        "races": 19,
+        "adds": 1,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 0
+      }
+    },
+    "jointThresholdSensitivity": {
+      "0.5": {
+        "floor": 0.15198520289309803,
+        "adds": 22,
+        "fourthPlaced": 12,
+        "newlyCovered": 8,
+        "coverageGainPerAdd": 0.36363636363636365,
+        "finalCoverage": 13
+      },
+      "0.8": {
+        "floor": 0.21614415764120148,
+        "adds": 11,
+        "fourthPlaced": 7,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.36363636363636365,
+        "finalCoverage": 9
+      },
+      "0.9": {
+        "floor": 0.2580261287635854,
+        "adds": 5,
+        "fourthPlaced": 2,
+        "newlyCovered": 2,
+        "coverageGainPerAdd": 0.4,
+        "finalCoverage": 7
+      }
+    }
+  },
+  "priorT10MarketOrder": {
+    "races": 124,
+    "raceDates": 6,
+    "from": "2026-11-07",
+    "through": "2026-11-22",
+    "mainCoversAll": 6,
+    "allFourthCoverage": {
+      "adds": 124,
+      "fourthPlaced": 39,
+      "newlyCovered": 15,
+      "coverageGainPerAdd": 0.12096774193548387,
+      "finalCoverage": 21
+    },
+    "marketJointScoreAUC": 0.7247706422018348,
+    "marketJointScoreBrier": 0.09986682362584144,
+    "fixedThresholds": {
+      "jointCoverage": {
+        "adds": 14,
+        "fourthPlaced": 8,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 11
+      },
+      "fourthTop3": {
+        "adds": 17,
+        "fourthPlaced": 8,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.29411764705882354,
+        "finalCoverage": 11
+      },
+      "smallThirdFourthGap": {
+        "adds": 57,
+        "fourthPlaced": 19,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.07017543859649122,
+        "finalCoverage": 10
+      },
+      "marketChaos": {
+        "adds": 89,
+        "fourthPlaced": 26,
+        "newlyCovered": 7,
+        "coverageGainPerAdd": 0.07865168539325842,
+        "finalCoverage": 13
+      }
+    },
+    "matchedDailyAddCounts": {
+      "jointCoverage": {
+        "adds": 14,
+        "fourthPlaced": 8,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 11
+      },
+      "fourthTop3": {
+        "adds": 14,
+        "fourthPlaced": 7,
+        "newlyCovered": 5,
+        "coverageGainPerAdd": 0.35714285714285715,
+        "finalCoverage": 11,
+        "deltaJointMinusComparator": 0,
+        "deltaPerRace95ByDate": null
+      },
+      "smallThirdFourthGap": {
+        "adds": 14,
+        "fourthPlaced": 4,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.07142857142857142,
+        "finalCoverage": 7,
+        "deltaJointMinusComparator": 4,
+        "deltaPerRace95ByDate": null
+      },
+      "marketChaos": {
+        "adds": 14,
+        "fourthPlaced": 3,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 6,
+        "deltaJointMinusComparator": 5,
+        "deltaPerRace95ByDate": null
+      }
+    },
+    "sameDayRandomExpectedNewCoverage": 1.8823382567089664,
+    "dailyJointRule": {
+      "2026-11-07": {
+        "races": 35,
+        "adds": 6,
+        "fourthPlaced": 4,
+        "newlyCovered": 4,
+        "coverageGainPerAdd": 0.6666666666666666,
+        "finalCoverage": 5
+      },
+      "2026-11-08": {
+        "races": 23,
+        "adds": 2,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.5,
+        "finalCoverage": 3
+      },
+      "2026-11-14": {
+        "races": 22,
+        "adds": 3,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 2
+      },
+      "2026-11-15": {
+        "races": 23,
+        "adds": 1,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 0
+      },
+      "2026-11-21": {
+        "races": 2,
+        "adds": 1,
+        "fourthPlaced": 1,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 1
+      },
+      "2026-11-22": {
+        "races": 19,
+        "adds": 1,
+        "fourthPlaced": 0,
+        "newlyCovered": 0,
+        "coverageGainPerAdd": 0.0,
+        "finalCoverage": 0
+      }
+    },
+    "jointThresholdSensitivity": {
+      "0.5": {
+        "floor": 0.15198520289309803,
+        "adds": 23,
+        "fourthPlaced": 11,
+        "newlyCovered": 7,
+        "coverageGainPerAdd": 0.30434782608695654,
+        "finalCoverage": 13
+      },
+      "0.8": {
+        "floor": 0.21614415764120148,
+        "adds": 10,
+        "fourthPlaced": 5,
+        "newlyCovered": 3,
+        "coverageGainPerAdd": 0.3,
+        "finalCoverage": 9
+      },
+      "0.9": {
+        "floor": 0.2580261287635854,
+        "adds": 5,
+        "fourthPlaced": 1,
+        "newlyCovered": 1,
+        "coverageGainPerAdd": 0.2,
+        "finalCoverage": 7
+      }
+    }
+  },
+  "forwardStartsAtJST": "2026-11-24T00:00:00+09:00",
+  "forwardT10FormalAIOrder": {
+    "races": 0
+  }
+}
