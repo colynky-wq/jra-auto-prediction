@@ -277,6 +277,19 @@ def publish_race_to_racedata(race, out):
     except Exception as exc:
         print("WARNING: optional no-current-odds research failed:", type(exc).__name__)
 
+    # First-frozen market-anchored challengers: independent of formal AI/tickets.
+    # The history-augmented branch is included only if the no-odds candidate
+    # was already frozen on the same formal T-10 capture.
+    try:
+        from market_anchor_shadow import record_best_effort as record_market_anchor
+        market_anchor_status = record_market_anchor(
+            RACEDATA_PATH.parent, published_race,
+            first_formal_capture=first_formal_capture,
+        )
+        print("MARKET_ANCHORED_SHADOW_STATUS", rid, market_anchor_status)
+    except Exception as exc:
+        print("WARNING: optional market-anchor research failed:", type(exc).__name__)
+
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
     from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort
