@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "version": "market-anchored-history-v1-20261122",
+  "generatedAtJST": "2026-11-23T00:36:16.064219+09:00",
+  "status": "retrospective_research_only",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "formalRecommendationsEnabled": false,
+  "autoBetEnabled": false,
+  "historicalSourceSHA256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "independentModelSHA256": "1b2218656cc44b5a56373c59a764b0333351a4ad47aa40c73765836be22ae5ba",
+  "trainingEndFor2025Assessment": "2023-12-31",
+  "modelRefitEndFor2026Assessment": "2025-12-31",
+  "selectionPeriod": "2024-01-01..2024-12-31",
+  "selection": {
+    "marketCalibrated": {
+      "marketPower": 1.05,
+      "historicalWeight": 0.0,
+      "method": "linear",
+      "validationWinBrier": 0.057370194116605676
+    },
+    "historyAugmented": {
+      "marketPower": 1.05,
+      "historicalWeight": 0.02,
+      "method": "linear",
+      "validationWinBrier": 0.05737753271026206
+    }
+  },
+  "selectionEvidence": {
+    "2024Races": 3305,
+    "2024RawClosingMarketWinBrier": 0.05737759297685207,
+    "2024NoOddsWinBrier": 0.06108843696442204,
+    "trials": 66
+  },
+  "test2025": {
+    "period": "2025-independent-of-2025-training",
+    "races": 3309,
+    "horses": 45779,
+    "firstDate": "2025-01-05",
+    "lastDate": "2025-12-28",
+    "events": {
+      "win": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.05725447624399677,
+          "historicalOnly": 0.06061158813749554,
+          "marketCalibrated": 0.05726858065186356,
+          "historyAugmented": 0.05727030153304094
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": 1.4104407866789848e-05,
+          "historyAugmented": 1.5825289044167634e-05
+        }
+      },
+      "top2": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.09798375024429545,
+          "historicalOnly": 0.10461741151881913,
+          "marketCalibrated": 0.09822121089075213,
+          "historyAugmented": 0.09817394124009995
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": 0.00023746064645667475,
+          "historyAugmented": 0.00019019099580450116
+        }
+      },
+      "top3": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.1301884526749601,
+          "historicalOnly": 0.13852787226521776,
+          "marketCalibrated": 0.13078697001396367,
+          "historyAugmented": 0.13064712265365225
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": 0.0005985173390035681,
+          "historyAugmented": 0.00045866997869215
+        }
+      }
+    }
+  },
+  "test2026": {
+    "period": "2026-independent-of-2026-training",
+    "races": 2939,
+    "horses": 40414,
+    "firstDate": "2026-01-04",
+    "lastDate": "2026-11-21",
+    "events": {
+      "win": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.05728633405239073,
+          "historicalOnly": 0.061022640357528385,
+          "marketCalibrated": 0.05727905572803464,
+          "historyAugmented": 0.05728916691012595
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": -7.278324356090049e-06,
+          "historyAugmented": 2.832857735217409e-06
+        }
+      },
+      "top2": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.09812296655336247,
+          "historicalOnly": 0.10543277820674392,
+          "marketCalibrated": 0.09833481592148781,
+          "historyAugmented": 0.09830117311518828
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": 0.00021184936812533584,
+          "historyAugmented": 0.0001782065618258083
+        }
+      },
+      "top3": {
+        "pooledHorseBrier": {
+          "finalMarket": 0.12908176155250548,
+          "historicalOnly": 0.13829846867127585,
+          "marketCalibrated": 0.12960321856505203,
+          "historyAugmented": 0.1294871417198942
+        },
+        "horsePooledDifferenceVsFinalMarket": {
+          "marketCalibrated": 0.0005214570125465501,
+          "historyAugmented": 0.00040538016738872473
+        }
+      }
+    }
+  },
+  "limitations": [
+    "The market inputs are closing odds in retrospective years, not T10.",
+    "2024 used for early stopping AND experiment-selection, never a holdout.",
+    "2025 holdout uses model trained through 2023, NOT refitted through 2025.",
+    "2026 uses a separately frozen model trained through 2025.",
+    "2025 and 2026 were explored in this broader project, not fully pristine.",
+    "The experiment grid and weights are fixed before looking at 2025/2026 results.",
+    "Prospective matched first-frozen T10 races required to compare against production AI.",
+    "No model adoption, betting, ticket recommendation or ROI claim."
+  ]
+}
