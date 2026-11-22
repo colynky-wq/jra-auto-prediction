@@ -198,7 +198,7 @@ class Outbox:
             corrections = []
             if self.role == 'health':
                 from monitor_health_runtime import validated
-                for journal, digest in self.state['pending'].items():
+                for journal, digest in getattr(self, 'state', {}).get('pending', {}).items():
                     if (not journal.startswith(f'reports/{self.date8}/monitor_sessions/')
                             or not journal.endswith('.json')):
                         continue
