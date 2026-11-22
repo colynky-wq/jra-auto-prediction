@@ -3,7 +3,14 @@ name: RaceSimulator forward learning
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 8,11 * * *' # 17:17 and 20:17 JST, after official results
+    # GitHub cron is best-effort; late result publications need catch-up slots.
+    - cron: '17 8,11,12,13 * * *' # 17:17, 20:17, 21:17, 22:17 JST
+  workflow_run:
+    # A successful scheduled result/performance job also wakes the learner,
+    # even when this workflow's own cron was delayed or skipped.
+    workflows: ['KeibaAI Bet Performance Summary', 'KeibaAI Live Result Sync']
+    types: [completed]
+    branches: [main]
   pull_request:
     paths:
       - 'production/race_simulator*.py'
@@ -30,6 +37,12 @@ concurrency:
 
 jobs:
   verify-and-learn:
+    if: >-
+      ${{ github.event_name != 'workflow_run' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'schedule' &&
+           github.event.workflow_run.head_repository.full_name == github.repository &&
+           github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -57,22 +70,29 @@ jobs:
           python-version: '3.12'
       - name: Test capture, isolation, result pairing and promotion gates
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher test_app_research_publish_window
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher test_app_research_publish_window test_after_race_result_gate
+      - name: Verify independent night catch-up triggers
+        run: python3 production/test_nightly_research_recovery.py
       - name: Evaluate and safely publish the latest verified simulator evidence
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          # A push during live racing is CI-only. The scheduled 20:17 JST
-          # replay can safely evaluate the immutable pre-post records after
-          # live T-10 captures have finished. The 17:17 run may defer.
-          if [ "$GITHUB_EVENT_NAME" = 'push' ]; then
-            echo 'SIMULATOR_LEARNING_DEFERRED: push event checks only'
-            exit 0
-          fi
-          if python3 production/app_research_publish_window.py; then
-            echo 'SIMULATOR_LEARNING_DEFERRED: live race-day writer has priority'
-            exit 0
+          # The after-race completeness gate is shared with the independent
+          # research publisher. An after-hours workflow change (push), a
+          # scheduled run, or a trusted workflow_run may catch up, but only
+          # after ALL same-day race results are independently available.
+          # Never reconstruct late formal T-10 captures or train on partial
+          # same-day results.
+          if python3 production/after_race_result_gate.py; then
+            echo 'SIMULATOR_LEARNING_SOURCE_CONFIRMED'
+          else
+            rc=$?
+            if [ "$rc" -eq 10 ]; then
+              echo 'SIMULATOR_LEARNING_DEFERRED: incomplete or stale result sources'
+              exit 0
+            fi
+            exit "$rc"
           fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
