@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "version": "parallel-prediction-research-v1-20261122",
+  "status": "quality_limited_research_only",
+  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "researchOnly": true,
+  "formalPredictionAIChanged": false,
+  "formalRecommendationsEnabled": false,
+  "autoBetEnabled": false,
+  "candidatePromotionApproved": false,
+  "betaAutomaticallyEnabled": false,
+  "tracks": {
+    "collection": {
+      "verifiedAlignedRaces": 128,
+      "matchedAlignedRaces": 124,
+      "additionalMatchedTo300": 176,
+      "qualityStatus": "attention_required",
+      "qualityIssueCount": 28,
+      "missingFormalCaptures": 24,
+      "pendingSelectedSettlements": 3
+    },
+    "historicalDiagnostics": {
+      "evidence": "fixed_first100_and_101to200_descriptive_only",
+      "evaluatedRaces": 124,
+      "cohorts": {
+        "first100": {
+          "win": {
+            "races": 98,
+            "topAIHits": 30,
+            "topMarketHits": 33,
+            "brier": {
+              "ai": 0.057347,
+              "market": 0.057252,
+              "marketBlend50": 0.05729
+            },
+            "aiMinusMarketBrier": 5.621e-05,
+            "aiMinusMarketBootstrap95": [
+              -0.00021207,
+              0.00033119
+            ],
+            "blend50MinusMarketBrier": 1.785e-05,
+            "blend50MinusMarketBootstrap95": [
+              -0.00011679,
+              0.00015575
+            ]
+          },
+          "top2": {
+            "races": 98,
+            "topAIHits": 45,
+            "topMarketHits": 45,
+            "brier": {
+              "ai": 0.10025,
+              "market": 0.099737,
+              "marketBlend50": 0.099918
+            },
+            "aiMinusMarketBrier": 0.00057063,
+            "aiMinusMarketBootstrap95": [
+              -0.00026307,
+              0.00147218
+            ],
+            "blend50MinusMarketBrier": 0.00020704,
+            "blend50MinusMarketBootstrap95": [
+              -0.00021,
+              0.00065845
+            ]
+          },
+          "top3": {
+            "races": 98,
+            "topAIHits": 51,
+            "topMarketHits": 54,
+            "brier": {
+              "ai": 0.135205,
+              "market": 0.13441,
+              "marketBlend50": 0.134472
+            },
+            "aiMinusMarketBrier": 0.00105233,
+            "aiMinusMarketBootstrap95": [
+              -0.00066328,
+              0.0027896
+            ],
+            "blend50MinusMarketBrier": 0.0001791,
+            "blend50MinusMarketBootstrap95": [
+              -0.00067542,
+              0.00105015
+            ]
+          }
+        },
+        "confirmation101to200": {
+          "win": {
+            "races": 26,
+            "topAIHits": 7,
+            "topMarketHits": 7,
+            "brier": {
+              "ai": 0.057264,
+              "market": 0.056982,
+              "marketBlend50": 0.057111
+            },
+            "aiMinusMarketBrier": 0.00029765,
+            "aiMinusMarketBootstrap95": null,
+            "blend50MinusMarketBrier": 0.00013773,
+            "blend50MinusMarketBootstrap95": null
+          },
+          "top2": {
+            "races": 26,
+            "topAIHits": 15,
+            "topMarketHits": 14,
+            "brier": {
+              "ai": 0.093452,
+              "market": 0.092135,
+              "marketBlend50": 0.09272
+            },
+            "aiMinusMarketBrier": 0.00120689,
+            "aiMinusMarketBootstrap95": null,
+            "blend50MinusMarketBrier": 0.00052806,
+            "blend50MinusMarketBootstrap95": null
+          },
+          "top3": {
+            "races": 26,
+            "topAIHits": 20,
+            "topMarketHits": 18,
+            "brier": {
+              "ai": 0.121514,
+              "market": 0.117822,
+              "marketBlend50": 0.119335
+            },
+            "aiMinusMarketBrier": 0.00312966,
+            "aiMinusMarketBootstrap95": null,
+            "blend50MinusMarketBrier": 0.00122442,
+            "blend50MinusMarketBootstrap95": null
+          }
+        }
+      },
+      "status": "quality_limited_descriptive_only"
+    },
+    "prospectiveCandidateValidation": {
+      "evidence": "separately_frozen_T10_shadow_only",
+      "frozenSnapshots": 24,
+      "pairedAuditedRaces": 21,
+      "minimumDescriptiveRaces": 100,
+      "status": "insufficient_prospective_evidence",
+      "byEvent": {
+        "win": {
+          "pairedRaces": 21,
+          "brierByModel": {
+            "marketOnly": 0.06253553,
+            "marketBlend25": 0.06259666,
+            "marketBlend50": 0.06266348,
+            "existingAI": 0.06281414
+          },
+          "brierDeltaVsMarket": {
+            "marketBlend25": 6.113e-05,
+            "marketBlend50": 0.00012795,
+            "existingAI": 0.00027861
+          }
+        },
+        "top2": {
+          "pairedRaces": 21,
+          "brierByModel": {
+            "marketOnly": 0.09773365,
+            "marketBlend25": 0.09789765,
+            "marketBlend50": 0.09810026,
+            "existingAI": 0.09862131
+          },
+          "brierDeltaVsMarket": {
+            "marketBlend25": 0.000164,
+            "marketBlend50": 0.00036661,
+            "existingAI": 0.00088766
+          }
+        },
+        "top3": {
+          "pairedRaces": 21,
+          "brierByModel": {
+            "marketOnly": 0.1230618,
+            "marketBlend25": 0.12356104,
+            "marketBlend50": 0.12423551,
+            "existingAI": 0.12611013
+          },
+          "brierDeltaVsMarket": {
+            "marketBlend25": 0.00049924,
+            "marketBlend50": 0.00117371,
+            "existingAI": 0.00304833
+          }
+        }
+      },
+      "weightsOnAI": {
+        "marketOnly": 0.0,
+        "marketBlend25": 0.25,
+        "marketBlend50": 0.5,
+        "existingAI": 1.0
+      },
+      "candidateSelectionAllowed": false
+    }
+  },
+  "limitations": [
+    "Historical calibration is descriptive, never a prospective candidate test.",
+    "The 50:50 historical blend and future pre-frozen shadows are different cohorts.",
+    "A reported Brier advantage is not a measured change in the production model.",
+    "Do not fit or select coefficients on this report's evaluation races.",
+    "Missing formal captures, unverified results and pending settlements are not losses.",
+    "Horse observations within a race are dependent; compare paired whole races.",
+    "No model promotion, formal rule changes, beta activation or auto-betting."
+  ]
+}
