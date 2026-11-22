@@ -11,6 +11,7 @@ DAY_STEP = 'Decide CI or live race day'
 NO_RACES_STEP = 'Confirm no races on schedule'
 STATES = {
     'active': ('自動監視を実行中', '開催確認・予測保存・公開を自動処理しています。', False),
+    'queued': ('自動監視が待機中', '監視要求はキューに入っていますが、実際の監視ジョブの開始は未確認です。', False),
     'completed': ('自動監視が終了', 'この監視処理は正常に終了しました。レース別の記録状況は一覧で確認できます。', False),
     'no_races': ('対象の開催なし', 'この監視日の開催一覧に対象レースがありません。', False),
     'not_started': ('自動監視が未実行', 'ジョブは成功表示ですが、実際のレース監視は起動されていません。予測保存済みとみなさないでください。', True),
@@ -53,7 +54,9 @@ def health_from_event(event, jobs, now):
         terminal = True
         conclusion = 'success' if all(j.get('conclusion') == 'success' for j in jobs) else 'failure'
     if not terminal:
-        status = 'active'
+        # A pending GitHub request with no worker is not live monitoring.
+        status = ('queued' if run['status'] in {'pending', 'queued', 'waiting', 'requested'}
+                  and not jobs else 'active')
     elif conclusion == 'cancelled':
         # With queue: single, a newer heartbeat cancels the *pending* run.
         # A successful jobs API response with zero jobs proves no worker
@@ -97,7 +100,7 @@ def validated(health):
     datetime.strptime(health['observedAtJST'], '%Y-%m-%d %H:%M:%S')
     if started.date().isoformat() != health['raceDate']:
         raise ValueError('monitor health date mismatch')
-    if (health['status'] == 'active') != (health['phaseRank'] == 1):
+    if (health['status'] in {'active', 'queued'}) != (health['phaseRank'] == 1):
         raise ValueError('monitor health phase mismatch')
     return health
 
@@ -116,7 +119,7 @@ def choose_health(*candidates):
     # JST day, even if it has a newer workflow creation timestamp.
     latest_day = max(h['raceDate'] for h in sessions.values())
     day_sessions = [h for h in sessions.values() if h['raceDate'] == latest_day]
-    substantive = [h for h in day_sessions if h['status'] != 'superseded']
+    substantive = [h for h in day_sessions if h['status'] not in {'superseded', 'queued'}]
     return max(substantive or day_sessions,
                key=lambda h: (h['runStartedAtJST'], h['runID']))
 
