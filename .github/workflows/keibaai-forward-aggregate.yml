@@ -10,6 +10,8 @@ on:
   pull_request:
     paths:
       - 'production/aggregate_forward_results.py'
+      - 'production/forward_prediction_source.py'
+      - 'production/test_forward_prediction_source.py'
       - 'production/forward_aggregate_schedule.py'
       - 'production/test_forward_aggregate_schedule.py'
       - '.github/workflows/keibaai-forward-aggregate.yml'
@@ -37,6 +39,7 @@ jobs:
         run: |
           python -m py_compile production/forward_aggregate_schedule.py production/aggregate_forward_results.py
           python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
+          python -m unittest discover -s production -p 'test_forward_prediction_source.py'
 
   aggregate:
     if: github.event_name != 'pull_request'
@@ -45,8 +48,10 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with published RaceData history
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -64,8 +69,10 @@ jobs:
       - name: Install aggregation dependencies
         run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
 
-      - name: Test scheduled date resolution
-        run: python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
+      - name: Test scheduled date resolution and historical provenance
+        run: |
+          python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
+          python -m unittest discover -s production -p 'test_forward_prediction_source.py'
 
       - name: Aggregate forward results
         env:
