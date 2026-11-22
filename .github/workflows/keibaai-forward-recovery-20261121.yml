@@ -1,0 +1,86 @@
+# One-time catch-up for the Nov 21 delayed cron loss; retains manual rerun.
+# No prediction reconstruction: all source rows must be committed before the
+# target day's JST midnight. The result parser still requires actual JRA pages.
+name: KeibaAI Nov21 Forward Aggregate Recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-forward-recovery-20261121.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-forward-aggregate
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install pinned aggregation requirements
+        run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+      - name: Verify no retrospective prediction construction
+        run: |
+          python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
+          python -m unittest discover -s production -p 'test_forward_prediction_source.py'
+      - name: Recover Nov 21 forward ledger from authentic pre-midnight Git
+        env:
+          KEIBAAI_AGGREGATE_DATE: '20261121'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python production/run_forward_aggregate_v2.py
+      - name: Publish date-scoped report and merged candidate ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- reports/20261121 reports/forward_candidate_ledger.csv)" ]; then
+            echo 'FORWARD_RECOVERY_ALREADY_CURRENT'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add -- reports/20261121 reports/forward_candidate_ledger.csv
+          git commit -m 'Restore Nov21 forward aggregate from committed pre-midnight predictions'
+          for attempt in 1 2 3 4 5; do
+            git fetch --no-tags origin main
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo '::error::Historical aggregate conflicts with newer report; retain artifact for review.' >&2
+              exit 1
+            fi
+            if git push origin HEAD:main; then
+              echo 'FORWARD_RECOVERY_PUBLISHED_20261121'
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          echo '::error::Historical aggregate publication exhausted retries.' >&2
+          exit 1
+      - name: Retain auditable recovery outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forward-aggregate-recovery-20261121-${{ github.run_id }}
+          path: |
+            reports/20261121/summary.json
+            reports/20261121/summary.md
+            reports/20261121/candidates.csv
+            reports/20261121/all_predictions.csv
+            reports/forward_candidate_ledger.csv
+          if-no-files-found: ignore
+          retention-days: 14
