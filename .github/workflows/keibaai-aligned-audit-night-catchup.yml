@@ -1,0 +1,91 @@
+name: KeibaAI Aligned Audit Night Catch-up
+
+# Independent late-result audit refresh. Only published main inputs are used.
+# No fresh predictions, model training, threshold changes, or automatic betting.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/keibaai-aligned-audit-night-catchup.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/keibaai-aligned-audit-night-catchup.yml'
+  workflow_dispatch:
+  schedule:
+    # 21:45 / 22:45 / 23:45 JST on JRA race days.
+    # GitHub cron is best effort, so trusted completed workflows back it up.
+    - cron: '45 12,13,14 * * 0,1,6'
+  workflow_run:
+    workflows:
+      - 'KeibaAI Bet Performance Summary'
+      - 'KeibaAI Settled Research Publication'
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-aligned-audit-night-catchup
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check independent audit publication safety
+        run: |
+          bash -n production/publish_aligned_audit_from_main.sh
+          python -m unittest discover -s production -p 'test_publish_aligned_audit_from_main.py' -v
+
+  publish:
+    if: >-
+      ${{ github.event_name != 'pull_request' &&
+          (github.event_name != 'workflow_run' ||
+           (github.event.workflow_run.conclusion == 'success' &&
+            (github.event.workflow_run.event == 'schedule' ||
+             github.event.workflow_run.event == 'push') &&
+            github.event.workflow_run.head_repository.full_name == github.repository &&
+            github.event.workflow_run.head_branch == 'main')) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - name: Checkout current main (never trust a triggering artifact)
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install existing strict-audit dependencies
+        run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Verify independent publisher and fail-closed behavior
+        run: |
+          bash -n production/publish_aligned_audit_from_main.sh
+          python -m unittest discover -s production -p 'test_publish_aligned_audit_from_main.py' -v
+      - name: Rebuild and publish the strict audit from already-published main
+        shell: bash
+        run: bash production/publish_aligned_audit_from_main.sh
+      - name: Report actual audit status (a blocked audit is not a success)
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit = json.loads(Path('AlignedPortfolioReview.json').read_text(encoding='utf-8'))
+          state = audit.get('projectionState')
+          current = audit.get('aligned', {}).get('countsAreCurrent')
+          if state != 'verified' or current is not True:
+              print('::warning::ALIGNED_AUDIT_BLOCKED: never treat these counts as current.')
+          else:
+              print('ALIGNED_AUDIT_VERIFIED:', audit.get('generatedAtJST'),
+                    audit['aligned'].get('racesObserved'),
+                    audit['aligned'].get('matchedResultRaces'))
+          PY
