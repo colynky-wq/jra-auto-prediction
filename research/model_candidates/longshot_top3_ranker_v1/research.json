@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-top3-direct-ranker-v1-20261123",
+  "generatedAtJST": "2026-11-23T02:01:18.764598+09:00",
+  "status": "exploratory_followup_hypothesis_not_independent_holdout",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "formalRecommendationsEnabled": false,
+  "autoBetEnabled": false,
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "hypothesisProposedAfter": "inspection of v2 retrospective results",
+  "rankingScoresAreProbabilities": false,
+  "features": [
+    "1着率",
+    "log間隔",
+    "クラス値f",
+    "クラス差",
+    "乗り替わり",
+    "内枠先行",
+    "出走数c",
+    "前走上がり差f",
+    "前走人気f",
+    "前走着順率f",
+    "前走秒差f",
+    "同芝ダ回数c",
+    "同芝ダ平均",
+    "同距離帯回数c",
+    "同距離帯平均",
+    "増減f",
+    "増減絶対",
+    "平均着順",
+    "年齢",
+    "斤量",
+    "斤量変化",
+    "昇級",
+    "枠位置",
+    "点数差",
+    "脚質初角",
+    "芝ダ替わり",
+    "調教師log数",
+    "調教師勝率",
+    "調教師複勝率",
+    "距離変化",
+    "降級",
+    "頭数f",
+    "馬体重f",
+    "騎手log数",
+    "騎手勝率",
+    "騎手複勝率",
+    "placeLast3V2",
+    "placeLast5V2",
+    "placeSurfaceV2",
+    "placeDistanceV2",
+    "finishLast3V2",
+    "bestFinishLast5V2",
+    "placeHistoryLogV2",
+    "placeClassV2",
+    "marketTop3LogitV2",
+    "logWinOddsV2",
+    "popularityFractionV2"
+  ],
+  "parameters": {
+    "objective": "lambdarank",
+    "metric": "ndcg",
+    "learning_rate": 0.035,
+    "num_leaves": 9,
+    "min_data_in_leaf": 450,
+    "lambda_l2": 25.0,
+    "feature_fraction": 0.85,
+    "seed": 20261123,
+    "feature_fraction_seed": 20261123,
+    "verbosity": -1,
+    "num_threads": 2,
+    "deterministic": true,
+    "force_col_wise": true,
+    "ndcg_eval_at": [
+      1
+    ],
+    "lambdarank_truncation_level": 4,
+    "label_gain": [
+      0,
+      1
+    ]
+  },
+  "selection2024": {
+    "rounds": 67,
+    "selected": {
+      "weight": 1.0,
+      "top3Hits2024": 668,
+      "races2024": 3132
+    },
+    "grid": [
+      {
+        "weight": 0.0,
+        "top3Hits2024": 643,
+        "races2024": 3132
+      },
+      {
+        "weight": 0.25,
+        "top3Hits2024": 647,
+        "races2024": 3132
+      },
+      {
+        "weight": 0.5,
+        "top3Hits2024": 651,
+        "races2024": 3132
+      },
+      {
+        "weight": 1.0,
+        "top3Hits2024": 668,
+        "races2024": 3132
+      }
+    ],
+    "selectionTimestampJST": "2026-11-23T02:00:57.157453+09:00",
+    "criterion": "maximum Top3 hits of one longshot per race in 2024 only; tie smaller weight"
+  },
+  "trainingThroughFor2025": "2023-12-31",
+  "refitThroughFor2026": "2025-12-31",
+  "2025": {
+    "races": 3143,
+    "horseRows": 27728,
+    "comparison": {
+      "market": {
+        "top3Hits": 645,
+        "top3HitRate": 0.20521794463888005
+      },
+      "control36": {
+        "top3Hits": 683,
+        "top3HitRate": 0.21730830416799238
+      },
+      "probabilityV2": {
+        "top3Hits": 681,
+        "top3HitRate": 0.2166719694559338
+      },
+      "directRanker": {
+        "top3Hits": 673,
+        "top3HitRate": 0.21412663060769965
+      }
+    },
+    "versusMarket": {
+      "hitRateDelta": 0.008908685968819599,
+      "rankerOnlyHit": 89,
+      "otherOnlyHit": 61,
+      "raceBootstrap95": [
+        0.001590836780146357,
+        0.01654470251352211
+      ],
+      "wholeRaceDateBootstrap95": [
+        0.001257071024512885,
+        0.01652258460982547
+      ]
+    },
+    "versusControl36": {
+      "hitRateDelta": -0.003181673560292714,
+      "rankerOnlyHit": 48,
+      "otherOnlyHit": 58,
+      "raceBootstrap95": [
+        -0.009863188036907413,
+        0.002545338848234171
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.00872329311032534,
+        0.002862638763272892
+      ]
+    },
+    "versusProbabilityV2": {
+      "hitRateDelta": -0.002545338848234171,
+      "rankerOnlyHit": 39,
+      "otherOnlyHit": 47,
+      "raceBootstrap95": [
+        -0.008272351256761056,
+        0.0036668787782373094
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.008306842808117141,
+        0.003132893662000009
+      ]
+    },
+    "rankingScoresAreProbabilities": false
+  },
+  "2026": {
+    "races": 2826,
+    "horseRows": 24567,
+    "comparison": {
+      "market": {
+        "top3Hits": 582,
+        "top3HitRate": 0.2059447983014862
+      },
+      "control36": {
+        "top3Hits": 599,
+        "top3HitRate": 0.21196036801132342
+      },
+      "probabilityV2": {
+        "top3Hits": 598,
+        "top3HitRate": 0.21160651096956828
+      },
+      "directRanker": {
+        "top3Hits": 603,
+        "top3HitRate": 0.21337579617834396
+      }
+    },
+    "versusMarket": {
+      "hitRateDelta": 0.0074309978768577496,
+      "rankerOnlyHit": 81,
+      "otherOnlyHit": 60,
+      "raceBootstrap95": [
+        -0.0010615711252653928,
+        0.01556970983722576
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.001053778312126291,
+        0.016289057745688104
+      ]
+    },
+    "versusControl36": {
+      "hitRateDelta": 0.0014154281670205238,
+      "rankerOnlyHit": 51,
+      "otherOnlyHit": 47,
+      "raceBootstrap95": [
+        -0.005661712668082095,
+        0.00813871196036801
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.005314084950823116,
+        0.009047923626675673
+      ]
+    },
+    "versusProbabilityV2": {
+      "hitRateDelta": 0.0017692852087756545,
+      "rankerOnlyHit": 42,
+      "otherOnlyHit": 37,
+      "raceBootstrap95": [
+        -0.0046001415428167025,
+        0.00813871196036801
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.004287522183108836,
+        0.008852712745888223
+      ]
+    },
+    "rankingScoresAreProbabilities": false
+  },
+  "modelHashes": {
+    "model_through2023.txt": "ee18aae16787ebff90b89501b419060be809de55a91923e800ec507680d0e410",
+    "model_through2025.txt": "1965601b56059045ad11275c0e0bdc49dfa9b63332e9e703bc5bde5080044000"
+  },
+  "limitations": [
+    "最終オッズ・最終人気を使う過去検証です。発走10分前の実測成績ではありません。",
+    "2025・2026年は過去の研究で既に参照済みです。完全に未知の独立検証とは扱いません。",
+    "過去の好走実績の追加が、既存候補より役立つかを調べる研究です。正式モデルへの採用は未承認です。",
+    "36項目の対照モデルも欠損馬体重を固定480kgで補完し直しています。旧候補の公表値と完全に同一ではありません。",
+    "見送り後の参加率は検証期間の実測です。毎年必ず50%・25%になる設定ではありません。",
+    "予測の好走率と馬券の利益は別です。今回、複勝払戻や回収率は検証していません。",
+    "入力の寄与は好走原因の証明ではありません。未来の発走前保存データで再検証が必要です。"
+  ],
+  "priorV2ReportSha256": "28014968b5a47a58248a423f5d46a50b192c2715e25e36ab5cca253558d555c0"
+}
