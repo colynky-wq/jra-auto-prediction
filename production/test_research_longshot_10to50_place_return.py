@@ -34,7 +34,7 @@ class LongshotPlacePayoutTests(unittest.TestCase):
         self.assertEqual(band["horseNumber"].tolist(),[6,7])
         self.assertEqual(band["uplift20Pct"].tolist(),[True,False])
         self.assertEqual(segment_quality(band)["top3Count"],1)
-        self.assertEqual(band.loc[0,"ratio"],2.2)
+        self.assertAlmostEqual(band.loc[0,"ratio"],2.2)
         frame.loc[0,"人気"]=5
         with self.assertRaisesRegex(ValueError,"cohort mismatch"):
             target_band(frame,market,cand[:2])
