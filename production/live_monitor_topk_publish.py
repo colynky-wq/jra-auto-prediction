@@ -290,6 +290,21 @@ def publish_race_to_racedata(race, out):
     except Exception as exc:
         print("WARNING: optional market-anchor research failed:", type(exc).__name__)
 
+    # Longshot-specialist Top3 is separate first-frozen, research-only evidence.
+    # It uses exactly the 36 pre-race horse features from the original T-10.
+    # Missing a first capture is never retroactively filled after a result.
+    try:
+        from longshot_top3_shadow import record_best_effort as record_longshot_top3
+        longshot_status = record_longshot_top3(
+            RACEDATA_PATH.parent,
+            published_race,
+            out.attrs.get("noCurrentOddsFeatures"),
+            first_formal_capture=first_formal_capture,
+        )
+        print("LONGSHOT_TOP3_SHADOW_STATUS", rid, longshot_status)
+    except Exception as exc:
+        print("WARNING: optional longshot research failed:", type(exc).__name__)
+
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
     from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort
