@@ -1,0 +1,245 @@
+{
+  "version": "longshot-reserve-and-promotion-v1-20261123",
+  "researchOnly": true,
+  "historySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "currentTop3ModelSha256": "da5cd6eb29eede56323e9b772334938dcd65827e35711632d4b98e3a297b57b4",
+  "upsetThreshold": 0.5,
+  "replayMissingWeightKg": 480,
+  "marketCalibration": {
+    "eligibleRaces": 2474,
+    "through": "2025-12-28",
+    "thirdProbability": -0.14853141667504133,
+    "tailProbability": 0.04573654131149851
+  },
+  "aiCalibration": {
+    "eligibleRaces": 1253,
+    "through": "2026-06-28",
+    "thirdProbability": -0.028253069340507864,
+    "tailProbability": 0.05822018344974822
+  },
+  "periods": {
+    "市場 2025": {
+      "races": 3143,
+      "from": "2025-01-05",
+      "through": "2025-12-28",
+      "reserveRaces": 2474,
+      "reserveLongshotPlaced": 556,
+      "ordinaryFourthPlaced": 791,
+      "summaries": {
+        "baseline3": {
+          "matchedHorses": 4989,
+          "coveredAllThree": 291,
+          "meanMatchedHorses": 1.587336939230035,
+          "coveredAllThreePct": 9.258670060451797
+        },
+        "reserveLongshot": {
+          "matchedHorses": 5545,
+          "coveredAllThree": 469,
+          "meanMatchedHorses": 1.76423798918231,
+          "coveredAllThreePct": 14.922048997772828
+        },
+        "ordinaryFourth": {
+          "matchedHorses": 5780,
+          "coveredAllThree": 557,
+          "meanMatchedHorses": 1.8390073178491886,
+          "coveredAllThreePct": 17.721921730830417
+        },
+        "rawPromotion": {
+          "matchedHorses": 4989,
+          "coveredAllThree": 291,
+          "meanMatchedHorses": 1.587336939230035,
+          "coveredAllThreePct": 9.258670060451797
+        }
+      },
+      "pairedDifferences": {
+        "reserveMinusFourth": {
+          "horses": -235,
+          "improvedRaces": 430,
+          "worsenedRaces": 665,
+          "mean95Pct": [
+            -0.09417753738466433,
+            -0.054875914731148626
+          ]
+        },
+        "rawMinusThree": {
+          "horses": 0,
+          "improvedRaces": 1,
+          "worsenedRaces": 1,
+          "mean95Pct": [
+            -0.0009545020680878142,
+            0.0009545020680878142
+          ]
+        }
+      },
+      "promotionCounts": {
+        "rawPromotion": {
+          "cases": 8,
+          "longshotOnlyPlaced": 1,
+          "originalOnlyPlaced": 1
+        }
+      }
+    },
+    "市場 2026": {
+      "races": 2826,
+      "from": "2026-01-04",
+      "through": "2026-11-21",
+      "reserveRaces": 2208,
+      "reserveLongshotPlaced": 506,
+      "ordinaryFourthPlaced": 712,
+      "summaries": {
+        "baseline3": {
+          "matchedHorses": 4505,
+          "coveredAllThree": 273,
+          "meanMatchedHorses": 1.5941259731068649,
+          "coveredAllThreePct": 9.660297239915074
+        },
+        "reserveLongshot": {
+          "matchedHorses": 5011,
+          "coveredAllThree": 418,
+          "meanMatchedHorses": 1.7731776362349612,
+          "coveredAllThreePct": 14.791224345364473
+        },
+        "ordinaryFourth": {
+          "matchedHorses": 5217,
+          "coveredAllThree": 512,
+          "meanMatchedHorses": 1.846072186836518,
+          "coveredAllThreePct": 18.117480537862704
+        },
+        "rawPromotion": {
+          "matchedHorses": 4504,
+          "coveredAllThree": 273,
+          "meanMatchedHorses": 1.5937721160651097,
+          "coveredAllThreePct": 9.660297239915074
+        },
+        "calibratedPromotion": {
+          "matchedHorses": 4495,
+          "coveredAllThree": 274,
+          "meanMatchedHorses": 1.5905874026893134,
+          "coveredAllThreePct": 9.695682944090587
+        }
+      },
+      "pairedDifferences": {
+        "reserveMinusFourth": {
+          "horses": -206,
+          "improvedRaces": 399,
+          "worsenedRaces": 605,
+          "mean95Pct": [
+            -0.09447983014861996,
+            -0.052370842179759375
+          ]
+        },
+        "rawMinusThree": {
+          "horses": -1,
+          "improvedRaces": 2,
+          "worsenedRaces": 3,
+          "mean95Pct": [
+            -0.0017692852087756545,
+            0.0010615711252653928
+          ]
+        },
+        "calibratedMinusThree": {
+          "horses": -10,
+          "improvedRaces": 13,
+          "worsenedRaces": 23,
+          "mean95Pct": [
+            -0.00778485491861288,
+            0.0007077140835102619
+          ]
+        }
+      },
+      "promotionCounts": {
+        "rawPromotion": {
+          "cases": 9,
+          "longshotOnlyPlaced": 2,
+          "originalOnlyPlaced": 3
+        },
+        "calibratedPromotion": {
+          "cases": 65,
+          "longshotOnlyPlaced": 13,
+          "originalOnlyPlaced": 23
+        }
+      }
+    },
+    "現行AI 2026年7月以降": {
+      "races": 1240,
+      "from": "2026-07-04",
+      "through": "2026-11-21",
+      "reserveRaces": 954,
+      "reserveLongshotPlaced": 218,
+      "ordinaryFourthPlaced": 306,
+      "summaries": {
+        "baseline3": {
+          "matchedHorses": 1962,
+          "coveredAllThree": 108,
+          "meanMatchedHorses": 1.582258064516129,
+          "coveredAllThreePct": 8.709677419354838
+        },
+        "reserveLongshot": {
+          "matchedHorses": 2180,
+          "coveredAllThree": 171,
+          "meanMatchedHorses": 1.7580645161290323,
+          "coveredAllThreePct": 13.790322580645162
+        },
+        "ordinaryFourth": {
+          "matchedHorses": 2268,
+          "coveredAllThree": 206,
+          "meanMatchedHorses": 1.8290322580645162,
+          "coveredAllThreePct": 16.612903225806452
+        },
+        "rawPromotion": {
+          "matchedHorses": 1959,
+          "coveredAllThree": 108,
+          "meanMatchedHorses": 1.5798387096774194,
+          "coveredAllThreePct": 8.709677419354838
+        },
+        "calibratedPromotion": {
+          "matchedHorses": 1956,
+          "coveredAllThree": 108,
+          "meanMatchedHorses": 1.5774193548387097,
+          "coveredAllThreePct": 8.709677419354838
+        }
+      },
+      "pairedDifferences": {
+        "reserveMinusFourth": {
+          "horses": -88,
+          "improvedRaces": 165,
+          "worsenedRaces": 253,
+          "mean95Pct": [
+            -0.10161290322580645,
+            -0.03870967741935484
+          ]
+        },
+        "rawMinusThree": {
+          "horses": -3,
+          "improvedRaces": 0,
+          "worsenedRaces": 3,
+          "mean95Pct": [
+            -0.00564516129032258,
+            0.0
+          ]
+        },
+        "calibratedMinusThree": {
+          "horses": -6,
+          "improvedRaces": 1,
+          "worsenedRaces": 7,
+          "mean95Pct": [
+            -0.00967741935483871,
+            -0.0008064516129032258
+          ]
+        }
+      },
+      "promotionCounts": {
+        "rawPromotion": {
+          "cases": 5,
+          "longshotOnlyPlaced": 0,
+          "originalOnlyPlaced": 3
+        },
+        "calibratedPromotion": {
+          "cases": 17,
+          "longshotOnlyPlaced": 1,
+          "originalOnlyPlaced": 7
+        }
+      }
+    }
+  }
+}

@@ -18,6 +18,9 @@ on:
       - 'production/test_longshot_top3_shadow.py'
       - 'production/evaluate_longshot_top3_forward.py'
       - 'production/test_evaluate_longshot_top3_forward.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
       - 'production/test_evaluate_market_anchor_forward.py'
       - 'production/evaluate_market_calibrated_formal_t10.py'
       - 'production/test_evaluate_market_calibrated_formal_t10.py'
@@ -46,6 +49,7 @@ on:
       - 'production/test_evaluate_market_anchor_forward.py'
       - 'research/model_candidates/market_anchored_v1/frozen_strategy.json'
       - 'research/model_candidates/longshot_top3_v1/metadata.json'
+      - 'production/evaluate_longshot_top3_v2.py'
       - 'research/model_candidates/no_current_odds_v1/metadata.json'
   workflow_dispatch:
   schedule:
@@ -114,6 +118,7 @@ jobs:
           python -m py_compile production/longshot_top3_shadow.py production/test_longshot_top3_shadow.py production/evaluate_longshot_top3_forward.py production/test_evaluate_longshot_top3_forward.py
           python production/test_longshot_top3_shadow.py -v
           python production/test_evaluate_longshot_top3_forward.py -v
+          python production/test_longshot_top3_v2_runtime.py -v
           # Quality-limited, descriptive data may be printed without weakening
           # the separate H1-H4 full-cohort integrity gate below.
           python production/inspect_frozen_win_probabilities.py
@@ -135,7 +140,9 @@ jobs:
             python -u production/evaluate_market_calibrated_formal_t10.py
             python -u production/evaluate_market_anchor_forward.py
             python -u production/evaluate_longshot_top3_forward.py
+            python -u production/evaluate_longshot_top3_v2.py
             git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md research/ParallelPredictionResearch.json research/ParallelPredictionResearch.md research/NoCurrentOddsForwardReview.json research/NoCurrentOddsForwardReview.md research/MarketCalibratedFormalT10Review.json research/MarketCalibratedFormalT10Review.md research/MarketAnchoredForwardReview.json research/MarketAnchoredForwardReview.md research/LongshotTop3ForwardReview.json research/LongshotTop3ForwardReview.md
+            git add -f -- research/LongshotTop3V2ForwardReview.json research/LongshotTop3V2ForwardReview.md
             if git diff --cached --quiet; then
               echo 'ALIGNED_RESEARCH_UNCHANGED: source material unchanged'
               exit 0

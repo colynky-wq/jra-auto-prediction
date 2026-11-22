@@ -1,0 +1,615 @@
+{
+  "auditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "auditSha256": "f2cf30bc5a0b0a072a7f87d8380975ff2b56b8d3c3fa533e757a7e67faaaef59",
+  "matchedAuditRaces": 124,
+  "evaluatedRaces": 124,
+  "missingPodiumRaceIDs": [],
+  "dates": [
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-14",
+    "2026-11-15",
+    "2026-11-21",
+    "2026-11-22"
+  ],
+  "criterion": "formal T-10 popularity rank >=6 and win odds >=10",
+  "prospectivelyStoredV2Captures": 0,
+  "comparison": {
+    "10+": {
+      "racesWithCandidate": 124,
+      "horses": 1128,
+      "actualPodiumHorses": 103,
+      "models": {
+        "market": {
+          "hits": 17,
+          "expectedHorseHits": 114.6821,
+          "horseBrier": 0.08044255
+        },
+        "formalAI": {
+          "hits": 16,
+          "expectedHorseHits": 133.9868,
+          "horseBrier": 0.08124704,
+          "differentPickRaces": 33,
+          "modelOnlyHits": 3,
+          "marketOnlyHits": 4,
+          "hitDifferenceExactP": 1.0,
+          "raceBrierDeltaVsMarket": {
+            "pairedRaces": 124,
+            "meanBrierDelta": 0.00104038,
+            "betterRaces": 41,
+            "worseRaces": 83,
+            "bootstrap95Pct": [
+              0.00012904,
+              0.00196226
+            ]
+          }
+        }
+      }
+    },
+    "10–<20": {
+      "racesWithCandidate": 104,
+      "horses": 321,
+      "actualPodiumHorses": 53,
+      "models": {
+        "market": {
+          "hits": 16,
+          "expectedHorseHits": 56.6908,
+          "horseBrier": 0.13851797
+        },
+        "formalAI": {
+          "hits": 14,
+          "expectedHorseHits": 62.3544,
+          "horseBrier": 0.1396034,
+          "differentPickRaces": 29,
+          "modelOnlyHits": 2,
+          "marketOnlyHits": 4,
+          "hitDifferenceExactP": 0.6875,
+          "raceBrierDeltaVsMarket": {
+            "pairedRaces": 104,
+            "meanBrierDelta": 0.00097487,
+            "betterRaces": 38,
+            "worseRaces": 66,
+            "bootstrap95Pct": [
+              -0.00173,
+              0.00337327
+            ]
+          }
+        }
+      }
+    },
+    "20–<50": {
+      "racesWithCandidate": 119,
+      "horses": 474,
+      "actualPodiumHorses": 41,
+      "models": {
+        "market": {
+          "hits": 11,
+          "expectedHorseHits": 44.1305,
+          "horseBrier": 0.07908558
+        },
+        "formalAI": {
+          "hits": 10,
+          "expectedHorseHits": 53.883,
+          "horseBrier": 0.08009379,
+          "differentPickRaces": 26,
+          "modelOnlyHits": 1,
+          "marketOnlyHits": 2,
+          "hitDifferenceExactP": 1.0,
+          "raceBrierDeltaVsMarket": {
+            "pairedRaces": 119,
+            "meanBrierDelta": 0.00095703,
+            "betterRaces": 31,
+            "worseRaces": 88,
+            "bootstrap95Pct": [
+              -0.00102448,
+              0.00246305
+            ]
+          }
+        }
+      }
+    },
+    "50+": {
+      "racesWithCandidate": 107,
+      "horses": 333,
+      "actualPodiumHorses": 9,
+      "models": {
+        "market": {
+          "hits": 6,
+          "expectedHorseHits": 13.8608,
+          "horseBrier": 0.02639149
+        },
+        "formalAI": {
+          "hits": 7,
+          "expectedHorseHits": 17.7495,
+          "horseBrier": 0.02663518,
+          "differentPickRaces": 24,
+          "modelOnlyHits": 1,
+          "marketOnlyHits": 0,
+          "hitDifferenceExactP": 1.0,
+          "raceBrierDeltaVsMarket": {
+            "pairedRaces": 107,
+            "meanBrierDelta": 0.00013227,
+            "betterRaces": 13,
+            "worseRaces": 94,
+            "bootstrap95Pct": [
+              -0.00081063,
+              0.00090744
+            ]
+          }
+        }
+      }
+    }
+  },
+  "V2Replay": {
+    "type": "retrospective_reconstruction_not_prospectively_stored",
+    "model": {
+      "version": "longshot-top3-place-history-v2-20261123",
+      "sha256": "bd9dfb654fe6a0bdbb29123011142bd696bee085d503f86d5e9963698ade9cf2",
+      "weight": 1.0,
+      "trainedThrough": "2025-12-31"
+    },
+    "currentResultFieldsUsed": [
+      "trainer",
+      "raceClass",
+      "surface",
+      "distance"
+    ],
+    "inputHistoricalOutcomeCutoff": "strictly before each race date",
+    "coverageRaces": 42,
+    "dates": [
+      "2026-11-07",
+      "2026-11-08",
+      "2026-11-14",
+      "2026-11-15",
+      "2026-11-21",
+      "2026-11-22"
+    ],
+    "formalAIComparedRaces": 124,
+    "formalAITolerancePctPoints": 0.0005,
+    "formalAIReproductionMaxErrorsPctPoints": {
+      "202603030101": 0.00049871,
+      "202605050101": 0.0004672,
+      "202608050101": 0.00047574,
+      "202603030102": 0.00043202,
+      "202605050102": 0.00047236,
+      "202608050102": 0.00048271,
+      "202603030103": 0.00049184,
+      "202605050103": 0.00045398,
+      "202608050103": 0.00048842,
+      "202603030104": 0.6277776,
+      "202605050104": 0.00046609,
+      "202608050104": 0.00042094,
+      "202603030105": 0.00048216,
+      "202605050105": 0.65369149,
+      "202608050105": 0.00042094,
+      "202603030106": 0.35882505,
+      "202605050106": 0.00049627,
+      "202608050106": 0.0004568,
+      "202603030107": 0.68517908,
+      "202605050107": 0.00041706,
+      "202608050107": 0.8500517,
+      "202603030108": 0.20462154,
+      "202605050108": 0.61161346,
+      "202603030109": 0.2970463,
+      "202605050109": 0.57521289,
+      "202608050109": 0.11232665,
+      "202603030110": 0.7611222,
+      "202605050110": 0.36499911,
+      "202608050110": 0.20161892,
+      "202603030111": 0.86300269,
+      "202605050111": 0.16958631,
+      "202608050111": 0.28701094,
+      "202603030112": 0.33659117,
+      "202605050112": 0.27461544,
+      "202608050112": 0.20469192,
+      "202608050203": 0.0004511,
+      "202605050204": 0.00047751,
+      "202608050204": 0.15498056,
+      "202605050205": 0.00048339,
+      "202608050205": 0.00048906,
+      "202603030206": 0.00045938,
+      "202605050206": 0.40158388,
+      "202608050206": 0.00049123,
+      "202603030207": 0.66566668,
+      "202605050207": 0.57184556,
+      "202608050207": 0.53820382,
+      "202603030208": 0.22882822,
+      "202605050208": 0.57103484,
+      "202603030209": 0.80238876,
+      "202605050209": 0.00046051,
+      "202608050209": 0.13376721,
+      "202603030210": 0.30974057,
+      "202605050210": 0.25590491,
+      "202608050210": 0.06648076,
+      "202603030211": 0.38553182,
+      "202605050211": 0.63465858,
+      "202608050211": 0.33092361,
+      "202603030212": 0.56775863,
+      "202603030305": 0.00046632,
+      "202605050305": 0.00038426,
+      "202608050305": 0.00046068,
+      "202603030306": 0.45276562,
+      "202605050306": 0.00049603,
+      "202608050306": 0.00044777,
+      "202603030307": 0.68267371,
+      "202605050307": 0.45723151,
+      "202608050307": 0.87301966,
+      "202603030308": 0.1924114,
+      "202608050308": 0.23119998,
+      "202603030309": 0.27506811,
+      "202605050309": 0.85430309,
+      "202608050309": 0.05132275,
+      "202603030310": 0.74865385,
+      "202605050310": 0.41211853,
+      "202608050310": 0.91058125,
+      "202603030311": 0.6089203,
+      "202605050311": 0.2585286,
+      "202608050311": 0.5528398,
+      "202603030312": 0.41800819,
+      "202608050312": 0.3898791,
+      "202608050404": 0.0004761,
+      "202605050405": 0.00030404,
+      "202608050405": 0.00045014,
+      "202603030406": 0.00044499,
+      "202605050406": 0.54047977,
+      "202608050406": 0.0969355,
+      "202603030407": 0.04962415,
+      "202605050407": 1.02241409,
+      "202608050407": 0.56589508,
+      "202603030408": 0.19012695,
+      "202605050408": 0.70440444,
+      "202608050408": 0.602661,
+      "202603030409": 0.67501005,
+      "202605050409": 0.41104385,
+      "202608050409": 0.10062158,
+      "202603030410": 0.7200626,
+      "202605050410": 0.3392176,
+      "202603030411": 0.28651325,
+      "202605050411": 0.65726963,
+      "202608050411": 0.62061417,
+      "202603030412": 0.34931711,
+      "202605050412": 0.61422805,
+      "202608050412": 0.61613364,
+      "202603030503": 0.00037059,
+      "202608050506": 0.00046931,
+      "202605050501": 0.00049529,
+      "202608050601": 0.00043975,
+      "202605050502": 0.00045514,
+      "202608050602": 0.00049359,
+      "202605050504": 0.0003809,
+      "202608050604": 0.00030625,
+      "202605050505": 0.00046631,
+      "202605050506": 0.00046787,
+      "202608050606": 0.99394118,
+      "202605050507": 0.90429523,
+      "202608050607": 0.7864544,
+      "202605050508": 0.96243192,
+      "202608050608": 0.33776119,
+      "202608050609": 0.32139449,
+      "202605050510": 0.69634363,
+      "202608050610": 0.77986242,
+      "202605050511": 0.34153953,
+      "202608050611": 0.71813489,
+      "202608050612": 0.52207749
+    },
+    "excludedRaceIDs": {
+      "formalAIReproductionMismatch": [
+        "202603030104",
+        "202605050105",
+        "202603030106",
+        "202603030107",
+        "202608050107",
+        "202603030108",
+        "202605050108",
+        "202603030109",
+        "202605050109",
+        "202608050109",
+        "202603030110",
+        "202605050110",
+        "202608050110",
+        "202603030111",
+        "202605050111",
+        "202608050111",
+        "202603030112",
+        "202605050112",
+        "202608050112",
+        "202608050204",
+        "202605050206",
+        "202603030207",
+        "202605050207",
+        "202608050207",
+        "202603030208",
+        "202605050208",
+        "202603030209",
+        "202608050209",
+        "202603030210",
+        "202605050210",
+        "202608050210",
+        "202603030211",
+        "202605050211",
+        "202608050211",
+        "202603030212",
+        "202603030306",
+        "202603030307",
+        "202605050307",
+        "202608050307",
+        "202603030308",
+        "202608050308",
+        "202603030309",
+        "202605050309",
+        "202608050309",
+        "202603030310",
+        "202605050310",
+        "202608050310",
+        "202603030311",
+        "202605050311",
+        "202608050311",
+        "202603030312",
+        "202608050312",
+        "202605050406",
+        "202608050406",
+        "202603030407",
+        "202605050407",
+        "202608050407",
+        "202603030408",
+        "202605050408",
+        "202608050408",
+        "202603030409",
+        "202605050409",
+        "202608050409",
+        "202603030410",
+        "202605050410",
+        "202603030411",
+        "202605050411",
+        "202608050411",
+        "202603030412",
+        "202605050412",
+        "202608050412",
+        "202608050606",
+        "202605050507",
+        "202608050607",
+        "202605050508",
+        "202608050608",
+        "202608050609",
+        "202605050510",
+        "202608050610",
+        "202605050511",
+        "202608050611",
+        "202608050612"
+      ]
+    },
+    "comparison": {
+      "10+": {
+        "racesWithCandidate": 42,
+        "horses": 342,
+        "actualPodiumHorses": 25,
+        "models": {
+          "market": {
+            "hits": 4,
+            "expectedHorseHits": 30.7204,
+            "horseBrier": 0.06610957
+          },
+          "formalAI": {
+            "hits": 4,
+            "expectedHorseHits": 36.2827,
+            "horseBrier": 0.06705768,
+            "differentPickRaces": 7,
+            "modelOnlyHits": 1,
+            "marketOnlyHits": 1,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 42,
+              "meanBrierDelta": 0.00189671,
+              "betterRaces": 14,
+              "worseRaces": 28,
+              "bootstrap95Pct": [
+                0.00050034,
+                0.00328976
+              ]
+            }
+          },
+          "V2Replay": {
+            "hits": 4,
+            "expectedHorseHits": 37.2197,
+            "horseBrier": 0.06708344,
+            "differentPickRaces": 5,
+            "modelOnlyHits": 1,
+            "marketOnlyHits": 1,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 42,
+              "meanBrierDelta": 0.00187588,
+              "betterRaces": 15,
+              "worseRaces": 27,
+              "bootstrap95Pct": [
+                0.00048583,
+                0.00334019
+              ]
+            }
+          }
+        }
+      },
+      "10–<20": {
+        "racesWithCandidate": 25,
+        "horses": 58,
+        "actualPodiumHorses": 9,
+        "models": {
+          "market": {
+            "hits": 3,
+            "expectedHorseHits": 10.5691,
+            "horseBrier": 0.13703208
+          },
+          "formalAI": {
+            "hits": 2,
+            "expectedHorseHits": 11.6177,
+            "horseBrier": 0.13909148,
+            "differentPickRaces": 3,
+            "modelOnlyHits": 0,
+            "marketOnlyHits": 1,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 25,
+              "meanBrierDelta": 0.00376477,
+              "betterRaces": 8,
+              "worseRaces": 17,
+              "bootstrap95Pct": null
+            }
+          },
+          "V2Replay": {
+            "hits": 2,
+            "expectedHorseHits": 12.2123,
+            "horseBrier": 0.13973949,
+            "differentPickRaces": 2,
+            "modelOnlyHits": 0,
+            "marketOnlyHits": 1,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 25,
+              "meanBrierDelta": 0.00438096,
+              "betterRaces": 8,
+              "worseRaces": 17,
+              "bootstrap95Pct": null
+            }
+          }
+        }
+      },
+      "20–<50": {
+        "racesWithCandidate": 41,
+        "horses": 143,
+        "actualPodiumHorses": 12,
+        "models": {
+          "market": {
+            "hits": 3,
+            "expectedHorseHits": 13.9914,
+            "horseBrier": 0.07569847
+          },
+          "formalAI": {
+            "hits": 3,
+            "expectedHorseHits": 17.0301,
+            "horseBrier": 0.07723876,
+            "differentPickRaces": 8,
+            "modelOnlyHits": 0,
+            "marketOnlyHits": 0,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 41,
+              "meanBrierDelta": 0.00229432,
+              "betterRaces": 10,
+              "worseRaces": 31,
+              "bootstrap95Pct": [
+                0.00041076,
+                0.00416065
+              ]
+            }
+          },
+          "V2Replay": {
+            "hits": 4,
+            "expectedHorseHits": 17.2724,
+            "horseBrier": 0.07675761,
+            "differentPickRaces": 6,
+            "modelOnlyHits": 1,
+            "marketOnlyHits": 0,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 41,
+              "meanBrierDelta": 0.00162461,
+              "betterRaces": 12,
+              "worseRaces": 29,
+              "bootstrap95Pct": [
+                -0.00048866,
+                0.0036379
+              ]
+            }
+          }
+        }
+      },
+      "50+": {
+        "racesWithCandidate": 36,
+        "horses": 141,
+        "actualPodiumHorses": 4,
+        "models": {
+          "market": {
+            "hits": 3,
+            "expectedHorseHits": 6.1599,
+            "horseBrier": 0.02721086
+          },
+          "formalAI": {
+            "hits": 4,
+            "expectedHorseHits": 7.6348,
+            "horseBrier": 0.02710126,
+            "differentPickRaces": 6,
+            "modelOnlyHits": 1,
+            "marketOnlyHits": 0,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 36,
+              "meanBrierDelta": 0.00025441,
+              "betterRaces": 6,
+              "worseRaces": 30,
+              "bootstrap95Pct": [
+                -0.00062695,
+                0.0010023
+              ]
+            }
+          },
+          "V2Replay": {
+            "hits": 2,
+            "expectedHorseHits": 7.735,
+            "horseBrier": 0.02738515,
+            "differentPickRaces": 4,
+            "modelOnlyHits": 0,
+            "marketOnlyHits": 1,
+            "hitDifferenceExactP": 1.0,
+            "raceBrierDeltaVsMarket": {
+              "pairedRaces": 36,
+              "meanBrierDelta": 0.00033504,
+              "betterRaces": 6,
+              "worseRaces": 30,
+              "bootstrap95Pct": [
+                -0.00056611,
+                0.0010536
+              ]
+            }
+          }
+        }
+      }
+    },
+    "raceHeaderArchive": {
+      "commit": "308570d685f6e8d182b4e001eaeba018395c701e",
+      "commitAt": "2026-11-22T19:31:25Z",
+      "sha256": "a8d0036f1d4683ae4db8706e48dc292fae753a393eea8b2bf0fdda08469fee13"
+    },
+    "priorHistoryArchivesByDate": {
+      "2026-11-07": {
+        "commit": "e68840cff47f4c9675fee3d6792b58cf17a72364",
+        "commitAt": "2026-11-01T12:53:59Z",
+        "sha256": "7e697330a2ddbf16891c3d31b58cc3368c52910fe2b199c3897df04ce581f27c"
+      },
+      "2026-11-08": {
+        "commit": "e68840cff47f4c9675fee3d6792b58cf17a72364",
+        "commitAt": "2026-11-01T12:53:59Z",
+        "sha256": "7e697330a2ddbf16891c3d31b58cc3368c52910fe2b199c3897df04ce581f27c"
+      },
+      "2026-11-14": {
+        "commit": "e68840cff47f4c9675fee3d6792b58cf17a72364",
+        "commitAt": "2026-11-01T12:53:59Z",
+        "sha256": "7e697330a2ddbf16891c3d31b58cc3368c52910fe2b199c3897df04ce581f27c"
+      },
+      "2026-11-15": {
+        "commit": "e68840cff47f4c9675fee3d6792b58cf17a72364",
+        "commitAt": "2026-11-01T12:53:59Z",
+        "sha256": "7e697330a2ddbf16891c3d31b58cc3368c52910fe2b199c3897df04ce581f27c"
+      },
+      "2026-11-21": {
+        "commit": "e68840cff47f4c9675fee3d6792b58cf17a72364",
+        "commitAt": "2026-11-01T12:53:59Z",
+        "sha256": "7e697330a2ddbf16891c3d31b58cc3368c52910fe2b199c3897df04ce581f27c"
+      },
+      "2026-11-22": {
+        "commit": "b16abc93f24ce2d43d7ab3e669024c77d4d3fd60",
+        "commitAt": "2026-11-21T17:36:53Z",
+        "sha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555"
+      }
+    }
+  }
+}

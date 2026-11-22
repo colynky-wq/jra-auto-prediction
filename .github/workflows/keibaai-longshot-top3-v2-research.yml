@@ -1,0 +1,78 @@
+name: KeibaAI Longshot Top3 Place History Research
+
+on:
+  pull_request:
+    paths:
+      - 'production/research_longshot_top3_v2.py'
+      - 'production/test_research_longshot_top3_v2.py'
+      - 'production/research_longshot_top3_ranker.py'
+      - 'production/test_research_longshot_top3_ranker.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - 'research/model_candidates/longshot_top3_v2/**'
+      - '.github/workflows/keibaai-longshot-top3-v2-research.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/research_longshot_top3_v2.py'
+      - 'production/test_research_longshot_top3_v2.py'
+      - 'production/research_longshot_top3_ranker.py'
+      - 'production/test_research_longshot_top3_ranker.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - '.github/workflows/keibaai-longshot-top3-v2-research.yml'
+  workflow_dispatch:
+    inputs:
+      run_historical_research:
+        description: 'Rebuild and train isolated retrospective research candidates'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keibaai-longshot-top3-v2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - name: Install pinned research dependencies
+        run: pip install -r production/requirements.txt
+      - name: Verify causal inputs, held-out years and paired comparisons
+        run: |
+          python -m py_compile production/research_longshot_top3_v2.py production/test_research_longshot_top3_v2.py
+          python -m py_compile production/research_longshot_top3_ranker.py production/test_research_longshot_top3_ranker.py
+          python -m unittest discover -s production -p 'test_train_longshot_top3.py' -v
+          python -m unittest discover -s production -p 'test_research_longshot_top3_v2.py' -v
+          python -m unittest discover -s production -p 'test_research_longshot_top3_ranker.py' -v
+          python -m unittest discover -s production -p 'test_longshot_top3_v2_runtime.py' -v
+      - name: Train and evaluate separate historical candidates
+        if: github.event_name == 'workflow_dispatch' && inputs.run_historical_research
+        env:
+          OMP_NUM_THREADS: '2'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python -u production/research_longshot_top3_v2.py
+          python -u production/research_longshot_top3_ranker.py
+      - name: Preserve research artifacts without changing live files
+        if: github.event_name == 'workflow_dispatch' && inputs.run_historical_research
+        uses: actions/upload-artifact@v4
+        with:
+          name: longshot-top3-v2-place-history
+          path: |
+            research/model_candidates/longshot_top3_v2
+            research/model_candidates/longshot_top3_ranker_v1
+          retention-days: 30
+          if-no-files-found: error

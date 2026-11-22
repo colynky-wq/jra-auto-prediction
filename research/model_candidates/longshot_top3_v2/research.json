@@ -1,0 +1,498 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-top3-place-history-v2-20261123",
+  "generatedAtJST": "2026-11-23T01:57:03.703693+09:00",
+  "status": "retrospective_additional_candidate_only",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "formalRecommendationsEnabled": false,
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "sourceRows": 624122,
+  "sourceLastRaceDate": "2026-11-21",
+  "longshotDefinition": {
+    "popularityMinimum": 6,
+    "winOddsMinimum": 10.0
+  },
+  "target": "finish <= 3",
+  "selectedFeatures": [
+    "1着率",
+    "log間隔",
+    "クラス値f",
+    "クラス差",
+    "乗り替わり",
+    "内枠先行",
+    "出走数c",
+    "前走上がり差f",
+    "前走人気f",
+    "前走着順率f",
+    "前走秒差f",
+    "同芝ダ回数c",
+    "同芝ダ平均",
+    "同距離帯回数c",
+    "同距離帯平均",
+    "増減f",
+    "増減絶対",
+    "平均着順",
+    "年齢",
+    "斤量",
+    "斤量変化",
+    "昇級",
+    "枠位置",
+    "点数差",
+    "脚質初角",
+    "芝ダ替わり",
+    "調教師log数",
+    "調教師勝率",
+    "調教師複勝率",
+    "距離変化",
+    "降級",
+    "頭数f",
+    "馬体重f",
+    "騎手log数",
+    "騎手勝率",
+    "騎手複勝率",
+    "placeLast3V2",
+    "placeLast5V2",
+    "placeSurfaceV2",
+    "placeDistanceV2",
+    "finishLast3V2",
+    "bestFinishLast5V2",
+    "placeHistoryLogV2",
+    "placeClassV2",
+    "marketTop3LogitV2",
+    "logWinOddsV2",
+    "popularityFractionV2"
+  ],
+  "selection2024": {
+    "version": "longshot-top3-place-history-v2-20261123",
+    "selected": {
+      "featureSet": "place_and_market",
+      "featureCount": 47,
+      "rounds": 155,
+      "weight": 1.0,
+      "equalRaceBrier2024": 0.0789273673203375
+    },
+    "control": {
+      "featureSet": "control36",
+      "featureCount": 36,
+      "rounds": 241,
+      "weight": 1.0,
+      "equalRaceBrier2024": 0.07894053721339392
+    },
+    "grid2024": [
+      {
+        "featureSet": "control36",
+        "featureCount": 36,
+        "rounds": 241,
+        "weight": 0.0,
+        "equalRaceBrier2024": 0.07962323331385066
+      },
+      {
+        "featureSet": "control36",
+        "featureCount": 36,
+        "rounds": 241,
+        "weight": 0.25,
+        "equalRaceBrier2024": 0.07936634106310053
+      },
+      {
+        "featureSet": "control36",
+        "featureCount": 36,
+        "rounds": 241,
+        "weight": 0.5,
+        "equalRaceBrier2024": 0.07915953687968401
+      },
+      {
+        "featureSet": "control36",
+        "featureCount": 36,
+        "rounds": 241,
+        "weight": 1.0,
+        "equalRaceBrier2024": 0.07894053721339392
+      },
+      {
+        "featureSet": "place_history",
+        "featureCount": 44,
+        "rounds": 299,
+        "weight": 0.0,
+        "equalRaceBrier2024": 0.07962323331385066
+      },
+      {
+        "featureSet": "place_history",
+        "featureCount": 44,
+        "rounds": 299,
+        "weight": 0.25,
+        "equalRaceBrier2024": 0.0793606844724815
+      },
+      {
+        "featureSet": "place_history",
+        "featureCount": 44,
+        "rounds": 299,
+        "weight": 0.5,
+        "equalRaceBrier2024": 0.07915048979536811
+      },
+      {
+        "featureSet": "place_history",
+        "featureCount": 44,
+        "rounds": 299,
+        "weight": 1.0,
+        "equalRaceBrier2024": 0.07893682366994134
+      },
+      {
+        "featureSet": "market_context",
+        "featureCount": 39,
+        "rounds": 138,
+        "weight": 0.0,
+        "equalRaceBrier2024": 0.07962323331385066
+      },
+      {
+        "featureSet": "market_context",
+        "featureCount": 39,
+        "rounds": 138,
+        "weight": 0.25,
+        "equalRaceBrier2024": 0.07938042720704094
+      },
+      {
+        "featureSet": "market_context",
+        "featureCount": 39,
+        "rounds": 138,
+        "weight": 0.5,
+        "equalRaceBrier2024": 0.0791782026229703
+      },
+      {
+        "featureSet": "market_context",
+        "featureCount": 39,
+        "rounds": 138,
+        "weight": 1.0,
+        "equalRaceBrier2024": 0.07893274600464899
+      },
+      {
+        "featureSet": "place_and_market",
+        "featureCount": 47,
+        "rounds": 155,
+        "weight": 0.0,
+        "equalRaceBrier2024": 0.07962323331385066
+      },
+      {
+        "featureSet": "place_and_market",
+        "featureCount": 47,
+        "rounds": 155,
+        "weight": 0.25,
+        "equalRaceBrier2024": 0.0793777384067918
+      },
+      {
+        "featureSet": "place_and_market",
+        "featureCount": 47,
+        "rounds": 155,
+        "weight": 0.5,
+        "equalRaceBrier2024": 0.07917325884534784
+      },
+      {
+        "featureSet": "place_and_market",
+        "featureCount": 47,
+        "rounds": 155,
+        "weight": 1.0,
+        "equalRaceBrier2024": 0.0789273673203375
+      }
+    ],
+    "thresholds2024": {
+      "1.0": 0.0,
+      "0.5": 0.20556465122136164,
+      "0.25": 0.23816211203713933
+    },
+    "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+    "selectionTimestampJST": "2026-11-23T01:56:35.225768+09:00",
+    "selectionRule": "minimum equal-race 2024 Brier, then fewer features, then smaller residual weight"
+  },
+  "2025": {
+    "races": 3143,
+    "horseRows": 27728,
+    "start": "2025-01-05",
+    "end": "2025-12-28",
+    "actualTop3RateAllLongshots": 0.08994518176572418,
+    "brier": {
+      "market": 0.07714716914158642,
+      "control36": 0.07647418587833268,
+      "v2": 0.07646356636057962
+    },
+    "logloss": {
+      "market": 0.27233015285238693,
+      "control36": 0.2688668343016872,
+      "v2": 0.2685967112967323
+    },
+    "pairedV2MinusControl": {
+      "equalRaceBrierDelta": 1.0832985673465265e-06,
+      "raceBootstrap95": [
+        -7.399296892657781e-05,
+        7.278300083621633e-05
+      ],
+      "wholeRaceDateBootstrap95": [
+        -6.8995788719069e-05,
+        6.601430093731181e-05
+      ],
+      "races": 3143,
+      "raceDates": 109
+    },
+    "pairedV2MinusMarket": {
+      "equalRaceBrierDelta": -0.0008207132364509236,
+      "raceBootstrap95": [
+        -0.0010310321230168902,
+        -0.0006107099700645674
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.0010459427721169804,
+        -0.0006069166620665327
+      ],
+      "races": 3143,
+      "raceDates": 109
+    },
+    "abstentionPolicies": {
+      "1.0": {
+        "thresholdFrozenOn2024": 0.0,
+        "selectedRaces": 3143,
+        "coverage": 1.0,
+        "methods": {
+          "market": {
+            "top3Hits": 645,
+            "top3HitRate": 0.20521794463888005,
+            "meanPredictedTop3": 0.17409351384100608,
+            "meanSelectedWinOdds": 20.5097677378301
+          },
+          "control36": {
+            "top3Hits": 683,
+            "top3HitRate": 0.21730830416799238,
+            "meanPredictedTop3": 0.21029880243982857,
+            "meanSelectedWinOdds": 20.79064587973274
+          },
+          "v2": {
+            "top3Hits": 681,
+            "top3HitRate": 0.2166719694559338,
+            "meanPredictedTop3": 0.20371084745846274,
+            "meanSelectedWinOdds": 20.767865097041042
+          }
+        },
+        "v2MinusMarketHitRate": 0.01145402481705377,
+        "pairedHitDeltaRaceBootstrap95": [
+          0.004772510340439071,
+          0.01845370664969774
+        ]
+      },
+      "0.5": {
+        "thresholdFrozenOn2024": 0.20556465122136164,
+        "selectedRaces": 1626,
+        "coverage": 0.5173401209035953,
+        "methods": {
+          "market": {
+            "top3Hits": 396,
+            "top3HitRate": 0.24354243542435425,
+            "meanPredictedTop3": 0.20916388455163726,
+            "meanSelectedWinOdds": 13.963468634686347
+          },
+          "control36": {
+            "top3Hits": 424,
+            "top3HitRate": 0.2607626076260763,
+            "meanPredictedTop3": 0.2530637313604423,
+            "meanSelectedWinOdds": 14.08849938499385
+          },
+          "v2": {
+            "top3Hits": 423,
+            "top3HitRate": 0.26014760147601473,
+            "meanPredictedTop3": 0.2435983685380726,
+            "meanSelectedWinOdds": 14.055781057810576
+          }
+        },
+        "v2MinusMarketHitRate": 0.016605166051660517,
+        "pairedHitDeltaRaceBootstrap95": [
+          0.007380073800738007,
+          0.026445264452644526
+        ]
+      },
+      "0.25": {
+        "thresholdFrozenOn2024": 0.23816211203713933,
+        "selectedRaces": 857,
+        "coverage": 0.2726694241170856,
+        "methods": {
+          "market": {
+            "top3Hits": 225,
+            "top3HitRate": 0.26254375729288215,
+            "meanPredictedTop3": 0.22624380264887928,
+            "meanSelectedWinOdds": 12.526487747957994
+          },
+          "control36": {
+            "top3Hits": 237,
+            "top3HitRate": 0.2765460910151692,
+            "meanPredictedTop3": 0.27432553222670075,
+            "meanSelectedWinOdds": 12.59369894982497
+          },
+          "v2": {
+            "top3Hits": 239,
+            "top3HitRate": 0.27887981330221706,
+            "meanPredictedTop3": 0.2634923712427702,
+            "meanSelectedWinOdds": 12.583780630105016
+          }
+        },
+        "v2MinusMarketHitRate": 0.01633605600933489,
+        "pairedHitDeltaRaceBootstrap95": [
+          0.004667444574095682,
+          0.029171528588098017
+        ]
+      }
+    }
+  },
+  "2026": {
+    "races": 2826,
+    "horseRows": 24567,
+    "start": "2026-01-04",
+    "end": "2026-11-21",
+    "actualTop3RateAllLongshots": 0.08938820368787398,
+    "brier": {
+      "market": 0.07652973569839872,
+      "control36": 0.0760219628782491,
+      "v2": 0.0759513095933624
+    },
+    "logloss": {
+      "market": 0.2703044329225368,
+      "control36": 0.26751384217263174,
+      "v2": 0.26723270060703175
+    },
+    "pairedV2MinusControl": {
+      "equalRaceBrierDelta": -5.905815680534143e-05,
+      "raceBootstrap95": [
+        -0.0001334233772225294,
+        1.656867366586367e-05
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.00013717122171420296,
+        1.2913029263585712e-05
+      ],
+      "races": 2826,
+      "raceDates": 97
+    },
+    "pairedV2MinusMarket": {
+      "equalRaceBrierDelta": -0.0007004948826620631,
+      "raceBootstrap95": [
+        -0.0009702634847418686,
+        -0.00044051680580373993
+      ],
+      "wholeRaceDateBootstrap95": [
+        -0.0009916327511046486,
+        -0.0004237788929005223
+      ],
+      "races": 2826,
+      "raceDates": 97
+    },
+    "abstentionPolicies": {
+      "1.0": {
+        "thresholdFrozenOn2024": 0.0,
+        "selectedRaces": 2826,
+        "coverage": 1.0,
+        "methods": {
+          "market": {
+            "top3Hits": 582,
+            "top3HitRate": 0.2059447983014862,
+            "meanPredictedTop3": 0.17653040626946107,
+            "meanSelectedWinOdds": 20.191330502476998
+          },
+          "control36": {
+            "top3Hits": 599,
+            "top3HitRate": 0.21196036801132342,
+            "meanPredictedTop3": 0.21515541595989887,
+            "meanSelectedWinOdds": 20.532271762208065
+          },
+          "v2": {
+            "top3Hits": 598,
+            "top3HitRate": 0.21160651096956828,
+            "meanPredictedTop3": 0.20839779954502285,
+            "meanSelectedWinOdds": 20.498619957537155
+          }
+        },
+        "v2MinusMarketHitRate": 0.005661712668082095,
+        "pairedHitDeltaRaceBootstrap95": [
+          -0.0028308563340410475,
+          0.01363234253361637
+        ]
+      },
+      "0.5": {
+        "thresholdFrozenOn2024": 0.20556465122136164,
+        "selectedRaces": 1538,
+        "coverage": 0.5442321302193913,
+        "methods": {
+          "market": {
+            "top3Hits": 371,
+            "top3HitRate": 0.24122236671001301,
+            "meanPredictedTop3": 0.2101197470579096,
+            "meanSelectedWinOdds": 14.026397919375812
+          },
+          "control36": {
+            "top3Hits": 374,
+            "top3HitRate": 0.24317295188556567,
+            "meanPredictedTop3": 0.25725551137823893,
+            "meanSelectedWinOdds": 14.149089726918074
+          },
+          "v2": {
+            "top3Hits": 372,
+            "top3HitRate": 0.24187256176853056,
+            "meanPredictedTop3": 0.24757353935103876,
+            "meanSelectedWinOdds": 14.15
+          }
+        },
+        "v2MinusMarketHitRate": 0.0006501950585175553,
+        "pairedHitDeltaRaceBootstrap95": [
+          -0.009102730819245773,
+          0.010403120936280884
+        ]
+      },
+      "0.25": {
+        "thresholdFrozenOn2024": 0.23816211203713933,
+        "selectedRaces": 862,
+        "coverage": 0.3050247699929229,
+        "methods": {
+          "market": {
+            "top3Hits": 222,
+            "top3HitRate": 0.25754060324825984,
+            "meanPredictedTop3": 0.22604302771002793,
+            "meanSelectedWinOdds": 12.802552204176335
+          },
+          "control36": {
+            "top3Hits": 222,
+            "top3HitRate": 0.25754060324825984,
+            "meanPredictedTop3": 0.27852565278082364,
+            "meanSelectedWinOdds": 12.864501160092809
+          },
+          "v2": {
+            "top3Hits": 222,
+            "top3HitRate": 0.25754060324825984,
+            "meanPredictedTop3": 0.26772602257596717,
+            "meanSelectedWinOdds": 12.854988399071926
+          }
+        },
+        "v2MinusMarketHitRate": 0.0,
+        "pairedHitDeltaRaceBootstrap95": [
+          -0.010440835266821345,
+          0.010440835266821345
+        ]
+      }
+    }
+  },
+  "modelHashes": {
+    "control_through2025.txt": "4aa8f78e1ada8c43984e9a78b4061c3e2be005ab03bd280a8aa84c857d122b29",
+    "model_through2023.txt": "bde106b79d6ce536516fb3df2d7ea4fd72cef87810be451a962dc0a559583c88",
+    "model_through2025.txt": "bd9dfb654fe6a0bdbb29123011142bd696bee085d503f86d5e9963698ade9cf2",
+    "control_through2023.txt": "c9826ba12b55171df433cc0a1b83e09bf18824d2e0ac49c2b2900122b5811508"
+  },
+  "causalHistory": {
+    "sameDayExcluded": true,
+    "missingFinishesAreLosses": false,
+    "jumpsExcluded": true,
+    "fixedBodyWeightImputationKg": 480.0
+  },
+  "limitations": [
+    "最終オッズ・最終人気を使う過去検証です。発走10分前の実測成績ではありません。",
+    "2025・2026年は過去の研究で既に参照済みです。完全に未知の独立検証とは扱いません。",
+    "過去の好走実績の追加が、既存候補より役立つかを調べる研究です。正式モデルへの採用は未承認です。",
+    "36項目の対照モデルも欠損馬体重を固定480kgで補完し直しています。旧候補の公表値と完全に同一ではありません。",
+    "見送り後の参加率は検証期間の実測です。毎年必ず50%・25%になる設定ではありません。",
+    "予測の好走率と馬券の利益は別です。今回、複勝払戻や回収率は検証していません。",
+    "入力の寄与は好走原因の証明ではありません。未来の発走前保存データで再検証が必要です。"
+  ]
+}
