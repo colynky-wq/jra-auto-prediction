@@ -17,6 +17,7 @@ STATES = {
     'startup_failed': ('自動監視の開始に失敗', '開催確認または開始準備を完了できませんでした。開催なしと判断した状態ではありません。', True),
     'failed': ('自動監視・公開が未完了', '監視または公開を完了できませんでした。未送信データがある場合は復旧用の成果物に保持します。', True),
     'interrupted': ('自動監視が中断', '監視処理が途中で停止しました。保存・公開できた内容はレース別の一覧で確認してください。', True),
+    'superseded': ('待機中の監視要求が置換', '実行を開始していない待機ジョブが新しい監視要求に置き換えられました。実際のレース監視の結果ではありません。', False),
 }
 
 
@@ -47,14 +48,17 @@ def health_from_event(event, jobs, now):
             started = min(starts)
     conclusion = run.get('conclusion')
     terminal = run['status'] == 'completed'
-    steps = [s for job in jobs for s in job.get('steps', [])]
+    steps = [s for job in (jobs or []) for s in job.get('steps', [])]
     if not terminal and jobs and all(j['status'] == 'completed' for j in jobs):
         terminal = True
         conclusion = 'success' if all(j.get('conclusion') == 'success' for j in jobs) else 'failure'
     if not terminal:
         status = 'active'
     elif conclusion == 'cancelled':
-        status = 'interrupted'
+        # With queue: single, a newer heartbeat cancels the *pending* run.
+        # A successful jobs API response with zero jobs proves no worker
+        # started. None means API details unavailable and MUST fail closed.
+        status = 'superseded' if jobs is not None and not jobs else 'interrupted'
     elif conclusion == 'success':
         monitor = next((s for s in steps if s['name'] == MONITOR_STEP), None)
         no_races = next((s for s in steps if s['name'] == NO_RACES_STEP), None)
@@ -107,7 +111,14 @@ def choose_health(*candidates):
         previous = sessions.get(health['runID'])
         if previous is None or (health['phaseRank'], health['observedAtJST']) > (previous['phaseRank'], previous['observedAtJST']):
             sessions[health['runID']] = health
-    return max(sessions.values(), key=lambda h: (h['runStartedAtJST'], h['runID']))
+    # A replaced pending heartbeat is not an observed monitor failure and
+    # must not overwrite another session's active/completed health for that
+    # JST day, even if it has a newer workflow creation timestamp.
+    latest_day = max(h['raceDate'] for h in sessions.values())
+    day_sessions = [h for h in sessions.values() if h['raceDate'] == latest_day]
+    substantive = [h for h in day_sessions if h['status'] != 'superseded']
+    return max(substantive or day_sessions,
+               key=lambda h: (h['runStartedAtJST'], h['runID']))
 
 
 def load_health(reports, today, start='2026-10-13'):
