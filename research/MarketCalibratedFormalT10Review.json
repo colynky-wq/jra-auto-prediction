@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "version": "market-calibrated-formal-T10-review-v1",
+  "generatedAtJST": "2026-11-23T00:39:56.631049+09:00",
+  "status": "retrospective_same_timestamp_not_prospective_promotion",
+  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "parameterSource": "2024-only-closing-odds-validation",
+  "marketPower": 1.05,
+  "selectionAndScoringSeparated": true,
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "counts": {
+    "auditedRaces": 128,
+    "matchedResultRaces": 124,
+    "validPairedRacesWin": 124,
+    "unmatchedOrExcludedRaces": 4,
+    "podiumUnavailableByEvent": {
+      "win": 0,
+      "top2": 0,
+      "top3": 0
+    }
+  },
+  "byEvent": {
+    "win": {
+      "pairedRaces": 124,
+      "equalRaceBrier": {
+        "formalAI": 0.05937141135533748,
+        "T10Market": 0.059264575937764644,
+        "marketCalibrated": 0.059171921261521085
+      },
+      "candidateMinusFormalAI": {
+        "pairedRaces": 124,
+        "meanBrierDelta": -0.00019949,
+        "betterRaces": 62,
+        "worseRaces": 62,
+        "bootstrap95Pct": [
+          -0.0004997,
+          9.415e-05
+        ]
+      },
+      "candidateMinusT10Market": {
+        "pairedRaces": 124,
+        "meanBrierDelta": -9.265e-05,
+        "betterRaces": 56,
+        "worseRaces": 68,
+        "bootstrap95Pct": [
+          -0.00029403,
+          0.00010788
+        ]
+      }
+    },
+    "top2": {
+      "pairedRaces": 124,
+      "equalRaceBrier": {
+        "formalAI": 0.10129391279787052,
+        "T10Market": 0.10058987727743794,
+        "marketCalibrated": 0.10050346446563212
+      },
+      "candidateMinusFormalAI": {
+        "pairedRaces": 124,
+        "meanBrierDelta": -0.00079045,
+        "betterRaces": 75,
+        "worseRaces": 49,
+        "bootstrap95Pct": [
+          -0.00176306,
+          0.00019183
+        ]
+      },
+      "candidateMinusT10Market": {
+        "pairedRaces": 124,
+        "meanBrierDelta": -8.641e-05,
+        "betterRaces": 63,
+        "worseRaces": 61,
+        "bootstrap95Pct": [
+          -0.00034549,
+          0.00017609
+        ]
+      }
+    },
+    "top3": {
+      "pairedRaces": 124,
+      "equalRaceBrier": {
+        "formalAI": 0.1342488993384963,
+        "T10Market": 0.13276100104017446,
+        "marketCalibrated": 0.13281202758477995
+      },
+      "candidateMinusFormalAI": {
+        "pairedRaces": 124,
+        "meanBrierDelta": -0.00143687,
+        "betterRaces": 71,
+        "worseRaces": 53,
+        "bootstrap95Pct": [
+          -0.00312735,
+          0.00032371
+        ]
+      },
+      "candidateMinusT10Market": {
+        "pairedRaces": 124,
+        "meanBrierDelta": 5.103e-05,
+        "betterRaces": 63,
+        "worseRaces": 61,
+        "bootstrap95Pct": [
+          -0.00022344,
+          0.00032732
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "Predictions share the same original formal T10 market snapshot.",
+    "Market calibration coefficients were fitted on historical 2024 closing odds.",
+    "Retrospective 2026 formal captures are NOT freshly preregistered prospective trials.",
+    "No 2026 results used to change candidate parameters.",
+    "The historical ensemble requires the separate future first-frozen no-odds model and cannot be reconstructed here.",
+    "The archive has existing quality issues; matched/excluded races stay separate.",
+    "Uncertainty resamples whole races; not independent horse rows.",
+    "No automatic model promotion, betting or ROI claims."
+  ]
+}
