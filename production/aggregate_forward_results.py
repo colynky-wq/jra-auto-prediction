@@ -44,6 +44,7 @@ REPORTS_DIR = REPO / "reports"
 LEDGER_PATH = REPORTS_DIR / "forward_candidate_ledger.csv"
 
 from forward_aggregate_schedule import target_date as resolve_aggregate_date
+from forward_prediction_source import load_published_day, SnapshotUnavailable
 
 TARGET_DATE8 = resolve_aggregate_date(
     os.environ.get("KEIBAAI_AGGREGATE_DATE", "").strip(),
@@ -86,16 +87,18 @@ def normalize_race_id(x) -> str:
     return s.zfill(12)
 
 
+PREDICTION_PROVENANCE = None
+
+
 def load_predictions() -> list[dict]:
-    if not RACEDATA_PATH.exists():
-        fail(f"RaceData.json not found: {RACEDATA_PATH}")
-
-    with RACEDATA_PATH.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if not isinstance(data, list) or not data:
-        fail("RaceData.json is empty or is not a list")
-
+    """Use only a previously committed current or same-day historical blob."""
+    global PREDICTION_PROVENANCE
+    try:
+        data, PREDICTION_PROVENANCE = load_published_day(REPO, TARGET_DATE8)
+    except SnapshotUnavailable as exc:
+        raise SkipAggregation(str(exc)) from exc
+    print("RaceData input:", PREDICTION_PROVENANCE["kind"],
+          "Git SHA:", PREDICTION_PROVENANCE["sourceCommitSHA"])
     return data
 
 
@@ -263,7 +266,12 @@ def main() -> None:
     if not re.fullmatch(r"\d{8}", TARGET_DATE8):
         fail(f"invalid target date: {TARGET_DATE8}")
 
-    predictions = load_predictions()
+    try:
+        predictions = load_predictions()
+    except SkipAggregation as exc:
+        print("SKIP: no previously published target-day predictions:", exc)
+        print("No invented or retrospectively generated forecast is added.")
+        return
     prediction_race_ids = [normalize_race_id(r.get("raceID", "")) for r in predictions]
     prediction_race_ids = [x for x in prediction_race_ids if re.fullmatch(r"\d{12}", x)]
 
@@ -424,6 +432,7 @@ def main() -> None:
 
     summary = {
         "date": TARGET_DATE8,
+        "predictionProvenance": PREDICTION_PROVENANCE,
         "generatedAtJST": datetime.now(JST).isoformat(),
         "candidateRule": {
             "aiMarketRatioMin": CANDIDATE_RATIO_MIN,
