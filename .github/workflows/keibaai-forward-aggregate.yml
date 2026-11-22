@@ -7,6 +7,12 @@ on:
         description: 'JST date YYYYMMDD. Leave blank to use today.'
         required: false
         default: ''
+  pull_request:
+    paths:
+      - 'production/aggregate_forward_results.py'
+      - 'production/forward_aggregate_schedule.py'
+      - 'production/test_forward_aggregate_schedule.py'
+      - '.github/workflows/keibaai-forward-aggregate.yml'
   schedule:
     # 20:00 JST every day. On non-JRA/stale RaceData days the script safely skips.
     - cron: '0 11 * * *'
@@ -19,7 +25,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-schedule:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Check delayed schedule date selection
+        run: |
+          python -m py_compile production/forward_aggregate_schedule.py production/aggregate_forward_results.py
+          python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
+
   aggregate:
+    if: github.event_name != 'pull_request'
     name: Aggregate forward predictions and results
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -43,6 +63,9 @@ jobs:
 
       - name: Install aggregation dependencies
         run: pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4' 'lxml==6.0.2'
+
+      - name: Test scheduled date resolution
+        run: python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
 
       - name: Aggregate forward results
         env:
