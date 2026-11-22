@@ -12,11 +12,16 @@ import hashlib
 import json
 from pathlib import Path
 
-from inspect_frozen_win_probabilities import official_podium
+from inspect_frozen_win_probabilities import official_podium, paired_race_uncertainty
 from market_shrink_shadow import JST, fingerprint
 from no_current_odds_shadow import SHADOW_VERSION
 from train_no_current_odds_challenger import REPORT_PATH, VERSION
 import formal_portfolio_capture as capture
+
+# The first eligible race date after the candidate and first-T10 publisher were
+# deployed. This gate is immutable: historical observations do not gain fake
+# 'missing' shadows or simulated candidate results after the fact.
+ACTIVATION_DATE = "2026-11-23"
 
 EVENTS = {
     "win": ("aiProbability", "marketProbability", "winPct", 1),
@@ -44,6 +49,14 @@ def evaluate(root: Path, audit: dict, load_bundle=capture.load) -> dict:
     ensure(len(keyed) == len(records), "duplicate race identity")
     excluded = {(r["raceDate"], r["raceID"]) for r in
                 (audit.get("quality", {}).get("resultExclusions") or [])}
+    # Each aligned row has passed the strict portfolio input/record gate;
+    # only records after deployment are expected to have a companion challenger.
+    eligible_forward = {
+        (row["raceDate"], row["raceID"])
+        for row in records
+        if row["raceDate"] >= ACTIVATION_DATE
+        and row.get("inputFingerprint")
+    }
 
     model_meta = None
     if REPORT_PATH.is_file():
@@ -57,6 +70,9 @@ def evaluate(root: Path, audit: dict, load_bundle=capture.load) -> dict:
         "unmatchedOrNotAudited": 0,
         "excludedResult": 0,
         "missingPodiumEvents": 0,
+        "eligibleAlignedCapturesSinceActivation": 0,
+        "missingCandidateShadowsSinceActivation": 0,
+        "candidateShadowCoveragePct": None,
     }
     grouped = defaultdict(list)
     seen = set()
@@ -143,15 +159,30 @@ def evaluate(root: Path, audit: dict, load_bundle=capture.load) -> dict:
             grouped[kind].append(score)
         counts["pairedAuditedRaces"] += 1
 
+    missing_keys = sorted(eligible_forward - seen)
+    counts["eligibleAlignedCapturesSinceActivation"] = len(eligible_forward)
+    counts["missingCandidateShadowsSinceActivation"] = len(missing_keys)
+    counts["candidateShadowCoveragePct"] = (
+        round(100 * len(eligible_forward & seen) / len(eligible_forward), 2)
+        if eligible_forward else None
+    )
     by_event = {}
     for kind in EVENTS:
         scores = grouped[kind]
         means = {name: (round(sum(s[name] for s in scores) / len(scores), 8)
                          if scores else None)
                  for name in ("market", "formalAI", "noCurrentOdds")}
+        uncertainty_ai = paired_race_uncertainty([
+            s["noCurrentOdds"] - s["formalAI"] for s in scores
+        ])
+        uncertainty_market = paired_race_uncertainty([
+            s["noCurrentOdds"] - s["market"] for s in scores
+        ])
         by_event[kind] = {
             "pairedRaces": len(scores),
             "meanBrier": means,
+            "pairedRaceUncertaintyVsFormalAI": uncertainty_ai,
+            "pairedRaceUncertaintyVsMarket": uncertainty_market,
             "candidateMinusFormalAIBrier": (
                 round(means["noCurrentOdds"] - means["formalAI"], 8)
                 if scores else None),
@@ -168,6 +199,11 @@ def evaluate(root: Path, audit: dict, load_bundle=capture.load) -> dict:
                    if counts["pairedAuditedRaces"] < 100 else
                    "prospective_descriptive_only"),
         "sourceAuditGeneratedAtJST": audit["generatedAtJST"],
+        "candidateActivationDate": ACTIVATION_DATE,
+        "missingCandidateRaceIDs": [
+            {"raceDate": date, "raceID": rid}
+            for date, rid in missing_keys[:50]
+        ],
         "qualityIssueCount": len((audit.get("quality") or {}).get("issues") or []),
         "modelVersion": model_meta["version"] if model_meta else None,
         "counts": counts, "byEvent": by_event,
@@ -196,17 +232,34 @@ def main():
         "Source strict audit: " + report["sourceAuditGeneratedAtJST"],
         f"First-frozen T-10 shadows: {report['counts']['frozenShadows']}",
         f"Independently matched: {report['counts']['pairedAuditedRaces']}",
+        f"Eligible formal captures since {ACTIVATION_DATE}: {report['counts']['eligibleAlignedCapturesSinceActivation']}",
+        f"Missing candidate shadows: {report['counts']['missingCandidateShadowsSinceActivation']}",
+        f"Capture coverage: {report['counts']['candidateShadowCoveragePct']}%",
         f"Quality issues in strict audit: {report['qualityIssueCount']}", "",
-        "| Event | Races | Formal AI Brier | Market T10 Brier | Odds-free Brier | Challenger - formal AI |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| Event | Races | Formal AI Brier | Market T10 Brier | Odds-free Brier | Challenger - formal AI | Paired race bootstrap 95% |",
+        "|---|---:|---:|---:|---:|---:|---|",
     ]
     for kind in ("win", "top2", "top3"):
         e = report["byEvent"][kind]
         b = e["meanBrier"]
         lines.append(f"| {kind} | {e['pairedRaces']} | {b['formalAI']} | "
                      f"{b['market']} | {b['noCurrentOdds']} | "
-                     f"{e['candidateMinusFormalAIBrier']} |")
-    lines += ["", "No model promotion or automatic wagers; first-frozen future evidence only.", ""]
+                     f"{e['candidateMinusFormalAIBrier']} | "
+                     f"{e['pairedRaceUncertaintyVsFormalAI']['bootstrap95Pct']} |")
+    lines += ["", "No model promotion or automatic wagers; first-frozen future evidence only.",
+              "Capture coverage measures only aligned formal races after candidate activation.",
+              "Bootstrap resamples whole races, not individual horses. A confidence interval crossing zero is inconclusive.",
+              ""]
+    if report["missingCandidateRaceIDs"]:
+        lines += [
+            "## Missing candidate snapshots (first 50; do not backfill)",
+            "",
+            *[
+                f"- {r['raceDate']} / {r['raceID']}"
+                for r in report["missingCandidateRaceIDs"]
+            ],
+            "",
+        ]
     output.with_suffix(".md").write_text("\n".join(lines), encoding="utf-8")
     print("NO_CURRENT_ODDS_FORWARD_REVIEW", report["status"], report["counts"])
 

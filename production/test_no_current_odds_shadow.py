@@ -113,9 +113,42 @@ class NoCurrentOddsForwardTests(unittest.TestCase):
                     "fingerprint": "bundle-fingerprint", "prediction": race})
             self.assertEqual(report["status"], "insufficient_prospective_evidence")
             self.assertEqual(report["counts"]["pairedAuditedRaces"], 1)
+            self.assertEqual(report["counts"]["eligibleAlignedCapturesSinceActivation"], 1)
+            self.assertEqual(report["counts"]["missingCandidateShadowsSinceActivation"], 0)
+            self.assertEqual(report["counts"]["candidateShadowCoveragePct"], 100.0)
+            self.assertEqual(report["byEvent"]["win"]["pairedRaceUncertaintyVsFormalAI"]["pairedRaces"], 1)
             self.assertEqual(report["byEvent"]["win"]["pairedRaces"], 1)
             self.assertFalse(report["candidatePromotionApproved"])
             self.assertFalse(report["autoBetEnabled"])
+
+    def test_missing_first_capture_is_reported_but_never_fabricated(self):
+        race, features, meta, audit = fixture()
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            p = root / "metadata.json"
+            p.write_text(json.dumps(meta))
+            with patch("evaluate_no_current_odds_shadow.REPORT_PATH", p):
+                report = evaluate(root, audit)
+                self.assertEqual(report["counts"]["frozenShadows"], 0)
+                self.assertEqual(report["counts"]["eligibleAlignedCapturesSinceActivation"], 1)
+                self.assertEqual(report["counts"]["missingCandidateShadowsSinceActivation"], 1)
+                self.assertEqual(report["counts"]["candidateShadowCoveragePct"], 0.0)
+                self.assertEqual(report["missingCandidateRaceIDs"], [{
+                    "raceDate": race["raceDate"], "raceID": race["raceID"]}])
+            self.assertFalse(shadow_path(root, race).exists())
+
+    def test_no_missing_alert_for_legacy_before_candidate_deployment(self):
+        _, _, meta, audit = fixture()
+        audit["races"][0]["raceDate"] = "2026-11-22"
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            p = root / "metadata.json"
+            p.write_text(json.dumps(meta))
+            with patch("evaluate_no_current_odds_shadow.REPORT_PATH", p):
+                report = evaluate(root, audit)
+                self.assertEqual(report["counts"]["eligibleAlignedCapturesSinceActivation"], 0)
+                self.assertEqual(report["counts"]["missingCandidateShadowsSinceActivation"], 0)
+                self.assertIsNone(report["counts"]["candidateShadowCoveragePct"])
 
     def test_failed_audit_and_unsettled_result_are_never_promoted(self):
         race, features, meta, audit = fixture()
