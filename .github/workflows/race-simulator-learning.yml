@@ -57,16 +57,37 @@ jobs:
           python-version: '3.12'
       - name: Test capture, isolation, result pairing and promotion gates
         working-directory: production
-        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher
-      - name: Evaluate saved forecasts and resolve one fixed validation cohort
-        if: github.event_name != 'pull_request'
-        run: python3 production/race_simulator_learning.py cycle
-      - name: Publish learning state and evaluation evidence
+        run: python3 -m unittest test_race_simulator_v02 test_race_simulator_learning test_race_simulator_operations test_live_bundle_publisher test_app_research_publish_window
+      - name: Evaluate and safely publish the latest verified simulator evidence
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
+          # A push during live racing is CI-only. The scheduled 20:17 JST
+          # replay can safely evaluate the immutable pre-post records after
+          # live T-10 captures have finished. The 17:17 run may defer.
+          if [ "$GITHUB_EVENT_NAME" = 'push' ]; then
+            echo 'SIMULATOR_LEARNING_DEFERRED: push event checks only'
+            exit 0
+          fi
+          if python3 production/app_research_publish_window.py; then
+            echo 'SIMULATOR_LEARNING_DEFERRED: live race-day writer has priority'
+            exit 0
+          fi
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+
+          for attempt in 1 2 3 4; do
+            # Do not rebase competing generated JSON/operational status. Read
+            # from the latest published main, preserving verified frozen input
+            # journals and first durable commit timestamps.
+            git fetch --no-tags origin main
+            git reset --hard origin/main
+            # All files below are derived by the cycle; clear only untracked
+            # outputs of an earlier unsuccessful attempt in THIS runner.
+            git clean -fd -- reports/*/race_simulator_evaluation research/race_simulator/models research/race_simulator/decisions
+            python3 production/race_simulator_learning.py cycle
+            python3 - <<'PY'
           import subprocess
           from pathlib import Path
           paths = [Path('RaceSimulatorLearning.json'), Path('RaceSimulatorRecordingStatus.json'), Path('reports/RaceSimulatorLearning.md')]
@@ -74,16 +95,25 @@ jobs:
           paths += list(Path('reports').glob('*/race_simulator_evaluation/*/*.json'))
           subprocess.run(['git', 'add', '--sparse', '--', *map(str, paths)], check=True)
           PY
-          if git diff --cached --quiet; then exit 0; fi
-          git config user.name 'KeibaAI GitHub Actions'
-          git config user.email 'keibaai@users.noreply.github.com'
-          git commit -m 'Evaluate prospective RaceSimulator forecasts and validation gates'
-          for attempt in 1 2 3; do
-            git fetch origin main
-            # A conflicting learning decision must be reviewed, never overwritten.
-            git rebase origin/main
-            if git push origin HEAD:main; then exit 0; fi
+            if git diff --cached --quiet; then
+              echo 'SIMULATOR_LEARNING_UNCHANGED'
+              exit 0
+            fi
+            git commit -m 'Evaluate prospective RaceSimulator forecasts and validation gates'
+            if git push origin HEAD:main; then
+              echo 'SIMULATOR_LEARNING_PUBLISHED'
+              exit 0
+            fi
+            # A new candidate, irreversible holdout decision or model file
+            # must not be re-decided on a changing source during the same run.
+            if git diff --name-only HEAD^ HEAD -- research/race_simulator/decisions research/race_simulator/models | grep -q .; then
+              echo '::error::Simulator decision/model conflicted; preserve artifact for independent review.' >&2
+              exit 1
+            fi
+            echo "::warning::Main advanced; rebuilding derived simulator status from verified inputs ($attempt/4)"
+            sleep $((attempt * 2))
           done
+          echo '::error::Simulator publication exhausted bounded retries; preserved artifacts.' >&2
           exit 1
       - name: Preserve reports and fixed candidate evidence
         if: always()
