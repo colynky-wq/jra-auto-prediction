@@ -52,27 +52,35 @@ def load_published_day(root, target_date8):
     day_iso = day.date().isoformat()
     root = Path(root)
     path = root / "RaceData.json"
+    current = None
+    current_matches_target = False
     if path.exists():
         current = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(current, list):
             raise ValueError("current RaceData must be an array")
         days = {r.get("raceDate") for r in current if isinstance(r, dict)}
-        if days == {day_iso}:
-            return verify_rows(current, day_iso), {
-                "kind": "current_committed_display", "sourceCommitSHA": None,
-                "formalT10EvidenceVerified": False}
-        if day_iso in days:
+        current_matches_target = days == {day_iso}
+        if day_iso in days and not current_matches_target:
             raise ValueError("current RaceData mixes target and other days")
+        if current_matches_target:
+            verify_rows(current, day_iso)
+    # Even when the checked-out file names the target, require a published
+    # Git blob from no later than target-day midnight. The working tree or
+    # an after-midnight replacement alone is not acceptable history.
     cutoff = (day.replace(tzinfo=JST) + timedelta(days=1)).isoformat()
     sha = git_stdout(root, "rev-list", "-1", "--before="+cutoff,
                      "HEAD", "--", "RaceData.json").strip()
     if re.fullmatch(r"[0-9a-f]{40}", sha) is None:
-        raise SnapshotUnavailable("no already published RaceData snapshot before target-day midnight")
+        raise SnapshotUnavailable("no published RaceData commit before target-day midnight")
     previous = json.loads(git_stdout(root, "show", sha+":RaceData.json"))
     try:
         verify_rows(previous, day_iso)
     except (ValueError, SnapshotUnavailable) as exc:
         raise SnapshotUnavailable("published predecessor is not for requested date") from exc
+    if current_matches_target and current != previous:
+        raise ValueError("working RaceData differs from the verified committed snapshot")
     return previous, {
-        "kind": "historical_committed_display", "sourceCommitSHA": sha,
+        "kind": "current_committed_display" if current_matches_target
+                else "historical_committed_display",
+        "sourceCommitSHA": sha,
         "formalT10EvidenceVerified": False}
