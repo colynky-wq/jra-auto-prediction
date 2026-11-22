@@ -66,6 +66,7 @@ def brier(y, p):
 
 
 def choose_2024(data, independent):
+    ensure((data["日付"].dt.year == 2024).all(), "2024 only may choose parameters")
     market = win_market(data)
     races = data["レースID"].astype(str).to_numpy()
     outcomes = (data["着順"] == 1).to_numpy(float)
