@@ -11,6 +11,11 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/market_shrink_shadow.py'
       - 'production/no_current_odds_shadow.py'
+      - 'production/market_anchor_shadow.py'
+      - 'production/test_market_anchor_shadow.py'
+      - 'production/evaluate_market_anchor_forward.py'
+      - 'production/test_evaluate_market_anchor_forward.py'
+      - 'research/model_candidates/market_anchored_v1/frozen_strategy.json'
       - 'production/evaluate_no_current_odds_shadow.py'
       - 'production/test_no_current_odds_shadow.py'
       - 'production/train_no_current_odds_challenger.py'
@@ -146,6 +151,9 @@ jobs:
           python production/test_market_shrink_shadow.py -v
           python -m py_compile production/no_current_odds_shadow.py production/evaluate_no_current_odds_shadow.py production/test_no_current_odds_shadow.py
           python production/test_no_current_odds_shadow.py -v
+          python -m py_compile production/market_anchor_shadow.py production/test_market_anchor_shadow.py production/evaluate_market_anchor_forward.py production/test_evaluate_market_anchor_forward.py
+          python production/test_market_anchor_shadow.py -v
+          python production/test_evaluate_market_anchor_forward.py -v
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py
           python -m unittest discover -s production -p test_race_simulator_learning.py
