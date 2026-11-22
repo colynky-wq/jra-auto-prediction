@@ -184,6 +184,8 @@ def main():
     evaluations = score(data, model)
     report = build_report(metadata, history, data, evaluations,
                           hashlib.sha256(model_bytes).hexdigest())
+    # Preserve exact source provenance for reproducibility across history updates.
+    report["sourceHistorySha256"] = hashlib.sha256(HISTORY.read_bytes()).hexdigest()
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2,
                                  allow_nan=False) + "\n", encoding="utf-8")
