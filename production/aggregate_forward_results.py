@@ -43,9 +43,12 @@ RACEDATA_PATH = REPO / "RaceData.json"
 REPORTS_DIR = REPO / "reports"
 LEDGER_PATH = REPORTS_DIR / "forward_candidate_ledger.csv"
 
-TARGET_DATE8 = (
-    os.environ.get("KEIBAAI_AGGREGATE_DATE", "").strip()
-    or datetime.now(JST).strftime("%Y%m%d")
+from forward_aggregate_schedule import target_date as resolve_aggregate_date
+
+TARGET_DATE8 = resolve_aggregate_date(
+    os.environ.get("KEIBAAI_AGGREGATE_DATE", "").strip(),
+    os.environ.get("GITHUB_EVENT_NAME", ""),
+    datetime.now(JST),
 )
 
 CANDIDATE_RATIO_MIN = 1.20
