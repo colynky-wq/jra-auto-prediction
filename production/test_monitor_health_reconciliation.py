@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from monitor_health_runtime import JST, MONITOR_STEP, REPOSITORY, WORKFLOW
+from monitor_health_runtime import JST, MONITOR_STEP, REPOSITORY, WORKFLOW, choose_health
 from monitor_health_reconciliation import recent_race_day_health
 
 
@@ -44,6 +44,46 @@ class SessionReconciliation(unittest.TestCase):
         wrong["head_branch"] = "other"
         self.assertEqual(recent_race_day_health([run(1, "completed", "success",
              "2026-11-21T02:00:00Z"), wrong], lambda _: [], self.now), [])
+
+    def test_late_skipped_heartbeat_cannot_mask_completed_race_day(self):
+        # The Nov 22 19:33 JST backup was successful in Actions but all
+        # actual live monitoring steps were skipped after the phase cutoff.
+        now = datetime(2026, 11, 22, 19, 40, tzinfo=JST)
+        good = run(44994368639, "completed", "success",
+                   "2026-11-22T06:34:59Z")
+        late = run(45012997807, "completed", "success",
+                   "2026-11-22T10:33:11Z")
+        def jobs(rid):
+            steps = ([{"name": MONITOR_STEP, "conclusion": "success"}]
+                     if rid == good["id"] else
+                     [{"name": MONITOR_STEP, "conclusion": "skipped"}])
+            return [{"status": "completed", "conclusion": "success", "steps": steps}]
+        healths = recent_race_day_health([good, late], jobs, now)
+        self.assertEqual({h["runID"]: h["status"] for h in healths},
+                         {good["id"]: "completed", late["id"]: "not_started"})
+        selected = choose_health(*healths)
+        self.assertEqual(selected["runID"], good["id"])
+        self.assertEqual(selected["status"], "completed")
+        self.assertFalse(selected["needsAttention"])
+
+    def test_late_skipped_run_alone_remains_visible_and_daytime_failures_not_hidden(self):
+        now = datetime(2026, 11, 22, 19, 40, tzinfo=JST)
+        good = run(44994368639, "completed", "success",
+                   "2026-11-22T06:34:59Z")
+        daytime_bad = run(45000000001, "completed", "success",
+                          "2026-11-22T07:00:00Z")
+        late_bad = run(45012997807, "completed", "success",
+                       "2026-11-22T10:33:11Z")
+        def jobs(rid):
+            return [{"status": "completed", "conclusion": "success",
+                     "steps": ([{"name": MONITOR_STEP, "conclusion": "success"}]
+                               if rid == good["id"] else
+                               [{"name": MONITOR_STEP, "conclusion": "skipped"}])}]
+        healths = recent_race_day_health([good, daytime_bad, late_bad], jobs, now)
+        self.assertEqual(choose_health(*[h for h in healths if h["runID"] == late_bad["id"]])["status"],
+                         "not_started")
+        self.assertEqual(choose_health(*healths)["runID"], daytime_bad["id"])
+        self.assertTrue(choose_health(*healths)["needsAttention"])
 
     def test_limit_and_clock_fail_closed(self):
         with self.assertRaises(ValueError):

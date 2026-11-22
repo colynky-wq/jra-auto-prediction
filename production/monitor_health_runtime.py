@@ -1,5 +1,5 @@
 """Workflow-level health without inventing race observations or predictions."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 import json
 from pathlib import Path
 
@@ -120,6 +120,16 @@ def choose_health(*candidates):
     latest_day = max(h['raceDate'] for h in sessions.values())
     day_sessions = [h for h in sessions.values() if h['raceDate'] == latest_day]
     substantive = [h for h in day_sessions if h['status'] not in {'superseded', 'queued'}]
+    # A GitHub cron heartbeat may be delayed until AFTER the 17:35 JST
+    # live-monitor cutoff. Such a green but skipped run is not a regression
+    # of a verified, successfully completed earlier session on that date.
+    # Do not hide a genuine daytime not_started or any failed session.
+    if any(h['status'] == 'completed' for h in substantive):
+        substantive = [h for h in substantive
+                       if not (h['status'] == 'not_started'
+                               and datetime.strptime(
+                                   h['runStartedAtJST'], '%Y-%m-%d %H:%M:%S'
+                               ).time() >= time(17, 35))]
     return max(substantive or day_sessions,
                key=lambda h: (h['runStartedAtJST'], h['runID']))
 
