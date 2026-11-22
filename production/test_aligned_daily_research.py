@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from aligned_daily_research import build, render
+from aligned_daily_research import build, render, blocked_report, render_blocked
 
 
 def fixture():
@@ -96,6 +96,38 @@ class AlignedDailyResearchTests(unittest.TestCase):
                 bad["cohortLockRecoveryRequired"] = True
             with self.subTest(mod=mod), self.assertRaisesRegex(ValueError, "BLOCKED"):
                 build(bad, protocol)
+
+    def test_blocked_audit_supersedes_stale_metrics_without_relaxing_gate(self):
+        audit, protocol = fixture()
+        audit["quality"] = {"issues": [{"code": "capture_missing_after_window"}],
+                            "missingCaptureCount": 24, "invalidCaptureCount": 0}
+        with self.assertRaisesRegex(ValueError, "ALIGNED_RESEARCH_BLOCKED"):
+            build(audit, protocol)
+        before = copy.deepcopy(audit)
+        blocked = blocked_report(audit, protocol,
+                                 "ALIGNED_RESEARCH_BLOCKED: aligned input-quality failures")
+        self.assertEqual(audit, before)
+        self.assertEqual(blocked["status"], "blocked_quality")
+        self.assertEqual(blocked["source"]["countsAreCurrent"], True)
+        self.assertEqual(blocked["quality"]["missingCaptureCount"], 24)
+        for forbidden in ("cohort", "selection", "probability", "profitYen", "returnIndex"):
+            self.assertNotIn(forbidden, blocked)
+        self.assertIn("BLOCKED", render_blocked(blocked))
+        self.assertFalse(blocked["betaAutomaticallyEnabled"])
+        self.assertFalse(blocked["diagnosticsCurrent"])
+
+    def test_stale_or_unverified_input_cannot_publish_cohort_counts(self):
+        audit, protocol = fixture()
+        audit["projectionState"] = "failed"
+        audit["aligned"]["countsAreCurrent"] = False
+        audit["quality"]["missingCaptureCount"] = 200
+        blocked = blocked_report(audit, protocol,
+                                 "ALIGNED_RESEARCH_BLOCKED: projection not verified")
+        self.assertIsNone(blocked["quality"]["missingCaptureCount"])
+        self.assertFalse(blocked["source"]["countsAreCurrent"])
+        self.assertNotIn("cohort", blocked)
+        with self.assertRaisesRegex(ValueError, "BLOCKED"):
+            blocked_report(audit, protocol, "untrusted exception")
 
     def test_no_mutation_and_stable_output(self):
         audit, protocol = fixture()

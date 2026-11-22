@@ -323,6 +323,80 @@ def build(audit, protocol):
     return normalized
 
 
+def blocked_report(audit, protocol, failure):
+    """Explicitly supersede stale H1-H4 diagnostics without weakening build()."""
+    require(isinstance(audit, dict) and isinstance(protocol, dict),
+            "blocked input must be structured")
+    prefix = "ALIGNED_RESEARCH_BLOCKED: "
+    require(isinstance(failure, str) and failure.startswith(prefix),
+            "non-audit exception cannot be represented as a blocked research result")
+    aligned = audit.get("aligned")
+    quality = audit.get("quality")
+    aligned = aligned if isinstance(aligned, dict) else {}
+    quality = quality if isinstance(quality, dict) else {}
+    state = audit.get("projectionState")
+    current = aligned.get("countsAreCurrent") is True
+    verified = state == "verified" and current
+    reasons = [failure[len(prefix):]]
+    issue_codes = sorted({x.get("code") for x in quality.get("issues", [])
+                          if isinstance(x, dict) and isinstance(x.get("code"), str)})
+    # These are *quality counters*, not a new cohort or performance sample.
+    missing = quality.get("missingCaptureCount")
+    invalid = quality.get("invalidCaptureCount")
+    return {
+        "schemaVersion": 1,
+        "status": "blocked_quality",
+        "researchOnly": True,
+        "diagnosticsCurrent": False,
+        "automaticBettingEnabled": False,
+        "formalPredictionAIChanged": False,
+        "betaAutomaticallyEnabled": False,
+        "source": {
+            "file": "AlignedPortfolioReview.json",
+            "generatedAtJST": audit.get("generatedAtJST"),
+            "projectionState": state,
+            "countsAreCurrent": current,
+            "protocolVersion": audit.get("protocolVersion"),
+            "expectedProtocolVersion": protocol.get("version"),
+        },
+        "blockReasons": reasons,
+        "quality": {
+            "missingCaptureCount": missing if verified and type(missing) is int and missing >= 0 else None,
+            "invalidCaptureCount": invalid if verified and type(invalid) is int and invalid >= 0 else None,
+            "issueCodes": issue_codes,
+        },
+        "meaning": (
+            "H1-H4 and payout/probability diagnostics are NOT current or "
+            "eligible for promotion. This status contains no computed "
+            "performance metrics and no retrospective T-10 reconstruction."
+        ),
+    }
+
+
+def render_blocked(payload):
+    require(payload.get("status") == "blocked_quality", "not a blocked report")
+    source = payload["source"]
+    quality = payload["quality"]
+    return "\n".join([
+        "# KeibaAI aligned daily research (read-only)",
+        "",
+        "**Status: BLOCKED — no current H1-H4 research result.**",
+        "The prior verified research report has been superseded, not carried forward as today's result.",
+        "",
+        f"Source audit: {source['generatedAtJST']}",
+        f"Projection: {source['projectionState']}; current counts: {source['countsAreCurrent']}",
+        "Block reason: " + "; ".join(payload["blockReasons"]),
+        f"Official-quality missing T-10 captures: {quality['missingCaptureCount']}",
+        f"Invalid T-10 captures: {quality['invalidCaptureCount']}",
+        "Quality issue types: " + ", ".join(quality["issueCodes"]),
+        "",
+        "Formal T-10 captures cannot be reconstructed after their windows.",
+        "No H1-H4 diagnostics, forecasts, model settings, stake sizing, or beta",
+        "activation are inferred from this blocked status.",
+        "",
+    ]) + "\n"
+
+
 def render(payload):
     c = payload["cohort"]
     prob = payload["probability"]["byBetType"]
@@ -408,10 +482,20 @@ def main():
     root = Path(os.environ.get("KEIBAAI_ROOT", Path(__file__).resolve().parent.parent))
     audit = json.loads((root / "AlignedPortfolioReview.json").read_text(encoding="utf-8"))
     protocol = json.loads((root / "production/ALIGNED_PORTFOLIO_PROTOCOL.json").read_text(encoding="utf-8"))
-    report = build(audit, protocol)
+    try:
+        report = build(audit, protocol)
+        markdown = render(report)
+    except ValueError as exc:
+        # Do NOT change build's full-cohort integrity gate. Replace the
+        # stale previous research file with a clearly blocked *status only*.
+        if not str(exc).startswith("ALIGNED_RESEARCH_BLOCKED: "):
+            raise
+        report = blocked_report(audit, protocol, str(exc))
+        markdown = render_blocked(report)
+        print("::warning::ALIGNED_RESEARCH_BLOCKED_CURRENT", report["blockReasons"], flush=True)
     outputs = ((root / OUTPUT_JSON,
                 json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + "\n"),
-               (root / OUTPUT_MD, render(report)))
+               (root / OUTPUT_MD, markdown))
     for path, content in outputs:
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists() and path.read_text(encoding="utf-8") == content:
@@ -421,13 +505,13 @@ def main():
         temp.write_text(content, encoding="utf-8")
         temp.replace(path)
         print("RESEARCH_UPDATED", path.relative_to(root), flush=True)
-    print(json.dumps({
-        "sourceAuditJST": report["source"]["generatedAtJST"],
-        "races": report["cohort"]["racesObserved"],
-        "matched": report["cohort"]["resultMatchedRaces"],
-        "settled": report["cohort"]["settledSelectedRaces"],
-        "researchOnly": True,
-    }, ensure_ascii=False), flush=True)
+    summary = {"sourceAuditJST": report["source"]["generatedAtJST"],
+               "status": report["status"], "researchOnly": True}
+    if report["status"] == "verified_research_only":
+        summary.update(races=report["cohort"]["racesObserved"],
+                       matched=report["cohort"]["resultMatchedRaces"],
+                       settled=report["cohort"]["settledSelectedRaces"])
+    print(json.dumps(summary, ensure_ascii=False), flush=True)
 
 
 if __name__ == "__main__":

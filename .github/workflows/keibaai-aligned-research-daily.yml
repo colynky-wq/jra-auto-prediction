@@ -4,6 +4,11 @@ name: KeibaAI Aligned Daily Research
 # Never fetch racing pages, replay predictions, mutate frozen T-10 records,
 # tune V1 thresholds, place bets, or activate research beta.
 on:
+  pull_request:
+    paths:
+      - 'production/aligned_daily_research.py'
+      - 'production/test_aligned_daily_research.py'
+      - '.github/workflows/keibaai-aligned-research-daily.yml'
   push:
     branches: [main]
     paths:
@@ -30,10 +35,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
-      - name: Checkout main
+      - name: Checkout event commit (PR checks must exercise proposed code)
         uses: actions/checkout@v5
         with:
-          ref: main
           fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -55,6 +59,7 @@ jobs:
           # the separate H1-H4 full-cohort integrity gate below.
           python production/inspect_frozen_win_probabilities.py
       - name: Rebuild from current verified audit and publish only research reports
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
