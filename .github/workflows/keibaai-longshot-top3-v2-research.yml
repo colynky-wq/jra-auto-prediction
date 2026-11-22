@@ -7,6 +7,10 @@ on:
       - 'production/test_research_longshot_top3_v2.py'
       - 'production/research_longshot_top3_ranker.py'
       - 'production/test_research_longshot_top3_ranker.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
+      - 'research/model_candidates/longshot_top3_v2/**'
       - '.github/workflows/keibaai-longshot-top3-v2-research.yml'
   push:
     branches: [main]
@@ -15,6 +19,9 @@ on:
       - 'production/test_research_longshot_top3_v2.py'
       - 'production/research_longshot_top3_ranker.py'
       - 'production/test_research_longshot_top3_ranker.py'
+      - 'production/longshot_top3_v2_runtime.py'
+      - 'production/evaluate_longshot_top3_v2.py'
+      - 'production/test_longshot_top3_v2_runtime.py'
       - '.github/workflows/keibaai-longshot-top3-v2-research.yml'
   workflow_dispatch:
     inputs:
@@ -50,6 +57,7 @@ jobs:
           python -m unittest discover -s production -p 'test_train_longshot_top3.py' -v
           python -m unittest discover -s production -p 'test_research_longshot_top3_v2.py' -v
           python -m unittest discover -s production -p 'test_research_longshot_top3_ranker.py' -v
+          python -m unittest discover -s production -p 'test_longshot_top3_v2_runtime.py' -v
       - name: Train and evaluate separate historical candidates
         if: github.event_name == 'workflow_dispatch' && inputs.run_historical_research
         env:
