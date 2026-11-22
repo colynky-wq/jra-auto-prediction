@@ -12,6 +12,11 @@ on:
       - 'production/market_shrink_shadow.py'
       - 'production/no_current_odds_shadow.py'
       - 'production/market_anchor_shadow.py'
+      - 'production/longshot_top3_shadow.py'
+      - 'production/test_longshot_top3_shadow.py'
+      - 'production/evaluate_longshot_top3_forward.py'
+      - 'production/test_evaluate_longshot_top3_forward.py'
+      - 'research/model_candidates/longshot_top3_v1/metadata.json'
       - 'production/test_market_anchor_shadow.py'
       - 'production/evaluate_market_anchor_forward.py'
       - 'production/test_evaluate_market_anchor_forward.py'
@@ -153,6 +158,9 @@ jobs:
           python production/test_no_current_odds_shadow.py -v
           python -m py_compile production/market_anchor_shadow.py production/test_market_anchor_shadow.py production/evaluate_market_anchor_forward.py production/test_evaluate_market_anchor_forward.py
           python production/test_market_anchor_shadow.py -v
+          python -m py_compile production/longshot_top3_shadow.py production/test_longshot_top3_shadow.py production/evaluate_longshot_top3_forward.py production/test_evaluate_longshot_top3_forward.py
+          python production/test_longshot_top3_shadow.py -v
+          python production/test_evaluate_longshot_top3_forward.py -v
           python production/test_evaluate_market_anchor_forward.py -v
           python -m py_compile production/live_bundle_publisher.py
           python -m py_compile production/race_simulator_learning.py
