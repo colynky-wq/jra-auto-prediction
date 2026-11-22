@@ -7,6 +7,8 @@ on:
     paths:
       - 'production/after_race_result_gate.py'
       - 'production/test_after_race_result_gate.py'
+      - 'production/validate_wide_axis_snapshot.py'
+      - 'production/test_validate_wide_axis_snapshot.py'
       - '.github/workflows/keibaai-settled-research-publish.yml'
   push:
     branches: [main]
@@ -36,6 +38,7 @@ jobs:
         run: |
           python -m py_compile production/after_race_result_gate.py
           python -m unittest discover -s production -p 'test_after_race_result_gate.py' -v
+          python -m unittest discover -s production -p 'test_validate_wide_axis_snapshot.py' -v
 
   publish:
     if: github.event_name != 'pull_request'
@@ -85,6 +88,9 @@ jobs:
             python -u production/wide_validation_summary.py
             python -u production/ticket_plan_shadow.py
             python -u production/wide_axis_shadow.py
+            # A summary must cover every frozen archive in this checkout.
+            # Fail closed rather than silently publish a stale, partial count.
+            python production/validate_wide_axis_snapshot.py
             date8="$(TZ=Asia/Tokyo date +%Y%m%d)"
             paths=(
               PerformanceData.json
