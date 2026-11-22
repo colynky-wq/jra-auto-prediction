@@ -1,0 +1,105 @@
+name: KeibaAI Market Anchored Historical Challenger
+
+# Research only. Test in PR, select weights using 2024 ONLY, score 2025/2026
+# on merge. No deployment of production models or automatic betting.
+on:
+  pull_request:
+    paths:
+      - 'production/train_market_anchored_challenger.py'
+      - 'production/test_train_market_anchored_challenger.py'
+      - '.github/workflows/keibaai-market-anchored-challenger.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/train_market_anchored_challenger.py'
+      - 'production/test_train_market_anchored_challenger.py'
+      - '.github/workflows/keibaai-market-anchored-challenger.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keibaai-market-anchored-challenger
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v5
+        # For pull requests this checks out the proposed commit.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: production/requirements.txt
+      - run: pip install -r production/requirements.txt
+      - name: Verify pre-registered calibration and feature identity
+        run: |
+          python -m py_compile production/train_market_anchored_challenger.py production/test_train_market_anchored_challenger.py
+          python -m unittest discover -s production -p 'test_train_market_anchored_challenger.py' -v
+      - name: Train provisional 2014-2023 candidate and choose 2024 weights; independently check 2025/2026
+        if: github.event_name != 'pull_request'
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python -u production/train_market_anchored_challenger.py
+      - name: Check source provenance and no betting/model activation
+        if: github.event_name != 'pull_request'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          base=Path('research/model_candidates/market_anchored_v1')
+          model=json.loads((base/'frozen_strategy.json').read_text(encoding='utf-8'))
+          report=json.loads((base/'research.json').read_text(encoding='utf-8'))
+          no_odds=Path('research/model_candidates/no_current_odds_v1/win_lightgbm.txt')
+          assert model['independentModelSHA256']==hashlib.sha256(no_odds.read_bytes()).hexdigest()
+          assert report['trainingEndFor2025Assessment']=='2023-12-31'
+          assert report['modelRefitEndFor2026Assessment']=='2025-12-31'
+          assert model['parametersSelectedFrom']=='2024-only'
+          assert report['selectionEvidence']['2024Races']>3000
+          assert report['test2025']['races']>3000
+          assert report['test2026']['races']>2000
+          assert model['strategies']['historyAugmented']['historicalWeight']>0
+          for item in (model,report):
+              assert item['researchOnly'] is True
+              assert item['candidatePromotionApproved'] is False
+              assert item['formalPredictionAIChanged'] is False
+              assert item['autoBetEnabled'] is False
+          print('HISTORICAL_MARKET_ANCHOR_VALIDATED',
+                report['selectionEvidence'],
+                report['test2025']['events']['win']['pooledHorseBrier'],
+                report['test2026']['events']['win']['pooledHorseBrier'])
+          PY
+      - name: Save separate, versioned research candidate
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: market-anchored-historical-candidate
+          path: research/model_candidates/market_anchored_v1
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish only research model strategy and report
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add -f research/model_candidates/market_anchored_v1
+          if git diff --cached --quiet; then
+            echo 'MARKET_ANCHORED_UNCHANGED'
+            exit 0
+          fi
+          git commit -m 'Publish pre-selected research-only market anchored AI challenger'
+          for n in 1 2 3 4 5; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              echo 'MARKET_ANCHORED_CANDIDATE_PUBLISHED'
+              exit 0
+            fi
+            sleep $((n*2))
+          done
+          echo '::error::Candidate research publishing failed; run artifact retained.' >&2
+          exit 1
