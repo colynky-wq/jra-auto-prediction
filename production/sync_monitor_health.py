@@ -29,7 +29,7 @@ def fetch_jobs(run_id, token):
 
 def fetch_recent_runs(token):
     request = Request(
-        f'https://api.github.com/repos/{REPOSITORY}/actions/runs?per_page=100',
+        f'https://api.github.com/repos/{REPOSITORY}/actions/workflows/keibaai-live-permanent.yml/runs?branch=main&per_page=100',
         headers={'Authorization': f'Bearer {token}', 'Accept': 'application/vnd.github+json',
                  'X-GitHub-Api-Version': '2022-11-28'})
     with build_opener(NoRedirect()).open(request, timeout=15) as response:
