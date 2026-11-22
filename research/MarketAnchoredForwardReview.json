@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "version": "market-anchored-forward-review-v1",
+  "status": "insufficient_future_evidence",
+  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "candidateActivationDate": "2026-11-23",
+  "strategySHA256": "bd3e548cae49b26f90c9ed40d4666cfed1d28b4242de1c9b5eaa43f1d61c1912",
+  "strategyVersion": "market-anchored-history-v1-20261122",
+  "qualityIssueCount": 28,
+  "counts": {
+    "firstFrozenSnapshots": 0,
+    "pairedMatchedWithCalibrated": 0,
+    "pairedMatchedWithHistory": 0,
+    "unmatchedOrExcludedSnapshots": 0,
+    "eligibleAlignedSinceActivation": 0,
+    "missingCandidateSinceActivation": 0,
+    "candidateCaptureCoveragePct": null
+  },
+  "missingCaptureRaceIDs": [],
+  "events": {
+    "win": {
+      "marketCalibrated": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      },
+      "historyAugmented": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      }
+    },
+    "top2": {
+      "marketCalibrated": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      },
+      "historyAugmented": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      }
+    },
+    "top3": {
+      "marketCalibrated": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      },
+      "historyAugmented": {
+        "pairedRaces": 0,
+        "meanBrier": {
+          "formalAI": null,
+          "T10Market": null,
+          "candidate": null
+        },
+        "candidateMinusFormalAI": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        },
+        "candidateMinusMarket": {
+          "pairedRaces": 0,
+          "meanBrierDelta": null,
+          "betterRaces": 0,
+          "worseRaces": 0,
+          "bootstrap95Pct": null
+        }
+      }
+    }
+  },
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "limitations": [
+    "Only first-frozen futures recorded independently before start time.",
+    "Market calibration coefficients chosen on 2024 closing odds, not T10.",
+    "Independent 2% history method only scored when its original separate no-odds shadow was frozen in the same T10 window.",
+    "Missing shadows cannot be reconstructed from later results.",
+    "Whole-race bootstrap uncertainty; no claim of positive profit or model promotion."
+  ]
+}
