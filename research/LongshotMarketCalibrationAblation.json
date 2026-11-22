@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "version": "longshot-market-calibration-ablation-v1-20261123",
+  "generatedAtJST": "2026-11-23T01:34:11.238768+09:00",
+  "status": "retrospective_calibration_ablation_only",
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "longshotModelVersion": "longshot-top3-market-residual-v1-20261123",
+  "longshotModelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "calibrationSelectedIn": "2024-only",
+  "calibrationSelection": {
+    "logitIntercept": 0.3,
+    "winOddsSource": "closing-market-implied-Top3",
+    "validationBrier": 0.07638252644643612
+  },
+  "calibrationGrid2024": [
+    {
+      "logitIntercept": -0.4,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07880069977573509
+    },
+    {
+      "logitIntercept": -0.3,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07824199925109279
+    },
+    {
+      "logitIntercept": -0.2,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07772057451498444
+    },
+    {
+      "logitIntercept": -0.1,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07725370590610374
+    },
+    {
+      "logitIntercept": 0.0,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07686157466082903
+    },
+    {
+      "logitIntercept": 0.1,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.0765674500923136
+    },
+    {
+      "logitIntercept": 0.2,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.0763978309201062
+    },
+    {
+      "logitIntercept": 0.3,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07638252644643612
+    },
+    {
+      "logitIntercept": 0.4,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07655466329118975
+    },
+    {
+      "logitIntercept": 0.5,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07695060432420014
+    },
+    {
+      "logitIntercept": 0.6,
+      "winOddsSource": "closing-market-implied-Top3",
+      "validationBrier": 0.07760976839498566
+    }
+  ],
+  "2025": {
+    "period": "2025-trained-through-2023",
+    "horseRows": 27728,
+    "races": 3143,
+    "top3HorseRows": 2494,
+    "observedTop3Rate": 0.08994518176572418,
+    "expectedRate": {
+      "marketRaw": 0.07153691699451506,
+      "marketIntercept": 0.09265708975100695,
+      "longshotResidualAI": 0.0875441732450312
+    },
+    "horsePooledBrier": {
+      "marketRaw": 0.07714716914158642,
+      "marketIntercept": 0.0766669562838275,
+      "longshotResidualAI": 0.0764741978807024
+    },
+    "horsePooledLogloss": {
+      "marketRaw": 0.27233015285238693,
+      "marketIntercept": 0.2698591658311907,
+      "longshotResidualAI": 0.26886686423329226
+    },
+    "aiMinusSimpleMarketBrier": -0.00019275840312510395,
+    "aiMinusRawMarketBrier": -0.000672971260884031,
+    "pairedRaceMeanBrierDifference": {
+      "versusSimple": -0.00018422536755584182,
+      "versusMarket": -0.0008217814521460654
+    },
+    "pairedRaceBootstrap95": {
+      "versusSimple": [
+        -0.0003105039385038387,
+        -4.6431010682680004e-05
+      ],
+      "versusMarket": [
+        -0.0010578956617910854,
+        -0.0005924876644303842
+      ]
+    },
+    "rankingAmongLongshots": {
+      "sameTopHorse": 2740,
+      "changedTopHorse": 403,
+      "bothHit": 600,
+      "marketOnlyHit": 45,
+      "candidateOnlyHit": 83,
+      "neitherHit": 2415
+    },
+    "topRankedLongshotPodiumHits": {
+      "marketAndSimple": 645,
+      "longshotResidualAI": 683
+    }
+  },
+  "2026": {
+    "period": "2026-trained-through-2025",
+    "horseRows": 24567,
+    "races": 2826,
+    "top3HorseRows": 2196,
+    "observedTop3Rate": 0.08938820368787398,
+    "expectedRate": {
+      "marketRaw": 0.07314584020031319,
+      "marketIntercept": 0.0946624686442979,
+      "longshotResidualAI": 0.08989485100634871
+    },
+    "horsePooledBrier": {
+      "marketRaw": 0.07652973569839872,
+      "marketIntercept": 0.07617072673957322,
+      "longshotResidualAI": 0.0760219374246158
+    },
+    "horsePooledLogloss": {
+      "marketRaw": 0.2703044329225368,
+      "marketIntercept": 0.26854133578796135,
+      "longshotResidualAI": 0.2675137543639868
+    },
+    "aiMinusSimpleMarketBrier": -0.00014878931495741765,
+    "aiMinusRawMarketBrier": -0.0005077982737829168,
+    "pairedRaceMeanBrierDifference": {
+      "versusSimple": -0.00015986485666409094,
+      "versusMarket": -0.0006414542834024027
+    },
+    "pairedRaceBootstrap95": {
+      "versusSimple": [
+        -0.00029935009689565706,
+        -1.035565467022322e-05
+      ],
+      "versusMarket": [
+        -0.0009267512530936145,
+        -0.00036449789603070377
+      ]
+    },
+    "rankingAmongLongshots": {
+      "sameTopHorse": 2413,
+      "changedTopHorse": 413,
+      "bothHit": 529,
+      "marketOnlyHit": 53,
+      "candidateOnlyHit": 71,
+      "neitherHit": 2173
+    },
+    "topRankedLongshotPodiumHits": {
+      "marketAndSimple": 582,
+      "longshotResidualAI": 600
+    }
+  },
+  "limitations": [
+    "Only final historical market odds; never compare this with real T-10 odds.",
+    "Market-only logit-intercept selected on 2024 exclusively; 2025/26 outcomes never determine it.",
+    "The specialized longshot model already selected early stopping and strength using 2024; 2025/26 are not pristine project-wide.",
+    "An intercept alone cannot change the ranking among horses in the same race.",
+    "Any candidate improvement over calibration is descriptive, not proof of a causal or profitable trading edge.",
+    "Only frozen future formal T-10 races can establish genuine deployment quality.",
+    "No live model changes, feature selection, subgroup selection, tickets, or auto-betting."
+  ]
+}
