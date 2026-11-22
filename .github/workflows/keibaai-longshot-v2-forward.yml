@@ -58,11 +58,22 @@ jobs:
           pip install -r production/requirements.txt
           pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
       - name: Verify prospective capture and calibration
+        shell: bash
         run: |
-          python production/test_research_longshot_top3_v2.py -v
-          python production/test_longshot_top3_v2_runtime.py -v
-          python production/test_formal_portfolio_e2e.py -v
-          python production/test_live_bundle_publisher.py -v
+          set -euo pipefail
+          # Fault-injection tests deliberately print GitHub error annotations.
+          # Keep their full log, and expose it if a real assertion fails.
+          if PYTHONPATH=production python -m unittest \
+            production.test_research_longshot_top3_v2 \
+            production.test_longshot_top3_v2_runtime \
+            production.test_formal_portfolio_e2e \
+            production.test_live_bundle_publisher \
+            > "$RUNNER_TEMP/longshot-v2-tests.log" 2>&1; then
+            tail -n 5 "$RUNNER_TEMP/longshot-v2-tests.log"
+          else
+            cat "$RUNNER_TEMP/longshot-v2-tests.log"
+            exit 1
+          fi
       - name: Publish comparison from the current verified result audit
         if: github.event_name != 'pull_request'
         shell: bash
