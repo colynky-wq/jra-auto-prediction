@@ -8,6 +8,9 @@ on:
     paths:
       - 'production/aligned_daily_research.py'
       - 'production/test_aligned_daily_research.py'
+      - 'production/no_current_odds_shadow.py'
+      - 'production/evaluate_no_current_odds_shadow.py'
+      - 'production/test_no_current_odds_shadow.py'
       - 'production/parallel_prediction_research.py'
       - 'production/test_parallel_prediction_research.py'
       - '.github/workflows/keibaai-aligned-research-daily.yml'
@@ -22,6 +25,7 @@ on:
       - 'production/parallel_prediction_research.py'
       - 'production/test_parallel_prediction_research.py'
       - 'production/evaluate_market_shrink_shadow.py'
+      - 'research/model_candidates/no_current_odds_v1/metadata.json'
   workflow_dispatch:
   schedule:
     # 21:15 JST every day (12:15 UTC), after the daytime result/settlement jobs.
@@ -56,11 +60,15 @@ jobs:
       - name: Checkout event commit (PR checks must exercise proposed code)
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0
+          # This research only reads frozen archives and published main inputs;
+          # full Git history is unnecessary and significantly slows the runner.
+          fetch-depth: 1
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
+      - name: Install pinned dependencies for the optional candidate
+        run: pip install -r production/requirements.txt
       - name: Verify offline research contract and safety
         shell: bash
         run: |
@@ -75,6 +83,8 @@ jobs:
           python production/test_inspect_frozen_win_probabilities.py -v
           python production/test_evaluate_market_shrink_shadow.py -v
           python production/test_parallel_prediction_research.py -v
+          python -m py_compile production/no_current_odds_shadow.py production/evaluate_no_current_odds_shadow.py production/test_no_current_odds_shadow.py
+          python production/test_no_current_odds_shadow.py -v
           # Quality-limited, descriptive data may be printed without weakening
           # the separate H1-H4 full-cohort integrity gate below.
           python production/inspect_frozen_win_probabilities.py
@@ -92,7 +102,8 @@ jobs:
             # nonfrozen cohorts and never writes a misleading report.
             python -u production/aligned_daily_research.py
             python -u production/parallel_prediction_research.py
-            git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md research/ParallelPredictionResearch.json research/ParallelPredictionResearch.md
+            python -u production/evaluate_no_current_odds_shadow.py
+            git add -f -- research/AlignedDailyResearch.json research/AlignedDailyResearch.md research/ParallelPredictionResearch.json research/ParallelPredictionResearch.md research/NoCurrentOddsForwardReview.json research/NoCurrentOddsForwardReview.md
             if git diff --cached --quiet; then
               echo 'ALIGNED_RESEARCH_UNCHANGED: source material unchanged'
               exit 0

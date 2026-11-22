@@ -263,6 +263,20 @@ def publish_race_to_racedata(race, out):
     except Exception as exc:
         print("WARNING: optional market-shrink research failed:", type(exc).__name__)
 
+    # Separate candidate trained without current win odds: first-frozen
+    # formal T-10 only; never synthesize missing snapshots or change tickets.
+    try:
+        from no_current_odds_shadow import record_best_effort as record_no_current_odds
+        no_odds_status = record_no_current_odds(
+            RACEDATA_PATH.parent,
+            published_race,
+            out.attrs.get("noCurrentOddsFeatures"),
+            first_formal_capture=first_formal_capture,
+        )
+        print("NO_CURRENT_ODDS_SHADOW_STATUS", rid, no_odds_status)
+    except Exception as exc:
+        print("WARNING: optional no-current-odds research failed:", type(exc).__name__)
+
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
     from ticket_shadow_bridge import record_manifest_best_effort, record_prediction_best_effort

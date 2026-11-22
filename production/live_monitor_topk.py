@@ -240,6 +240,14 @@ def predict_live_race_topk(
     out.attrs['allBetEntryEvidence'] = research_entry_evidence
     out.attrs['winOddsSource'] = {'payload':win_odds_payload,
         'requestStartedAtJST':odds_requested.isoformat(),'receivedAtJST':odds_received.isoformat()}
+    # Preserve the same pre-race, per-entrant feature matrix for the optional
+    # no-current-odds research challenger. This never changes the formal output.
+    no_market_fields = [name for name in base.ALLF if name != "市場ロジット"]
+    out.attrs["noCurrentOddsFeatures"] = {
+        "featureNames": no_market_fields,
+        "horseNumbers": pred["馬番"].astype(int).tolist(),
+        "rows": pred[no_market_fields].astype(float).to_numpy().tolist(),
+    }
 
     p1 = ai_win
     p2 = topk["ai_top2"]
