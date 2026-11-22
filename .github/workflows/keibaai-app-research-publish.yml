@@ -7,6 +7,8 @@ on:
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
       - 'production/validate_app_research_publish.py'
+      - 'production/app_research_publish_window.py'
+      - 'production/test_app_research_publish_window.py'
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
@@ -20,6 +22,8 @@ on:
       - 'production/build_app_research_data.py'
       - 'production/test_app_research_data.py'
       - 'production/validate_app_research_publish.py'
+      - 'production/app_research_publish_window.py'
+      - 'production/test_app_research_publish_window.py'
       - 'production/formation_runtime.py'
       - 'production/research_formation.py'
       - 'production/test_formation_reference.py'
@@ -53,6 +57,7 @@ jobs:
         run: pip install -r production/requirements.txt
       - name: Run regression tests
         run: |
+          python -m unittest discover -s production -p 'test_app_research_publish_window.py'
           python -m unittest discover -s production -p 'test_app_research_data.py'
           python -m unittest discover -s production -p 'test_formation_reference.py'
       - name: Evaluate initial-position reference on 2024 and 2025
@@ -74,6 +79,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # The active live writer updates main every few seconds. Publishing
+          # the expensive derived research here would repeatedly exhaust
+          # optimistic concurrency retries and interrupt useful live work.
+          # Nightly 18:50 JST refresh remains scheduled.
+          if python production/app_research_publish_window.py; then
+            exit 0
+          fi
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
 
