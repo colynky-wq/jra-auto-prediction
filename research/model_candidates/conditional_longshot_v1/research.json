@@ -1,0 +1,223 @@
+{
+  "version": "conditional-longshot-top3-v1-20261123",
+  "researchOnly": true,
+  "historySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "highRiskThreshold": 0.5,
+  "featureNames": [
+    "marketEvent",
+    "fieldSize",
+    "longshotCount",
+    "favoriteWinShare",
+    "top3WinShare",
+    "longshotWinShare",
+    "bestLongshotWinShare",
+    "winEntropy"
+  ],
+  "selection": {
+    "mode": "marketCalibrated",
+    "offset": 0.4,
+    "rounds": 146,
+    "brier2024": {
+      "market": 0.21586489499913844,
+      "marketCalibrated": 0.20668859912956872,
+      "residualGBDT": 0.20676986844204623
+    }
+  },
+  "periods": {
+    "2025": {
+      "risk": {
+        "races": 3143,
+        "actualEventRate": 0.6258351893095768,
+        "marketBrier": 0.21519209777274168,
+        "modelBrier": 0.2052553505002914,
+        "modelLogLoss": 0.597344075835716,
+        "bands": {
+          "low": {
+            "races": 102,
+            "actualEvents": 13,
+            "actualPct": 12.745098039215685,
+            "meanPredictedPct": 16.119746536753148
+          },
+          "middle": {
+            "races": 567,
+            "actualEvents": 230,
+            "actualPct": 40.56437389770723,
+            "meanPredictedPct": 40.04835333640298
+          },
+          "high": {
+            "races": 2474,
+            "actualEvents": 1724,
+            "actualPct": 69.68472109943411,
+            "meanPredictedPct": 68.16334896857485
+          }
+        }
+      },
+      "picks": {
+        "switches": 2474,
+        "baselineTop3Hits": 4989,
+        "adaptiveTop3Hits": 4588,
+        "baselineExactPodiums": 291,
+        "adaptiveExactPodiums": 209,
+        "baselineActualLongshots": 0,
+        "adaptiveActualLongshots": 556,
+        "improvedRaces": 398,
+        "worsenedRaces": 799,
+        "races": 3143,
+        "meanMatchedHorsesDelta": -0.12758510976773782,
+        "pairedRaceBootstrap95": [
+          -0.14826598790964046,
+          -0.1056315622017181
+        ]
+      },
+      "thresholdSensitivityExploratory": {
+        "70%": {
+          "changes": 1101,
+          "matchedHorsesDifference": -119
+        },
+        "80%": {
+          "changes": 264,
+          "matchedHorsesDifference": -21
+        },
+        "90%": {
+          "changes": 4,
+          "matchedHorsesDifference": 1
+        }
+      }
+    },
+    "2026": {
+      "risk": {
+        "races": 2826,
+        "actualEventRate": 0.60828025477707,
+        "marketBrier": 0.21350650094179577,
+        "modelBrier": 0.20703997297122134,
+        "modelLogLoss": 0.6015023972593749,
+        "bands": {
+          "low": {
+            "races": 87,
+            "actualEvents": 11,
+            "actualPct": 12.643678160919542,
+            "meanPredictedPct": 17.406761327066192
+          },
+          "middle": {
+            "races": 531,
+            "actualEvents": 186,
+            "actualPct": 35.02824858757062,
+            "meanPredictedPct": 40.842373430793025
+          },
+          "high": {
+            "races": 2208,
+            "actualEvents": 1522,
+            "actualPct": 68.93115942028986,
+            "meanPredictedPct": 68.36179584563953
+          }
+        }
+      },
+      "picks": {
+        "switches": 2208,
+        "baselineTop3Hits": 4505,
+        "adaptiveTop3Hits": 4168,
+        "baselineExactPodiums": 273,
+        "adaptiveExactPodiums": 187,
+        "baselineActualLongshots": 0,
+        "adaptiveActualLongshots": 506,
+        "improvedRaces": 363,
+        "worsenedRaces": 700,
+        "races": 2826,
+        "meanMatchedHorsesDelta": -0.11924982307147912,
+        "pairedRaceBootstrap95": [
+          -0.14118895966029724,
+          -0.09677105449398449
+        ]
+      },
+      "thresholdSensitivityExploratory": {
+        "70%": {
+          "changes": 999,
+          "matchedHorsesDifference": -110
+        },
+        "80%": {
+          "changes": 283,
+          "matchedHorsesDifference": -27
+        },
+        "90%": {
+          "changes": 10,
+          "matchedHorsesDifference": 3
+        }
+      }
+    },
+    "発走10分前・参考": {
+      "risk": {
+        "races": 124,
+        "actualEventRate": 0.6209677419354839,
+        "marketBrier": 0.20016325875601731,
+        "modelBrier": 0.21670210815924348,
+        "modelLogLoss": 0.62543675477303,
+        "bands": {
+          "low": {
+            "races": 1,
+            "actualEvents": 0,
+            "actualPct": 0.0,
+            "meanPredictedPct": 14.346420838444695
+          },
+          "middle": {
+            "races": 5,
+            "actualEvents": 1,
+            "actualPct": 20.0,
+            "meanPredictedPct": 38.97498326113965
+          },
+          "high": {
+            "races": 118,
+            "actualEvents": 76,
+            "actualPct": 64.40677966101694,
+            "meanPredictedPct": 77.87855380508671
+          }
+        }
+      },
+      "picks": {
+        "switches": 117,
+        "baselineTop3Hits": 186,
+        "adaptiveTop3Hits": 150,
+        "baselineExactPodiums": 5,
+        "adaptiveExactPodiums": 3,
+        "baselineActualLongshots": 0,
+        "adaptiveActualLongshots": 15,
+        "improvedRaces": 12,
+        "worsenedRaces": 48,
+        "races": 124,
+        "meanMatchedHorsesDelta": -0.2903225806451613,
+        "pairedRaceBootstrap95": [
+          -0.3951612903225806,
+          -0.1774193548387097
+        ]
+      },
+      "thresholdSensitivityExploratory": {
+        "70%": {
+          "changes": 88,
+          "matchedHorsesDifference": -28
+        },
+        "80%": {
+          "changes": 60,
+          "matchedHorsesDifference": -14
+        },
+        "90%": {
+          "changes": 14,
+          "matchedHorsesDifference": -6
+        }
+      }
+    }
+  },
+  "t10ExistingChaosBands": {
+    "1–2": {
+      "races": 37,
+      "actualEvents": 21
+    },
+    "4–5": {
+      "races": 74,
+      "actualEvents": 48
+    },
+    "3": {
+      "races": 13,
+      "actualEvents": 8
+    }
+  }
+}
