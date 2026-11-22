@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-11-22T14:57:18+09:00",
+  "generatedAtJST": "2026-11-22T23:27:29+09:00",
   "baselineRuleVersion": "portfolio-shadow-v1-20261019",
   "prospectiveStartDate": "2026-11-02",
   "evidencePolicy": "2026-11-01以前はV2定義後の再生であり、V2前向き成績には数えない。",
@@ -37,7 +37,7 @@
       },
       "prospective": {
         "racesSeen": 184,
-        "selectedRaces": 23,
+        "selectedRaces": 22,
         "settledSelectedRaces": 22,
         "hitAnyRaces": 1,
         "profitableRaces": 1,
@@ -74,8 +74,8 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 28,
-            "selectedRaces": 23,
+            "racesSeen": 27,
+            "selectedRaces": 22,
             "settledSelectedRaces": 22,
             "hitAnyRaces": 1,
             "profitableRaces": 1,
@@ -85,7 +85,7 @@
             "meanSelectedWideFormalTop3Coverage": 1.55
           },
           "S": {
-            "racesSeen": 21,
+            "racesSeen": 22,
             "selectedRaces": 0,
             "settledSelectedRaces": 0,
             "hitAnyRaces": 0,
@@ -12279,9 +12279,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            6,
+            5,
+            1
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -12292,57 +12296,28 @@
           "startTime": "15:40",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "A",
+          "battleGrade": "B",
           "challenger": "battle_a_only",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
-          "planType": "wide_focus",
-          "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：ワイド2点以内。3連複条件は未達",
-          "legs": [
-            {
-              "betType": "wide",
-              "candidateID": "0105",
-              "label": "1番 エルデナリ − 5番 アドマイヤズーム",
-              "numbers": [
-                1,
-                5
-              ],
-              "probabilityPct": 6.062,
-              "oddsLow": 23.4,
-              "oddsHigh": 24.4,
-              "expectedMultiplierLow": 1.419,
-              "unitYen": 100,
-              "hit": null,
-              "payoutYen": null
-            },
-            {
-              "betType": "wide",
-              "candidateID": "0514",
-              "label": "5番 アドマイヤズーム − 14番 スターアニス",
-              "numbers": [
-                5,
-                14
-              ],
-              "probabilityPct": 9.465,
-              "oddsLow": 12.2,
-              "oddsHigh": 13.0,
-              "expectedMultiplierLow": 1.155,
-              "unitYen": 100,
-              "hit": null,
-              "payoutYen": null
-            }
-          ],
-          "totalStakeYen": 200,
+          "planType": "skip",
+          "planLabel": "見送り",
+          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "legs": [],
+          "totalStakeYen": 0,
           "settled": false,
           "returnYen": null,
           "profitYen": null,
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            14,
+            8,
+            2
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -12353,13 +12328,13 @@
           "startTime": "16:05",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "B",
+          "battleGrade": "S",
           "challenger": "battle_a_only",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "reason": "V2 challenger: 混戦Sは保留し、Aのみ前向き比較します",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -12368,9 +12343,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            1,
+            7,
+            9
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -12379,15 +12358,15 @@
           "raceNumber": 12,
           "raceName": "醍醐S",
           "startTime": "16:20",
-          "chaosLevel": 4,
-          "chaosStars": "★★★★☆",
-          "battleGrade": "B",
+          "chaosLevel": 1,
+          "chaosStars": "★☆☆☆☆",
+          "battleGrade": "見送り",
           "challenger": "battle_a_only",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "reason": "勝負度がC以下のため研究プランを作りません",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -12396,9 +12375,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            11,
+            13,
+            6
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         }
       ]
     },
@@ -12417,15 +12400,15 @@
       },
       "prospective": {
         "racesSeen": 184,
-        "selectedRaces": 36,
-        "settledSelectedRaces": 34,
+        "selectedRaces": 38,
+        "settledSelectedRaces": 38,
         "hitAnyRaces": 2,
         "profitableRaces": 2,
         "torigamiRaces": 0,
-        "stakeYen": 6800,
+        "stakeYen": 7400,
         "returnYen": 4390,
-        "profitYen": -2410,
-        "returnIndex": 0.645588
+        "profitYen": -3010,
+        "returnIndex": 0.593243
       },
       "highChaosByGrade": {
         "posthoc_replay": {
@@ -12454,7 +12437,7 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 28,
+            "racesSeen": 27,
             "selectedRaces": 20,
             "settledSelectedRaces": 20,
             "hitAnyRaces": 1,
@@ -12465,15 +12448,15 @@
             "meanSelectedWideFormalTop3Coverage": 1.75
           },
           "S": {
-            "racesSeen": 21,
-            "selectedRaces": 16,
-            "settledSelectedRaces": 14,
+            "racesSeen": 22,
+            "selectedRaces": 18,
+            "settledSelectedRaces": 18,
             "hitAnyRaces": 1,
             "profitableRaces": 1,
-            "stakeYen": 2900,
+            "stakeYen": 3500,
             "returnYen": 1310,
-            "returnIndex": 0.451724,
-            "meanSelectedWideFormalTop3Coverage": 1.875
+            "returnIndex": 0.374286,
+            "meanSelectedWideFormalTop3Coverage": 1.778
           }
         }
       },
@@ -24699,8 +24682,8 @@
               "oddsHigh": 25.0,
               "expectedMultiplierLow": 1.372,
               "unitYen": 100,
-              "hit": null,
-              "payoutYen": null
+              "hit": false,
+              "payoutYen": 0
             },
             {
               "betType": "wide",
@@ -24715,17 +24698,17 @@
               "oddsHigh": 18.1,
               "expectedMultiplierLow": 1.181,
               "unitYen": 100,
-              "hit": null,
-              "payoutYen": null
+              "hit": false,
+              "payoutYen": 0
             }
           ],
           "totalStakeYen": 200,
-          "settled": false,
-          "returnYen": null,
-          "profitYen": null,
-          "hitAny": null,
-          "profitable": null,
-          "torigami": null,
+          "settled": true,
+          "returnYen": 0,
+          "profitYen": -200,
+          "hitAny": false,
+          "profitable": false,
+          "torigami": false,
           "formalTop3": [
             3,
             12,
@@ -24845,9 +24828,9 @@
           "challenger": "top3_coverage",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
-          "planType": "wide_focus",
-          "planLabel": "ワイド中心",
-          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
+          "planType": "wide_plus_trio",
+          "planLabel": "ワイド＋3連複",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内＋v1据え置き3連複ゲート",
           "legs": [
             {
               "betType": "wide",
@@ -24862,17 +24845,29 @@
               "oddsHigh": 17.5,
               "expectedMultiplierLow": 1.372,
               "unitYen": 100,
-              "hit": null,
-              "payoutYen": null
+              "hit": false,
+              "payoutYen": 0
+            },
+            {
+              "betType": "trio",
+              "candidateID": "050612",
+              "label": "5番 ジッピーチューン − 6番 ウフドゥウフ − 12番 コスモサガルマータ",
+              "probabilityPct": 4.585341691921134,
+              "oddsLow": 42.8,
+              "oddsHigh": 42.8,
+              "expectedMultiplierLow": 1.9625262441422453,
+              "unitYen": 100,
+              "hit": false,
+              "payoutYen": 0
             }
           ],
-          "totalStakeYen": 100,
-          "settled": false,
-          "returnYen": null,
-          "profitYen": null,
-          "hitAny": null,
-          "profitable": null,
-          "torigami": null,
+          "totalStakeYen": 200,
+          "settled": true,
+          "returnYen": 0,
+          "profitYen": -200,
+          "hitAny": false,
+          "profitable": false,
+          "torigami": false,
           "formalTop3": [
             6,
             5,
@@ -24929,20 +24924,43 @@
           "challenger": "top3_coverage",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
-          "planType": "skip",
-          "planLabel": "見送り",
-          "reason": "V2 challenger: 正式10分前Top3証拠がないためfail-closedで保留します",
-          "legs": [],
-          "totalStakeYen": 0,
-          "settled": false,
-          "returnYen": null,
-          "profitYen": null,
-          "hitAny": null,
-          "profitable": null,
-          "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "planType": "wide_focus",
+          "planLabel": "ワイド中心",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
+          "legs": [
+            {
+              "betType": "wide",
+              "candidateID": "0510",
+              "label": "5番 スナッピードレッサ − 10番 マピュース",
+              "numbers": [
+                5,
+                10
+              ],
+              "probabilityPct": 5.213,
+              "oddsLow": 24.0,
+              "oddsHigh": 26.5,
+              "expectedMultiplierLow": 1.251,
+              "unitYen": 100,
+              "hit": false,
+              "payoutYen": 0
+            }
+          ],
+          "totalStakeYen": 100,
+          "settled": true,
+          "returnYen": 0,
+          "profitYen": -100,
+          "hitAny": false,
+          "profitable": false,
+          "torigami": false,
+          "formalTop3": [
+            6,
+            5,
+            1
+          ],
+          "selectedWideTop3CoverageCount": 1,
+          "selectedWideTop3CoveredNumbers": [
+            5
+          ]
         },
         {
           "raceDate": "2026-11-22",
@@ -24953,13 +24971,13 @@
           "startTime": "15:40",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "A",
+          "battleGrade": "B",
           "challenger": "top3_coverage",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "V2 challenger: 正式10分前Top3証拠がないためfail-closedで保留します",
+          "reason": "混戦では勝負度A以上だけを研究対象にします",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -24968,9 +24986,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            14,
+            8,
+            2
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -24981,24 +25003,47 @@
           "startTime": "16:05",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "B",
+          "battleGrade": "S",
           "challenger": "top3_coverage",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
-          "planType": "skip",
-          "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
-          "legs": [],
-          "totalStakeYen": 0,
-          "settled": false,
-          "returnYen": null,
-          "profitYen": null,
-          "hitAny": null,
-          "profitable": null,
-          "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "planType": "wide_focus",
+          "planLabel": "ワイド中心",
+          "reason": "V2高混戦比較：各ワイドに正式Top3を必須化した2点以内。3連複条件は未達",
+          "legs": [
+            {
+              "betType": "wide",
+              "candidateID": "0112",
+              "label": "1番 ヒズマスターピース − 12番 ライネリーベ",
+              "numbers": [
+                1,
+                12
+              ],
+              "probabilityPct": 7.327,
+              "oddsLow": 16.1,
+              "oddsHigh": 17.3,
+              "expectedMultiplierLow": 1.18,
+              "unitYen": 100,
+              "hit": false,
+              "payoutYen": 0
+            }
+          ],
+          "totalStakeYen": 100,
+          "settled": true,
+          "returnYen": 0,
+          "profitYen": -100,
+          "hitAny": false,
+          "profitable": false,
+          "torigami": false,
+          "formalTop3": [
+            1,
+            7,
+            9
+          ],
+          "selectedWideTop3CoverageCount": 1,
+          "selectedWideTop3CoveredNumbers": [
+            1
+          ]
         },
         {
           "raceDate": "2026-11-22",
@@ -25007,15 +25052,15 @@
           "raceNumber": 12,
           "raceName": "醍醐S",
           "startTime": "16:20",
-          "chaosLevel": 4,
-          "chaosStars": "★★★★☆",
-          "battleGrade": "B",
+          "chaosLevel": 1,
+          "chaosStars": "★☆☆☆☆",
+          "battleGrade": "見送り",
           "challenger": "top3_coverage",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "reason": "勝負度がC以下のため研究プランを作りません",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -25024,9 +25069,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            11,
+            13,
+            6
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         }
       ]
     },
@@ -25082,7 +25131,7 @@
         },
         "prospective": {
           "A": {
-            "racesSeen": 28,
+            "racesSeen": 27,
             "selectedRaces": 20,
             "settledSelectedRaces": 20,
             "hitAnyRaces": 1,
@@ -25093,7 +25142,7 @@
             "meanSelectedWideFormalTop3Coverage": 1.75
           },
           "S": {
-            "racesSeen": 21,
+            "racesSeen": 22,
             "selectedRaces": 0,
             "settledSelectedRaces": 0,
             "hitAnyRaces": 0,
@@ -36847,9 +36896,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            6,
+            5,
+            1
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -36860,13 +36913,13 @@
           "startTime": "15:40",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "A",
+          "battleGrade": "B",
           "challenger": "combined",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "V2 challenger: 正式10分前Top3証拠がないためfail-closedで保留します",
+          "reason": "混戦では勝負度A以上だけを研究対象にします",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -36875,9 +36928,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            14,
+            8,
+            2
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -36888,13 +36945,13 @@
           "startTime": "16:05",
           "chaosLevel": 5,
           "chaosStars": "★★★★★",
-          "battleGrade": "B",
+          "battleGrade": "S",
           "challenger": "combined",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "reason": "V2 challenger: 混戦Sは保留し、Aのみ前向き比較します",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -36903,9 +36960,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            1,
+            7,
+            9
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         },
         {
           "raceDate": "2026-11-22",
@@ -36914,15 +36975,15 @@
           "raceNumber": 12,
           "raceName": "醍醐S",
           "startTime": "16:20",
-          "chaosLevel": 4,
-          "chaosStars": "★★★★☆",
-          "battleGrade": "B",
+          "chaosLevel": 1,
+          "chaosStars": "★☆☆☆☆",
+          "battleGrade": "見送り",
           "challenger": "combined",
           "scope": "prospective",
           "ruleVersion": "portfolio-shadow-v2-20261101",
           "planType": "skip",
           "planLabel": "見送り",
-          "reason": "混戦では勝負度A以上だけを研究対象にします",
+          "reason": "勝負度がC以下のため研究プランを作りません",
           "legs": [],
           "totalStakeYen": 0,
           "settled": false,
@@ -36931,9 +36992,13 @@
           "hitAny": null,
           "profitable": null,
           "torigami": null,
-          "formalTop3": null,
-          "selectedWideTop3CoverageCount": null,
-          "selectedWideTop3CoveredNumbers": null
+          "formalTop3": [
+            11,
+            13,
+            6
+          ],
+          "selectedWideTop3CoverageCount": 0,
+          "selectedWideTop3CoveredNumbers": []
         }
       ]
     }
