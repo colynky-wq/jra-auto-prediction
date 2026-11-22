@@ -201,6 +201,18 @@ class TestMonitorHealth(unittest.TestCase):
         self.assertTrue(uncertain['needsAttention'])
         self.assertEqual(actual['status'], 'interrupted')
 
+    def test_queued_request_is_not_a_started_live_worker(self):
+        actual = health_from_event(
+            event(345, 'in_progress', None, '2026-11-22T01:59:50Z'),
+            [{'status': 'in_progress', 'steps': [{'name': MONITOR_STEP}]}],
+            datetime(2026, 11, 22, 14, tzinfo=JST))
+        queued = health_from_event(
+            event(346, 'pending', None, '2026-11-22T03:09:33Z'),
+            [], datetime(2026, 11, 22, 14, tzinfo=JST))
+        self.assertEqual(queued['status'], 'queued')
+        self.assertFalse(queued['needsAttention'])
+        self.assertEqual(choose_health(actual, queued)['runID'], 345)
+
     def test_pending_replacement_only_hides_other_runs_on_same_date(self):
         old = health_from_event(event(1, 'in_progress', None,
                                       '2026-10-16T00:00:00Z'), [], NOW)
