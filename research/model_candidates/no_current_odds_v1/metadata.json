@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "version": "no-current-odds-challenger-v1-20261122",
+  "generatedAtJST": "2026-11-22T23:38:41.392607+09:00",
+  "sourceHistorySha256": "9c5399312b6b38c29e6684755ab6a3ec76afa31a3d7170e6c8fd47b251c91555",
+  "sourceHistoryRows": 624122,
+  "sourceLatestDate": "2026-11-21",
+  "researchOnly": true,
+  "autoBetEnabled": false,
+  "formalPredictionAIChanged": false,
+  "candidatePromotionApproved": false,
+  "modelFile": "win_lightgbm.txt",
+  "modelSha256": "1b2218656cc44b5a56373c59a764b0333351a4ad47aa40c73765836be22ae5ba",
+  "features": [
+    "1着率",
+    "log間隔",
+    "クラス値f",
+    "クラス差",
+    "乗り替わり",
+    "内枠先行",
+    "出走数c",
+    "前走上がり差f",
+    "前走人気f",
+    "前走着順率f",
+    "前走秒差f",
+    "同芝ダ回数c",
+    "同芝ダ平均",
+    "同距離帯回数c",
+    "同距離帯平均",
+    "増減f",
+    "増減絶対",
+    "平均着順",
+    "年齢",
+    "斤量",
+    "斤量変化",
+    "昇級",
+    "枠位置",
+    "点数差",
+    "脚質初角",
+    "芝ダ替わり",
+    "調教師log数",
+    "調教師勝率",
+    "調教師複勝率",
+    "距離変化",
+    "降級",
+    "頭数f",
+    "馬体重f",
+    "騎手log数",
+    "騎手勝率",
+    "騎手複勝率"
+  ],
+  "featureCount": 36,
+  "currentMarketInputs": [],
+  "historicalMarketSignalRetained": [
+    "前走人気f"
+  ],
+  "target": "P(win); Top2/3 derived from no-odds win using Plackett-Luce",
+  "trainThrough": "2023-12-31",
+  "earlyStopping": "2024-01-01..2024-12-31",
+  "retrospectiveHoldout": "2025-01-01..2025-12-31",
+  "finalRefitThrough": "2025-12-31",
+  "bestIterationChosenWithout2025": 350,
+  "training": {
+    "rows": 465544,
+    "races": 33084,
+    "validationRows": 45130,
+    "validationRaces": 3305,
+    "holdoutRows": 45779,
+    "holdoutRaces": 3309,
+    "finalRefitRows": 556453,
+    "finalRefitRaces": 39698
+  },
+  "holdoutComparison": {
+    "win": {
+      "event": "win",
+      "raceCount": 3309,
+      "horseRows": 45779,
+      "marketFinalOddsBrier": 0.05725447624399677,
+      "candidateNoCurrentOddsBrier": 0.06061158813749554,
+      "candidateMinusFinalMarketBrier": 0.003357111893498764,
+      "pairedRaceBootstrap95": [
+        0.0031213146219891013,
+        0.0041138965935802844
+      ],
+      "marketFinalOddsLogloss": 0.20272142910819588,
+      "candidateNoCurrentOddsLogloss": 0.21915367151110374,
+      "marketTopPickHitRaces": 1095,
+      "candidateTopPickHitRaces": 933
+    },
+    "top2": {
+      "event": "top2",
+      "raceCount": 3309,
+      "horseRows": 45779,
+      "marketFinalOddsBrier": 0.09798375024429545,
+      "candidateNoCurrentOddsBrier": 0.10461741151881913,
+      "candidateMinusFinalMarketBrier": 0.006633661274523681,
+      "pairedRaceBootstrap95": [
+        0.006280794488401342,
+        0.007931135203807872
+      ],
+      "marketFinalOddsLogloss": 0.31859151954616244,
+      "candidateNoCurrentOddsLogloss": 0.3421142735709868,
+      "marketTopPickHitRaces": 1734,
+      "candidateTopPickHitRaces": 1541
+    },
+    "top3": {
+      "event": "top3",
+      "raceCount": 3309,
+      "horseRows": 45779,
+      "marketFinalOddsBrier": 0.1301884526749601,
+      "candidateNoCurrentOddsBrier": 0.13852787226521776,
+      "candidateMinusFinalMarketBrier": 0.008339419590257663,
+      "pairedRaceBootstrap95": [
+        0.007394052398507123,
+        0.00967252859860115
+      ],
+      "marketFinalOddsLogloss": 0.4059683456590254,
+      "candidateNoCurrentOddsLogloss": 0.4308649716491417,
+      "marketTopPickHitRaces": 2146,
+      "candidateTopPickHitRaces": 1976
+    }
+  },
+  "limitations": [
+    "Only earlier historical features are model inputs; current market logit removed.",
+    "Previous-race popularity remains an allowed, past market-related feature.",
+    "Reference 2025 odds are post-race final odds, NOT T-10 odds.",
+    "2025 is an internal chronological holdout, not an untouched project-wide dataset.",
+    "Final model is fit through 2025 and must NEVER be re-scored on 2025 as out-of-sample.",
+    "2026 strictly first-frozen T-10 shadow results required to assess live usefulness.",
+    "No automatic model adoption, betting, threshold adjustment, or ROI claim."
+  ]
+}
