@@ -82,10 +82,10 @@ def evaluate(d, model, features, funcs):
             "outcomes":outcomes,"paired":paired}
 
 
-def run(root):
+def run(root, history_file=None):
     report_path = root/"research/model_candidates/longshot_top3_v2/research.json"
     registry = json.loads(report_path.read_text(encoding="utf-8"))
-    history_path = root/"production/production_history.parquet"
+    history_path = Path(history_file) if history_file else root/"production/production_history.parquet"
     source_sha = hashlib.sha256(history_path.read_bytes()).hexdigest()
     if source_sha != registry["sourceHistorySha256"]:
         raise ValueError("Historical source hash does not match frozen V2 training registry")
@@ -129,8 +129,9 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--root",type=Path,default=Path("."))
     parser.add_argument("--output",type=Path,default=Path("longshot_v3_historical_result.json"))
+    parser.add_argument("--history-file",type=Path,default=None,help="Exact frozen source parquet; SHA-256 must equal V2 registry")
     args=parser.parse_args()
-    result=run(args.root)
+    result=run(args.root, args.history_file)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False)+"\n",encoding="utf-8")
     for year in ("2025","2026"):
