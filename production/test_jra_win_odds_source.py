@@ -260,6 +260,45 @@ class JRAWinOddsSourceTests(unittest.TestCase):
                     self.assertFalse(retryable_win_odds_failure(caught.exception))
                     self.assertEqual(session.calls, ["get"] if stage == "entry" else ["post"])
 
+    def test_http_200_official_access_block_is_terminal(self):
+        class Response:
+            status_code = 200
+            apparent_encoding = "shift_jis"
+            content = "アクセスが集中しております".encode("shift_jis")
+
+        class Session:
+            def __init__(self):
+                self.headers = {}
+            def post(self, *args, **kwargs):
+                return Response()
+
+        cache = {(DATE, RACE): (
+            "https://www.jra.go.jp/JRADB/accessD.html?CNAME=observed", TOKEN)}
+        with self.assertRaises(JRAAccessRestricted) as caught:
+            fetch_jra_win_odds(
+                RACE, DATE, session=Session(),
+                clock=lambda: RECEIVED, navigation_cache=cache)
+        self.assertFalse(retryable_win_odds_failure(caught.exception))
+
+    def test_http_200_navigation_access_block_is_terminal(self):
+        class Response:
+            status_code = 200
+            apparent_encoding = "shift_jis"
+            content = "ご指定のページに接続できません".encode("shift_jis")
+
+        class Session:
+            def __init__(self):
+                self.calls = 0
+            def get(self, url, **kwargs):
+                self.calls += 1
+                return Response()
+
+        session = Session()
+        with self.assertRaises(JRAEntryAccessRestricted) as caught:
+            discover_entry_url(RACE, DATE, session, abort_on_restricted=True)
+        self.assertFalse(retryable_win_odds_failure(caught.exception))
+        self.assertEqual(session.calls, 1)
+
     def test_other_upstream_http_error_retries_without_repeat_discovery(self):
         class Response:
             apparent_encoding = "shift_jis"
