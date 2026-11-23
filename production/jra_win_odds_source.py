@@ -195,4 +195,7 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
     _require_http_ok(response, "odds")
     html = response.content.decode(response.apparent_encoding or "shift_jis",
                                    errors="replace")
+    if any(message in html for message in (
+            "アクセスが集中", "ご指定のページに接続できません")):
+        raise JRAAccessRestricted("jra_odds_access_restricted_page")
     return parse_jra_win_odds(html, race_id, date8, received)
