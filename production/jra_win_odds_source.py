@@ -8,6 +8,7 @@ are fail closed, and the source clock is never replaced by HTTP receipt time.
 from __future__ import annotations
 
 from datetime import datetime
+import hashlib
 import re
 
 import pandas as pd
@@ -122,6 +123,10 @@ def parse_jra_win_odds(html: str, race_id: str, date8: str,
         "sourceProvider": "jra_official_web",
         "sourceDisplayLabel": times[0],
         "sourceURL": ACCESS_O,
+        "sourceRaceDateJST": date8,
+        "sourceRaceID": race_id,
+        "sourceTimePrecision": "minute",
+        "sourcePageSha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
         "data": {"official_datetime": source_at.isoformat()},
     }
     evidence = validate_win_odds_freshness(payload, received_at)
