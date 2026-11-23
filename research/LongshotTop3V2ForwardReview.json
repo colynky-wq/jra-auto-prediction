@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "researchOnly": true,
-  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T16:22:14+09:00",
   "model": {
     "version": "longshot-top3-place-history-v2-20261123",
     "sha256": "bd9dfb654fe6a0bdbb29123011142bd696bee085d503f86d5e9963698ade9cf2",
     "weight": 1.0,
     "trainedThrough": "2025-12-31"
   },
-  "sourceAuditFingerprint": "d659c57080902a305b10fca7c4012df839712d0adbf075c4aa77225fbf61a23a",
+  "sourceAuditFingerprint": "0a124debd2ebdbce685b51ddc7379a986a57290bd022a88d376895542f7a9829",
   "calibrationBinEdgesPct": [
     0,
     5,
@@ -19,106 +19,665 @@
     100
   ],
   "matchedRaceDates": 1,
-  "eligibleAuditedRaces": 17,
-  "storedCandidateCaptures": 17,
+  "freshOddsVerified30m": {
+    "status": "insufficient_verified_30m_evidence",
+    "sourceTimestampField": "data.official_datetime",
+    "maximumAgeSecondsAtPublication": 1800,
+    "verifiedCapturedRaces": 0,
+    "missingProvenanceCaptures": 22,
+    "invalidProvenanceCaptures": 0,
+    "matchedRaces": 0,
+    "matchedRaceDates": 0,
+    "matchedCandidateHorses": 0,
+    "topPickComparison": {
+      "candidate": {
+        "top3Hits": 0,
+        "top3RatePct": null,
+        "brierEqualRace": null
+      },
+      "market": {
+        "top3Hits": 0,
+        "top3RatePct": null,
+        "brierEqualRace": null
+      },
+      "formalAI": {
+        "top3Hits": 0,
+        "top3RatePct": null,
+        "brierEqualRace": null
+      }
+    },
+    "pairedCandidateBrierDifference": {
+      "market": {
+        "pairedRaces": 0,
+        "meanBrierDelta": null,
+        "betterRaces": 0,
+        "worseRaces": 0,
+        "bootstrap95Pct": null
+      },
+      "formalAI": {
+        "pairedRaces": 0,
+        "meanBrierDelta": null,
+        "betterRaces": 0,
+        "worseRaces": 0,
+        "bootstrap95Pct": null
+      }
+    },
+    "calibrationAllQualifyingHorses": {
+      "candidate": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      },
+      "market": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      },
+      "formalAI": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      }
+    },
+    "calibrationSelectedHorse": {
+      "candidate": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      },
+      "market": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      },
+      "formalAI": {
+        "horses": 0,
+        "races": 0,
+        "raceDates": 0,
+        "observedHits": 0,
+        "expectedHits": 0.0,
+        "meanPredictedPct": null,
+        "observedRatePct": null,
+        "brierScore": null,
+        "bins": [
+          {
+            "fromPctInclusive": 0,
+            "toPct": 5,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 5,
+            "toPct": 10,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 10,
+            "toPct": 20,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 20,
+            "toPct": 30,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 30,
+            "toPct": 50,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          },
+          {
+            "fromPctInclusive": 50,
+            "toPct": 100,
+            "horses": 0,
+            "races": 0,
+            "raceDates": 0,
+            "observedHits": 0,
+            "expectedHits": 0.0,
+            "meanPredictedPct": null,
+            "observedRatePct": null,
+            "brierScore": null
+          }
+        ]
+      }
+    },
+    "dailyMatchedBrier": {},
+    "promotionApproved": false,
+    "limitations": [
+      "Requires frozen source update time verified within 30 minutes at publication.",
+      "Provider timestamp semantics need live verification; receipt time alone is insufficient.",
+      "Small cohorts do not establish profitable betting or model superiority."
+    ]
+  },
+  "eligibleAuditedRaces": 22,
+  "storedCandidateCaptures": 22,
   "missingCandidateCaptures": 0,
   "rejectedCaptures": 0,
-  "pendingOrExcludedRaces": 2,
+  "pendingOrExcludedRaces": 0,
   "racesWithoutEligibleHorse": 0,
   "incompletePodiumRaces": 0,
-  "matchedRaces": 15,
-  "matchedCandidateHorses": 146,
+  "matchedRaces": 22,
+  "matchedCandidateHorses": 216,
   "topPickComparison": {
     "candidate": {
-      "top3Hits": 2,
-      "top3RatePct": 13.333333333333334,
-      "brierEqualRace": 0.059242014016533256
+      "top3Hits": 3,
+      "top3RatePct": 13.636363636363637,
+      "brierEqualRace": 0.06347462658782467
     },
     "market": {
-      "top3Hits": 2,
-      "top3RatePct": 13.333333333333334,
-      "brierEqualRace": 0.05858169016003031
+      "top3Hits": 3,
+      "top3RatePct": 13.636363636363637,
+      "brierEqualRace": 0.06312238069588706
     },
     "formalAI": {
-      "top3Hits": 2,
-      "top3RatePct": 13.333333333333334,
-      "brierEqualRace": 0.05899440143215657
+      "top3Hits": 3,
+      "top3RatePct": 13.636363636363637,
+      "brierEqualRace": 0.06343457730788216
     }
   },
   "pairedCandidateBrierDifference": {
     "market": {
-      "pairedRaces": 15,
-      "meanBrierDelta": 0.00066032,
-      "betterRaces": 5,
-      "worseRaces": 10,
+      "pairedRaces": 22,
+      "meanBrierDelta": 0.00035225,
+      "betterRaces": 9,
+      "worseRaces": 13,
       "bootstrap95Pct": null
     },
     "formalAI": {
-      "pairedRaces": 15,
-      "meanBrierDelta": 0.00024761,
-      "betterRaces": 6,
-      "worseRaces": 9,
+      "pairedRaces": 22,
+      "meanBrierDelta": 4.005e-05,
+      "betterRaces": 9,
+      "worseRaces": 13,
       "bootstrap95Pct": null
     }
   },
   "calibrationAllQualifyingHorses": {
     "candidate": {
-      "horses": 146,
-      "races": 15,
+      "horses": 216,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 9,
-      "expectedHits": 15.773800291225022,
-      "meanPredictedPct": 10.80397280220892,
-      "observedRatePct": 6.164383561643835,
-      "brierScore": 0.05880919751771505,
+      "observedHits": 15,
+      "expectedHits": 23.99161141668093,
+      "meanPredictedPct": 11.107227507722653,
+      "observedRatePct": 6.944444444444445,
+      "brierScore": 0.06344200325835134,
       "bins": [
         {
           "fromPctInclusive": 0,
           "toPct": 5,
-          "horses": 36,
-          "races": 15,
+          "horses": 49,
+          "races": 22,
           "raceDates": 1,
           "observedHits": 0,
-          "expectedHits": 1.158766923096002,
-          "meanPredictedPct": 3.2187970086000055,
+          "expectedHits": 1.617472240215968,
+          "meanPredictedPct": 3.3009637555427918,
           "observedRatePct": 0.0,
-          "brierScore": 0.001154132473221073
+          "brierScore": 0.0012022041125567126
         },
         {
           "fromPctInclusive": 5,
           "toPct": 10,
-          "horses": 39,
-          "races": 13,
+          "horses": 51,
+          "races": 18,
           "raceDates": 1,
           "observedHits": 0,
-          "expectedHits": 2.9616208021451205,
-          "meanPredictedPct": 7.593899492679796,
+          "expectedHits": 3.781399632150799,
+          "meanPredictedPct": 7.414509082648626,
           "observedRatePct": 0.0,
-          "brierScore": 0.00598479650440871
+          "brierScore": 0.005703299027380419
         },
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 54,
-          "races": 15,
+          "horses": 90,
+          "races": 22,
           "raceDates": 1,
-          "observedHits": 8,
-          "expectedHits": 7.907619714563891,
-          "meanPredictedPct": 14.643740212155354,
-          "observedRatePct": 14.814814814814815,
-          "brierScore": 0.12836919270288133
+          "observedHits": 11,
+          "expectedHits": 12.836174035402097,
+          "meanPredictedPct": 14.26241559489122,
+          "observedRatePct": 12.222222222222221,
+          "brierScore": 0.10962191246682836
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 17,
-          "races": 12,
+          "horses": 26,
+          "races": 18,
           "raceDates": 1,
-          "observedHits": 1,
-          "expectedHits": 3.745792851420008,
-          "meanPredictedPct": 22.03407559658828,
-          "observedRatePct": 5.882352941176471,
-          "brierScore": 0.08113238817193574
+          "observedHits": 4,
+          "expectedHits": 5.7565655089120655,
+          "meanPredictedPct": 22.14063657273871,
+          "observedRatePct": 15.384615384615385,
+          "brierScore": 0.13414324345683287
         },
         {
           "fromPctInclusive": 30,
@@ -147,62 +706,62 @@
       ]
     },
     "market": {
-      "horses": 146,
-      "races": 15,
+      "horses": 216,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 9,
-      "expectedHits": 12.89963,
-      "meanPredictedPct": 8.83536301369863,
-      "observedRatePct": 6.164383561643835,
-      "brierScore": 0.05779473217739725,
+      "observedHits": 15,
+      "expectedHits": 19.64667,
+      "meanPredictedPct": 9.095680555555555,
+      "observedRatePct": 6.944444444444445,
+      "brierScore": 0.06281851804953703,
       "bins": [
         {
           "fromPctInclusive": 0,
           "toPct": 5,
-          "horses": 48,
-          "races": 15,
+          "horses": 66,
+          "races": 22,
           "raceDates": 1,
           "observedHits": 0,
-          "expectedHits": 1.50241,
-          "meanPredictedPct": 3.1300208333333335,
+          "expectedHits": 2.12048,
+          "meanPredictedPct": 3.212848484848485,
           "observedRatePct": 0.0,
-          "brierScore": 0.0010813352562499998
+          "brierScore": 0.0011297384787878788
         },
         {
           "fromPctInclusive": 5,
           "toPct": 10,
-          "horses": 45,
-          "races": 15,
+          "horses": 68,
+          "races": 22,
           "raceDates": 1,
-          "observedHits": 2,
-          "expectedHits": 3.28936,
-          "meanPredictedPct": 7.309688888888888,
-          "observedRatePct": 4.444444444444445,
-          "brierScore": 0.04321723338222223
+          "observedHits": 4,
+          "expectedHits": 5.08746,
+          "meanPredictedPct": 7.4815588235294115,
+          "observedRatePct": 5.882352941176471,
+          "brierScore": 0.05539223682058824
         },
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 49,
-          "races": 15,
+          "horses": 76,
+          "races": 22,
           "raceDates": 1,
-          "observedHits": 7,
-          "expectedHits": 7.2525699999999995,
-          "meanPredictedPct": 14.801163265306121,
-          "observedRatePct": 14.285714285714286,
-          "brierScore": 0.12771706756530612
+          "observedHits": 10,
+          "expectedHits": 11.14235,
+          "meanPredictedPct": 14.660986842105265,
+          "observedRatePct": 13.157894736842104,
+          "brierScore": 0.11683277479078946
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 4,
-          "races": 3,
+          "horses": 6,
+          "races": 5,
           "raceDates": 1,
-          "observedHits": 0,
-          "expectedHits": 0.8552900000000001,
-          "meanPredictedPct": 21.382250000000003,
-          "observedRatePct": 0.0,
-          "brierScore": 0.045803748175000006
+          "observedHits": 1,
+          "expectedHits": 1.29638,
+          "meanPredictedPct": 21.606333333333335,
+          "observedRatePct": 16.666666666666668,
+          "brierScore": 0.14137902853333337
         },
         {
           "fromPctInclusive": 30,
@@ -231,62 +790,62 @@
       ]
     },
     "formalAI": {
-      "horses": 146,
-      "races": 15,
+      "horses": 216,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 9,
-      "expectedHits": 15.18247,
-      "meanPredictedPct": 10.39895205479452,
-      "observedRatePct": 6.164383561643835,
-      "brierScore": 0.0584145091239726,
+      "observedHits": 15,
+      "expectedHits": 23.05563,
+      "meanPredictedPct": 10.673902777777778,
+      "observedRatePct": 6.944444444444445,
+      "brierScore": 0.06333525006435185,
       "bins": [
         {
           "fromPctInclusive": 0,
           "toPct": 5,
-          "horses": 36,
-          "races": 15,
+          "horses": 49,
+          "races": 22,
           "raceDates": 1,
           "observedHits": 0,
-          "expectedHits": 1.16021,
-          "meanPredictedPct": 3.2228055555555555,
+          "expectedHits": 1.59632,
+          "meanPredictedPct": 3.257795918367347,
           "observedRatePct": 0.0,
-          "brierScore": 0.001153632975
+          "brierScore": 0.0011629870653061224
         },
         {
           "fromPctInclusive": 5,
           "toPct": 10,
-          "horses": 41,
-          "races": 15,
+          "horses": 54,
+          "races": 20,
           "raceDates": 1,
-          "observedHits": 1,
-          "expectedHits": 3.0131200000000002,
-          "meanPredictedPct": 7.349073170731708,
-          "observedRatePct": 2.4390243902439024,
-          "brierScore": 0.025609739858536585
+          "observedHits": 2,
+          "expectedHits": 3.90028,
+          "meanPredictedPct": 7.222740740740741,
+          "observedRatePct": 3.7037037037037037,
+          "brierScore": 0.03556817275555556
         },
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 56,
-          "races": 15,
+          "horses": 94,
+          "races": 22,
           "raceDates": 1,
-          "observedHits": 7,
-          "expectedHits": 8.22979,
-          "meanPredictedPct": 14.69605357142857,
-          "observedRatePct": 12.5,
-          "brierScore": 0.11167729318035714
+          "observedHits": 10,
+          "expectedHits": 13.46779,
+          "meanPredictedPct": 14.327436170212765,
+          "observedRatePct": 10.638297872340425,
+          "brierScore": 0.09726765949255319
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 13,
-          "races": 10,
+          "horses": 19,
+          "races": 14,
           "raceDates": 1,
-          "observedHits": 1,
-          "expectedHits": 2.77935,
-          "meanPredictedPct": 21.379615384615384,
-          "observedRatePct": 7.6923076923076925,
-          "brierScore": 0.09100459943846154
+          "observedHits": 3,
+          "expectedHits": 4.09124,
+          "meanPredictedPct": 21.53284210526316,
+          "observedRatePct": 15.789473684210526,
+          "brierScore": 0.13471506982105264
         },
         {
           "fromPctInclusive": 30,
@@ -317,14 +876,14 @@
   },
   "calibrationSelectedHorse": {
     "candidate": {
-      "horses": 15,
-      "races": 15,
+      "horses": 22,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 2,
-      "expectedHits": 3.2013449203833906,
-      "meanPredictedPct": 21.342299469222603,
-      "observedRatePct": 13.333333333333334,
-      "brierScore": 0.12490729680262794,
+      "observedHits": 3,
+      "expectedHits": 4.713142795862108,
+      "meanPredictedPct": 21.423376344827766,
+      "observedRatePct": 13.636363636363637,
+      "brierScore": 0.12396335273194659,
       "bins": [
         {
           "fromPctInclusive": 0,
@@ -353,26 +912,26 @@
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 3,
-          "races": 3,
+          "horses": 4,
+          "races": 4,
           "raceDates": 1,
           "observedHits": 1,
-          "expectedHits": 0.5398307026934523,
-          "meanPredictedPct": 17.99435675644841,
-          "observedRatePct": 33.333333333333336,
-          "brierScore": 0.24339557739985476
+          "expectedHits": 0.7014328455808709,
+          "meanPredictedPct": 17.535821139521772,
+          "observedRatePct": 25.0,
+          "brierScore": 0.18907549619634248
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 12,
-          "races": 12,
+          "horses": 18,
+          "races": 18,
           "raceDates": 1,
-          "observedHits": 1,
-          "expectedHits": 2.661514217689938,
-          "meanPredictedPct": 22.179285147416152,
-          "observedRatePct": 8.333333333333334,
-          "brierScore": 0.09528522665332123
+          "observedHits": 2,
+          "expectedHits": 4.011709950281237,
+          "meanPredictedPct": 22.28727750156243,
+          "observedRatePct": 11.11111111111111,
+          "brierScore": 0.10949398751763639
         },
         {
           "fromPctInclusive": 30,
@@ -401,14 +960,14 @@
       ]
     },
     "market": {
-      "horses": 15,
-      "races": 15,
+      "horses": 22,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 2,
-      "expectedHits": 2.73779,
-      "meanPredictedPct": 18.251933333333334,
-      "observedRatePct": 13.333333333333334,
-      "brierScore": 0.12402865373999998,
+      "observedHits": 3,
+      "expectedHits": 4.04861,
+      "meanPredictedPct": 18.402772727272726,
+      "observedRatePct": 13.636363636363637,
+      "brierScore": 0.12179710854999999,
       "bins": [
         {
           "fromPctInclusive": 0,
@@ -437,26 +996,26 @@
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 12,
-          "races": 12,
+          "horses": 17,
+          "races": 17,
           "raceDates": 1,
           "observedHits": 2,
-          "expectedHits": 2.09376,
-          "meanPredictedPct": 17.448,
-          "observedRatePct": 16.666666666666668,
-          "brierScore": 0.14348713341666666
+          "expectedHits": 2.96349,
+          "meanPredictedPct": 17.43229411764706,
+          "observedRatePct": 11.764705882352942,
+          "brierScore": 0.11034664732352939
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 3,
-          "races": 3,
+          "horses": 5,
+          "races": 5,
           "raceDates": 1,
-          "observedHits": 0,
-          "expectedHits": 0.6440300000000001,
-          "meanPredictedPct": 21.46766666666667,
-          "observedRatePct": 0.0,
-          "brierScore": 0.046194735033333344
+          "observedHits": 1,
+          "expectedHits": 1.08512,
+          "meanPredictedPct": 21.702400000000004,
+          "observedRatePct": 20.0,
+          "brierScore": 0.16072867672000002
         },
         {
           "fromPctInclusive": 30,
@@ -485,14 +1044,14 @@
       ]
     },
     "formalAI": {
-      "horses": 15,
-      "races": 15,
+      "horses": 22,
+      "races": 22,
       "raceDates": 1,
-      "observedHits": 2,
-      "expectedHits": 3.07938,
-      "meanPredictedPct": 20.5292,
-      "observedRatePct": 13.333333333333334,
-      "brierScore": 0.12314293325333332,
+      "observedHits": 3,
+      "expectedHits": 4.52548,
+      "meanPredictedPct": 20.570363636363638,
+      "observedRatePct": 13.636363636363637,
+      "brierScore": 0.1201337834181818,
       "bins": [
         {
           "fromPctInclusive": 0,
@@ -521,26 +1080,26 @@
         {
           "fromPctInclusive": 10,
           "toPct": 20,
-          "horses": 5,
-          "races": 5,
+          "horses": 8,
+          "races": 8,
           "raceDates": 1,
           "observedHits": 1,
-          "expectedHits": 0.93751,
-          "meanPredictedPct": 18.7502,
-          "observedRatePct": 20.0,
-          "brierScore": 0.15995749334
+          "expectedHits": 1.4875,
+          "meanPredictedPct": 18.59375,
+          "observedRatePct": 12.5,
+          "brierScore": 0.1125895644
         },
         {
           "fromPctInclusive": 20,
           "toPct": 30,
-          "horses": 10,
-          "races": 10,
+          "horses": 14,
+          "races": 14,
           "raceDates": 1,
-          "observedHits": 1,
-          "expectedHits": 2.14187,
-          "meanPredictedPct": 21.418699999999998,
-          "observedRatePct": 10.0,
-          "brierScore": 0.10473565320999997
+          "observedHits": 2,
+          "expectedHits": 3.03798,
+          "meanPredictedPct": 21.699857142857145,
+          "observedRatePct": 14.285714285714286,
+          "brierScore": 0.12444476571428571
         },
         {
           "fromPctInclusive": 30,
@@ -572,16 +1131,16 @@
   "dailyMatchedBrier": {
     "2026-11-23": {
       "candidate": {
-        "races": 15,
-        "meanBrier": 0.059242014016533256
+        "races": 22,
+        "meanBrier": 0.06347462658782467
       },
       "market": {
-        "races": 15,
-        "meanBrier": 0.05858169016003031
+        "races": 22,
+        "meanBrier": 0.06312238069588706
       },
       "formalAI": {
-        "races": 15,
-        "meanBrier": 0.05899440143215657
+        "races": 22,
+        "meanBrier": 0.06343457730788216
       }
     }
   },
