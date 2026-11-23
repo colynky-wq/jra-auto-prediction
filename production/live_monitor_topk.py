@@ -8,6 +8,7 @@ import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
 from win_odds_freshness import validate_win_odds_freshness
+from win_odds_retry import WinOddsFetchError
 
 import live_monitor_dry_run as base
 from topk_runtime import predict_top2_top3
@@ -80,7 +81,7 @@ def predict_live_race_topk(
     odds_received = base.now_jst()
     win_odds_freshness = validate_win_odds_freshness(win_odds_payload, odds_received)
     if len(odds) < 2:
-        raise RuntimeError("insufficient live win odds")
+        raise WinOddsFetchError("insufficient live win odds")
 
     entries, entry_time, entry_url = base.fetch_jra_entry_table(
         rid,
