@@ -21,7 +21,10 @@
   "matchedRaceDates": 1,
   "freshOddsVerified30m": {
     "status": "insufficient_verified_30m_evidence",
-    "sourceTimestampField": "data.official_datetime",
+    "acceptedSourceTimestampFields": [
+      "data.official_datetime",
+      "jra.html.interim_label"
+    ],
     "maximumAgeSecondsAtPublication": 1800,
     "verifiedCapturedRaces": 0,
     "missingProvenanceCaptures": 22,
