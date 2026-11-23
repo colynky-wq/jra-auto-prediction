@@ -57,6 +57,12 @@ def eligible(race, max_age):
     return age is not None and (max_age is None or age <= max_age)
 
 
+def is_top3(finish, horse_number):
+    """Non-finishers, excluded horses and missing/NULL results are not top three."""
+    position = finish.get(str(horse_number))
+    return type(position) is int and 1 <= position <= 3
+
+
 def fit_calibration(train_races):
     """Band-wise multiplicative calibration with shrinkage toward no adjustment.
 
@@ -69,7 +75,7 @@ def fit_calibration(train_races):
         for pair in pairs:
             p = pair["aiWideProbability"]
             i = band(p)
-            hit = finish.get(str(pair["number1"]), 999) <= 3 and finish.get(str(pair["number2"]), 999) <= 3
+            hit = is_top3(finish, pair["number1"]) and is_top3(finish, pair["number2"])
             counts[i][0] += int(hit)
             counts[i][1] += p / 100
             counts[i][2] += 1
@@ -133,7 +139,7 @@ def evaluate(races, fit, max_age, threshold):
             total["bets"] += len(tickets)
             total["stake"] += 100 * len(tickets)
             for horse, pair in tickets:
-                if finish.get(str(axis["number"]), 999) <= 3 and finish.get(str(horse["number"]), 999) <= 3:
+                if is_top3(finish, axis["number"]) and is_top3(finish, horse["number"]):
                     total["hits"] += 1
                     total["proxy_return"] += round(pair["wideOddsLow"] * 100)
     for total in totals.values():
