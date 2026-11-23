@@ -5,7 +5,7 @@
   "formalRecommendationsEnabled": false,
   "autoBetEnabled": false,
   "stakeSizingEnabled": false,
-  "generatedAtJST": "2026-11-23T16:18:49+09:00",
+  "generatedAtJST": "2026-11-23T16:22:14+09:00",
   "prospectiveStartDate": "2026-10-24",
   "developmentDataPolicy": "Dates before prospectiveStartDate are development/backfill only and cannot prove performance.",
   "selectionPolicy": "Rules are fixed before prospectiveStartDate; selection never reads finish, hit, payout or return fields.",
@@ -71,13 +71,13 @@
   "prospective": {
     "racesSeen": 323,
     "selectedRaces": 64,
-    "settledSelectedRaces": 61,
-    "hitAnyRaces": 7,
-    "profitableRaces": 7,
+    "settledSelectedRaces": 62,
+    "hitAnyRaces": 8,
+    "profitableRaces": 8,
     "torigamiRaces": 0,
-    "stakeYen": 11900,
-    "returnYen": 14540,
-    "returnIndex": 1.221849
+    "stakeYen": 12100,
+    "returnYen": 15270,
+    "returnIndex": 1.261983
   },
   "races": [
     {
@@ -12116,8 +12116,8 @@
           "oddsHigh": 17.1,
           "expectedMultiplierLow": 1.426,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": true,
+          "payoutYen": 730
         },
         {
           "betType": "wide",
@@ -12128,17 +12128,17 @@
           "oddsHigh": 18.5,
           "expectedMultiplierLow": 1.282,
           "unitYen": 100,
-          "hit": null,
-          "payoutYen": null
+          "hit": false,
+          "payoutYen": 0
         }
       ],
       "totalStakeYen": 200,
-      "settled": false,
-      "returnYen": null,
-      "profitYen": null,
-      "hitAny": null,
-      "profitable": null,
-      "torigami": null,
+      "settled": true,
+      "returnYen": 730,
+      "profitYen": 530,
+      "hitAny": true,
+      "profitable": true,
+      "torigami": false,
       "inputPolicy": "formal-portfolio-inputs-v1",
       "inputFingerprint": "d40ea78de1e2fe9a1310a99282fddee1bb5c26674cc55bf6da14ad1b80306934",
       "inputRecordedAtJST": "2026-11-23T15:53:22.726681+09:00"
