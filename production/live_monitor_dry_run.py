@@ -56,6 +56,8 @@ MAX_RUNTIME_MINUTES = int(os.environ.get("KEIBAAI_LIVE_MAX_MINUTES", "30").strip
 POLL_SECONDS = int(os.environ.get("KEIBAAI_LIVE_POLL_SECONDS", "20").strip() or "20")
 WIN_ODDS_RETRY_SECONDS = (60 if os.environ.get("KEIBAAI_ODDS_SOURCE") == "jra_official_web"
                           else 15)
+# In-memory only, per-running-monitor; no cross-day persistent JRA route tokens.
+JRA_ODDS_NAVIGATION_CACHE: dict[tuple[str, str], tuple[str, str]] = {}
 
 WINDOW_EARLY_MINUTES = 12.0
 WINDOW_LATE_MINUTES = 8.0
@@ -230,7 +232,8 @@ def fetch_win_odds(race_id: str) -> tuple[pd.DataFrame, dict]:
             raise RuntimeError("jra_official_web_requires_experimental_opt_in")
         from jra_win_odds_source import fetch_jra_win_odds
         return fetch_jra_win_odds(race_id, TARGET_DATE8, session=SESSION,
-                                  clock=now_jst)
+                                  clock=now_jst,
+                                  navigation_cache=JRA_ODDS_NAVIGATION_CACHE)
     if source != "netkeiba_api":
         raise RuntimeError("unsupported_win_odds_source")
     url = "https://race.netkeiba.com/api/api_get_jra_odds.html"

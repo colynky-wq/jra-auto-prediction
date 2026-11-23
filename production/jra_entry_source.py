@@ -187,10 +187,16 @@ def _prefer_url(existing: str | None, candidate: str) -> str:
     return existing
 
 
+class JRAEntryAccessRestricted(RuntimeError):
+    """Official access restriction observed during public route discovery."""
+
+
 def discover_entry_url(
     race_id: str,
     date8: str,
     session: requests.Session,
+    *,
+    abort_on_restricted: bool = False,
 ) -> str | None:
     """Discover the routed JRA accessD URL for one race.
 
@@ -228,13 +234,18 @@ def discover_entry_url(
 
         try:
             cname = _get_cname(page_url)
+            request_options = {"timeout": 20}
+            if abort_on_restricted:
+                # Do not follow a redirect during opt-in odds research.
+                # Preserve the old Session API for ordinary entry discovery.
+                request_options["allow_redirects"] = False
             if re.fullmatch(r"pw01dli00/[0-9A-Za-z]{2}", cname) and navigation_cname_field:
                 # JRA's public calendar is a form navigation. GET returns a
                 # parameter-error page; use the exact field name from its form.
                 r = session.post(ACCESS_D, data={**navigation_fields, navigation_cname_field: cname},
-                                 headers={"Referer": JRA_HOST + "/"}, timeout=20)
+                                 headers={"Referer": JRA_HOST + "/"}, **request_options)
             else:
-                r = session.get(page_url, timeout=20)
+                r = session.get(page_url, **request_options)
             print(
                 "JRA discovery HTTP:",
                 r.status_code,
@@ -245,11 +256,18 @@ def discover_entry_url(
                 "url:",
                 page_url,
             )
+            if abort_on_restricted and (r.status_code in (401, 403, 429, 451)
+                                        or 300 <= r.status_code < 400):
+                raise JRAEntryAccessRestricted(
+                    f"jra_navigation_access_restricted_http_{r.status_code}")
             if r.status_code != 200:
                 continue
 
             enc = r.apparent_encoding or "shift_jis"
             text = r.content.decode(enc, errors="replace")
+            if abort_on_restricted and any(message in text for message in (
+                    "アクセスが集中", "ご指定のページに接続できません")):
+                raise JRAEntryAccessRestricted("jra_navigation_access_restricted_page")
             form = BeautifulSoup(text, "html.parser").find("form", id="commForm01")
             if form:
                 field = form.find("input", id="cname")
@@ -277,6 +295,8 @@ def discover_entry_url(
                 if (rid or navigation) and u not in visited and u not in queue:
                     queue.append(u)
 
+        except JRAEntryAccessRestricted:
+            raise
         except Exception as e:
             print("JRA discovery warning:", repr(e))
             continue

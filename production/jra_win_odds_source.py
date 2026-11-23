@@ -42,6 +42,18 @@ class JRAWinOddsError(WinOddsFetchError):
     """Official page has insufficient, ambiguous, or wrong-race data."""
 
 
+class JRAAccessRestricted(RuntimeError):
+    """Stop rather than retry when the official site refuses automated access."""
+
+
+def _require_http_ok(response, step: str) -> None:
+    status = response.status_code
+    if status in (401, 403, 429, 451) or 300 <= status < 400:
+        raise JRAAccessRestricted(f"jra_{step}_access_restricted_http_{status}")
+    if status != 200:
+        raise JRAWinOddsError(f"jra_{step}_http_{status}")
+
+
 def discover_win_odds_cname(entry_html: str) -> str:
     """Read the official public odds link from an observed race entry page."""
     tokens = {m.group(2) for m in ACTION_PATTERN.finditer(entry_html)}
@@ -136,24 +148,43 @@ def parse_jra_win_odds(html: str, race_id: str, date8: str,
 
 def fetch_jra_win_odds(race_id: str, date8: str, *,
                        session: requests.Session | None = None,
-                       clock=lambda: datetime.now(JST)) -> tuple[pd.DataFrame, dict]:
-    """Fetch a single JRA HTML snapshot. No polling or implicit fallback."""
+                       clock=lambda: datetime.now(JST),
+                       navigation_cache: dict[tuple[str, str], tuple[str, str]] | None = None,
+                       ) -> tuple[pd.DataFrame, dict]:
+    """Read one JRA HTML snapshot; cache only observed navigation within a run.
+
+    The token is obtained from a real public entry link; it is never guessed.
+    Caching avoids re-crawling the official navigation tree on each freshness
+    retry. No login, redirect following, access-denial retry or bypass.
+    """
     if not re.fullmatch(r"\d{12}", race_id) or not re.fullmatch(r"\d{8}", date8):
         raise JRAWinOddsError("invalid_jra_race_identity")
     session = session or requests.Session()
     session.headers.update(HEADERS)
-    entry_url = discover_entry_url(race_id, date8, session)
-    if not entry_url or not entry_url.startswith(ACCESS_D + "?"):
-        raise JRAWinOddsError("jra_entry_navigation_unavailable")
-    try:
-        response = session.get(entry_url, timeout=20, allow_redirects=False)
-    except requests.exceptions.RequestException as exc:
-        raise JRAWinOddsError("jra_entry_transport_failure") from exc
-    if response.status_code != 200:
-        raise JRAWinOddsError("jra_entry_http_failure")
-    raw_entry = response.content.decode(response.apparent_encoding or "shift_jis",
-                                        errors="replace")
-    token = discover_win_odds_cname(raw_entry)
+    cache_key = (date8, race_id)
+    cached = (navigation_cache.get(cache_key)
+              if navigation_cache is not None else None)
+    if cached is not None:
+        entry_url, token = cached
+        if (not entry_url.startswith(ACCESS_D + "?")
+                or not TOKEN.fullmatch(token)):
+            raise JRAWinOddsError("invalid_cached_jra_navigation")
+    else:
+        entry_url = discover_entry_url(race_id, date8, session,
+                                       abort_on_restricted=True)
+        if not entry_url or not entry_url.startswith(ACCESS_D + "?"):
+            raise JRAWinOddsError("jra_entry_navigation_unavailable")
+        try:
+            response = session.get(entry_url, timeout=20, allow_redirects=False)
+        except requests.exceptions.RequestException as exc:
+            raise JRAWinOddsError("jra_entry_transport_failure") from exc
+        _require_http_ok(response, "entry")
+        raw_entry = response.content.decode(
+            response.apparent_encoding or "shift_jis", errors="replace")
+        token = discover_win_odds_cname(raw_entry)
+        if navigation_cache is not None:
+            navigation_cache[cache_key] = (entry_url, token)
+
     try:
         response = session.post(ACCESS_O, data={"cname": token},
                                 headers={"Referer": entry_url},
@@ -161,8 +192,10 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
     except requests.exceptions.RequestException as exc:
         raise JRAWinOddsError("jra_odds_transport_failure") from exc
     received = clock()
-    if response.status_code != 200:
-        raise JRAWinOddsError("jra_odds_http_failure")
+    _require_http_ok(response, "odds")
     html = response.content.decode(response.apparent_encoding or "shift_jis",
                                    errors="replace")
+    if any(message in html for message in (
+            "アクセスが集中", "ご指定のページに接続できません")):
+        raise JRAAccessRestricted("jra_odds_access_restricted_page")
     return parse_jra_win_odds(html, race_id, date8, received)
