@@ -1,0 +1,47 @@
+name: Research longshot V3 historical closing-odds audit
+
+on:
+  push:
+    branches:
+      - research/longshot-v3-market-anchor-20261123
+    paths:
+      - research/longshot_v3_historical_diagnostics.py
+      - .github/workflows/research-longshot-v3-historical.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  historical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout pinned past source and models
+        uses: actions/checkout@v4
+      - name: Use Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned training-time dependencies
+        run: pip install --disable-pip-version-check -r production/requirements.txt
+      - name: Verify Python syntax
+        run: python3 -m py_compile research/longshot_v3_historical_diagnostics.py
+      - name: Evaluate frozen 2025 and 2026 using historic closing odds ONLY
+        run: |
+          python3 research/longshot_v3_historical_diagnostics.py --root . --output longshot_v3_historical_result.json
+      - name: Confirm no production model activation
+        run: |
+          python3 - <<'PY'
+          import json
+          result=json.load(open("longshot_v3_historical_result.json"))
+          assert result["approved_for_production"] is False
+          assert result["auto_bet_enabled"] is False
+          print("VERIFIED_RESEARCH_ONLY", [(y,result[y]["races"]) for y in ("2025","2026")])
+          PY
+      - name: Upload historical research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: longshot-v3-history-closing-odds
+          path: longshot_v3_historical_result.json
+          retention-days: 7
