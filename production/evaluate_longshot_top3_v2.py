@@ -133,6 +133,7 @@ def evaluate(root, audit) -> dict:
     samples, selected_samples = defaultdict(list), defaultdict(list)
     daily_errors = defaultdict(lambda: {method: [] for method in METHODS})
     fresh_hits = Counter()
+    fresh_samples, fresh_selected_samples = defaultdict(list), defaultdict(list)
     fresh_errors = {name: [] for name in METHODS}
     fresh_daily_errors = defaultdict(lambda: {method: [] for method in METHODS})
     for audited in expected:
@@ -196,8 +197,12 @@ def evaluate(root, audit) -> dict:
                           "probability": prob(horse[field], field),
                           "outcome": int(horse["number"] in podium)}
                 samples[method].append(sample)
+                if fresh_ok:
+                    fresh_samples[method].append(sample)
                 if horse["number"] == chosen:
                     selected_samples[method].append(sample)
+                    if fresh_ok:
+                        fresh_selected_samples[method].append(sample)
 
     total, n = len(expected), counts["scored"]
     fresh_n = counts["freshScored"]
@@ -221,6 +226,18 @@ def evaluate(root, audit) -> dict:
             method: paired_race_uncertainty([a - b for a, b in zip(
                 fresh_errors["candidate"], fresh_errors[method], strict=True,
             )]) for method in ("market", "formalAI")
+        },
+        "calibrationAllQualifyingHorses": {
+            method: calibration_summary(fresh_samples[method]) for method in METHODS
+        },
+        "calibrationSelectedHorse": {
+            method: calibration_summary(fresh_selected_samples[method]) for method in METHODS
+        },
+        "dailyMatchedBrier": {
+            day: {method: {"races": len(values),
+                           "meanBrier": math.fsum(values) / len(values)}
+                  for method, values in methods.items()}
+            for day, methods in sorted(fresh_daily_errors.items())
         },
         "promotionApproved": False,
         "limitations": [
