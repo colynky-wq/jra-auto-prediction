@@ -30,6 +30,7 @@ def parse_official_datetime(value: object) -> datetime:
     # Provider timestamps can use Japanese date separators and space/T.
     raw = raw.replace("年", "-").replace("月", "-").replace("日", " ")
     raw = raw.replace("/", "-")
+    raw = re.sub(r"\\s+", " ", raw).strip()
     if not re.match(r"^\d{4}-\d{1,2}-\d{1,2}[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?$", raw):
         raise WinOddsFreshnessError("win_odds_source_timestamp_unparseable")
     if raw.endswith("Z"):
