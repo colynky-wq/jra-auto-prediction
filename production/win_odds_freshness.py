@@ -48,6 +48,11 @@ def parse_official_datetime(value: object) -> datetime:
 def validate_win_odds_freshness(payload: dict, received_at: datetime) -> dict:
     if received_at.tzinfo is None:
         raise WinOddsFreshnessError("win_odds_receipt_timestamp_naive")
+    provider = payload.get("sourceProvider") if isinstance(payload, dict) else None
+    if provider not in (None, "netkeiba_api", "jra_official_web"):
+        raise WinOddsFreshnessError("unrecognized_win_odds_provider")
+    source_field = ("jra.html.interim_label" if provider == "jra_official_web"
+                    else "data.official_datetime")
     data = payload.get("data") if isinstance(payload, dict) else None
     if not isinstance(data, dict):
         raise WinOddsFreshnessError("win_odds_data_missing")
@@ -59,7 +64,8 @@ def validate_win_odds_freshness(payload: dict, received_at: datetime) -> dict:
     if age > MAX_AGE:
         raise WinOddsFreshnessError("win_odds_source_stale_over_30m")
     return {
-        "sourceField": "data.official_datetime",
+        "sourceField": source_field,
+        "sourceProvider": provider or "netkeiba_api",
         "sourceUpdatedAtJST": origin_time.isoformat(),
         "receivedAtJST": received.isoformat(),
         "sourceAgeSecondsAtReceipt": round(age.total_seconds(), 3),
