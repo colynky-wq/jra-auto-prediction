@@ -35,7 +35,10 @@ def verified_fresh_win_odds(race: dict) -> tuple[bool, str]:
     evidence = race.get("winOddsFreshness")
     if not isinstance(evidence, dict):
         return False, "missing_source_provenance"
-    if (evidence.get("sourceField") != "data.official_datetime"
+    provider = evidence.get("sourceProvider", "netkeiba_api")
+    allowed_fields = {"netkeiba_api": "data.official_datetime",
+                      "jra_official_web": "jra.html.interim_label"}
+    if (evidence.get("sourceField") != allowed_fields.get(provider)
             or evidence.get("freshnessStatus") != "verified_within_30m"
             or evidence.get("publicationFreshnessStatus") != "verified_within_30m"
             or evidence.get("maxSourceAgeSeconds") != 1800):
@@ -46,7 +49,8 @@ def verified_fresh_win_odds(race: dict) -> tuple[bool, str]:
         if (published.utcoffset() is None or received.utcoffset() is None
                 or received > published):
             return False, "invalid_source_provenance"
-        upstream = {"data": {"official_datetime": evidence["sourceUpdatedAtJST"]}}
+        upstream = {"sourceProvider": provider,
+                    "data": {"official_datetime": evidence["sourceUpdatedAtJST"]}}
         at_receipt = validate_win_odds_freshness(upstream, received)
         at_publication = validate_win_odds_freshness(upstream, published)
         for recorded, computed in (

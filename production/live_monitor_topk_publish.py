@@ -204,9 +204,13 @@ def publish_race_to_racedata(race, out, *, history=None):
             raise ValueError('verified win-odds origin freshness evidence missing')
         # A borderline-fresh fetch may expire during feature calculation.
         validated_at_publish = validate_win_odds_freshness(
-            {'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
+            {'sourceProvider': odds_evidence.get('sourceProvider', 'netkeiba_api'),
+             'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
+
             datetime.fromisoformat(captured_at),
         )
+        if validated_at_publish['sourceField'] != odds_evidence.get('sourceField'):
+            raise ValueError('win odds origin source field mismatch')
         odds_evidence = {**odds_evidence,
                          'sourceAgeSecondsAtPublication': validated_at_publish['sourceAgeSecondsAtReceipt'],
                          'publicationFreshnessStatus': 'verified_within_30m'}
