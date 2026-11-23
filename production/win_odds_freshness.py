@@ -63,15 +63,15 @@ def validate_win_odds_freshness(payload: dict, received_at: datetime) -> dict:
         # JRA printed an origin time. Require its raw display label, page
         # digest and independently matched race identity before adoption.
         label = payload.get("sourceDisplayLabel")
-        match = (re.fullmatch(r"(\\d{1,2})時(\\d{2})分現在オッズ", label)
+        match = (re.fullmatch(r"(\d{1,2})時(\d{2})分現在オッズ", label)
                  if isinstance(label, str) else None)
         date8 = payload.get("sourceRaceDateJST")
         race_id = payload.get("sourceRaceID")
         digest = payload.get("sourcePageSha256")
         if (match is None or not isinstance(date8, str)
-                or not re.fullmatch(r"\\d{8}", date8)
+                or not re.fullmatch(r"\d{8}", date8)
                 or not isinstance(race_id, str)
-                or not re.fullmatch(r"\\d{12}", race_id)
+                or not re.fullmatch(r"\d{12}", race_id)
                 or not isinstance(digest, str)
                 or not re.fullmatch(r"[0-9a-f]{64}", digest)
                 or payload.get("sourceURL") != "https://www.jra.go.jp/JRADB/accessO.html"
