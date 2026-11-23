@@ -1,15 +1,15 @@
 # Frozen T10 retrospective benchmark: historical 2024 market calibration
 
 Status: retrospective_same_timestamp_not_prospective_promotion
-Source aligned audit: 2026-11-23T14:30:02+09:00
+Source aligned audit: 2026-11-23T16:22:14+09:00
 2024-selected market power: 1.05
-Matched formal win races: 139
+Matched formal win races: 146
 
 | Event | Races | Existing formal AI | Original T10 market | Calibrated T10 market | Candidate - existing AI | Whole-race CI 95% |
 |---|---:|---:|---:|---:|---:|---|
-| win | 139 | 0.05908193557066189 | 0.058993410156685494 | 0.058923978409916686 | -0.00015796 | [-0.00046219, 0.00013757] |
-| top2 | 139 | 0.09902516708007036 | 0.0982326144209965 | 0.09807505810777321 | -0.00095011 | [-0.00183929, -1.133e-05] |
-| top3 | 139 | 0.1319281120092658 | 0.13025318339731015 | 0.13024433705723082 | -0.00168377 | [-0.00336292, 9.9e-07] |
+| win | 146 | 0.05928135575726732 | 0.05920942701395438 | 0.05916036171783869 | -0.00012099 | [-0.00040809, 0.00016398] |
+| top2 | 146 | 0.09919281158048747 | 0.09847501321866656 | 0.09834125706149041 | -0.00085155 | [-0.00174665, 5.823e-05] |
+| top3 | 146 | 0.13206071022826124 | 0.13052550223991913 | 0.13053616009849725 | -0.00152455 | [-0.00312888, 6.923e-05] |
 
 Lower is better. A negative candidate-minus-formal-AI delta favors calibration.
 This is a retrospective comparison on originally frozen T10 inputs.

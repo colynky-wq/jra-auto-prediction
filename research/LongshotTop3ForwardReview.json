@@ -2,79 +2,91 @@
   "schemaVersion": 1,
   "version": "longshot-top3-forward-review-v1",
   "status": "insufficient_first_frozen_evidence",
-  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T16:22:14+09:00",
   "modelVersion": "longshot-top3-market-residual-v1-20261123",
   "modelSha256": "351742deae1fbe3f7a434fdff3d2357bc0044cc8777c01fb93b2b3e068280416",
   "cohortActivationDate": "2026-11-23",
   "longshotDefinition": "popularity >= 6 AND win odds >= 10.0",
   "qualityIssuesInStrictAudit": 30,
   "counts": {
-    "firstFrozenShadowRaces": 17,
-    "eligibleAlignedFormalRacesAfterActivation": 17,
+    "firstFrozenShadowRaces": 22,
+    "eligibleAlignedFormalRacesAfterActivation": 22,
     "missingShadowRaces": 0,
     "candidateCaptureCoveragePct": 100.0,
-    "matchedScorableRaces": 15,
-    "matchedUnderdogHorseRows": 146,
-    "matchedUnderdogTop3Rows": 9,
-    "unmatchedOrExcludedShadows": 2,
+    "matchedScorableRaces": 22,
+    "matchedUnderdogHorseRows": 216,
+    "matchedUnderdogTop3Rows": 15,
+    "unmatchedOrExcludedShadows": 0,
     "noQualifyingLongshots": 0,
     "unscorablePodium": 0
   },
   "missingShadowRaceIDs": [],
   "top3BrierEqualRace": {
-    "formalAI": 0.05899440143215655,
-    "T10Market": 0.05858169016003031,
-    "longshotCandidate": 0.05971773059076044
+    "formalAI": 0.06343457730788214,
+    "T10Market": 0.06312238069588708,
+    "longshotCandidate": 0.06385055911485633
   },
   "pairedRaceCandidateMinusMarket": {
-    "pairedRaces": 15,
-    "meanBrierDelta": 0.00113604,
-    "betterRaces": 4,
-    "worseRaces": 11,
+    "pairedRaces": 22,
+    "meanBrierDelta": 0.00072818,
+    "betterRaces": 9,
+    "worseRaces": 13,
     "bootstrap95Pct": null
   },
   "pairedRaceCandidateMinusFormalAI": {
-    "pairedRaces": 15,
-    "meanBrierDelta": 0.00072333,
-    "betterRaces": 5,
-    "worseRaces": 10,
+    "pairedRaces": 22,
+    "meanBrierDelta": 0.00041598,
+    "betterRaces": 9,
+    "worseRaces": 13,
     "bootstrap95Pct": null
   },
   "topRankedLongshotTop3Hits": {
-    "formalAI": 2,
-    "T10Market": 2,
-    "longshotCandidate": 2
+    "formalAI": 3,
+    "T10Market": 3,
+    "longshotCandidate": 3
   },
-  "raceCountAtLeastOneLongshotInTop3": 8,
+  "raceCountAtLeastOneLongshotInTop3": 13,
   "top3OutcomesByOdds": {
     "10-29.9": {
-      "n": 57,
-      "hits": 8
+      "n": 92,
+      "hits": 13
     },
     "30+": {
-      "n": 89,
-      "hits": 1
+      "n": 124,
+      "hits": 2
     }
   },
   "positiveFeatureAssociationsAmongActualLongshotTop3": [
     {
       "feature": "同芝ダ回数c",
-      "count": 8
-    },
-    {
-      "feature": "前走着順率f",
-      "count": 5
+      "count": 13
     },
     {
       "feature": "同芝ダ平均",
-      "count": 5
+      "count": 9
+    },
+    {
+      "feature": "前走着順率f",
+      "count": 7
     },
     {
       "feature": "年齢",
+      "count": 3
+    },
+    {
+      "feature": "斤量",
       "count": 2
     },
     {
       "feature": "前走秒差f",
+      "count": 2
+    },
+    {
+      "feature": "log間隔",
+      "count": 2
+    },
+    {
+      "feature": "頭数f",
       "count": 2
     },
     {
@@ -86,15 +98,11 @@
       "count": 1
     },
     {
-      "feature": "斤量",
+      "feature": "出走数c",
       "count": 1
     },
     {
-      "feature": "log間隔",
-      "count": 1
-    },
-    {
-      "feature": "頭数f",
+      "feature": "馬体重f",
       "count": 1
     }
   ],

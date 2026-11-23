@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "version": "market-calibrated-formal-T10-review-v1",
-  "generatedAtJST": "2026-11-23T14:31:16.427609+09:00",
+  "generatedAtJST": "2026-11-24T01:24:39.522815+09:00",
   "status": "retrospective_same_timestamp_not_prospective_promotion",
-  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T16:22:14+09:00",
   "parameterSource": "2024-only-closing-odds-validation",
   "marketPower": 1.05,
   "selectionAndScoringSeparated": true,
@@ -12,10 +12,10 @@
   "formalPredictionAIChanged": false,
   "autoBetEnabled": false,
   "counts": {
-    "auditedRaces": 145,
-    "matchedResultRaces": 139,
-    "validPairedRacesWin": 139,
-    "unmatchedOrExcludedRaces": 6,
+    "auditedRaces": 150,
+    "matchedResultRaces": 146,
+    "validPairedRacesWin": 146,
+    "unmatchedOrExcludedRaces": 4,
     "podiumUnavailableByEvent": {
       "win": 0,
       "top2": 0,
@@ -24,86 +24,86 @@
   },
   "byEvent": {
     "win": {
-      "pairedRaces": 139,
+      "pairedRaces": 146,
       "equalRaceBrier": {
-        "formalAI": 0.05908193557066189,
-        "T10Market": 0.058993410156685494,
-        "marketCalibrated": 0.058923978409916686
+        "formalAI": 0.05928135575726732,
+        "T10Market": 0.05920942701395438,
+        "marketCalibrated": 0.05916036171783869
       },
       "candidateMinusFormalAI": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -0.00015796,
-        "betterRaces": 69,
-        "worseRaces": 70,
+        "pairedRaces": 146,
+        "meanBrierDelta": -0.00012099,
+        "betterRaces": 71,
+        "worseRaces": 75,
         "bootstrap95Pct": [
-          -0.00046219,
-          0.00013757
+          -0.00040809,
+          0.00016398
         ]
       },
       "candidateMinusT10Market": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -6.943e-05,
-        "betterRaces": 63,
-        "worseRaces": 76,
+        "pairedRaces": 146,
+        "meanBrierDelta": -4.907e-05,
+        "betterRaces": 66,
+        "worseRaces": 80,
         "bootstrap95Pct": [
-          -0.00026128,
-          0.00013422
+          -0.00024668,
+          0.00014517
         ]
       }
     },
     "top2": {
-      "pairedRaces": 139,
+      "pairedRaces": 146,
       "equalRaceBrier": {
-        "formalAI": 0.09902516708007036,
-        "T10Market": 0.0982326144209965,
-        "marketCalibrated": 0.09807505810777321
+        "formalAI": 0.09919281158048747,
+        "T10Market": 0.09847501321866656,
+        "marketCalibrated": 0.09834125706149041
       },
       "candidateMinusFormalAI": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -0.00095011,
-        "betterRaces": 86,
-        "worseRaces": 53,
+        "pairedRaces": 146,
+        "meanBrierDelta": -0.00085155,
+        "betterRaces": 90,
+        "worseRaces": 56,
         "bootstrap95Pct": [
-          -0.00183929,
-          -1.133e-05
+          -0.00174665,
+          5.823e-05
         ]
       },
       "candidateMinusT10Market": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -0.00015756,
-        "betterRaces": 74,
-        "worseRaces": 65,
+        "pairedRaces": 146,
+        "meanBrierDelta": -0.00013376,
+        "betterRaces": 77,
+        "worseRaces": 69,
         "bootstrap95Pct": [
-          -0.00040657,
-          8.003e-05
+          -0.00037445,
+          0.00010262
         ]
       }
     },
     "top3": {
-      "pairedRaces": 139,
+      "pairedRaces": 146,
       "equalRaceBrier": {
-        "formalAI": 0.1319281120092658,
-        "T10Market": 0.13025318339731015,
-        "marketCalibrated": 0.13024433705723082
+        "formalAI": 0.13206071022826124,
+        "T10Market": 0.13052550223991913,
+        "marketCalibrated": 0.13053616009849725
       },
       "candidateMinusFormalAI": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -0.00168377,
-        "betterRaces": 82,
-        "worseRaces": 57,
+        "pairedRaces": 146,
+        "meanBrierDelta": -0.00152455,
+        "betterRaces": 86,
+        "worseRaces": 60,
         "bootstrap95Pct": [
-          -0.00336292,
-          9.9e-07
+          -0.00312888,
+          6.923e-05
         ]
       },
       "candidateMinusT10Market": {
-        "pairedRaces": 139,
-        "meanBrierDelta": -8.85e-06,
-        "betterRaces": 74,
-        "worseRaces": 65,
+        "pairedRaces": 146,
+        "meanBrierDelta": 1.066e-05,
+        "betterRaces": 78,
+        "worseRaces": 68,
         "bootstrap95Pct": [
-          -0.00027025,
-          0.00025763
+          -0.00023942,
+          0.00027068
         ]
       }
     }
