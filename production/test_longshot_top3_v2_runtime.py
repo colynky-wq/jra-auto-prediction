@@ -12,7 +12,7 @@ import lightgbm as lgb
 import pandas as pd
 
 import formal_portfolio_capture as capture
-from evaluate_longshot_top3_v2 import calibration_summary, evaluate
+from evaluate_longshot_top3_v2 import calibration_summary, evaluate, verified_fresh_win_odds
 from longshot_top3_v2_runtime import (
     FEATURES, MODEL_FEATURES, OUTPUT, path_for, prepare, record_first, score_race, validate_record,
 )
@@ -36,7 +36,17 @@ def inputs():
     ), 1)]
     race = {"raceDate": DAY, "raceID": RACE_ID, "startTime": "10:10",
             "course": "芝1600m", "predictionTiming": "live_10min",
-            "captureQuality": "formal_10min", "capturedAtJST": NOW.isoformat(), "horses": horses}
+            "captureQuality": "formal_10min", "capturedAtJST": NOW.isoformat(), "horses": horses,
+            "winOddsFreshness": {
+                "sourceField": "data.official_datetime",
+                "sourceUpdatedAtJST": (NOW - timedelta(minutes=5)).isoformat(),
+                "receivedAtJST": (NOW - timedelta(minutes=1)).isoformat(),
+                "sourceAgeSecondsAtReceipt": 240,
+                "sourceAgeSecondsAtPublication": 300,
+                "maxSourceAgeSeconds": 1800,
+                "freshnessStatus": "verified_within_30m",
+                "publicationFreshnessStatus": "verified_within_30m",
+            }}
     features = {"featureNames": list(FEATURES), "horseNumbers": list(range(1, 9)),
                 "rows": [[490.0 if f == "馬体重f" else 0.5 for f in FEATURES] for _ in horses]}
     prior = pd.DataFrame([{
@@ -117,6 +127,10 @@ class LongshotV2RuntimeTest(unittest.TestCase):
                      "aligned": {"countsAreCurrent": True, "racesObserved": 1}, "races": [audit_race]}
             report = evaluate(root, audit)
             self.assertEqual(report["matchedRaces"], 1)
+            self.assertEqual(report["freshOddsVerified30m"]["matchedRaces"], 1)
+            self.assertEqual(report["freshOddsVerified30m"]["matchedCandidateHorses"], 2)
+            self.assertEqual(report["freshOddsVerified30m"]["topPickComparison"]["market"]["top3Hits"], 1)
+            self.assertEqual(report["freshOddsVerified30m"]["status"], "insufficient_verified_30m_evidence")
             self.assertEqual(report["topPickComparison"]["market"]["top3Hits"], 1)
             self.assertEqual(report["topPickComparison"]["formalAI"]["top3Hits"], 0)
             self.assertEqual(report["matchedCandidateHorses"], 2)
@@ -147,6 +161,33 @@ class LongshotV2RuntimeTest(unittest.TestCase):
             report = evaluate(root, audit)
             self.assertEqual(report["rejectedCaptures"], 1)
             self.assertEqual(report["matchedRaces"], 0)
+
+    def test_fresh_source_evidence_requires_true_upstream_update_time(self):
+        race, _, _ = inputs()
+        self.assertEqual(verified_fresh_win_odds(race),
+                         (True, "verified_30m_at_publication"))
+        old = deepcopy(race)
+        old.pop("winOddsFreshness")
+        self.assertEqual(verified_fresh_win_odds(old),
+                         (False, "missing_source_provenance"))
+        stale = deepcopy(race)
+        stale["winOddsFreshness"]["sourceUpdatedAtJST"] = (
+            NOW - timedelta(minutes=31)).isoformat()
+        self.assertEqual(verified_fresh_win_odds(stale)[0], False)
+        future = deepcopy(race)
+        future["winOddsFreshness"]["sourceUpdatedAtJST"] = (
+            NOW + timedelta(seconds=5)).isoformat()
+        self.assertEqual(verified_fresh_win_odds(future)[0], False)
+        spoofed = deepcopy(race)
+        spoofed["winOddsFreshness"]["sourceField"] = "HTTP.receivedAt"
+        self.assertEqual(verified_fresh_win_odds(spoofed)[0], False)
+        forged = deepcopy(race)
+        forged["winOddsFreshness"]["sourceAgeSecondsAtPublication"] = 0
+        self.assertEqual(verified_fresh_win_odds(forged)[0], False)
+        after_capture = deepcopy(race)
+        after_capture["winOddsFreshness"]["receivedAtJST"] = (
+            NOW + timedelta(seconds=1)).isoformat()
+        self.assertEqual(verified_fresh_win_odds(after_capture)[0], False)
 
     def test_calibration_counts_each_probability_boundary_once(self):
         probabilities = (0., .05, .10, .20, .30, .50, 1.)
