@@ -203,11 +203,23 @@ def publish_race_to_racedata(race, out, *, history=None):
         if not isinstance(odds_evidence, dict) or odds_evidence.get('freshnessStatus') != 'verified_within_30m':
             raise ValueError('verified win-odds origin freshness evidence missing')
         # A borderline-fresh fetch may expire during feature calculation.
+        provider = odds_evidence.get('sourceProvider', 'netkeiba_api')
+        source = {
+            'sourceProvider': provider,
+            'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']},
+        }
+        if provider == 'jra_official_web':
+            # Preserve actual displayed label and page identity, not merely
+            # a fabricated datetime with an unverifiable provider flag.
+            for field in ('sourceDisplayLabel', 'sourceRaceDateJST',
+                          'sourceRaceID', 'sourceTimePrecision',
+                          'sourcePageSha256', 'sourceURL'):
+                source[field] = odds_evidence[field]
+            if (source['sourceRaceID'] != str(race['race_id'])
+                    or source['sourceRaceDateJST'] != target_date.replace('-', '')):
+                raise ValueError('JRA source race identity differs from formal prediction')
         validated_at_publish = validate_win_odds_freshness(
-            {'sourceProvider': odds_evidence.get('sourceProvider', 'netkeiba_api'),
-             'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
-
-            datetime.fromisoformat(captured_at),
+            source, datetime.fromisoformat(captured_at),
         )
         if validated_at_publish['sourceField'] != odds_evidence.get('sourceField'):
             raise ValueError('win odds origin source field mismatch')
