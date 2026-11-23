@@ -172,7 +172,7 @@ class JRAWinOddsSourceTests(unittest.TestCase):
             def __init__(self, content):
                 self.content = content.encode("shift_jis")
 
-        entry = '<a onclick="doAction(\\x27/JRADB/accessO.html\\x27,\\x27pw15oli00/6D\\x27)">オッズ</a>'
+        entry = '<a onclick="doAction(\x27/JRADB/accessO.html\x27,\x27pw15oli00/6D\x27)">オッズ</a>'
         class Session:
             def __init__(self):
                 self.headers = {}
