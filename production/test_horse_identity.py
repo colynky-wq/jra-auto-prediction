@@ -139,7 +139,7 @@ class HorseIdentityTests(unittest.TestCase):
             raise CheckedBeforeModel()
 
         for predict in [live.predict_live_race, topk.predict_live_race_topk]:
-            with self.subTest(predict=predict.__name__), patch.object(live, "fetch_meta", return_value=race), patch.object(live, "fetch_win_odds", return_value=(odds, None)), patch.object(live, "fetch_jra_entry_table", return_value=(entries.copy(), T, URL)), patch.object(live, "add_rating", side_effect=verify_ratings), contextlib.redirect_stdout(io.StringIO()):
+            with self.subTest(predict=predict.__name__), patch.object(live, "fetch_meta", return_value=race), patch.object(live, "fetch_win_odds", return_value=(odds, {"data": {"official_datetime": live.now_jst().isoformat()}})), patch.object(live, "fetch_jra_entry_table", return_value=(entries.copy(), T, URL)), patch.object(live, "add_rating", side_effect=verify_ratings), contextlib.redirect_stdout(io.StringIO()):
                 with self.assertRaises(CheckedBeforeModel): predict(race, history, pd.Timestamp("2026-10-11"))
 
     def test_publisher_retains_identity_in_future_racedata(self):
@@ -151,7 +151,12 @@ class HorseIdentityTests(unittest.TestCase):
         completed = Future(); completed.set_result(True)
         # Identity projection does not perform real historical odds capture.
         with tempfile.TemporaryDirectory() as root, patch.object(publisher, "RACEDATA_PATH", Path(root) / "RaceData.json"), patch.object(publisher.base, "TARGET_DATE8", "20261011"), patch.object(publisher, "_refresh_prediction_bundle"), patch('triple_research_runtime.schedule', return_value=completed), patch('all_bet_runtime.schedule', return_value=completed), patch('live_recording_resume.research_sidecars_complete', return_value=True), contextlib.redirect_stdout(io.StringIO()):
-            publisher.publish_race_to_racedata(race, pd.DataFrame([row]))
+            frame = pd.DataFrame([row])
+            frame.attrs["winOddsSource"] = {"freshnessEvidence": {
+                "sourceField": "data.official_datetime",
+                "sourceUpdatedAtJST": publisher.base.now_jst().isoformat(),
+                "freshnessStatus": "verified_within_30m"}}
+            publisher.publish_race_to_racedata(race, frame)
             horse = json.loads(publisher.RACEDATA_PATH.read_text())[0]["horses"][0]
         self.assertEqual((horse["age"], horse["horseKey"]), (2, "アインザッツ_2024"))
 
