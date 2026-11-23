@@ -1,7 +1,7 @@
 """Regression checks for T10-vs-closing-odds diagnostic (no betting)."""
 import unittest
 from research.longshot_v3_odds_drift import (
-    movement_bin, observed_podium, source_ages, metrics, sha_of_dict,
+    movement_bin, observed_podium, source_ages, metrics, sha_of_dict, win_quote_age_minutes,
 )
 
 
@@ -26,6 +26,23 @@ class OddsDriftTests(unittest.TestCase):
         self.assertAlmostEqual(source_ages({"officialDatetime":"2026-11-23 14:25:17",
                                              "capturedAtJST":"2026-11-23 15:18:32"}),53.25)
         self.assertIsNone(source_ages({}))
+
+    def test_original_win_quote_age_and_linkage(self):
+        original = {"capturedAtJST": "2026-11-23T15:18:32.211366+09:00", "horses": []}
+        odds = {
+            "betType": "win",
+            "sourceURL": "https://race.netkeiba.com/api/api_get_jra_odds.html?race_id=1",
+            "prediction": original,
+            "officialDatetime": "2026-11-23 14:25:17",
+            "requestStartedAtJST": "2026-11-23T15:18:32.486747+09:00",
+            "receivedAtJST": "2026-11-23T15:18:32.705148+09:00",
+        }
+        self.assertAlmostEqual(win_quote_age_minutes(odds, original), 53.261752, places=4)
+        with self.assertRaises(ValueError):
+            win_quote_age_minutes(odds, {"capturedAtJST": original["capturedAtJST"], "horses": [1]})
+        odds["officialDatetime"] = "2026-11-23 16:25:17"
+        with self.assertRaises(ValueError):
+            win_quote_age_minutes(odds, original)
 
     def test_deterministic_json_fingerprint(self):
         self.assertEqual(sha_of_dict({"z":3,"a":4}),sha_of_dict({"a":4,"z":3}))
