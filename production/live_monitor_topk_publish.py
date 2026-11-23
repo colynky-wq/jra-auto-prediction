@@ -188,7 +188,11 @@ def publish_race_to_racedata(race, out, *, history=None):
         if formal else
         "正式10分前窓を逃した遅延救済記録です。正式10分前研究には使用せず、購入推奨を出しません。"
     )
+    odds_evidence = (out.attrs.get('winOddsSource') or {}).get('freshnessEvidence')
+    if not isinstance(odds_evidence, dict) or odds_evidence.get('freshnessStatus') != 'verified_within_30m':
+        raise ValueError('verified win-odds origin freshness evidence missing')
     published_race = {
+        "winOddsFreshness": odds_evidence,
         "raceDate": target_date,
         "raceID": str(race["race_id"]),
         "venue": str(race["venue"]),
