@@ -6,6 +6,7 @@ on:
       - research/wide-calibration-20261123
     paths:
       - research/wide_walkforward_calibration.py
+      - research/tests/test_wide_walkforward_calibration.py
       - .github/workflows/research-wide-walkforward.yml
   workflow_dispatch:
 
@@ -21,6 +22,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Syntax check
         run: python3 -m py_compile research/wide_walkforward_calibration.py
+      - name: Regression tests for freshness, NULL and date separation
+        run: python3 -m unittest discover -s research/tests -p 'test_wide_walkforward_calibration.py' -v
       - name: Run walk-forward analysis without changing production files
         run: python3 research/wide_walkforward_calibration.py --root . > wide_walkforward_result.json
       - name: Print comparable summaries
