@@ -170,7 +170,8 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
                 or not TOKEN.fullmatch(token)):
             raise JRAWinOddsError("invalid_cached_jra_navigation")
     else:
-        entry_url = discover_entry_url(race_id, date8, session)
+        entry_url = discover_entry_url(race_id, date8, session,
+                                       abort_on_restricted=True)
         if not entry_url or not entry_url.startswith(ACCESS_D + "?"):
             raise JRAWinOddsError("jra_entry_navigation_unavailable")
         try:
