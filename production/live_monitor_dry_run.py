@@ -223,17 +223,23 @@ def fetch_meta(race: dict) -> dict:
 def fetch_win_odds(race_id: str) -> tuple[pd.DataFrame, dict]:
     url = "https://race.netkeiba.com/api/api_get_jra_odds.html"
     referer = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}"
-    r = SESSION.get(
-        url,
-        params={"race_id": race_id, "type": 1, "action": "init", "compress": 0},
-        headers={**HEADERS, "Referer": referer},
-        timeout=30,
-    )
+    try:
+        r = SESSION.get(
+            url,
+            params={"race_id": race_id, "type": 1, "action": "init", "compress": 0},
+            headers={**HEADERS, "Referer": referer},
+            timeout=30,
+        )
+    except requests.exceptions.RequestException as exc:
+        raise WinOddsFetchError("upstream win odds HTTP transport failure") from exc
     print("odds HTTP:", r.status_code, "bytes:", len(r.content), "race:", race_id)
     if r.status_code != 200:
         raise WinOddsFetchError(f"odds HTTP {r.status_code}")
 
-    payload = r.json()
+    try:
+        payload = r.json()
+    except (ValueError, requests.exceptions.RequestException) as exc:
+        raise WinOddsFetchError("upstream win odds invalid JSON") from exc
     data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
     odds_root = data.get("odds") if isinstance(data.get("odds"), dict) else {}
     win = odds_root.get("1") if isinstance(odds_root.get("1"), dict) else {}
