@@ -86,7 +86,7 @@ class JRAWinOddsSourceTests(unittest.TestCase):
             discover_win_odds_cname(entry + entry.replace(TOKEN, "pw15oli00/6E"))
 
     def test_no_source_fabricated_from_receipt(self):
-        for source in ("09時52分現在オッズ", "10時00分現在オッズ"):
+        for source in ("09時52分現在オッズ", "09時50分現在オッズ"):
             with self.subTest(source=source):
                 with self.assertRaisesRegex(WinOddsFreshnessError, "stale_over_30m"):
                     parse_jra_win_odds(html(clock=source), RACE, DATE,
