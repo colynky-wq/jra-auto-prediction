@@ -6,7 +6,6 @@ The caller enforces the original formal prediction window (T-12..T-8).
 """
 from __future__ import annotations
 
-import requests
 from win_odds_freshness import WinOddsFreshnessError
 
 
@@ -15,6 +14,4 @@ class WinOddsFetchError(RuntimeError):
 
 
 def retryable_win_odds_failure(exc: BaseException) -> bool:
-    return isinstance(exc, (WinOddsFreshnessError,
-                            WinOddsFetchError,
-                            requests.exceptions.RequestException))
+    return isinstance(exc, (WinOddsFreshnessError, WinOddsFetchError))
