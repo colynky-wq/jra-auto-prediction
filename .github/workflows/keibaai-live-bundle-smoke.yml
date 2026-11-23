@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'production/live_monitor_topk_publish.py'
+      - 'production/live_monitor_topk.py'
+      - 'production/win_odds_freshness.py'
+      - 'production/test_win_odds_freshness.py'
       - 'production/build_signal_data_v2.py'
       - 'production/build_signal_data.py'
       - 'production/test_live_recording_resume.py'
@@ -59,13 +62,15 @@ jobs:
         run: |
           python -m py_compile production/wide_odds_runtime.py
           python -m py_compile production/build_signal_data_v2.py
-          python -m py_compile production/live_monitor_topk_publish.py
+          python -m py_compile production/live_monitor_topk_publish.py production/live_monitor_topk.py production/win_odds_freshness.py
           python -m py_compile production/repair_wide_odds.py
           python -m py_compile production/wide_forward_validation.py
           python -m py_compile production/wide_validation_summary.py
           python -m py_compile production/ticket_plan_shadow.py
           python -m py_compile production/wide_axis_rules.py
           python -m py_compile production/wide_axis_shadow.py
+      - name: Verify origin timestamp freshness for win odds
+        run: python production/test_win_odds_freshness.py -v
       - name: Verify Wide-axis selection and independent final result identity
         run: python production/test_wide_axis_rules.py
       - name: Verify session resume and simultaneous live recording writes

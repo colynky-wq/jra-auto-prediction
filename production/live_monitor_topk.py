@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
+from win_odds_freshness import validate_win_odds_freshness
 
 import live_monitor_dry_run as base
 from topk_runtime import predict_top2_top3
@@ -77,6 +78,7 @@ def predict_live_race_topk(
     odds_requested = base.now_jst()
     odds, win_odds_payload = base.fetch_win_odds(rid)
     odds_received = base.now_jst()
+    win_odds_freshness = validate_win_odds_freshness(win_odds_payload, odds_received)
     if len(odds) < 2:
         raise RuntimeError("insufficient live win odds")
 
@@ -239,7 +241,9 @@ def predict_live_race_topk(
     out["研究候補"] = (out["AI÷市場"] >= 1.20) & (out["期待払戻指数"] >= 100)
     out.attrs['allBetEntryEvidence'] = research_entry_evidence
     out.attrs['winOddsSource'] = {'payload':win_odds_payload,
-        'requestStartedAtJST':odds_requested.isoformat(),'receivedAtJST':odds_received.isoformat()}
+        'requestStartedAtJST':odds_requested.isoformat(),
+        'receivedAtJST':odds_received.isoformat(),
+        'freshnessEvidence':win_odds_freshness}
     # Preserve the same pre-race, per-entrant feature matrix for the optional
     # no-current-odds research challenger. This never changes the formal output.
     no_market_fields = [name for name in base.ALLF if name != "市場ロジット"]

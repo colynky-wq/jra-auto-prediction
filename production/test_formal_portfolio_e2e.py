@@ -76,6 +76,14 @@ class PortfolioE2E(unittest.TestCase):
                         'horses':[{'number':int(r['馬番']),'name':r['馬名']} for r in frame.to_dict('records')]}
             e=entry(entry_race);e['capturedAtJST']=(NOW-timedelta(seconds=10)).isoformat()
             frame.attrs['allBetEntryEvidence']=e
+            # Synthetic official source update time, not just the HTTP receipt.
+            frame.attrs['winOddsSource']={'freshnessEvidence':{
+                'sourceField':'data.official_datetime',
+                'sourceUpdatedAtJST':(NOW-timedelta(minutes=2)).isoformat(),
+                'receivedAtJST':NOW.isoformat(),
+                'sourceAgeSecondsAtReceipt':120,
+                'maxSourceAgeSeconds':1800,
+                'freshnessStatus':'verified_within_30m'}}
             calls={'added':0,'triple':0,'wide':0}
             real_added,real_triple=added.record_first,triple.record_first
             real_wide=formal_wide.record_first_wide_snapshot
