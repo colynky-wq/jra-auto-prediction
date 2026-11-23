@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
 import live_monitor_dry_run as base
 import live_monitor_topk as topk
+from win_odds_freshness import validate_win_odds_freshness
 from live_capture_policy import (
     CAPTURE_TIMING_MARKERS,
     FORMAL_TIMING_MARKER,
@@ -191,6 +193,15 @@ def publish_race_to_racedata(race, out, *, history=None):
     odds_evidence = (out.attrs.get('winOddsSource') or {}).get('freshnessEvidence')
     if not isinstance(odds_evidence, dict) or odds_evidence.get('freshnessStatus') != 'verified_within_30m':
         raise ValueError('verified win-odds origin freshness evidence missing')
+    # Recheck at actual publication time; a borderline-fresh fetch may expire
+    # while feature generation or downstream calculations are running.
+    validated_at_publish = validate_win_odds_freshness(
+        {'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
+        datetime.fromisoformat(captured_at),
+    )
+    odds_evidence = {**odds_evidence,
+                     'sourceAgeSecondsAtPublication': validated_at_publish['sourceAgeSecondsAtReceipt'],
+                     'publicationFreshnessStatus': 'verified_within_30m'}
     published_race = {
         "winOddsFreshness": odds_evidence,
         "raceDate": target_date,
