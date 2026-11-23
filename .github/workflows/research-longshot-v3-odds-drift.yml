@@ -20,6 +20,10 @@ jobs:
     steps:
       - name: Checkout immutable T10 and official result records
         uses: actions/checkout@v4
+      - name: Use matching Python 3.11 runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Install frozen project dependencies
         run: pip install --disable-pip-version-check -r production/requirements.txt
       - name: Validate Python syntax
