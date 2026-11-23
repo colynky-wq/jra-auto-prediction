@@ -20,7 +20,7 @@ jobs:
       - name: Checkout pinned past source and models
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
       - name: Use Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -37,7 +37,10 @@ jobs:
           PY
           expected=$(python3 -c "import json; print(json.load(open('research/model_candidates/longshot_top3_v2/research.json'))['sourceHistorySha256'])")
           found=0
-          for rev in $(git log -n 15 --format=%H -- production/production_history.parquet); do
+          # Historical V2 was trained on 2026-11-23 01:57 JST, before the
+          # 2026-11-23 04:31 JST history update. Fetch only candidate commits.
+          for rev in b16abc93f24ce2d43d7ab3e669024c77d4d3fd60 71ec318993fe4ae321902f10e2e07d4c91359aa7 a894a49aaeb93d17ad86ec5ab398f5a185c70b67 8ff756a08c1d273010abe77acde8b82382241c51 46640a0eef0e64a5500e972ea188ba08d462a4ab; do
+            git fetch --no-tags --depth=1 origin "$rev"
             git show "$rev:production/production_history.parquet" > frozen_source.parquet
             actual=$(sha256sum frozen_source.parquet | cut -d' ' -f1)
             if [ "$actual" = "$expected" ]; then
