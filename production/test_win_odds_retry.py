@@ -14,7 +14,7 @@ class RetryClassificationTests(unittest.TestCase):
             WinOddsFreshnessError("win_odds_source_timestamp_missing")))
 
     def test_transport_timeout_retries(self):
-        self.assertTrue(retryable_win_odds_failure(requests.Timeout("temporary")))
+        self.assertFalse(retryable_win_odds_failure(requests.Timeout("unscoped network error")))
 
     def test_http_status_retries(self):
         self.assertTrue(retryable_win_odds_failure(WinOddsFetchError("odds HTTP 503")))
