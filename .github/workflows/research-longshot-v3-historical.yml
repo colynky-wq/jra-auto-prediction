@@ -53,7 +53,7 @@ jobs:
             echo 'Exact historical source not found: fail closed'
             exit 1
           fi
-      - name: Evaluate frozen 2025 and 2026 using historic closing odds ONLY
+      - name: Evaluate frozen 2026 using historic closing odds ONLY
         run: |
           python3 research/longshot_v3_historical_diagnostics.py --root . --history-file frozen_source.parquet --output longshot_v3_historical_result.json
       - name: Confirm no production model activation
@@ -63,7 +63,7 @@ jobs:
           result=json.load(open("longshot_v3_historical_result.json"))
           assert result["approved_for_production"] is False
           assert result["auto_bet_enabled"] is False
-          print("VERIFIED_RESEARCH_ONLY", [(y,result[y]["races"]) for y in ("2025","2026")])
+          print("VERIFIED_RESEARCH_ONLY", [(y,result[y]["races"]) for y in ("2026",)])
           PY
       - name: Upload historical research report
         uses: actions/upload-artifact@v4
