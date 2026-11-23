@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout pinned past source and models
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Use Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -27,9 +29,30 @@ jobs:
         run: pip install --disable-pip-version-check -r production/requirements.txt
       - name: Verify Python syntax
         run: python3 -m py_compile research/longshot_v3_historical_diagnostics.py
+      - name: Restore exact SHA-verified historic source from Git history
+        run: |
+          python3 - <<'PY'
+          import json
+          print('EXPECTED_HISTORY_SHA',json.load(open('research/model_candidates/longshot_top3_v2/research.json'))['sourceHistorySha256'])
+          PY
+          expected=$(python3 -c "import json; print(json.load(open('research/model_candidates/longshot_top3_v2/research.json'))['sourceHistorySha256'])")
+          found=0
+          for rev in $(git log -n 15 --format=%H -- production/production_history.parquet); do
+            git show "$rev:production/production_history.parquet" > frozen_source.parquet
+            actual=$(sha256sum frozen_source.parquet | cut -d' ' -f1)
+            if [ "$actual" = "$expected" ]; then
+              echo "VERIFIED_SOURCE_COMMIT=$rev"
+              found=1
+              break
+            fi
+          done
+          if [ "$found" -ne 1 ]; then
+            echo 'Exact historical source not found: fail closed'
+            exit 1
+          fi
       - name: Evaluate frozen 2025 and 2026 using historic closing odds ONLY
         run: |
-          python3 research/longshot_v3_historical_diagnostics.py --root . --output longshot_v3_historical_result.json
+          python3 research/longshot_v3_historical_diagnostics.py --root . --history-file frozen_source.parquet --output longshot_v3_historical_result.json
       - name: Confirm no production model activation
         run: |
           python3 - <<'PY'
