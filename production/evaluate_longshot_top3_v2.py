@@ -51,6 +51,14 @@ def verified_fresh_win_odds(race: dict) -> tuple[bool, str]:
             return False, "invalid_source_provenance"
         upstream = {"sourceProvider": provider,
                     "data": {"official_datetime": evidence["sourceUpdatedAtJST"]}}
+        if provider == "jra_official_web":
+            for field in ("sourceDisplayLabel", "sourceRaceDateJST",
+                          "sourceRaceID", "sourceTimePrecision",
+                          "sourcePageSha256", "sourceURL"):
+                upstream[field] = evidence[field]
+            if (upstream["sourceRaceID"] != race["raceID"]
+                    or upstream["sourceRaceDateJST"] != race["raceDate"].replace("-", "")):
+                return False, "invalid_source_provenance"
         at_receipt = validate_win_odds_freshness(upstream, received)
         at_publication = validate_win_odds_freshness(upstream, published)
         for recorded, computed in (
@@ -213,7 +221,8 @@ def evaluate(root, audit) -> dict:
     fresh_cohort = {
         "status": ("insufficient_verified_30m_evidence" if fresh_n < 30
                    else "verified_30m_descriptive_comparison"),
-        "sourceTimestampField": "data.official_datetime",
+        "acceptedSourceTimestampFields": ["data.official_datetime",
+                                          "jra.html.interim_label"],
         "maximumAgeSecondsAtPublication": 1800,
         "verifiedCapturedRaces": counts["sourceProvenance_verified_30m_at_publication"],
         "missingProvenanceCaptures": counts["sourceProvenance_missing_source_provenance"],

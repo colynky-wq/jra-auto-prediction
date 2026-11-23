@@ -57,6 +57,39 @@ def validate_win_odds_freshness(payload: dict, received_at: datetime) -> dict:
     if not isinstance(data, dict):
         raise WinOddsFreshnessError("win_odds_data_missing")
     origin_time = parse_official_datetime(data.get("official_datetime"))
+    source_metadata = {}
+    if provider == "jra_official_web":
+        # The synthetic data.official_datetime alone is NOT evidence that
+        # JRA printed an origin time. Require its raw display label, page
+        # digest and independently matched race identity before adoption.
+        label = payload.get("sourceDisplayLabel")
+        match = (re.fullmatch(r"(\d{1,2})時(\d{2})分現在オッズ", label)
+                 if isinstance(label, str) else None)
+        date8 = payload.get("sourceRaceDateJST")
+        race_id = payload.get("sourceRaceID")
+        digest = payload.get("sourcePageSha256")
+        if (match is None or not isinstance(date8, str)
+                or not re.fullmatch(r"\d{8}", date8)
+                or not isinstance(race_id, str)
+                or not re.fullmatch(r"\d{12}", race_id)
+                or not isinstance(digest, str)
+                or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                or payload.get("sourceURL") != "https://www.jra.go.jp/JRADB/accessO.html"
+                or payload.get("sourceTimePrecision") != "minute"):
+            raise WinOddsFreshnessError("jra_displayed_source_provenance_missing")
+        if (int(match[1]) != origin_time.hour
+                or int(match[2]) != origin_time.minute
+                or origin_time.second != 0 or origin_time.microsecond != 0
+                or date8 != origin_time.strftime("%Y%m%d")):
+            raise WinOddsFreshnessError("jra_source_display_timestamp_mismatch")
+        source_metadata = {
+            "sourceDisplayLabel": label,
+            "sourceRaceDateJST": date8,
+            "sourceRaceID": race_id,
+            "sourcePageSha256": digest,
+            "sourceURL": payload["sourceURL"],
+            "sourceTimePrecision": "minute",
+        }
     received = received_at.astimezone(JST)
     age = received - origin_time
     if age < -MAX_CLOCK_SKEW:
@@ -66,6 +99,7 @@ def validate_win_odds_freshness(payload: dict, received_at: datetime) -> dict:
     return {
         "sourceField": source_field,
         "sourceProvider": provider or "netkeiba_api",
+        **source_metadata,
         "sourceUpdatedAtJST": origin_time.isoformat(),
         "receivedAtJST": received.isoformat(),
         "sourceAgeSecondsAtReceipt": round(age.total_seconds(), 3),

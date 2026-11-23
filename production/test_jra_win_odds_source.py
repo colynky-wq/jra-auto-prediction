@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from copy import deepcopy
 import unittest
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
@@ -41,6 +42,47 @@ class JRAWinOddsSourceTests(unittest.TestCase):
         fresh = validate_win_odds_freshness(source, RECEIVED)
         self.assertEqual(fresh["sourceField"], "jra.html.interim_label")
         self.assertEqual(fresh["sourceAgeSecondsAtReceipt"], 120)
+        self.assertEqual(fresh["sourceDisplayLabel"], "10時20分現在オッズ")
+        self.assertEqual(fresh["sourceRaceID"], RACE)
+        self.assertEqual(fresh["sourceRaceDateJST"], DATE)
+        self.assertEqual(fresh["sourceTimePrecision"], "minute")
+        self.assertRegex(fresh["sourcePageSha256"], r"^[0-9a-f]{64}$")
+
+    def test_jra_freshness_requires_original_display_proof(self):
+        _, payload = parse_jra_win_odds(html(), RACE, DATE, RECEIVED)
+        valid = validate_win_odds_freshness(payload, RECEIVED)
+        self.assertEqual(valid["sourceField"], "jra.html.interim_label")
+        for key in ("sourceDisplayLabel", "sourceRaceDateJST",
+                    "sourceRaceID", "sourceTimePrecision",
+                    "sourcePageSha256", "sourceURL"):
+            broken = deepcopy(payload)
+            del broken[key]
+            with self.subTest(missing=key), self.assertRaises(WinOddsFreshnessError):
+                validate_win_odds_freshness(broken, RECEIVED)
+        for key, changed in (
+            ("sourceDisplayLabel", "10時15分現在オッズ"),
+            ("sourceRaceDateJST", "20261122"),
+            ("sourceTimePrecision", "unknown"),
+            ("sourcePageSha256", "0" * 63),
+            ("sourceURL", "https://example.invalid/jra"),
+        ):
+            broken = deepcopy(payload)
+            broken[key] = changed
+            with self.subTest(mismatch=key), self.assertRaises(WinOddsFreshnessError):
+                validate_win_odds_freshness(broken, RECEIVED)
+
+    def test_jra_evidence_rechecks_at_publication(self):
+        _, payload = parse_jra_win_odds(html(), RACE, DATE, RECEIVED)
+        evidence = validate_win_odds_freshness(payload, RECEIVED)
+        forwarded = {"sourceProvider": evidence["sourceProvider"],
+                     "data": {"official_datetime": evidence["sourceUpdatedAtJST"]}}
+        for field in ("sourceDisplayLabel", "sourceRaceDateJST", "sourceRaceID",
+                      "sourceTimePrecision", "sourcePageSha256", "sourceURL"):
+            forwarded[field] = evidence[field]
+        later = validate_win_odds_freshness(forwarded, RECEIVED + timedelta(minutes=28))
+        self.assertEqual(later["sourceAgeSecondsAtReceipt"], 1800)
+        with self.assertRaisesRegex(WinOddsFreshnessError, "stale_over_30m"):
+            validate_win_odds_freshness(forwarded, RECEIVED + timedelta(minutes=28, seconds=1))
 
     def test_no_last_odds_pass_as_interim(self):
         with self.assertRaises(JRAWinOddsError):
