@@ -54,7 +54,8 @@ MODE = os.environ.get("KEIBAAI_LIVE_MODE", "plan").strip().lower() or "plan"
 TARGET_RACE_ID = os.environ.get("KEIBAAI_LIVE_RACE_ID", "").strip()
 MAX_RUNTIME_MINUTES = int(os.environ.get("KEIBAAI_LIVE_MAX_MINUTES", "30").strip() or "30")
 POLL_SECONDS = int(os.environ.get("KEIBAAI_LIVE_POLL_SECONDS", "20").strip() or "20")
-WIN_ODDS_RETRY_SECONDS = 15
+WIN_ODDS_RETRY_SECONDS = (60 if os.environ.get("KEIBAAI_ODDS_SOURCE") == "jra_official_web"
+                          else 15)
 
 WINDOW_EARLY_MINUTES = 12.0
 WINDOW_LATE_MINUTES = 8.0
@@ -221,6 +222,17 @@ def fetch_meta(race: dict) -> dict:
 
 
 def fetch_win_odds(race_id: str) -> tuple[pd.DataFrame, dict]:
+    source = os.environ.get("KEIBAAI_ODDS_SOURCE", "netkeiba_api").strip()
+    if source == "jra_official_web":
+        # Experimental source is opt-in ONLY; production remains unchanged.
+        # An explicit separate switch prevents accidental scheduled probing.
+        if os.environ.get("KEIBAAI_ALLOW_EXPERIMENTAL_JRA_ODDS") != "1":
+            raise RuntimeError("jra_official_web_requires_experimental_opt_in")
+        from jra_win_odds_source import fetch_jra_win_odds
+        return fetch_jra_win_odds(race_id, TARGET_DATE8, session=SESSION,
+                                  clock=now_jst)
+    if source != "netkeiba_api":
+        raise RuntimeError("unsupported_win_odds_source")
     url = "https://race.netkeiba.com/api/api_get_jra_odds.html"
     referer = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}"
     try:
