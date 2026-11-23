@@ -234,15 +234,18 @@ def discover_entry_url(
 
         try:
             cname = _get_cname(page_url)
+            request_options = {"timeout": 20}
+            if abort_on_restricted:
+                # Do not follow a redirect during opt-in odds research.
+                # Preserve the old Session API for ordinary entry discovery.
+                request_options["allow_redirects"] = False
             if re.fullmatch(r"pw01dli00/[0-9A-Za-z]{2}", cname) and navigation_cname_field:
                 # JRA's public calendar is a form navigation. GET returns a
                 # parameter-error page; use the exact field name from its form.
                 r = session.post(ACCESS_D, data={**navigation_fields, navigation_cname_field: cname},
-                                 headers={"Referer": JRA_HOST + "/"}, timeout=20,
-                                 allow_redirects=not abort_on_restricted)
+                                 headers={"Referer": JRA_HOST + "/"}, **request_options)
             else:
-                r = session.get(page_url, timeout=20,
-                                allow_redirects=not abort_on_restricted)
+                r = session.get(page_url, **request_options)
             print(
                 "JRA discovery HTTP:",
                 r.status_code,
