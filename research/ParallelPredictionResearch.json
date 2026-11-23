@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "parallel-prediction-research-v1-20261122",
   "status": "quality_limited_research_only",
-  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
   "researchOnly": true,
   "formalPredictionAIChanged": false,
   "formalRecommendationsEnabled": false,
@@ -11,17 +11,17 @@
   "betaAutomaticallyEnabled": false,
   "tracks": {
     "collection": {
-      "verifiedAlignedRaces": 128,
-      "matchedAlignedRaces": 124,
-      "additionalMatchedTo300": 176,
+      "verifiedAlignedRaces": 145,
+      "matchedAlignedRaces": 139,
+      "additionalMatchedTo300": 161,
       "qualityStatus": "attention_required",
-      "qualityIssueCount": 28,
-      "missingFormalCaptures": 24,
-      "pendingSelectedSettlements": 3
+      "qualityIssueCount": 30,
+      "missingFormalCaptures": 25,
+      "pendingSelectedSettlements": 5
     },
     "historicalDiagnostics": {
       "evidence": "fixed_first100_and_101to200_descriptive_only",
-      "evaluatedRaces": 124,
+      "evaluatedRaces": 139,
       "cohorts": {
         "first100": {
           "win": {
@@ -87,46 +87,64 @@
         },
         "confirmation101to200": {
           "win": {
-            "races": 26,
-            "topAIHits": 7,
-            "topMarketHits": 7,
+            "races": 41,
+            "topAIHits": 12,
+            "topMarketHits": 11,
             "brier": {
-              "ai": 0.057264,
-              "market": 0.056982,
-              "marketBlend50": 0.057111
+              "ai": 0.056629,
+              "market": 0.056488,
+              "marketBlend50": 0.056548
             },
-            "aiMinusMarketBrier": 0.00029765,
-            "aiMinusMarketBootstrap95": null,
-            "blend50MinusMarketBrier": 0.00013773,
-            "blend50MinusMarketBootstrap95": null
+            "aiMinusMarketBrier": 0.00016577,
+            "aiMinusMarketBootstrap95": [
+              -0.00016282,
+              0.00047405
+            ],
+            "blend50MinusMarketBrier": 7.274e-05,
+            "blend50MinusMarketBootstrap95": [
+              -9.195e-05,
+              0.00022854
+            ]
           },
           "top2": {
-            "races": 26,
-            "topAIHits": 15,
-            "topMarketHits": 14,
+            "races": 41,
+            "topAIHits": 27,
+            "topMarketHits": 26,
             "brier": {
-              "ai": 0.093452,
-              "market": 0.092135,
-              "marketBlend50": 0.09272
+              "ai": 0.088456,
+              "market": 0.087076,
+              "marketBlend50": 0.087691
             },
-            "aiMinusMarketBrier": 0.00120689,
-            "aiMinusMarketBootstrap95": null,
-            "blend50MinusMarketBrier": 0.00052806,
-            "blend50MinusMarketBootstrap95": null
+            "aiMinusMarketBrier": 0.00132301,
+            "aiMinusMarketBootstrap95": [
+              8.01e-05,
+              0.0024933
+            ],
+            "blend50MinusMarketBrier": 0.00058558,
+            "blend50MinusMarketBootstrap95": [
+              -4.179e-05,
+              0.0011692
+            ]
           },
           "top3": {
-            "races": 26,
-            "topAIHits": 20,
-            "topMarketHits": 18,
+            "races": 41,
+            "topAIHits": 33,
+            "topMarketHits": 31,
             "brier": {
-              "ai": 0.121514,
-              "market": 0.117822,
-              "marketBlend50": 0.119335
+              "ai": 0.117976,
+              "market": 0.1144,
+              "marketBlend50": 0.115872
             },
-            "aiMinusMarketBrier": 0.00312966,
-            "aiMinusMarketBootstrap95": null,
-            "blend50MinusMarketBrier": 0.00122442,
-            "blend50MinusMarketBootstrap95": null
+            "aiMinusMarketBrier": 0.00316309,
+            "aiMinusMarketBootstrap95": [
+              0.00057815,
+              0.00549522
+            ],
+            "blend50MinusMarketBrier": 0.00125948,
+            "blend50MinusMarketBootstrap95": [
+              -2.858e-05,
+              0.00242952
+            ]
           }
         }
       },
@@ -134,51 +152,51 @@
     },
     "prospectiveCandidateValidation": {
       "evidence": "separately_frozen_T10_shadow_only",
-      "frozenSnapshots": 24,
-      "pairedAuditedRaces": 21,
+      "frozenSnapshots": 41,
+      "pairedAuditedRaces": 36,
       "minimumDescriptiveRaces": 100,
       "status": "insufficient_prospective_evidence",
       "byEvent": {
         "win": {
-          "pairedRaces": 21,
+          "pairedRaces": 36,
           "brierByModel": {
-            "marketOnly": 0.06253553,
-            "marketBlend25": 0.06259666,
-            "marketBlend50": 0.06266348,
-            "existingAI": 0.06281414
+            "marketOnly": 0.06012563,
+            "marketBlend25": 0.06015209,
+            "marketBlend50": 0.06018364,
+            "existingAI": 0.06026197
           },
           "brierDeltaVsMarket": {
-            "marketBlend25": 6.113e-05,
-            "marketBlend50": 0.00012795,
-            "existingAI": 0.00027861
+            "marketBlend25": 2.646e-05,
+            "marketBlend50": 5.801e-05,
+            "existingAI": 0.00013634
           }
         },
         "top2": {
-          "pairedRaces": 21,
+          "pairedRaces": 36,
           "brierByModel": {
-            "marketOnly": 0.09773365,
-            "marketBlend25": 0.09789765,
-            "marketBlend50": 0.09810026,
-            "existingAI": 0.09862131
+            "marketOnly": 0.08982209,
+            "marketBlend25": 0.09005252,
+            "marketBlend50": 0.09032148,
+            "existingAI": 0.09097502
           },
           "brierDeltaVsMarket": {
-            "marketBlend25": 0.000164,
-            "marketBlend50": 0.00036661,
-            "existingAI": 0.00088766
+            "marketBlend25": 0.00023043,
+            "marketBlend50": 0.00049939,
+            "existingAI": 0.00115293
           }
         },
         "top3": {
-          "pairedRaces": 21,
+          "pairedRaces": 36,
           "brierByModel": {
-            "marketOnly": 0.1230618,
-            "marketBlend25": 0.12356104,
-            "marketBlend50": 0.12423551,
-            "existingAI": 0.12611013
+            "marketOnly": 0.11742017,
+            "marketBlend25": 0.11795621,
+            "marketBlend50": 0.11865494,
+            "existingAI": 0.12054047
           },
           "brierDeltaVsMarket": {
-            "marketBlend25": 0.00049924,
-            "marketBlend50": 0.00117371,
-            "existingAI": 0.00304833
+            "marketBlend25": 0.00053604,
+            "marketBlend50": 0.00123477,
+            "existingAI": 0.0031203
           }
         }
       },

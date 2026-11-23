@@ -2,156 +2,156 @@
   "schemaVersion": 1,
   "version": "market-anchored-forward-review-v1",
   "status": "insufficient_future_evidence",
-  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
   "candidateActivationDate": "2026-11-23",
   "strategySHA256": "bd3e548cae49b26f90c9ed40d4666cfed1d28b4242de1c9b5eaa43f1d61c1912",
   "strategyVersion": "market-anchored-history-v1-20261122",
-  "qualityIssueCount": 28,
+  "qualityIssueCount": 30,
   "counts": {
-    "firstFrozenSnapshots": 0,
-    "pairedMatchedWithCalibrated": 0,
-    "pairedMatchedWithHistory": 0,
-    "unmatchedOrExcludedSnapshots": 0,
-    "eligibleAlignedSinceActivation": 0,
+    "firstFrozenSnapshots": 17,
+    "pairedMatchedWithCalibrated": 15,
+    "pairedMatchedWithHistory": 15,
+    "unmatchedOrExcludedSnapshots": 2,
+    "eligibleAlignedSinceActivation": 17,
     "missingCandidateSinceActivation": 0,
-    "candidateCaptureCoveragePct": null
+    "candidateCaptureCoveragePct": 100.0
   },
   "missingCaptureRaceIDs": [],
   "events": {
     "win": {
       "marketCalibrated": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.05668893575067678,
+          "T10Market": 0.0567517730330978,
+          "candidate": 0.05687431750416736
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": 0.00018538,
+          "betterRaces": 7,
+          "worseRaces": 8,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": 0.00012254,
+          "betterRaces": 7,
+          "worseRaces": 8,
           "bootstrap95Pct": null
         }
       },
       "historyAugmented": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.05668893575067678,
+          "T10Market": 0.0567517730330978,
+          "candidate": 0.05683624993825966
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": 0.00014731,
+          "betterRaces": 7,
+          "worseRaces": 8,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": 8.448e-05,
+          "betterRaces": 8,
+          "worseRaces": 7,
           "bootstrap95Pct": null
         }
       }
     },
     "top2": {
       "marketCalibrated": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.0802702024795892,
+          "T10Market": 0.07874590814108048,
+          "candidate": 0.07800023221585635
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00226997,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00074568,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         }
       },
       "historyAugmented": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.0802702024795892,
+          "T10Market": 0.07874590814108048,
+          "candidate": 0.0781247887156054
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00214541,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00062112,
+          "betterRaces": 12,
+          "worseRaces": 3,
           "bootstrap95Pct": null
         }
       }
     },
     "top3": {
       "marketCalibrated": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.11274293675429356,
+          "T10Market": 0.10952189088296511,
+          "candidate": 0.1090180953633608
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00372484,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.0005038,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         }
       },
       "historyAugmented": {
-        "pairedRaces": 0,
+        "pairedRaces": 15,
         "meanBrier": {
-          "formalAI": null,
-          "T10Market": null,
-          "candidate": null
+          "formalAI": 0.11274293675429356,
+          "T10Market": 0.10952189088296511,
+          "candidate": 0.10881153687119047
         },
         "candidateMinusFormalAI": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.0039314,
+          "betterRaces": 11,
+          "worseRaces": 4,
           "bootstrap95Pct": null
         },
         "candidateMinusMarket": {
-          "pairedRaces": 0,
-          "meanBrierDelta": null,
-          "betterRaces": 0,
-          "worseRaces": 0,
+          "pairedRaces": 15,
+          "meanBrierDelta": -0.00071035,
+          "betterRaces": 12,
+          "worseRaces": 3,
           "bootstrap95Pct": null
         }
       }

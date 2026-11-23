@@ -3,10 +3,10 @@
 **Status: BLOCKED — no current H1-H4 research result.**
 The prior verified research report has been superseded, not carried forward as today's result.
 
-Source audit: 2026-11-22T16:35:34+09:00
+Source audit: 2026-11-23T14:30:02+09:00
 Projection: verified; current counts: True
 Block reason: aligned input-quality failures
-Official-quality missing T-10 captures: 24
+Official-quality missing T-10 captures: 25
 Invalid T-10 captures: 0
 Quality issue types: capture_missing_after_window, schedule_integrity
 

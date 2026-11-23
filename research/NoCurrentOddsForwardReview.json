@@ -2,93 +2,93 @@
   "schemaVersion": 1,
   "version": "no-current-odds-forward-review-v1",
   "status": "insufficient_prospective_evidence",
-  "sourceAuditGeneratedAtJST": "2026-11-22T16:35:34+09:00",
+  "sourceAuditGeneratedAtJST": "2026-11-23T14:30:02+09:00",
   "candidateActivationDate": "2026-11-23",
   "missingCandidateRaceIDs": [],
-  "qualityIssueCount": 28,
+  "qualityIssueCount": 30,
   "modelVersion": "no-current-odds-challenger-v1-20261122",
   "counts": {
-    "frozenShadows": 0,
-    "pairedAuditedRaces": 0,
-    "unmatchedOrNotAudited": 0,
+    "frozenShadows": 17,
+    "pairedAuditedRaces": 15,
+    "unmatchedOrNotAudited": 2,
     "excludedResult": 0,
     "missingPodiumEvents": 0,
-    "eligibleAlignedCapturesSinceActivation": 0,
+    "eligibleAlignedCapturesSinceActivation": 17,
     "missingCandidateShadowsSinceActivation": 0,
-    "candidateShadowCoveragePct": null
+    "candidateShadowCoveragePct": 100.0
   },
   "byEvent": {
     "win": {
-      "pairedRaces": 0,
+      "pairedRaces": 15,
       "meanBrier": {
-        "market": null,
-        "formalAI": null,
-        "noCurrentOdds": null
+        "market": 0.05675177,
+        "formalAI": 0.05668894,
+        "noCurrentOdds": 0.05924542
       },
       "pairedRaceUncertaintyVsFormalAI": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.00255648,
+        "betterRaces": 6,
+        "worseRaces": 9,
         "bootstrap95Pct": null
       },
       "pairedRaceUncertaintyVsMarket": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.00249365,
+        "betterRaces": 6,
+        "worseRaces": 9,
         "bootstrap95Pct": null
       },
-      "candidateMinusFormalAIBrier": null,
-      "candidateMinusMarketBrier": null
+      "candidateMinusFormalAIBrier": 0.00255648,
+      "candidateMinusMarketBrier": 0.00249365
     },
     "top2": {
-      "pairedRaces": 0,
+      "pairedRaces": 15,
       "meanBrier": {
-        "market": null,
-        "formalAI": null,
-        "noCurrentOdds": null
+        "market": 0.07874591,
+        "formalAI": 0.0802702,
+        "noCurrentOdds": 0.09715003
       },
       "pairedRaceUncertaintyVsFormalAI": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.01687983,
+        "betterRaces": 1,
+        "worseRaces": 14,
         "bootstrap95Pct": null
       },
       "pairedRaceUncertaintyVsMarket": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.01840413,
+        "betterRaces": 1,
+        "worseRaces": 14,
         "bootstrap95Pct": null
       },
-      "candidateMinusFormalAIBrier": null,
-      "candidateMinusMarketBrier": null
+      "candidateMinusFormalAIBrier": 0.01687983,
+      "candidateMinusMarketBrier": 0.01840412
     },
     "top3": {
-      "pairedRaces": 0,
+      "pairedRaces": 15,
       "meanBrier": {
-        "market": null,
-        "formalAI": null,
-        "noCurrentOdds": null
+        "market": 0.10952189,
+        "formalAI": 0.11274294,
+        "noCurrentOdds": 0.12171055
       },
       "pairedRaceUncertaintyVsFormalAI": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.00896762,
+        "betterRaces": 3,
+        "worseRaces": 12,
         "bootstrap95Pct": null
       },
       "pairedRaceUncertaintyVsMarket": {
-        "pairedRaces": 0,
-        "meanBrierDelta": null,
-        "betterRaces": 0,
-        "worseRaces": 0,
+        "pairedRaces": 15,
+        "meanBrierDelta": 0.01218866,
+        "betterRaces": 3,
+        "worseRaces": 12,
         "bootstrap95Pct": null
       },
-      "candidateMinusFormalAIBrier": null,
-      "candidateMinusMarketBrier": null
+      "candidateMinusFormalAIBrier": 0.00896761,
+      "candidateMinusMarketBrier": 0.01218866
     }
   },
   "researchOnly": true,
