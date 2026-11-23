@@ -7,7 +7,8 @@ fed to live predictions, simulated pre-race selections or profit calculations.
 from __future__ import annotations
 import argparse
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from statistics import median
 import hashlib
 import json
 import math
@@ -105,6 +106,26 @@ def source_ages(details):
         return None
 
 
+def win_quote_age_minutes(record, original_prediction):
+    """Age of the original netkeiba win quote as recorded, not merely T10 capture."""
+    ensure(record.get("betType") == "win" and
+           sha_of_dict(record.get("prediction")) == sha_of_dict(original_prediction),
+           "win odds snapshot is not linked to frozen prediction")
+    ensure("race.netkeiba.com/api/api_get_jra_odds.html" in record.get("sourceURL", ""),
+           "win odds provider differs from expected source")
+    source = datetime.strptime(record["officialDatetime"], "%Y-%m-%d %H:%M:%S").replace(
+        tzinfo=timezone(timedelta(hours=9)))
+    captured = datetime.fromisoformat(original_prediction["capturedAtJST"])
+    requested = datetime.fromisoformat(record["requestStartedAtJST"])
+    received = datetime.fromisoformat(record["receivedAtJST"])
+    jst = timedelta(hours=9)
+    ensure(all(v.utcoffset() == jst for v in (captured, requested, received)) and
+           captured <= requested <= received, "win odds request/capture order invalid")
+    age = (received - source).total_seconds()/60
+    ensure(0 <= age <= 24*60, "win odds source timestamp invalid")
+    return age
+
+
 def run(root):
     sys.path.insert(0, str(root / "production"))
     from topk_runtime import market_top2_top3
@@ -133,6 +154,7 @@ def run(root):
     quality = Counter()
     shifts = []
     age_wide = []
+    age_win = []
     per_race = []
     for race in audit["races"]:
         if race["raceDate"] != "2026-11-23" or not race.get("inputFingerprint"):
@@ -142,11 +164,13 @@ def run(root):
         folder = root/"reports/20261123"
         portfolio_file = folder/"portfolio_live10"/(rid+".json")
         v2_file = folder/"longshot_top3_v2"/(rid+".json")
-        if not portfolio_file.exists() or not v2_file.exists() or rid not in by_id:
+        win_file = folder/"all_bet_v1"/"win"/(rid+".json")
+        if not portfolio_file.exists() or not v2_file.exists() or not win_file.exists() or rid not in by_id:
             quality["missing_linked_files"] += 1
             continue
         bundle = json.loads(portfolio_file.read_text(encoding="utf-8"))
         v2 = json.loads(v2_file.read_text(encoding="utf-8"))
+        win_snapshot = json.loads(win_file.read_text(encoding="utf-8"))
         pred = bundle["prediction"]
         ensure(bundle.get("fingerprint") == race["inputFingerprint"], "formal audit fingerprint "+rid)
         ensure(v2.get("recordFingerprint") == sha_of_dict({k: v for k,v in v2.items()
@@ -212,6 +236,7 @@ def run(root):
         p_market_context = score(model, xf, bf, cols)
         ensure(np.isfinite(p_market_context).all(), "V2 final scenario invalid "+rid)
         age_wide.append(source_ages(bundle["signal"]["wideEvaluation"]))
+        age_win.append(win_quote_age_minutes(win_snapshot, pred))
 
         after = 0
         lost = 0
@@ -271,7 +296,7 @@ def run(root):
         "analysisType": "same_horse_T10_vs_official_closing_odds",
         "warning": "Final odds are NOT available at T10. Counterfactual outputs are hindsight diagnostics only.",
         "eligibleDefinition": "T10 popularity>=6 AND T10 win odds>=10; FIXED across all scenarios",
-        "sourceAge": "wide odds timestamps, NOT win-odds timestamps",
+        "sourceAge": "win and wide odds source timestamps independently verified",
         "predictionSource": "immutable first-formal T10 specialist V2 features, 47 inputs",
         "frozenVariables": "44 non-market V2 features unchanged; only 3 market features and Top3 baseline changed",
         "metrics": by_scen,
@@ -281,6 +306,16 @@ def run(root):
             "n": sum(a is not None for a in age_wide),
             "min":min([a for a in age_wide if a is not None],default=None),
             "max":max([a for a in age_wide if a is not None],default=None),
+        },
+        "recordedOddsAgesWinMinutes": {
+            "n":len(age_win),
+            "min":min(age_win,default=None),
+            "median":median(age_win) if age_win else None,
+            "max":max(age_win,default=None),
+            "atMost30":sum(x<=30 for x in age_win),
+            "over30":sum(x>30 for x in age_win),
+            "over45":sum(x>45 for x in age_win),
+            "over60":sum(x>60 for x in age_win),
         },
         "cohortChange": {
             "scoredRaces":len(per_race),
@@ -314,7 +349,8 @@ def main():
     print("ODDS_DRIFT_COHORT",report["quality"],report["cohortChange"])
     print("ODDS_DRIFT_MOVEMENTS",json.dumps(report["driftGroups"],ensure_ascii=False))
     print("ODDS_DRIFT_SCENARIOS",json.dumps(report["metrics"],ensure_ascii=False))
-    print("ODDS_DRIFT_WIDE_AGE_ONLY",report["recordedOddsAgesWideMinutes"])
+    print("ODDS_DRIFT_WIDE_AGE",report["recordedOddsAgesWideMinutes"])
+    print("ODDS_DRIFT_WIN_AGE",report["recordedOddsAgesWinMinutes"])
 
 
 if __name__=="__main__":
