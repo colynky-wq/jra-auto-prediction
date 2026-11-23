@@ -15,7 +15,8 @@ import requests
 from bs4 import BeautifulSoup
 
 from jra_entry_source import ACCESS_D, JRA_HOST, HEADERS, discover_entry_url
-from win_odds_freshness import JST, WinOddsFreshnessError, validate_win_odds_freshness
+from win_odds_freshness import JST, validate_win_odds_freshness
+from win_odds_retry import WinOddsFetchError
 
 ACCESS_O = JRA_HOST + "/JRADB/accessO.html"
 VENUES = {
@@ -36,7 +37,7 @@ ODDS_NUMBER = re.compile(r"^\d+\.\d$")
 TOKEN = re.compile(r"^[A-Za-z0-9_/.-]{1,160}$")
 
 
-class JRAWinOddsError(ValueError):
+class JRAWinOddsError(WinOddsFetchError):
     """Official page has insufficient, ambiguous, or wrong-race data."""
 
 
@@ -79,7 +80,7 @@ def parse_jra_win_odds(html: str, race_id: str, date8: str,
 
     times = [node.get_text(" ", strip=True)
              for node in soup.select("div.cell.time strong")]
-    if len(times) != 1 or "最終" in html or "確定オッズ" in html:
+    if len(times) != 1 or any("最終" in t or "確定" in t for t in times):
         raise JRAWinOddsError("jra_odds_interim_time_missing_or_final")
     m = INTERIM_LABEL.fullmatch(times[0])
     if not m:
@@ -139,15 +140,21 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
     entry_url = discover_entry_url(race_id, date8, session)
     if not entry_url or not entry_url.startswith(ACCESS_D + "?"):
         raise JRAWinOddsError("jra_entry_navigation_unavailable")
-    response = session.get(entry_url, timeout=20, allow_redirects=False)
+    try:
+        response = session.get(entry_url, timeout=20, allow_redirects=False)
+    except requests.exceptions.RequestException as exc:
+        raise JRAWinOddsError("jra_entry_transport_failure") from exc
     if response.status_code != 200:
         raise JRAWinOddsError("jra_entry_http_failure")
     raw_entry = response.content.decode(response.apparent_encoding or "shift_jis",
                                         errors="replace")
     token = discover_win_odds_cname(raw_entry)
-    response = session.post(ACCESS_O, data={"cname": token},
-                            headers={"Referer": entry_url},
-                            timeout=20, allow_redirects=False)
+    try:
+        response = session.post(ACCESS_O, data={"cname": token},
+                                headers={"Referer": entry_url},
+                                timeout=20, allow_redirects=False)
+    except requests.exceptions.RequestException as exc:
+        raise JRAWinOddsError("jra_odds_transport_failure") from exc
     received = clock()
     if response.status_code != 200:
         raise JRAWinOddsError("jra_odds_http_failure")
