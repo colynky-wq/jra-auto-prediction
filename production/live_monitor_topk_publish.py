@@ -190,18 +190,26 @@ def publish_race_to_racedata(race, out, *, history=None):
         if formal else
         "正式10分前窓を逃した遅延救済記録です。正式10分前研究には使用せず、購入推奨を出しません。"
     )
-    odds_evidence = (out.attrs.get('winOddsSource') or {}).get('freshnessEvidence')
-    if not isinstance(odds_evidence, dict) or odds_evidence.get('freshnessStatus') != 'verified_within_30m':
-        raise ValueError('verified win-odds origin freshness evidence missing')
-    # Recheck at actual publication time; a borderline-fresh fetch may expire
-    # while feature generation or downstream calculations are running.
-    validated_at_publish = validate_win_odds_freshness(
-        {'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
-        datetime.fromisoformat(captured_at),
+    # Replayed/frozen formal records must remain immutable: no later odds can
+    # retroactively alter or invalidate the originally committed prediction.
+    already_frozen = formal and any(
+        str(item.get("raceDate", "")).strip() == target_date
+        and str(item.get("raceID", "")) == str(race["race_id"])
+        and item.get("predictionTiming") == FORMAL_TIMING_MARKER
+        for item in _load_existing()
     )
-    odds_evidence = {**odds_evidence,
-                     'sourceAgeSecondsAtPublication': validated_at_publish['sourceAgeSecondsAtReceipt'],
-                     'publicationFreshnessStatus': 'verified_within_30m'}
+    odds_evidence = (out.attrs.get('winOddsSource') or {}).get('freshnessEvidence')
+    if not already_frozen:
+        if not isinstance(odds_evidence, dict) or odds_evidence.get('freshnessStatus') != 'verified_within_30m':
+            raise ValueError('verified win-odds origin freshness evidence missing')
+        # A borderline-fresh fetch may expire during feature calculation.
+        validated_at_publish = validate_win_odds_freshness(
+            {'data': {'official_datetime': odds_evidence['sourceUpdatedAtJST']}},
+            datetime.fromisoformat(captured_at),
+        )
+        odds_evidence = {**odds_evidence,
+                         'sourceAgeSecondsAtPublication': validated_at_publish['sourceAgeSecondsAtReceipt'],
+                         'publicationFreshnessStatus': 'verified_within_30m'}
     published_race = {
         "winOddsFreshness": odds_evidence,
         "raceDate": target_date,
