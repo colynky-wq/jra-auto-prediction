@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
+from win_odds_retry import WinOddsFetchError, retryable_win_odds_failure
 import requests
 from bs4 import BeautifulSoup
 
@@ -53,6 +54,7 @@ MODE = os.environ.get("KEIBAAI_LIVE_MODE", "plan").strip().lower() or "plan"
 TARGET_RACE_ID = os.environ.get("KEIBAAI_LIVE_RACE_ID", "").strip()
 MAX_RUNTIME_MINUTES = int(os.environ.get("KEIBAAI_LIVE_MAX_MINUTES", "30").strip() or "30")
 POLL_SECONDS = int(os.environ.get("KEIBAAI_LIVE_POLL_SECONDS", "20").strip() or "20")
+WIN_ODDS_RETRY_SECONDS = 15
 
 WINDOW_EARLY_MINUTES = 12.0
 WINDOW_LATE_MINUTES = 8.0
@@ -221,17 +223,23 @@ def fetch_meta(race: dict) -> dict:
 def fetch_win_odds(race_id: str) -> tuple[pd.DataFrame, dict]:
     url = "https://race.netkeiba.com/api/api_get_jra_odds.html"
     referer = f"https://race.netkeiba.com/odds/index.html?race_id={race_id}"
-    r = SESSION.get(
-        url,
-        params={"race_id": race_id, "type": 1, "action": "init", "compress": 0},
-        headers={**HEADERS, "Referer": referer},
-        timeout=30,
-    )
+    try:
+        r = SESSION.get(
+            url,
+            params={"race_id": race_id, "type": 1, "action": "init", "compress": 0},
+            headers={**HEADERS, "Referer": referer},
+            timeout=30,
+        )
+    except requests.exceptions.RequestException as exc:
+        raise WinOddsFetchError("upstream win odds HTTP transport failure") from exc
     print("odds HTTP:", r.status_code, "bytes:", len(r.content), "race:", race_id)
     if r.status_code != 200:
-        raise RuntimeError(f"odds HTTP {r.status_code}")
+        raise WinOddsFetchError(f"odds HTTP {r.status_code}")
 
-    payload = r.json()
+    try:
+        payload = r.json()
+    except (ValueError, requests.exceptions.RequestException) as exc:
+        raise WinOddsFetchError("upstream win odds invalid JSON") from exc
     data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
     odds_root = data.get("odds") if isinstance(data.get("odds"), dict) else {}
     win = odds_root.get("1") if isinstance(odds_root.get("1"), dict) else {}
@@ -273,7 +281,7 @@ def predict_live_race(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp)
 
     odds, _ = fetch_win_odds(rid)
     if len(odds) < 2:
-        raise RuntimeError("insufficient live win odds")
+        raise WinOddsFetchError("insufficient live win odds")
 
     entries, entry_time, entry_url = fetch_jra_entry_table(rid, TARGET_DATE8, JST)
     print("JRA official entry parsed:", len(entries), "fetched_at:", entry_time)
@@ -499,6 +507,8 @@ def main() -> None:
         print('LIVE_RESUME_PUBLISHED', sorted(processed))
     missed: set[str] = set()
     failures: list[tuple[str, str]] = []
+    odds_retry_at: dict[str, datetime] = {}
+    odds_retry_counts: dict[str, int] = {}
 
     print()
     print("Live monitoring started. max runtime minutes:", MAX_RUNTIME_MINUTES, "poll seconds:", POLL_SECONDS)
@@ -519,10 +529,14 @@ def main() -> None:
                 if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
                     from pace_recording_events import record_event
                     record_event(rid, TARGET_DATE8, "monitor_missed", "prediction window missed")
-                print("MISSED window:", rid, f"remaining={remaining:.2f}m")
+                print("MISSED window:", rid, f"remaining={remaining:.2f}m",
+                      "retry_attempts=", odds_retry_counts.get(rid, 0))
                 continue
 
             if WINDOW_LATE_MINUTES <= remaining <= WINDOW_EARLY_MINUTES:
+                if now < odds_retry_at.get(rid, now):
+                    pending += 1
+                    continue
                 print()
                 print("=" * 110)
                 print("TRIGGER:", rid, race["venue"], f"{race['race_no']}R", "post", race["start_time"], f"remaining={remaining:.2f}m")
@@ -533,11 +547,23 @@ def main() -> None:
                     print("TRIGGER RESULT: SUCCESS", rid)
                 except Exception as exc:
                     failures.append((rid, f"{type(exc).__name__}: {exc}"))
-                    if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
-                        from pace_recording_events import record_event
-                        record_event(rid, TARGET_DATE8, "monitor_failed", exc)
-                    processed.add(rid)
-                    print("TRIGGER RESULT: FAILED", rid, repr(exc))
+                    if retryable_win_odds_failure(exc):
+                        # The existing T-12..T-8 window remains authoritative.
+                        # Retry only while the window is still open; never
+                        # fabricate an out-of-window formal prediction.
+                        odds_retry_counts[rid] = odds_retry_counts.get(rid, 0) + 1
+                        odds_retry_at[rid] = now_jst() + timedelta(seconds=WIN_ODDS_RETRY_SECONDS)
+                        pending += 1
+                        print("WIN_ODDS_RETRY_SCHEDULED", rid,
+                              "attempt", odds_retry_counts[rid],
+                              "next", odds_retry_at[rid].isoformat(),
+                              "reason", f"{type(exc).__name__}:{exc}")
+                    else:
+                        if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+                            from pace_recording_events import record_event
+                            record_event(rid, TARGET_DATE8, "monitor_failed", exc)
+                        processed.add(rid)
+                        print("TRIGGER RESULT: FAILED_NON_RETRYABLE", rid, repr(exc))
                 continue
 
             if remaining > WINDOW_EARLY_MINUTES:
@@ -547,7 +573,7 @@ def main() -> None:
             break
         if pending == 0 and all(r["race_id"] in processed | missed for r in flat):
             break
-        time.sleep(max(5, POLL_SECONDS))
+        time.sleep(max(5, min(POLL_SECONDS, WIN_ODDS_RETRY_SECONDS)))
 
     print()
     print("=" * 110)
