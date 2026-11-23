@@ -262,6 +262,9 @@ def discover_entry_url(
 
             enc = r.apparent_encoding or "shift_jis"
             text = r.content.decode(enc, errors="replace")
+            if abort_on_restricted and any(message in text for message in (
+                    "アクセスが集中", "ご指定のページに接続できません")):
+                raise JRAEntryAccessRestricted("jra_navigation_access_restricted_page")
             form = BeautifulSoup(text, "html.parser").find("form", id="commForm01")
             if form:
                 field = form.find("input", id="cname")
