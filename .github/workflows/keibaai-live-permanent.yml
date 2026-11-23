@@ -11,6 +11,9 @@ on:
       - 'production/live_monitor_topk_publish.py'
       - 'production/live_monitor_topk.py'
       - 'production/win_odds_freshness.py'
+      - 'production/win_odds_retry.py'
+      - 'production/test_win_odds_retry.py'
+      - 'production/live_monitor_dry_run.py'
       - 'production/test_win_odds_freshness.py'
       - 'production/market_shrink_shadow.py'
       - 'production/no_current_odds_shadow.py'
@@ -160,8 +163,9 @@ jobs:
         run: |
           bash -n .github/scripts/keibaai-race-day-check.sh
           bash production/test_race_day_check.sh
-          python -m py_compile production/live_monitor_topk_publish.py production/live_monitor_topk.py production/win_odds_freshness.py
+          python -m py_compile production/live_monitor_topk_publish.py production/live_monitor_topk.py production/live_monitor_dry_run.py production/win_odds_freshness.py production/win_odds_retry.py
           python production/test_win_odds_freshness.py -v
+          python production/test_win_odds_retry.py -v
           python -m py_compile production/market_shrink_shadow.py production/test_market_shrink_shadow.py
           python production/test_market_shrink_shadow.py -v
           python -m py_compile production/no_current_odds_shadow.py production/evaluate_no_current_odds_shadow.py production/test_no_current_odds_shadow.py
