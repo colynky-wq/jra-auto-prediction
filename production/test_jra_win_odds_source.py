@@ -13,6 +13,7 @@ from jra_win_odds_source import (
 )
 from win_odds_freshness import WinOddsFreshnessError, validate_win_odds_freshness
 from win_odds_retry import retryable_win_odds_failure
+from jra_entry_source import JRAEntryAccessRestricted, discover_entry_url
 
 RACE = "202605050602"
 DATE = "20261123"
@@ -164,6 +165,28 @@ class JRAWinOddsSourceTests(unittest.TestCase):
         self.assertEqual(session.calls[1][2], {"cname": TOKEN})
         self.assertEqual(source["preflightFreshnessEvidence"]["freshnessStatus"],
                          "verified_within_30m")
+
+    def test_navigation_discovery_stops_at_first_restricted_page(self):
+        class Response:
+            content = b"blocked"
+            def __init__(self, status):
+                self.status_code = status
+
+        for status in (401, 403, 429, 451, 302):
+            with self.subTest(status=status):
+                class Session:
+                    def __init__(self):
+                        self.calls = []
+                    def get(self, url, **kwargs):
+                        self.calls.append((url, kwargs))
+                        return Response(status)
+
+                session = Session()
+                with self.assertRaises(JRAEntryAccessRestricted) as caught:
+                    discover_entry_url(RACE, DATE, session, abort_on_restricted=True)
+                self.assertFalse(retryable_win_odds_failure(caught.exception))
+                self.assertEqual(len(session.calls), 1)
+                self.assertFalse(session.calls[0][1]["allow_redirects"])
 
     def test_cache_prevents_repeat_jra_entry_crawl_for_one_race(self):
         class Response:
