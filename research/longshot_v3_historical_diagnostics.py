@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Retrospective diagnostic for fixed, frozen longshot V3 probability mixtures.
+"""Retrospective 2026-only diagnostic for fixed, frozen longshot V3 mixtures.
 
-Historical closing odds are a later-time reference, NOT equivalent to formal T-10.
+Historical 2026 closing odds are a later-time reference, NOT equivalent to formal T-10.
 No fitting of new models, feature selection on evaluation years, or deployment.
 """
 from __future__ import annotations
@@ -101,14 +101,11 @@ def run(root, history_file=None):
     priors = place_history(data)
     safe = data.copy()
     safe["馬体重"] = pd.to_numeric(safe["馬体重"],errors="coerce").fillna(480)
-    print("RETRO_V3_BUILD_2025",flush=True)
-    older = add_extras(prepare_longshot(prepare_history(safe)),priors)
-    _, _, test25 = split_longshot(older)
     print("RETRO_V3_BUILD_2026",flush=True)
     test26 = add_extras(prepare_longshot(prepare_2026(safe)),priors)
     model_dir = root/"research/model_candidates/longshot_top3_v2"
     models = {}
-    for year, filename in (("2025","model_through2023.txt"),("2026","model_through2025.txt")):
+    for year, filename in (("2026","model_through2025.txt"),):
         f=model_dir/filename
         if hashlib.sha256(f.read_bytes()).hexdigest()!=registry["modelHashes"][filename]:
             raise ValueError("Frozen model checksum mismatch for "+year)
@@ -116,10 +113,9 @@ def run(root, history_file=None):
     result = {
         "status":"retrospective_not_pristine_holdout",
         "source_sha256":source_sha,
-        "warning":"Historical CLOSING odds; not formal 10-min odds. 2025 and 2026 were previously studied.",
+        "warning":"Historical 2026 CLOSING odds; not formal 10-min odds. 2026 was previously studied.",
         "research_only":True,"approved_for_production":False,"auto_bet_enabled":False,
         "selection":"V2 from 2024 feature-selection protocol; mixing coefficients predefined without test-year optimization",
-        "2025":evaluate(test25,models["2025"],feature_sets["place_and_market"],funcs),
         "2026":evaluate(test26,models["2026"],feature_sets["place_and_market"],funcs),
     }
     return result
@@ -134,7 +130,7 @@ def main():
     result=run(args.root, args.history_file)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2,allow_nan=False)+"\n",encoding="utf-8")
-    for year in ("2025","2026"):
+    for year in ("2026",):
         y=result[year]
         print("LONGSHOT_V3_HISTORY",year,"RACES",y["races"],"ROWS",y["horse_rows"])
         print("METRICS",json.dumps(y["outcomes"],ensure_ascii=False))
