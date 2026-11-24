@@ -38,3 +38,14 @@ def classify_capture_timing(
 
 def is_formal_timing(value: object) -> bool:
     return value == FORMAL_TIMING_MARKER
+
+
+def missed_capture_reason(*, worker_ready, post, recovery_late, attempts, last_error):
+    """Separate startup delay from attempted capture failure or loop delay."""
+    if worker_ready.tzinfo is None or post.tzinfo is None:
+        raise ValueError("capture diagnostics require timezone-aware clocks")
+    if attempts:
+        return "capture_attempt_failed: " + str(last_error or "unknown")
+    if (post - worker_ready).total_seconds() < recovery_late * 60:
+        return "startup_after_capture_deadline"
+    return "capture_window_elapsed_without_attempt"
