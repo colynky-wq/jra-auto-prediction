@@ -7,6 +7,7 @@ on:
       - 'production/live_monitor_topk.py'
       - 'production/no_current_odds_independent.py'
       - 'production/test_no_current_odds_shadow.py'
+      - 'production/test_no_current_odds_independent.py'
       - 'production/win_odds_freshness.py'
       - 'production/jra_win_odds_source.py'
       - 'production/test_jra_win_odds_source.py'
@@ -82,6 +83,7 @@ jobs:
           python production/test_win_odds_retry.py -v
           python production/test_jra_win_odds_source.py -v
           python production/test_no_current_odds_shadow.py -v
+          python production/test_no_current_odds_independent.py -v
       - name: Verify Wide-axis selection and independent final result identity
         run: python production/test_wide_axis_rules.py
       - name: Verify session resume and simultaneous live recording writes
