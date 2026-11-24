@@ -206,11 +206,11 @@ def settlement(d,methods,with_payout=False):
     return out
 
 
-def coherent_report(full25, full26, d25, d26, archive, provenance):
+def coherent_report(full25, full26, d25, d26, archive, provenance, *, compare_portfolios=False):
     from research_longshot_wide_coherent import evaluate
 
     frame = d26.copy()
-    models, study = evaluate(full25, full26, d25, frame)
+    models, study, races = evaluate(full25, full26, d25, frame)
     method_names = ("market", "v2Joint", "v7Joint", "temperature", "coherentV2", "coherentV7")
     methods = {name: frame[name].to_numpy() for name in method_names}
     covered, excluded = attach_payout(frame, archive)
@@ -270,6 +270,15 @@ def coherent_report(full25, full26, d25, d26, archive, provenance):
     frame[columns].to_csv(output / "pair_probabilities_2026.csv", index=False)
     covered[[*columns, "payout"]].to_csv(output / "verified_payout_pairs_2026.csv", index=False)
     print("WIDE_COHERENT_COMPLETE", json.dumps(study["selected2025"]), flush=True)
+    if compare_portfolios:
+        from research_longshot_wide_portfolio import write_comparison
+
+        comparison = write_comparison(
+            OUT.with_name("longshot_wide_portfolio_selection"), races, frame, covered, models, bootstrap,
+        )
+        for name, metrics in comparison["historical2026"].items():
+            baseline = study["coherentDistribution2026"][name]["portfolio"]["3"]
+            ensure(metrics["pairRank"]["racesHit"] == baseline["racesHit"], f"portfolio baseline differs: {name}")
     return models
 
 
@@ -277,7 +286,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--coherent", action="store_true", help="also evaluate coherent top-three models")
     parser.add_argument("--odds-replay", action="store_true", help="replay archived pre-race odds with coherent models")
+    parser.add_argument("--portfolio-selection", action="store_true", help="compare exact three-ticket joint coverage")
     args = parser.parse_args()
+    if args.portfolio_selection and not args.coherent:
+        parser.error("--portfolio-selection requires --coherent")
     if args.odds_replay and not args.coherent:
         parser.error("--odds-replay requires --coherent")
 
@@ -344,7 +356,7 @@ def main():
         coherent_models = coherent_report(full25, full26, d25, d, archive, {
             "sourceHistorySha256": result["sourceHistorySha256"], "v2ModelSha256": sha,
             "v7Selection": v7, "candidateSelectionYear": 2025,
-        })
+        }, compare_portfolios=args.portfolio_selection)
         if args.odds_replay:
             from research_longshot_wide_odds_replay import run as replay
             replay(ROOT, OUT.with_name("longshot_wide_odds_replay"), coherent_models,

@@ -12,6 +12,8 @@ on:
       - 'production/test_jra_wide_odds_source.py'
       - 'production/jra_wide_research_archive.py'
       - 'production/test_jra_wide_research_archive.py'
+      - 'production/research_longshot_wide_portfolio.py'
+      - 'production/test_research_longshot_wide_portfolio.py'
       - '.github/workflows/keibaai-longshot-wide-joint.yml'
   workflow_dispatch:
 permissions:
@@ -31,11 +33,12 @@ jobs:
       - run: python production/test_research_longshot_wide_odds_replay.py -v
       - run: python production/test_jra_wide_odds_source.py -v
       - run: python production/test_jra_wide_research_archive.py -v
+      - run: python production/test_research_longshot_wide_portfolio.py -v
       - name: Fit joint probabilities and evaluate archived payouts
         env:
           OMP_NUM_THREADS: '2'
           OPENBLAS_NUM_THREADS: '2'
-        run: python production/research_longshot_wide_joint.py --coherent --odds-replay
+        run: python production/research_longshot_wide_joint.py --coherent --odds-replay --portfolio-selection
       - uses: actions/upload-artifact@v4
         with:
           name: longshot-wide-joint-research
@@ -43,3 +46,4 @@ jobs:
             research/model_candidates/longshot_wide_joint/
             research/model_candidates/longshot_wide_coherent/
             research/model_candidates/longshot_wide_odds_replay/
+            research/model_candidates/longshot_wide_portfolio_selection/

@@ -251,4 +251,4 @@ def evaluate(full25, full26, pairs25, pairs26):
         "trainingRaces2025BeforeSeptember": len(train),
         "selectionRaces2025FromSeptember": len(validation),
         "coherentDistribution2026": quality,
-    }
+    }, test
