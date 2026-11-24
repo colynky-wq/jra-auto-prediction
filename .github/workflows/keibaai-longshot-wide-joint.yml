@@ -1,0 +1,30 @@
+name: KeibaAI Longshot Wide Joint Research
+on:
+  pull_request:
+    paths:
+      - 'production/research_longshot_wide_joint.py'
+      - 'production/test_research_longshot_wide_joint.py'
+      - '.github/workflows/keibaai-longshot-wide-joint.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt
+      - run: python production/test_research_longshot_wide_joint.py -v
+      - name: Fit joint probability and evaluate archived payouts
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        run: python production/research_longshot_wide_joint.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-wide-joint-research
+          path: research/model_candidates/longshot_wide_joint/
