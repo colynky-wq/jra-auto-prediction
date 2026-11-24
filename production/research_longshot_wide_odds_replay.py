@@ -15,9 +15,11 @@ import pandas as pd
 
 from aligned_portfolio_review import read, wide_results
 from all_bet_baseline import result_state
+from all_bet_forward import validate as validate_win_record
 from build_bet_research_data import checked_results
 from build_signal_data_v2 import _all_wide_pairs
 from formal_portfolio_capture import digest, load, stamp, window
+from jra_wide_research_archive import read_record as read_jra_record, verify_snapshot
 from longshot_top3_v2_runtime import model_spec, validate_record
 from research_longshot_top3_v7 import blend, raw, within_race
 from research_longshot_wide_coherent import (
@@ -226,29 +228,69 @@ def summary(rows):
     return out
 
 
-def run(root, output, models, rank_model, choice, now):
-    inventories = scan_archive(root)
+def legacy_inputs(root, path, day, rid, now):
+    bundle = load(root, day, rid)
+    race = bundle["prediction"]
+    captured = window(day, race["startTime"], race["capturedAtJST"])
+    frozen = window(day, race["startTime"], bundle["recordedAtJST"])
+    odds = read(path.parent.with_name("wide_odds_live10") / path.name)
+    if (race["captureQuality"] != "formal_10min" or race["predictionTiming"] != "live_10min"
+            or any(odds[k] != race[k] for k in ("raceID", "raceDate", "startTime"))
+            or odds["apiStatus"] != "middle" or odds["apiType"] != 5
+            or odds["frozenAtFirstSuccessfulCapture"] is not True
+            or not captured <= frozen <= now):
+        raise ValueError("invalid bound pre-race inputs")
+    window(day, race["startTime"], odds["capturedAtJST"])
+    return race, odds, frozen
+
+
+def official_inputs(race_dir, path, day, rid, now):
+    date8 = day.replace("-", "")
+    record = read_jra_record(path, date8, rid)
+    source = record["snapshot"]
+    win = validate_win_record(read(race_dir / "all_bet_v1" / "win" / path.name))
+    race = win["prediction"]
+    if (win["betType"] != "win" or race["raceID"] != rid or race["raceDate"] != day
+            or race["captureQuality"] != "formal_10min" or race["predictionTiming"] != "live_10min"
+            or stamp(f'{day}T{race["startTime"]}') != stamp(source["scheduledPostJST"])):
+        raise ValueError("official Wide and frozen prediction identities differ")
+    captured = window(day, race["startTime"], race["capturedAtJST"])
+    prediction_available = window(day, race["startTime"], win["predictionAvailableAtJST"])
+    prediction_recorded = window(day, race["startTime"], win["recordedAtJST"])
+    decision = max(prediction_recorded, stamp(record["recordedAtJST"]))
+    if not captured <= prediction_available <= prediction_recorded <= decision <= now:
+        raise ValueError("official Wide replay input chronology differs")
+    return race, source, decision
+
+
+def run(root, output, models, rank_model, choice, now, *, jra_archive=None):
+    official = jra_archive is not None
+    if official:
+        paths = sorted(jra_archive.glob("*/*.json"))
+        inventories = []
+    else:
+        paths = sorted(root.glob("reports/*/portfolio_live10/*.json"))
+        inventories = scan_archive(root)
     rows, tickets = [], []
     audits = []
     results_by_day = {}
-    for path in sorted(root.glob("reports/*/portfolio_live10/*.json")):
-        day8, rid = path.parents[1].name, path.stem
-        day = datetime.strptime(day8, "%Y%m%d").date().isoformat()
-        audit = {"raceID": rid, "raceDate": day, "status": "invalid", "coherent": "noFrozenInput"}
+    for path in paths:
+        day8, rid = (path.parent.name if official else path.parents[1].name), path.stem
+        race_dir = root / "reports" / day8
+        audit = {"raceID": rid, "raceDate": None, "status": "invalid", "coherent": "noFrozenInput"}
         try:
-            bundle = load(root, day, rid)
-            race = bundle["prediction"]
-            predictions = window(day, race["startTime"], race["capturedAtJST"])
-            frozen = window(day, race["startTime"], bundle["recordedAtJST"])
-            odds_doc = read(path.parent.with_name("wide_odds_live10") / path.name)
-            if (race["captureQuality"] != "formal_10min" or race["predictionTiming"] != "live_10min"
-                    or any(odds_doc[k] != race[k] for k in ("raceID", "raceDate", "startTime"))
-                    or odds_doc["apiStatus"] != "middle" or odds_doc["apiType"] != 5
-                    or odds_doc["frozenAtFirstSuccessfulCapture"] is not True
-                    or not predictions <= frozen <= now):
-                raise ValueError("invalid bound pre-race inputs")
-            window(day, race["startTime"], odds_doc["capturedAtJST"])
-            age = source_age(odds_doc, frozen)
+            day = datetime.strptime(day8, "%Y%m%d").date().isoformat()
+            audit["raceDate"] = day
+            if official:
+                if not (race_dir / "all_bet_v1" / "win" / path.name).is_file():
+                    read_jra_record(path, day8, rid)
+                    audit["status"] = "awaitingPrediction"
+                    continue
+                race, odds_doc, frozen = official_inputs(race_dir, path, day, rid, now)
+                age = verify_snapshot(odds_doc, day8, rid, frozen)
+            else:
+                race, odds_doc, frozen = legacy_inputs(root, path, day, rid, now)
+                age = source_age(odds_doc, frozen)
             audit["sourceAgeSecondsAtDecision"] = age
             odds = prices(odds_doc)
             horses = sorted(race["horses"], key=lambda h: h["number"])
@@ -274,13 +316,18 @@ def run(root, output, models, rank_model, choice, now):
             }
             estimates = {"marketPL": candidates, "currentAI": {pair: ai[pair] for pair in candidates}}
 
-            v2_path = path.parent.with_name("longshot_top3_v2") / path.name
+            v2_path = race_dir / "longshot_top3_v2" / path.name
             coherent_age = age
             if v2_path.is_file():
                 try:
                     v2 = read(v2_path)
                     rank_ready = max(frozen, window(day, race["startTime"], v2["recordedAtJST"]))
-                    coherent_age = source_age(odds_doc, rank_ready)
+                    if rank_ready > now:
+                        raise ValueError("Wide rank inputs postdate the replay clock")
+                    if official:
+                        coherent_age = verify_snapshot(odds_doc, day8, rid, rank_ready)
+                    else:
+                        coherent_age = source_age(odds_doc, rank_ready)
                     estimates.update(coherent_predictions(race, horses, longshot, v2, rank_model, models, choice))
                     audit["coherent"] = "inputVerified"
                 except (ValueError, KeyError, TypeError, OSError) as exc:
@@ -288,7 +335,7 @@ def run(root, output, models, rank_model, choice, now):
                     audit["coherentReason"] = str(exc)
 
             if day not in results_by_day:
-                results_by_day[day] = checked_results(path.parents[1] / "ResultData.json", day, now)
+                results_by_day[day] = checked_results(race_dir / "ResultData.json", day, now)
             actual = results_by_day[day].get((day, rid))
             state, finish = result_state(race, actual)
             if state != "matched":
@@ -350,6 +397,12 @@ def run(root, output, models, rank_model, choice, now):
             "staleDiagnosticsCoherentCommonRaces": summary(on_coherent),
         },
     }
+    if official:
+        report["sourceProvider"] = "jra_official_web"
+        report["snapshotInventory"] = {
+            "count": len(paths), "days": len({path.parent.name for path in paths}),
+        }
+        report["boundReplay"]["officialArchiveRecords"] = report["boundReplay"].pop("portfolioRecords")
     output.mkdir(parents=True, exist_ok=True)
     (output / "research.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
     (output / "race_audit.json").write_text(json.dumps({
@@ -375,10 +428,13 @@ def main():
     parser.add_argument("--coherent-models", type=Path, required=True)
     parser.add_argument("--rank-model", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--jra-archive", type=Path, help="replay only frozen official JRA Wide records")
     args = parser.parse_args()
+    if args.jra_archive is not None and not args.jra_archive.is_dir():
+        parser.error("--jra-archive must be an existing directory")
     choice = read(ROOT / "research/LongshotV7VerifiedSummary.json")["results"]["selected"]
     run(ROOT, args.output, read(args.coherent_models), lgb.Booster(model_file=str(args.rank_model)),
-        choice, datetime.now(JST))
+        choice, datetime.now(JST), jra_archive=args.jra_archive)
 
 
 if __name__ == "__main__":

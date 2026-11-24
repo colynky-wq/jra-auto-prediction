@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from itertools import combinations
 import hashlib
 import json
+from pathlib import Path
 import re
 import sys
 
@@ -207,14 +208,27 @@ def main():
     parser.add_argument("--race-id", required=True)
     parser.add_argument("--date", required=True, help="YYYYMMDD")
     parser.add_argument("--entry-url")
+    parser.add_argument("--research-archive", type=Path,
+                        help="freeze a verified interim observation in YYYYMMDD/RACE.json")
     parser.add_argument("--inspect-final", action="store_true", help="permit a rejected-as-live final page diagnostic")
     args = parser.parse_args()
+    if args.inspect_final and args.research_archive is not None:
+        parser.error("final inspection cannot be written to the interim research archive")
     try:
         with redirect_stdout(sys.stderr):
-            snapshot = fetch_jra_wide_odds(args.race_id, args.date, entry_url=args.entry_url,
-                                          inspect_final=args.inspect_final)
-    except (ValueError, requests.RequestException, JRAWinOddsError, JRAAccessRestricted,
-            JRAEntryAccessRestricted) as exc:
+            if args.research_archive is None:
+                snapshot = fetch_jra_wide_odds(args.race_id, args.date, entry_url=args.entry_url,
+                                              inspect_final=args.inspect_final)
+            else:
+                from jra_wide_research_archive import path_for, read_record, record_first
+                path = path_for(args.research_archive, args.date, args.race_id)
+                if path.is_file():
+                    snapshot = read_record(path, args.date, args.race_id)
+                else:
+                    fetched = fetch_jra_wide_odds(args.race_id, args.date, entry_url=args.entry_url)
+                    snapshot = record_first(args.research_archive, fetched)
+    except (ValueError, KeyError, TypeError, OSError, requests.RequestException,
+            JRAWinOddsError, JRAAccessRestricted, JRAEntryAccessRestricted) as exc:
         parser.exit(1, f"{type(exc).__name__}: {exc}\n")
     print(json.dumps(snapshot, ensure_ascii=False, indent=2, allow_nan=False))
 
