@@ -1,0 +1,67 @@
+name: KeibaAI Longshot Wide Joint Research
+on:
+  pull_request:
+    paths:
+      - 'production/research_longshot_wide_joint.py'
+      - 'production/test_research_longshot_wide_joint.py'
+      - 'production/research_longshot_wide_coherent.py'
+      - 'production/test_research_longshot_wide_coherent.py'
+      - 'production/research_longshot_wide_odds_replay.py'
+      - 'production/test_research_longshot_wide_odds_replay.py'
+      - 'production/jra_wide_odds_source.py'
+      - 'production/test_jra_wide_odds_source.py'
+      - 'production/jra_wide_research_archive.py'
+      - 'production/test_jra_wide_research_archive.py'
+      - 'production/research_longshot_wide_portfolio.py'
+      - 'production/test_research_longshot_wide_portfolio.py'
+      - 'production/research_wide_portfolio_calibration.py'
+      - 'production/test_research_wide_portfolio_calibration.py'
+      - 'production/research_wide_four_way.py'
+      - 'production/test_research_wide_four_way.py'
+      - 'production/jra_wide_pilot.py'
+      - 'production/test_jra_wide_pilot.py'
+      - 'production/test_formal_portfolio_e2e.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'research/model_candidates/wide_jra_pilot_v1/models.json'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
+      - '.github/workflows/keibaai-longshot-wide-joint.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt requests beautifulsoup4
+      - run: python production/test_research_longshot_wide_joint.py -v
+      - run: python production/test_research_longshot_wide_coherent.py -v
+      - run: python production/test_research_longshot_wide_odds_replay.py -v
+      - run: python production/test_jra_wide_odds_source.py -v
+      - run: python production/test_jra_wide_research_archive.py -v
+      - run: python production/test_research_longshot_wide_portfolio.py -v
+      - run: python production/test_research_wide_portfolio_calibration.py -v
+      - run: python production/test_research_wide_four_way.py -v
+      - run: python production/test_jra_wide_pilot.py -v
+      - run: python production/test_formal_portfolio_e2e.py -v
+      - name: Fit joint probabilities and evaluate archived payouts
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        run: python production/research_longshot_wide_joint.py --coherent --odds-replay --portfolio-selection --portfolio-calibration --portfolio-four-way
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-wide-joint-research
+          path: |
+            research/model_candidates/longshot_wide_joint/
+            research/model_candidates/longshot_wide_coherent/
+            research/model_candidates/longshot_wide_odds_replay/
+            research/model_candidates/longshot_wide_portfolio_selection/
+            research/model_candidates/longshot_wide_portfolio_calibration/
+            research/model_candidates/longshot_wide_portfolio_t10/

@@ -29,6 +29,7 @@ def _env_flag(name: str, default: bool) -> bool:
 PUBLISH_TO_APP = _env_flag("KEIBAAI_PUBLISH_RACEDATA", False)
 CAPTURE_WIDE_ODDS = _env_flag("KEIBAAI_CAPTURE_WIDE_ODDS", True)
 REFRESH_SIGNALS = _env_flag("KEIBAAI_REFRESH_SIGNALS", True)
+JRA_WIDE_PILOT_DATE = os.environ.get("KEIBAAI_JRA_WIDE_PILOT_DATE", "")
 
 
 def _number(value, digits=3):
@@ -355,6 +356,14 @@ def publish_race_to_racedata(race, out, *, history=None):
             print("LONGSHOT_TOP3_V2_STATUS", rid, status)
         except Exception as exc:
             print("WARNING: optional longshot v2 capture failed:", rid, type(exc).__name__, str(exc))
+
+    if first_formal_capture and JRA_WIDE_PILOT_DATE == target_date.replace("-", ""):
+        try:
+            from jra_wide_pilot import schedule as schedule_jra_wide_pilot
+            entry = out.attrs.get("allBetEntryEvidence") or {}
+            schedule_jra_wide_pilot(RACEDATA_PATH.parent, published_race, entry.get("sourceURL"))
+        except Exception as exc:
+            print("WARNING: JRA_WIDE_PILOT_SCHEDULE", rid, type(exc).__name__)
 
     # Ticket-specific probabilities are strictly shadow research.  Failure is
     # frozen as its own immutable evidence and must never stop formal A or odds.
