@@ -11,6 +11,9 @@ on:
     paths:
       - 'production/aggregate_forward_results.py'
       - 'production/run_forward_aggregate.py'
+      - 'production/archived_forward_results.py'
+      - 'production/test_archived_forward_results.py'
+      - 'production/result_detail_enrichment.py'
       - 'production/run_forward_aggregate_v2.py'
       - 'production/test_jra_route_modes.py'
       - 'production/forward_prediction_source.py'
@@ -35,6 +38,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -46,6 +51,7 @@ jobs:
           python -m unittest discover -s production -p 'test_forward_aggregate_schedule.py'
           python -m unittest discover -s production -p 'test_forward_prediction_source.py'
           python -m unittest discover -s production -p 'test_jra_route_modes.py'
+          python -m unittest discover -s production -p 'test_archived_forward_results.py'
 
   aggregate:
     if: github.event_name != 'pull_request'
