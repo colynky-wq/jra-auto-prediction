@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 import lightgbm as lgb
 import numpy as np
@@ -8,7 +9,7 @@ import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
 from win_odds_freshness import validate_win_odds_freshness
-from win_odds_retry import WinOddsFetchError
+from win_odds_retry import WinOddsFetchError, retryable_win_odds_failure
 
 import live_monitor_dry_run as base
 from topk_runtime import predict_top2_top3
@@ -19,6 +20,7 @@ TOP2_MODEL_PATH = HERE / "lightgbm_top2_fixed_2025.txt"
 TOP3_MODEL_PATH = HERE / "lightgbm_top3_fixed_2025.txt"
 UNKNOWN_JOCKEY = "__UNKNOWN_JOCKEY__"
 UNKNOWN_TRAINER = "__UNKNOWN_TRAINER__"
+_INDEPENDENT_ATTEMPTED = set()
 
 
 def _match_history_name_or_current(
@@ -77,11 +79,29 @@ def predict_live_race_topk(
         raise RuntimeError(f"course could not be resolved: {race}")
 
     odds_requested = base.now_jst()
-    odds, win_odds_payload = base.fetch_win_odds(rid)
-    odds_received = base.now_jst()
-    win_odds_freshness = validate_win_odds_freshness(win_odds_payload, odds_received)
-    if len(odds) < 2:
-        raise WinOddsFetchError("insufficient live win odds")
+    try:
+        odds, win_odds_payload = base.fetch_win_odds(rid)
+        odds_received = base.now_jst()
+        win_odds_freshness = validate_win_odds_freshness(win_odds_payload, odds_received)
+        if len(odds) < 2:
+            raise WinOddsFetchError("insufficient live win odds")
+    except Exception as exc:
+        # Explicit research opt-in, limited to the existing default provider.
+        # A JRA odds access refusal must never trigger additional JRA requests.
+        key = (base.TARGET_DATE8, rid)
+        if (retryable_win_odds_failure(exc)
+                and os.environ.get("KEIBAAI_ODDS_SOURCE", "netkeiba_api") == "netkeiba_api"
+                and os.environ.get("KEIBAAI_CAPTURE_ODDS_INDEPENDENT_SHADOW") == "1"
+                and os.environ.get("KEIBAAI_PUBLISH_RACEDATA", "").lower() in {"1", "true"}
+                and base.MODE == "live" and key not in _INDEPENDENT_ATTEMPTED):
+            _INDEPENDENT_ATTEMPTED.add(key)
+            try:
+                from no_current_odds_independent import record_best_effort
+                status = record_best_effort(HERE.parent, race, hist, target_date)
+                print("NO_CURRENT_ODDS_INDEPENDENT_STATUS", rid, status)
+            except Exception as research_error:
+                print("NO_CURRENT_ODDS_INDEPENDENT_ERROR", rid, repr(research_error))
+        raise
 
     entries, entry_time, entry_url = base.fetch_jra_entry_table(
         rid,

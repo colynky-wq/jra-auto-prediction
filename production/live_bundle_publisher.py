@@ -226,6 +226,18 @@ class Outbox:
             if Path(path).stem != str(health['runID']) or health['raceDate'] != self.day:
                 raise PublishError('monitor journal identity mismatch')
             return (json.dumps(health, ensure_ascii=False, indent=2)+'\n').encode()
+        if path.startswith(f'reports/{self.date8}/no_current_odds_independent_v1/'):
+            from market_shrink_shadow import fingerprint
+            from no_current_odds_independent import VERSION
+            for record in [json.loads(data)] + ([json.loads(remote)] if remote is not None else []):
+                if (record.get('version') != VERSION or record.get('raceID') != Path(path).stem
+                        or record.get('raceDate') != self.day
+                        or record.get('researchOnly') is not True
+                        or record.get('currentOddsUsed') is not False
+                        or record.get('recordFingerprint') != fingerprint({
+                            k: v for k, v in record.items() if k != 'recordFingerprint'})):
+                    raise PublishError('invalid independent research archive')
+            return remote if remote is not None else data
         if path.startswith(f'reports/{self.date8}/longshot_top3_v2/') and remote is not None:
             # The optional prediction remains immutable across monitor sessions.
             # The result audit verifies its link to the original race prediction.
