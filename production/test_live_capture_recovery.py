@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta
 from pathlib import Path
 import tempfile
 import unittest
@@ -9,6 +10,7 @@ from live_capture_policy import (
     FORMAL_TIMING_MARKER,
     RECOVERY_TIMING_MARKER,
     classify_capture_timing,
+    missed_capture_reason,
 )
 from live_recording_resume import published_race_ids
 
@@ -30,6 +32,25 @@ class LiveCapturePolicyTests(unittest.TestCase):
         self.assertEqual(self.classify(7.99), RECOVERY_TIMING_MARKER)
         self.assertEqual(self.classify(5.0), RECOVERY_TIMING_MARKER)
         self.assertIsNone(self.classify(4.99))
+
+    def test_missed_reason_distinguishes_startup_and_runtime(self):
+        post = datetime.fromisoformat("2026-11-23T09:45:00+09:00")
+        self.assertEqual(missed_capture_reason(
+            worker_ready=post + timedelta(minutes=6), post=post,
+            recovery_late=5, attempts=0, last_error=None),
+            "startup_after_capture_deadline")
+        self.assertEqual(missed_capture_reason(
+            worker_ready=post - timedelta(minutes=30), post=post,
+            recovery_late=5, attempts=0, last_error=None),
+            "capture_window_elapsed_without_attempt")
+        self.assertEqual(missed_capture_reason(
+            worker_ready=post - timedelta(minutes=30), post=post,
+            recovery_late=5, attempts=2, last_error="stale odds"),
+            "capture_attempt_failed: stale odds")
+        self.assertEqual(missed_capture_reason(
+            worker_ready=post - timedelta(minutes=5), post=post,
+            recovery_late=5, attempts=0, last_error=None),
+            "capture_window_elapsed_without_attempt")
 
     @staticmethod
     def race(timing: str) -> dict:
