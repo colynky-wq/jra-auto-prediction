@@ -1,0 +1,32 @@
+name: KeibaAI No-Odds Longshot 2026 Retrospective
+
+on:
+  pull_request:
+    paths:
+      - 'production/evaluate_no_current_odds_longshot_2026.py'
+      - 'production/test_evaluate_no_current_odds_longshot_2026.py'
+      - '.github/workflows/keibaai-no-odds-longshot-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt
+      - run: python production/test_evaluate_no_current_odds_longshot_2026.py -v
+      - name: Score frozen models on historical complete 2026 fields
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python production/evaluate_no_current_odds_longshot_2026.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: no-odds-longshot-retrospective
+          path: research/NoCurrentOddsLongshot2026Review.json
