@@ -112,8 +112,8 @@ def _enriched_parser(text: str, race_id: str) -> pd.DataFrame:
     # The result URL is already resolved and cached by the live JRA fetch path.
     # Reuse the same HTML to parse official race-level laps without another request.
     try:
-        source_url = base._RESULT_URL_CACHE.get(str(race_id).zfill(12))
         date8 = str(agg.TARGET_DATE8)
+        source_url = base._RESULT_URL_CACHE.get((date8, str(race_id).zfill(12)))
         if source_url:
             enriched.attrs["raceLap"] = parse_official_laps(
                 text, str(race_id).zfill(12), date8, source_url
