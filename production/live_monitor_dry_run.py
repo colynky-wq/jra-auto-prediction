@@ -525,7 +525,8 @@ def main() -> None:
         processed = published_race_ids(HERE.parent, TARGET_DATE8, flat)
         print('LIVE_RESUME_PUBLISHED', sorted(processed))
     missed: set[str] = set()
-    failures: list[tuple[str, str]] = []
+    # Keep only unresolved triggered failures; a successful retry clears its own error.
+    failures: dict[str, str] = {}
     odds_retry_at: dict[str, datetime] = {}
     odds_retry_counts: dict[str, int] = {}
 
@@ -533,13 +534,14 @@ def main() -> None:
     print("Live monitoring started. max runtime minutes:", MAX_RUNTIME_MINUTES, "poll seconds:", POLL_SECONDS)
 
     while now_jst() < deadline:
-        now = now_jst()
         pending = 0
 
         for race in flat:
             rid = race["race_id"]
             if rid in processed or rid in missed:
                 continue
+            # Earlier races can consume the window of the next race.
+            now = now_jst()
             post = race_post_datetime(TARGET_DATE8, race["start_time"])
             remaining = (post - now).total_seconds() / 60.0
 
@@ -563,9 +565,11 @@ def main() -> None:
                 try:
                     predict_live_race(race, hist, target_date)
                     processed.add(rid)
+                    failures.pop(rid, None)
+                    odds_retry_at.pop(rid, None)
                     print("TRIGGER RESULT: SUCCESS", rid)
                 except Exception as exc:
-                    failures.append((rid, f"{type(exc).__name__}: {exc}"))
+                    failures[rid] = f"{type(exc).__name__}: {exc}"
                     if retryable_win_odds_failure(exc):
                         # The existing T-12..T-8 window remains authoritative.
                         # Retry only while the window is still open; never
@@ -600,7 +604,7 @@ def main() -> None:
     print("=" * 110)
     print("processed:", sorted(processed))
     print("missed:", sorted(missed))
-    print("failures:", failures)
+    print("failures:", list(failures.items()))
     print("RaceData.json modified: NO")
     print("prediction files modified: NO")
 
