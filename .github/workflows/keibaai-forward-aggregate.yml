@@ -39,7 +39,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Install route test dependencies
-        run: pip install -r production/requirements.txt
+        run: pip install -r production/requirements.txt 'requests==2.32.5' 'beautifulsoup4==4.13.4'
       - name: Check delayed schedule date selection
         run: |
           python -m py_compile production/forward_aggregate_schedule.py production/aggregate_forward_results.py
