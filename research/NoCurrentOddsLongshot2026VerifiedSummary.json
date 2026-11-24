@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "source": "verified GitHub Actions log summary; full odds-band report remains in workflow artifact",
+  "runID": 45400367086,
+  "artifactID": 14923615728,
+  "sourceCommit": "d115e5c976d55fa946be0980d5bb151a42063228",
+  "researchOnly": true,
+  "formalPredictionAIChanged": false,
+  "candidatePromotionApproved": false,
+  "autoBetEnabled": false,
+  "retrospectiveFinalOddsOnly": true,
+  "results": {
+    "races": 2747,
+    "eligibleRaces": 2743,
+    "horses": 23868,
+    "actualPodium": 2135,
+    "brier": {
+      "market": 0.08048928649434457,
+      "formalReplay": 0.07975074255202572,
+      "independent": 0.0851682549371963
+    },
+    "onePerRace": {
+      "market": {
+        "selections": 2743,
+        "hits": 569,
+        "raceHitCount": 569,
+        "precision": 0.20743711265038278,
+        "raceHitRate": 0.20743711265038278,
+        "recallOfEligiblePodiumHorses": 0.26651053864168617,
+        "pairedRaceHitDeltaVsMarket": 0,
+        "wholeDateBootstrap95": null
+      },
+      "formalReplay": {
+        "selections": 2743,
+        "hits": 567,
+        "raceHitCount": 567,
+        "precision": 0.20670798395916878,
+        "raceHitRate": 0.20670798395916878,
+        "recallOfEligiblePodiumHorses": 0.26557377049180325,
+        "pairedRaceHitDeltaVsMarket": -0.0007291286912139983,
+        "wholeDateBootstrap95": [
+          -0.00881859763499406,
+          0.007489435497871836
+        ]
+      },
+      "independent": {
+        "selections": 2743,
+        "hits": 480,
+        "raceHitCount": 480,
+        "precision": 0.17499088589135983,
+        "raceHitRate": 0.17499088589135983,
+        "recallOfEligiblePodiumHorses": 0.22482435597189696,
+        "pairedRaceHitDeltaVsMarket": -0.03244622675902295,
+        "wholeDateBootstrap95": [
+          -0.046884158680684775,
+          -0.017092451980837052
+        ]
+      },
+      "independentMinusMarket": {
+        "selections": 2743,
+        "hits": 341,
+        "raceHitCount": 341,
+        "precision": 0.12431644185198687,
+        "raceHitRate": 0.12431644185198687,
+        "recallOfEligiblePodiumHorses": 0.15971896955503512,
+        "pairedRaceHitDeltaVsMarket": -0.08312067079839591,
+        "wholeDateBootstrap95": [
+          -0.10002027809965237,
+          -0.06611920148361616
+        ]
+      }
+    },
+    "twoPerRace": {
+      "market": {
+        "selections": 5471,
+        "hits": 1002,
+        "raceHitCount": 931,
+        "precision": 0.18314750502650337,
+        "raceHitRate": 0.33940940576011663,
+        "recallOfEligiblePodiumHorses": 0.46932084309133487,
+        "pairedRaceHitDeltaVsMarket": 0,
+        "wholeDateBootstrap95": null
+      },
+      "formalReplay": {
+        "selections": 5471,
+        "hits": 1007,
+        "raceHitCount": 932,
+        "precision": 0.18406141473222445,
+        "raceHitRate": 0.33977397010572363,
+        "recallOfEligiblePodiumHorses": 0.47166276346604213,
+        "pairedRaceHitDeltaVsMarket": 0.00036456434560699913,
+        "wholeDateBootstrap95": [
+          -0.005780887752341193,
+          0.006563414651657571
+        ]
+      },
+      "independent": {
+        "selections": 5471,
+        "hits": 862,
+        "raceHitCount": 819,
+        "precision": 0.1575580332663133,
+        "raceHitRate": 0.2985781990521327,
+        "recallOfEligiblePodiumHorses": 0.40374707259953163,
+        "pairedRaceHitDeltaVsMarket": -0.04083120670798396,
+        "wholeDateBootstrap95": [
+          -0.055875768871363585,
+          -0.025741409406473664
+        ]
+      },
+      "independentMinusMarket": {
+        "selections": 5471,
+        "hits": 638,
+        "raceHitCount": 615,
+        "precision": 0.11661487845000913,
+        "raceHitRate": 0.22420707254830477,
+        "recallOfEligiblePodiumHorses": 0.29882903981264636,
+        "pairedRaceHitDeltaVsMarket": -0.11520233321181186,
+        "wholeDateBootstrap95": [
+          -0.13551481645454574,
+          -0.09575984289255461
+        ]
+      }
+    }
+  }
+}
