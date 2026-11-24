@@ -231,9 +231,13 @@ def fetch_win_odds(race_id: str) -> tuple[pd.DataFrame, dict]:
         if os.environ.get("KEIBAAI_ALLOW_EXPERIMENTAL_JRA_ODDS") != "1":
             raise RuntimeError("jra_official_web_requires_experimental_opt_in")
         from jra_win_odds_source import fetch_jra_win_odds
-        return fetch_jra_win_odds(race_id, TARGET_DATE8, session=SESSION,
-                                  clock=now_jst,
-                                  navigation_cache=JRA_ODDS_NAVIGATION_CACHE)
+        # The shared production Session has automatic status retries. Use an
+        # isolated default Session so JRA access refusals reach the adapter
+        # immediately, without implicit retries or redirect following.
+        with requests.Session() as jra_session:
+            return fetch_jra_win_odds(race_id, TARGET_DATE8, session=jra_session,
+                                      clock=now_jst,
+                                      navigation_cache=JRA_ODDS_NAVIGATION_CACHE)
     if source != "netkeiba_api":
         raise RuntimeError("unsupported_win_odds_source")
     url = "https://race.netkeiba.com/api/api_get_jra_odds.html"
