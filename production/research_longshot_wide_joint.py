@@ -270,12 +270,16 @@ def coherent_report(full25, full26, d25, d26, archive, provenance):
     frame[columns].to_csv(output / "pair_probabilities_2026.csv", index=False)
     covered[[*columns, "payout"]].to_csv(output / "verified_payout_pairs_2026.csv", index=False)
     print("WIDE_COHERENT_COMPLETE", json.dumps(study["selected2025"]), flush=True)
+    return models
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--coherent", action="store_true", help="also evaluate coherent top-three models")
+    parser.add_argument("--odds-replay", action="store_true", help="replay archived pre-race odds with coherent models")
     args = parser.parse_args()
+    if args.odds_replay and not args.coherent:
+        parser.error("--odds-replay requires --coherent")
 
     hist=pd.read_parquet(HISTORY);prior=place_history(hist);safe=hist.copy()
     safe["馬体重"]=pd.to_numeric(safe["馬体重"],errors="coerce").fillna(480.)
@@ -337,10 +341,14 @@ def main():
     covered.to_csv(OUT/"verified_payout_pairs_2026.csv",index=False)
     print("WIDE_JOINT_RESULT",json.dumps(result,ensure_ascii=False),flush=True)
     if args.coherent:
-        coherent_report(full25, full26, d25, d, archive, {
+        coherent_models = coherent_report(full25, full26, d25, d, archive, {
             "sourceHistorySha256": result["sourceHistorySha256"], "v2ModelSha256": sha,
             "v7Selection": v7, "candidateSelectionYear": 2025,
         })
+        if args.odds_replay:
+            from research_longshot_wide_odds_replay import run as replay
+            replay(ROOT, OUT.with_name("longshot_wide_odds_replay"), coherent_models,
+                   rank26, v7, datetime.now(JST))
 
 if __name__=="__main__":
     main()

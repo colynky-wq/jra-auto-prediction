@@ -60,10 +60,21 @@ class Race:
     day: pd.Timestamp
     features: np.ndarray
     edges: np.ndarray
-    observed: int
+    observed: int | None
     pair_rows: np.ndarray
     candidate_edges: np.ndarray
     pair_count: int
+
+
+def triple_features(weights, longshot, candidate_edges, values, triples, edges, pair_count):
+    market = market_triples(weights, triples)
+    edge_features = np.zeros((pair_count, len(EDGE_FEATURES)))
+    edge_features[candidate_edges] = values
+    features = np.column_stack((
+        np.log(market), longshot[triples].sum(axis=1),
+        edge_features[edges].sum(axis=1),
+    ))
+    return features, market
 
 
 def build_races(full, candidates):
@@ -87,13 +98,10 @@ def build_races(full, candidates):
         ):
             raise ValueError(f"longshot identities disagree: {race_id}")
 
-        market = market_triples(field["市場確率"], triples)
-        edge_features = np.zeros((len(pairs), len(EDGE_FEATURES)))
-        edge_features[candidate_edges] = rows[list(EDGE_FEATURES)].to_numpy()
-        features = np.column_stack((
-            np.log(market), longshot[triples].sum(axis=1),
-            edge_features[edges].sum(axis=1),
-        ))
+        features, market = triple_features(
+            field["市場確率"], longshot, candidate_edges, rows[list(EDGE_FEATURES)].to_numpy(),
+            triples, edges, len(pairs),
+        )
         observed = np.flatnonzero((ranks[triples] <= 3).all(axis=1))
         if len(observed) != 1:
             raise ValueError(f"expected one observed top-three set: {race_id}")

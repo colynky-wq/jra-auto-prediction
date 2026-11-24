@@ -6,6 +6,8 @@ on:
       - 'production/test_research_longshot_wide_joint.py'
       - 'production/research_longshot_wide_coherent.py'
       - 'production/test_research_longshot_wide_coherent.py'
+      - 'production/research_longshot_wide_odds_replay.py'
+      - 'production/test_research_longshot_wide_odds_replay.py'
       - '.github/workflows/keibaai-longshot-wide-joint.yml'
   workflow_dispatch:
 permissions:
@@ -19,17 +21,19 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - run: pip install -r production/requirements.txt
+      - run: pip install -r production/requirements.txt requests beautifulsoup4
       - run: python production/test_research_longshot_wide_joint.py -v
       - run: python production/test_research_longshot_wide_coherent.py -v
+      - run: python production/test_research_longshot_wide_odds_replay.py -v
       - name: Fit joint probabilities and evaluate archived payouts
         env:
           OMP_NUM_THREADS: '2'
           OPENBLAS_NUM_THREADS: '2'
-        run: python production/research_longshot_wide_joint.py --coherent
+        run: python production/research_longshot_wide_joint.py --coherent --odds-replay
       - uses: actions/upload-artifact@v4
         with:
           name: longshot-wide-joint-research
           path: |
             research/model_candidates/longshot_wide_joint/
             research/model_candidates/longshot_wide_coherent/
+            research/model_candidates/longshot_wide_odds_replay/
