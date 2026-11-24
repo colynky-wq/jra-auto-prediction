@@ -210,7 +210,7 @@ def coherent_report(full25, full26, d25, d26, archive, provenance, *, compare_po
     from research_longshot_wide_coherent import evaluate
 
     frame = d26.copy()
-    models, study, races = evaluate(full25, full26, d25, frame)
+    models, study, test_races = evaluate(full25, full26, d25, frame)
     method_names = ("market", "v2Joint", "v7Joint", "temperature", "coherentV2", "coherentV7")
     methods = {name: frame[name].to_numpy() for name in method_names}
     covered, excluded = attach_payout(frame, archive)
@@ -274,7 +274,7 @@ def coherent_report(full25, full26, d25, d26, archive, provenance, *, compare_po
         from research_longshot_wide_portfolio import write_comparison
 
         comparison = write_comparison(
-            OUT.with_name("longshot_wide_portfolio_selection"), races, frame, covered, models, bootstrap,
+            OUT.with_name("longshot_wide_portfolio_selection"), test_races, frame, covered, models, bootstrap,
         )
         for name, metrics in comparison["historical2026"].items():
             baseline = study["coherentDistribution2026"][name]["portfolio"]["3"]
