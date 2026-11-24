@@ -17,6 +17,12 @@
 4. Worker のログで dry_run_would_dispatch / active_or_queued 等を確認する。必要な場合だけ Cloudflare の環境変数 ENABLE_DISPATCH を true に変更する。再デプロイ時の設定は false に戻る可能性があるので確認する。
 5. 停止時は ENABLE_DISPATCH=false、Cron Trigger 無効化、必要に応じ PAT 失効。既存 GitHub cron は残る。
 
+## Cloudflare ダッシュボードからの Git 連携（iPhone 対応）
+
+既存 Worker に Git repository を接続する場合は main、Path / Root directory は ops/cloudflare-watchdog、Build command は空欄、Deploy command は npx wrangler deploy、Preview builds は無効にする。Build watch paths の Include paths は ops/cloudflare-watchdog/* のみに限定し、Exclude paths は空欄とする。競馬AIの予測・結果データは頻繁に更新されるため、無関係なコミットによる再ビルドと無料枠消費を防ぐ。
+
+初回ビルドは Git 連携後のコミットで開始する。Deployments の Git 由来の成功記録と Settings の Cron triggers が 0,15,30,45 22-23 * * 5,6,0（UTC）であることを確認する。ENABLE_DISPATCH=false の状態を維持し、実行用 GitHub トークンはビルド用の環境変数ではなく Worker の実行時 Secret に登録する。初回の実稼働検証が完了するまで dispatch を有効にしない。
+
 ## 合格条件
 
 ローカル: `node --test ops/cloudflare-watchdog/worker.test.mjs`、`python production/test_live_session_slots.py -v`（リポジトリルート）。
