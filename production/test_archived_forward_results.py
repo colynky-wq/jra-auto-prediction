@@ -67,5 +67,26 @@ class ArchivedResultTests(unittest.TestCase):
             self.assertEqual(s["publishedPredictionTimingCounts"]["live_10min"], 22)
             self.assertTrue(pd.read_csv(day/"all_predictions.csv")["nameMatch"].all())
 
+class LapCacheTests(unittest.TestCase):
+    def test_enrichment_uses_only_same_day_route(self):
+        import result_detail_enrichment as detail
+        import run_forward_aggregate as base
+        rid = "202603030601"
+        url = "https://www.jra.go.jp/JRADB/accessS.html?CNAME=pw01sde0103202603060120261123/A8"
+        parsed = pd.DataFrame([{"raceID": rid, "number": 1}])
+        with patch.object(agg, "TARGET_DATE8", DAY), \
+             patch.dict(base._RESULT_URL_CACHE, {(DAY, rid): url}, clear=True), \
+             patch.object(detail, "_ORIGINAL", return_value=parsed), \
+             patch.object(detail, "parse_official_laps", return_value={"raceID": rid}) as laps:
+            output = detail._enriched_parser("<html></html>", rid)
+            laps.assert_called_once_with("<html></html>", rid, DAY, url)
+            self.assertEqual(output.attrs["raceLap"], {"raceID": rid})
+            laps.reset_mock()
+            with patch.object(agg, "TARGET_DATE8", "20261124"):
+                output = detail._enriched_parser("<html></html>", rid)
+                laps.assert_not_called()
+                self.assertNotIn("raceLap", output.attrs)
+
+
 if __name__ == "__main__":
     unittest.main()
