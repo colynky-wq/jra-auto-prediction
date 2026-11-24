@@ -21,7 +21,7 @@
 
 既存 Worker に Git repository を接続する場合は main、Path / Root directory は ops/cloudflare-watchdog、Build command は空欄、Deploy command は npx wrangler deploy、Preview builds は無効にする。Build watch paths の Include paths は ops/cloudflare-watchdog/* のみに限定し、Exclude paths は空欄とする。競馬AIの予測・結果データは頻繁に更新されるため、無関係なコミットによる再ビルドと無料枠消費を防ぐ。
 
-初回ビルドは Git 連携後のコミットで開始する。Deployments の Git 由来の成功記録と Settings の Cron triggers が 0,15,30,45 22-23 * * 5,6,0（UTC）であることを確認する。ENABLE_DISPATCH=false の状態を維持し、実行用 GitHub トークンはビルド用の環境変数ではなく Worker の実行時 Secret に登録する。初回の実稼働検証が完了するまで dispatch を有効にしない。
+初回ビルドは Git 連携後のコミットで開始する。Deployments の Git 由来の成功記録と Settings の Cron triggers が 0,15,30,45 22-23 * * FRI,SAT,SUN（UTC）であることを確認する。ENABLE_DISPATCH=false の状態を維持し、実行用 GitHub トークンはビルド用の環境変数ではなく Worker の実行時 Secret に登録する。初回の実稼働検証が完了するまで dispatch を有効にしない。
 
 ## 合格条件
 
