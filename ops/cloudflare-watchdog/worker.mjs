@@ -16,7 +16,8 @@ export function morningWindow(now) {
 export function decide(data) {
   if (!data || !Array.isArray(data.workflow_runs) ||
       !Number.isInteger(data.total_count) ||
-      data.total_count !== data.workflow_runs.length) return "incomplete";
+      data.total_count !== data.workflow_runs.length ||
+      data.workflow_runs.some(r => !r || typeof r.event !== "string" || typeof r.status !== "string")) return "incomplete";
   const runs = data.workflow_runs.filter(r => r.event === "schedule" || r.event === "workflow_dispatch");
   if (runs.some(r => r.status !== "completed")) return "active_or_queued";
   // At most one accepted manual/external launch per JST day. Do not replace
