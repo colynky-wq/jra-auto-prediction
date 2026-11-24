@@ -205,6 +205,12 @@ jobs:
               if [ "$cycle_failed" -eq 0 ]; then python production/ticket_plan_shadow.py || cycle_failed=1; fi
               if [ "$cycle_failed" -eq 0 ]; then python production/wide_axis_shadow.py || cycle_failed=1; fi
 
+              if [ "$cycle_failed" -eq 0 ]; then
+                pilot_day="${KEIBAAI_RESULT_DATE:-$(TZ=Asia/Tokyo date +%Y%m%d)}"
+                if [ -f "reports/$pilot_day/JRAWidePilotCapture.json" ]; then
+                  python production/jra_wide_pilot.py --date "$pilot_day" || echo '::warning::JRA Wide research settlement failed.'
+                fi
+              fi
               python production/evaluate_triple_forward.py || echo '::warning::Triple research evaluation failed for this cycle.'
               python production/evaluate_all_bet_forward.py || echo '::warning::All-bet research evaluation failed for this cycle.'
               python production/build_bet_research_data.py || echo '::warning::Bet research display build failed for this cycle.'

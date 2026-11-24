@@ -168,32 +168,32 @@ def parse_wide_page(html, race_id, date8, expected_numbers, received_at, *, insp
 
 
 def fetch_jra_wide_odds(race_id, date8, *, entry_url=None, session=None,
-                        clock=lambda: datetime.now(JST), inspect_final=False):
+                        clock=lambda: datetime.now(JST), inspect_final=False, request_timeout=20):
     """Read the entry page, its race-specific odds page and the linked Wide tab."""
     if not re.fullmatch(r"[0-9]{12}", race_id) or not re.fullmatch(r"[0-9]{8}", date8):
         raise JRAWideOddsError("invalid JRA race identity")
     if session is None:
         with requests.Session() as client:
             return fetch_jra_wide_odds(race_id, date8, entry_url=entry_url, session=client,
-                                      clock=clock, inspect_final=inspect_final)
+                                      clock=clock, inspect_final=inspect_final, request_timeout=request_timeout)
     session.headers.update(HEADERS)
     if entry_url is None:
         entry_url = discover_entry_url(race_id, date8, session, abort_on_restricted=True)
     if (not entry_url or not entry_url.startswith(ACCESS_D + "?")
             or _race_id_from_url(entry_url, date8) != race_id):
         raise JRAWideOddsError("observed JRA entry URL does not match race and date")
-    entry = checked_page(session.get(entry_url, timeout=20, allow_redirects=False), "entry")
+    entry = checked_page(session.get(entry_url, timeout=request_timeout, allow_redirects=False), "entry")
     soup = BeautifulSoup(entry, "html.parser")
     verify_header(soup, "出馬表", race_id, date8)
     numbers = entry_numbers(soup)
     token = link_token(soup, "li.odds a[onclick]", "オッズ")
     odds_response = session.post(ACCESS_O, data={"cname": token}, headers={"Referer": entry_url},
-                                 timeout=20, allow_redirects=False)
+                                 timeout=request_timeout, allow_redirects=False)
     soup = BeautifulSoup(checked_page(odds_response, "odds"), "html.parser")
     verify_header(soup, "単勝・複勝オッズ（馬番順）", race_id, date8)
     token = link_token(soup, "ul.nav.pills a[onclick]", "ワイド")
     wide_response = session.post(ACCESS_O, data={"cname": token}, headers={"Referer": ACCESS_O},
-                                 timeout=20, allow_redirects=False)
+                                 timeout=request_timeout, allow_redirects=False)
     received_at = clock()
     html = checked_page(wide_response, "wide_odds")
     snapshot = parse_wide_page(html, race_id, date8, numbers, received_at, inspect_final=inspect_final)

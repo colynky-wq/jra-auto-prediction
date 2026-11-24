@@ -167,6 +167,14 @@ class Outbox:
         return self.git.run('show', f'{base}:{path}').stdout if exists else None
 
     def bytes_for_remote(self, path, data, remote):
+        if path == f'reports/{self.date8}/JRAWidePilotCapture.json':
+            from jra_wide_pilot import validate_capture
+
+            validate_capture(decode_json(data), self.day)
+            if remote is not None:
+                validate_capture(decode_json(remote), self.day)
+                return remote
+            return data
         if path == 'RaceSimulatorRecordingStatus.json':
             from collections import Counter
             local=json.loads(data)

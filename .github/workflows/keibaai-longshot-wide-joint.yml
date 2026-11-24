@@ -18,6 +18,14 @@ on:
       - 'production/test_research_wide_portfolio_calibration.py'
       - 'production/research_wide_four_way.py'
       - 'production/test_research_wide_four_way.py'
+      - 'production/jra_wide_pilot.py'
+      - 'production/test_jra_wide_pilot.py'
+      - 'production/test_formal_portfolio_e2e.py'
+      - 'production/live_monitor_topk_publish.py'
+      - 'production/live_bundle_publisher.py'
+      - 'research/model_candidates/wide_jra_pilot_v1/models.json'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-live-result-sync.yml'
       - '.github/workflows/keibaai-longshot-wide-joint.yml'
   workflow_dispatch:
 permissions:
@@ -40,6 +48,8 @@ jobs:
       - run: python production/test_research_longshot_wide_portfolio.py -v
       - run: python production/test_research_wide_portfolio_calibration.py -v
       - run: python production/test_research_wide_four_way.py -v
+      - run: python production/test_jra_wide_pilot.py -v
+      - run: python production/test_formal_portfolio_e2e.py -v
       - name: Fit joint probabilities and evaluate archived payouts
         env:
           OMP_NUM_THREADS: '2'

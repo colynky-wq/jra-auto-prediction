@@ -122,6 +122,8 @@ class PortfolioE2E(unittest.TestCase):
                     (signals,'REPORTS_DIR',root/'reports'),(signals,'WIDE_ODDS_PATH',root/'WideOddsData.json'),
                     (wide,'REPORTS_DIR',root/'reports'),(axis,'datetime',Clock),(ticket,'datetime',Clock)]:
                 stack.enter_context(patch.object(obj,name,value))
+            stack.enter_context(patch.object(publisher, 'JRA_WIDE_PILOT_DATE', '20261107'))
+            pilot = stack.enter_context(patch('jra_wide_pilot.schedule'))
             stack.enter_context(patch.dict(added_runtime._futures,{},clear=True))
             stack.enter_context(patch.dict(triple_runtime._futures,{},clear=True))
             stack.enter_context(patch.object(added_runtime,'record_first',side_effect=lambda rt,r,k,pred,ev:
@@ -144,6 +146,7 @@ class PortfolioE2E(unittest.TestCase):
             published=json.loads((root/'RaceData.json').read_text())[0]
             rid=published['raceID'];bundle_path=capture.path_for(root,published['raceDate'],rid)
             bundle=capture.load(root,published['raceDate'],rid)
+            pilot.assert_called_once_with(root,published,e['sourceURL'])
             self.assertEqual(calls,{'added':5,'triple':2,'wide':1})
             self.assertTrue(bundle['plan']['legs'])
             self.assertTrue(review.build(root,NOW)['acceptance']['firstCaptureVerified'])
@@ -166,6 +169,7 @@ class PortfolioE2E(unittest.TestCase):
             changed=deepcopy(frame);changed.loc[0,'AI勝率(%)']=1.
             publisher.publish_race_to_racedata(race,changed)
             self.assertEqual(calls,{'added':5,'triple':2,'wide':1},'restart fetched new odds')
+            pilot.assert_called_once()
             for name,data in immutable.items():self.assertEqual((root/name).read_bytes(),data)
             self.assertEqual(capture.load(root,published['raceDate'],rid)['fingerprint'],bundle['fingerprint'])
 

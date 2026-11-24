@@ -249,6 +249,8 @@ jobs:
           KEIBAAI_LIVE_GRACE_MINUTES: '5'
           KEIBAAI_PUBLISH_RACEDATA: 'true'
           KEIBAAI_CAPTURE_WIDE_ODDS: 'true'
+          # First eligible race on the next official race day only.
+          KEIBAAI_JRA_WIDE_PILOT_DATE: '20261128'
           KEIBAAI_CAPTURE_PRERACE: 'true'
           KEIBAAI_REFRESH_SIGNALS: 'true'
           KEIBAAI_OUTBOX: ${{ runner.temp }}/keibaai-live-outbox
