@@ -1,0 +1,32 @@
+name: KeibaAI Longshot Market-Matched Feature Contrast
+
+on:
+  pull_request:
+    paths:
+      - 'production/research_longshot_market_matched_contrast.py'
+      - 'production/test_research_longshot_market_matched_contrast.py'
+      - '.github/workflows/keibaai-longshot-feature-contrast.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt
+      - run: python production/test_research_longshot_market_matched_contrast.py -v
+      - name: Compare historical outcome groups
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python production/research_longshot_market_matched_contrast.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-feature-contrast
+          path: research/LongshotMarketMatchedFeatureContrast.json
