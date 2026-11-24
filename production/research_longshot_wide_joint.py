@@ -2,6 +2,7 @@
 Fit on 2025 out-of-training predictions, test 2026. Actual payout evidence
 restricted to archived validated pairs, never fabricated from odds.
 """
+import argparse
 from datetime import datetime
 from itertools import combinations
 from pathlib import Path
@@ -205,7 +206,70 @@ def settlement(d,methods,with_payout=False):
     return out
 
 
+def coherent_report(full25, full26, d25, d26, archive, provenance):
+    from research_longshot_wide_coherent import evaluate
+
+    frame = d26.copy()
+    models, study = evaluate(full25, full26, d25, frame)
+    method_names = ("market", "v2Joint", "v7Joint", "temperature", "coherentV2", "coherentV7")
+    methods = {name: frame[name].to_numpy() for name in method_names}
+    covered, excluded = attach_payout(frame, archive)
+    quality = probability_report(frame, methods)
+    # Pair the loss differences by race before resampling whole race days.
+    losses = frame[["raceID", "date"]].copy()
+    v2_losses = np.square(methods["v2Joint"] - frame["hit"])
+    for name in models:
+        losses["delta"] = np.square(methods[name] - frame["hit"]) - v2_losses
+        races = losses.groupby("raceID").agg(day=("date", "first"), delta=("delta", "mean"))
+        quality[name]["pairedBrierDeltaVsIndependentV2"] = float(races["delta"].mean())
+        quality[name]["pairedBrierDeltaVsIndependentV2_95"] = bootstrap(
+            races["day"], races["delta"], np.ones(len(races)),
+        )
+
+    output = OUT.with_name("longshot_wide_coherent")
+    output.mkdir(parents=True, exist_ok=True)
+    result = {
+        "version": "longshot-wide-coherent-v1",
+        "researchOnly": True,
+        "candidatePromotionApproved": False,
+        "formalPredictionAIChanged": False,
+        "autoBetEnabled": False,
+        "provenance": provenance,
+        **study,
+        "2026": {
+            "races": int(frame["raceID"].nunique()),
+            "pairs": len(frame),
+            "firstDate": frame["date"].min().date().isoformat(),
+            "lastDate": frame["date"].max().date().isoformat(),
+            "quality": quality,
+            "historicalHitDiagnostics": settlement(frame, method_names),
+        },
+        "payoutCommonSupport": {
+            "races": int(covered["raceID"].nunique()),
+            "pairs": len(covered),
+            "excluded": excluded,
+            "settlement": settlement(covered, method_names, True),
+        },
+        "limitations": [
+            "Uses final win odds and final fields; no timestamped pre-race wide prices.",
+            "Evaluated tickets include at least one longshot; complete fields of eight or more; no podium ties.",
+            "Actual payouts are restricted to verified pairs in the prior archive.",
+            "The 2026 history was used in earlier research and is a retrospective comparison.",
+        ],
+    }
+    (output / "models_through2025.json").write_text(json.dumps(models, indent=2, allow_nan=False) + "\n")
+    (output / "research.json").write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")
+    columns = ["raceID", "date", "a", "b", "nameA", "nameB", "hit", *method_names]
+    frame[columns].to_csv(output / "pair_probabilities_2026.csv", index=False)
+    covered[[*columns, "payout"]].to_csv(output / "verified_payout_pairs_2026.csv", index=False)
+    print("WIDE_COHERENT_COMPLETE", json.dumps(study["selected2025"]), flush=True)
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--coherent", action="store_true", help="also evaluate coherent top-three models")
+    args = parser.parse_args()
+
     hist=pd.read_parquet(HISTORY);prior=place_history(hist);safe=hist.copy()
     safe["馬体重"]=pd.to_numeric(safe["馬体重"],errors="coerce").fillna(480.)
     older=prepare_history(safe);train,val,hold=split_longshot(add_extras(prepare_longshot(older),prior))
@@ -265,6 +329,11 @@ def main():
     d.to_csv(OUT/"pair_probabilities_2026.csv",index=False)
     covered.to_csv(OUT/"verified_payout_pairs_2026.csv",index=False)
     print("WIDE_JOINT_RESULT",json.dumps(result,ensure_ascii=False),flush=True)
+    if args.coherent:
+        coherent_report(full25, full26, d25, d, archive, {
+            "sourceHistorySha256": result["sourceHistorySha256"], "v2ModelSha256": sha,
+            "v7Selection": v7, "candidateSelectionYear": 2025,
+        })
 
 if __name__=="__main__":
     main()

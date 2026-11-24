@@ -4,6 +4,8 @@ on:
     paths:
       - 'production/research_longshot_wide_joint.py'
       - 'production/test_research_longshot_wide_joint.py'
+      - 'production/research_longshot_wide_coherent.py'
+      - 'production/test_research_longshot_wide_coherent.py'
       - '.github/workflows/keibaai-longshot-wide-joint.yml'
   workflow_dispatch:
 permissions:
@@ -19,12 +21,15 @@ jobs:
           python-version: '3.13'
       - run: pip install -r production/requirements.txt
       - run: python production/test_research_longshot_wide_joint.py -v
-      - name: Fit joint probability and evaluate archived payouts
+      - run: python production/test_research_longshot_wide_coherent.py -v
+      - name: Fit joint probabilities and evaluate archived payouts
         env:
           OMP_NUM_THREADS: '2'
           OPENBLAS_NUM_THREADS: '2'
-        run: python production/research_longshot_wide_joint.py
+        run: python production/research_longshot_wide_joint.py --coherent
       - uses: actions/upload-artifact@v4
         with:
           name: longshot-wide-joint-research
-          path: research/model_candidates/longshot_wide_joint/
+          path: |
+            research/model_candidates/longshot_wide_joint/
+            research/model_candidates/longshot_wide_coherent/
