@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import html as html_lib
 import io
+import json
+from datetime import datetime
 import re
 from urllib.parse import parse_qs, unquote, urljoin, urlparse
 
@@ -47,7 +49,7 @@ HEADERS = {
 SESSION = requests.Session()
 SESSION.headers.update(HEADERS)
 
-_RESULT_URL_CACHE: dict[str, str] = {}
+_RESULT_URL_CACHE: dict[tuple[str, str], str] = {}
 
 
 # ============================================================
@@ -157,6 +159,68 @@ def _decode_response(response) -> str:
     return best
 
 
+def _official_route(url, kind, race_id, date8):
+    """Only an exact HTTPS official public route for the requested race."""
+    if not isinstance(url, str):
+        return False
+    try:
+        parsed = urlparse(url)
+        fields = parse_qs(parsed.query, strict_parsing=True)
+        expected = race_id[4:6] + race_id[:4] + race_id[6:] + date8
+        path = "/JRADB/accessD.html" if kind == "dde" else "/JRADB/accessS.html"
+        return (parsed.scheme == "https" and parsed.netloc == "www.jra.go.jp"
+                and parsed.path == path and not parsed.fragment and not parsed.params
+                and set(fields) == {"CNAME"} and len(fields["CNAME"]) == 1
+                and bool(re.fullmatch(r"pw01" + kind + r"(?:01|10)"
+                                     + re.escape(expected) + r"/[0-9A-Fa-f]{2}",
+                                     fields["CNAME"][0])))
+    except (ValueError, TypeError):
+        return False
+
+
+def archived_entry_url(root, race_id, date8):
+    """Reuse an indexed pre-post official route, never old odds or outcomes."""
+    if not re.fullmatch(r"\d{12}", race_id) or not re.fullmatch(r"\d{8}", date8):
+        return None
+    folder = root / date8 / "prerace" / race_id
+    try:
+        index = json.loads((folder / "index.json").read_text(encoding="utf-8"))
+        if index["raceID"] != race_id or not isinstance(index["snapshots"], list):
+            return None
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+    valid = []
+    for item in index["snapshots"]:
+        try:
+            filename = item["file"]
+            if not re.fullmatch(r"\d{8}T\d{12}-[0-9a-f]{12}\.json", filename):
+                continue
+            if not re.fullmatch(r"[0-9a-f]{64}", item["fingerprint"]):
+                continue
+            if not filename.endswith("-" + item["fingerprint"][:12] + ".json"):
+                continue
+            snapshot = json.loads((folder / filename).read_text(encoding="utf-8"))
+            day = datetime.strptime(date8, "%Y%m%d").date()
+            captured = datetime.fromisoformat(snapshot["capturedAtJST"])
+            post = datetime.fromisoformat(snapshot["scheduledPostJST"])
+            if (snapshot["schemaVersion"] != 1
+                    or snapshot["methodVersion"] != "official-entry-observation-v2"
+                    or snapshot["raceID"] != race_id
+                    or snapshot["raceDate"] != day.isoformat()
+                    or snapshot["prePostConfirmed"] is not True
+                    or snapshot["capturedAtJST"] != item["capturedAtJST"]
+                    or captured.utcoffset() is None or post.utcoffset() is None
+                    or captured.astimezone(agg.JST).date() != day
+                    or post.astimezone(agg.JST).date() != day or captured >= post
+                    or not re.fullmatch(r"[0-9a-f]{64}", snapshot["sourceSHA256"])
+                    or not _official_route(snapshot["sourceURL"], "dde", race_id, date8)):
+                continue
+            valid.append((captured, snapshot["sourceURL"]))
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            continue
+    return max(valid)[1] if valid else None
+
+
 def _discover_result_url_for_race(race_id: str, date8: str) -> str:
     """Resolve the routed JRA accessS result URL for exactly one race.
 
@@ -167,21 +231,26 @@ def _discover_result_url_for_race(race_id: str, date8: str) -> str:
 
     race_id = str(race_id).zfill(12)
 
-    if race_id in _RESULT_URL_CACHE:
-        return _RESULT_URL_CACHE[race_id]
+    key = (date8, race_id)
+    if key in _RESULT_URL_CACHE:
+        return _RESULT_URL_CACHE[key]
 
-    entry_url = entry_source.discover_entry_url(
-        race_id,
-        date8,
-        SESSION,
-    )
+    entry_url = archived_entry_url(agg.REPORTS_DIR, race_id, date8)
+    if entry_url:
+        print("JRA archived pre-post entry route:", race_id, entry_url)
+    else:
+        entry_url = entry_source.discover_entry_url(
+            race_id, date8, SESSION, abort_on_restricted=True,
+        )
 
     if not entry_url:
         raise RuntimeError(
             f"JRA routed entry URL not found while resolving result: {race_id}"
         )
 
-    r = SESSION.get(entry_url, timeout=30)
+    if not _official_route(entry_url, 'dde', race_id, date8):
+        raise RuntimeError('unverified JRA entry route')
+    r = SESSION.get(entry_url, timeout=30, allow_redirects=False)
     print(
         "JRA result-link source HTTP:",
         r.status_code,
@@ -202,14 +271,14 @@ def _discover_result_url_for_race(race_id: str, date8: str) -> str:
     exact = []
     for u in candidates:
         rid = _race_id_from_result_url(u, date8)
-        if rid == race_id:
+        if rid == race_id and _official_route(u, 'sde', race_id, date8):
             exact.append(u)
 
     routed = [u for u in exact if _has_route_suffix(u)]
 
     if routed:
         result_url = routed[0]
-        _RESULT_URL_CACHE[race_id] = result_url
+        _RESULT_URL_CACHE[key] = result_url
         print(
             "JRA same-race routed result URL:",
             result_url,
@@ -422,6 +491,7 @@ def fetch_result_table_jra(race_id: str) -> pd.DataFrame:
     r = SESSION.get(
         url,
         timeout=30,
+        allow_redirects=False,
     )
 
     print(
