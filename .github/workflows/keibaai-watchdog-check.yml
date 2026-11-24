@@ -1,0 +1,32 @@
+name: KeibaAI external watchdog checks
+on:
+  pull_request:
+    paths:
+      - 'ops/cloudflare-watchdog/**'
+      - 'production/live_session_slots.py'
+      - 'production/test_live_session_slots.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-watchdog-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ops/cloudflare-watchdog/**'
+      - 'production/live_session_slots.py'
+      - 'production/test_live_session_slots.py'
+      - '.github/workflows/keibaai-live-permanent.yml'
+      - '.github/workflows/keibaai-watchdog-check.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test ops/cloudflare-watchdog/worker.test.mjs
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: python production/test_live_session_slots.py -v

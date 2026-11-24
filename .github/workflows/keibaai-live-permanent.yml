@@ -82,6 +82,10 @@ on:
         description: Optional live-monitor runtime for manual testing
         required: false
         default: '120'
+      watchdog_date:
+        description: 'Optional watchdog JST date (YYYYMMDD); reject expired dispatches'
+        required: false
+        default: ''
 permissions:
   contents: write
 concurrency:
@@ -109,6 +113,8 @@ jobs:
       - name: Decide CI or live race day
         id: day
         shell: bash
+        env:
+          WATCHDOG_DATE: ${{ inputs.watchdog_date }}
         run: |
           set -euo pipefail
           date8=$(TZ=Asia/Tokyo date '+%Y%m%d')
@@ -116,6 +122,12 @@ jobs:
             echo "target_date=$date8" >> "$GITHUB_OUTPUT"
             echo "has_races=false" >> "$GITHUB_OUTPUT"
             echo 'Push event: run CI only; production live monitor is disabled.'
+            exit 0
+          fi
+          if [ -n "$WATCHDOG_DATE" ] && [ "$WATCHDOG_DATE" != "$date8" ]; then
+            echo "target_date=$date8" >> "$GITHUB_OUTPUT"
+            echo "has_races=false" >> "$GITHUB_OUTPUT"
+            echo 'Expired watchdog dispatch; no live session.'
             exit 0
           fi
           bash startup-guard/.github/scripts/keibaai-race-day-check.sh "$date8"
@@ -133,6 +145,7 @@ jobs:
           KEIBAAI_EVENT_SCHEDULE: ${{ github.event.schedule }}
           KEIBAAI_DATE8: ${{ steps.day.outputs.target_date }}
           KEIBAAI_MAX_MINUTES_INPUT: ${{ github.event.inputs.max_minutes }}
+          KEIBAAI_WATCHDOG_DATE: ${{ inputs.watchdog_date }}
         shell: bash
         run: |
           set -euo pipefail
@@ -216,6 +229,7 @@ jobs:
           KEIBAAI_EVENT_SCHEDULE: ${{ github.event.schedule }}
           KEIBAAI_DATE8: ${{ steps.day.outputs.target_date }}
           KEIBAAI_MAX_MINUTES_INPUT: ${{ github.event.inputs.max_minutes }}
+          KEIBAAI_WATCHDOG_DATE: ${{ inputs.watchdog_date }}
         shell: bash
         run: |
           set -euo pipefail

@@ -36,7 +36,7 @@ MAX_RUNTIME_MINUTES = 335
 MIN_USEFUL_REMAINING_SECONDS = 120
 
 
-def choose(event_name, scheduled_cron, date8, now=None, manual_minutes=None):
+def choose(event_name, scheduled_cron, date8, now=None, manual_minutes=None, watchdog_date=None):
     """Return {active, minutes, reason}. No side effects."""
     if event_name == "push":
         return {"active": False, "minutes": 0, "reason": "push_ci_only"}
@@ -59,6 +59,15 @@ def choose(event_name, scheduled_cron, date8, now=None, manual_minutes=None):
             raise ValueError("invalid manual live runtime") from exc
         if not 1 <= minutes <= MAX_RUNTIME_MINUTES:
             raise ValueError("manual live runtime outside safety bounds")
+        if watchdog_date:
+            if watchdog_date != date8:
+                return {"active": False, "minutes": 0, "reason": "expired_watchdog_date"}
+            cutoff = now.replace(hour=17, minute=30, second=0, microsecond=0)
+            remaining = (cutoff - now).total_seconds()
+            if remaining < MIN_USEFUL_REMAINING_SECONDS:
+                return {"active": False, "minutes": 0, "reason": "watchdog_cutoff"}
+            return {"active": True, "minutes": min(minutes, math.ceil(remaining / 60.0)),
+                    "reason": "external_watchdog"}
         return {"active": True, "minutes": minutes, "reason": "manual"}
     if event_name != "schedule" or scheduled_cron not in CUTOFFS:
         raise ValueError("unregistered live event/cron; fail closed")
@@ -81,6 +90,7 @@ def main():
         os.environ.get("KEIBAAI_EVENT_SCHEDULE", ""),
         os.environ.get("KEIBAAI_DATE8", ""),
         manual_minutes=os.environ.get("KEIBAAI_MAX_MINUTES_INPUT") or None,
+        watchdog_date=os.environ.get("KEIBAAI_WATCHDOG_DATE") or None,
     )
     print("LIVE_SESSION_SLOT", state)
     if args.github_output:
