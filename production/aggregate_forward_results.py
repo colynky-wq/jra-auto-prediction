@@ -45,6 +45,7 @@ LEDGER_PATH = REPORTS_DIR / "forward_candidate_ledger.csv"
 
 from forward_aggregate_schedule import target_date as resolve_aggregate_date
 from forward_prediction_source import load_published_day, SnapshotUnavailable
+from archived_forward_results import load_archive, result_frame
 
 TARGET_DATE8 = resolve_aggregate_date(
     os.environ.get("KEIBAAI_AGGREGATE_DATE", "").strip(),
@@ -351,10 +352,19 @@ def main() -> None:
 
     result_frames = []
     result_failures = []
+    archived_races = []
+    fetched_races = []
+    archive, archive_sha = load_archive(REPORTS_DIR / TARGET_DATE8 / "ResultData.json")
+    prediction_index = {r["raceID"]: r for r in predictions}
 
     for rid in sorted(pred_df["raceID"].unique()):
         try:
-            result_frames.append(fetch_result_table(str(rid)))
+            if rid in archive:
+                result_frames.append(result_frame(archive[rid], prediction_index[rid], TARGET_DATE8))
+                archived_races.append(rid)
+            else:
+                result_frames.append(fetch_result_table(str(rid)))
+                fetched_races.append(rid)
         except Exception as e:
             print("RESULT ERROR:", rid, repr(e))
             result_failures.append((str(rid), str(e)))
@@ -377,6 +387,9 @@ def main() -> None:
         merged["horseName"].astype(str).str.replace(r"\s+", "", regex=True)
         == merged["resultHorseName"].astype(str).str.replace(r"\s+", "", regex=True)
     )
+
+    if not merged["nameMatch"].all():
+        fail("prediction/result horse identity mismatch")
 
     merged["win"] = merged["finish"].eq(1)
     merged["top3"] = merged["finish"].le(3) & merged["finish"].notna()
@@ -433,6 +446,15 @@ def main() -> None:
     summary = {
         "date": TARGET_DATE8,
         "predictionProvenance": PREDICTION_PROVENANCE,
+        "resultProvenance": {
+            "archivedResultDataSHA256": archive_sha,
+            "archivedRaceIDs": archived_races,
+            "fetchedRaceIDs": fetched_races,
+        },
+        "publishedPredictionTimingCounts": {
+            marker: sum((r.get("predictionTiming") or "unclassified") == marker for r in predictions)
+            for marker in sorted({r.get("predictionTiming") or "unclassified" for r in predictions})
+        },
         "generatedAtJST": datetime.now(JST).isoformat(),
         "candidateRule": {
             "aiMarketRatioMin": CANDIDATE_RATIO_MIN,
@@ -526,7 +548,7 @@ def main() -> None:
     lines.append(f"- 1着率: {summary['winRatePct'] if summary['winRatePct'] is not None else '-'}%")
     lines.append(f"- 3着内率: {summary['top3RatePct'] if summary['top3RatePct'] is not None else '-'}%")
     lines.append("")
-    lines.append("## 10分前オッズ → 最終オッズ")
+    lines.append("## 公開予測時のオッズ → 最終オッズ（正式T-10限定ではない）")
     lines.append("")
     lines.append(f"- オッズ短縮: {shortened}頭")
     lines.append(f"- オッズ上昇: {drifted}頭")
@@ -547,7 +569,7 @@ def main() -> None:
     lines.append("")
     lines.append("## 研究候補")
     lines.append("")
-    lines.append("| レース | 馬番 | 馬名 | 10分前 | 最終 | 変化 | AI÷市場 | 期待指数 | 着順 |")
+    lines.append("| レース | 馬番 | 馬名 | 公開時 | 最終 | 変化 | AI÷市場 | 期待指数 | 着順 |")
     lines.append("|---|---:|---|---:|---:|---:|---:|---:|---:|")
     for _, r in candidates.sort_values(["startTime", "raceID", "number"]).iterrows():
         finish_text = "-" if pd.isna(r["finish"]) else str(int(r["finish"]))
