@@ -154,9 +154,12 @@ class ArchivedResultRouteTests(unittest.TestCase):
         folder = root / "20261123" / "prerace"
         ids = sorted(p.name for p in folder.iterdir() if p.is_dir())
         self.assertEqual(len(ids), 23)
-        for rid in ids:
-            with self.subTest(race=rid):
-                self.assertIsNotNone(results.archived_entry_url(root, rid, "20261123"))
+        # Fukushima 1R has only monitor event files, not an entry snapshot.
+        # Never convert the existence of a directory into source evidence.
+        accepted = {rid for rid in ids
+                    if results.archived_entry_url(root, rid, "20261123") is not None}
+        self.assertEqual(len(accepted), 22)
+        self.assertEqual(set(ids) - accepted, {"202603030601"})
 
 
 if __name__ == "__main__":
