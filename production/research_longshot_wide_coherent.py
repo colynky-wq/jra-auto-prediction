@@ -175,6 +175,8 @@ def scores(races, model, frame, evaluate_tickets=False):
     predicted = np.empty(len(frame)) if evaluate_tickets else None
     race_losses, triple_losses, tickets = [], [], {1: [], 3: []}
     hits = frame["hit"].to_numpy()
+    # Keep the baseline's numerical tie-breaking when choosing the same market tickets.
+    market_ranking = frame["market"].to_numpy()
     for race in races:
         outcomes = outcome_probabilities(race, model)
         pair_prob = pair_marginals(race, outcomes)[race.candidate_edges]
@@ -184,7 +186,8 @@ def scores(races, model, frame, evaluate_tickets=False):
         if evaluate_tickets:
             predicted[race.pair_rows] = pair_prob
             # Candidate rows are in ascending horse number order, including after slicing.
-            ranked = np.argsort(-pair_prob, kind="stable")
+            ranking = market_ranking[race.pair_rows] if model["spec"] == "market" else pair_prob
+            ranked = np.argsort(-ranking, kind="stable")
             for k, sample in tickets.items():
                 pick = ranked[:k]
                 p_any = probability_of_any(race.edges, outcomes, race.candidate_edges[pick])

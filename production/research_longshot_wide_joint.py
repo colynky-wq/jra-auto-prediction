@@ -214,6 +214,13 @@ def coherent_report(full25, full26, d25, d26, archive, provenance):
     method_names = ("market", "v2Joint", "v7Joint", "temperature", "coherentV2", "coherentV7")
     methods = {name: frame[name].to_numpy() for name in method_names}
     covered, excluded = attach_payout(frame, archive)
+    historical = settlement(frame, method_names)
+    for method, distribution in study["coherentDistribution2026"].items():
+        for k, portfolio in distribution["portfolio"].items():
+            ensure(
+                portfolio["racesHit"] == historical[k][method]["racesHit"],
+                f"coherent and marginal ticket selections disagree: {method}, {k}",
+            )
     quality = probability_report(frame, methods)
     # Pair the loss differences by race before resampling whole race days.
     losses = frame[["raceID", "date"]].copy()
@@ -242,7 +249,7 @@ def coherent_report(full25, full26, d25, d26, archive, provenance):
             "firstDate": frame["date"].min().date().isoformat(),
             "lastDate": frame["date"].max().date().isoformat(),
             "quality": quality,
-            "historicalHitDiagnostics": settlement(frame, method_names),
+            "historicalHitDiagnostics": historical,
         },
         "payoutCommonSupport": {
             "races": int(covered["raceID"].nunique()),
