@@ -108,7 +108,7 @@ def scan_archive(root):
     return rows
 
 
-def coherent_predictions(race, horses, longshot, saved, rank_model, models, choice):
+def frozen_coherent_field(race, horses, longshot, saved, *, rank_model=None, choice=None):
     spec = model_spec()
     day, rid = race["raceDate"], race["raceID"]
     validate_record(saved, day, rid, spec)
@@ -142,7 +142,8 @@ def coherent_predictions(race, horses, longshot, saved, rank_model, models, choi
     residual = np.zeros(len(horses))
     rank = np.zeros(len(horses))
     residual[longshot] = logit(p2) - logit(market3)
-    rank[longshot] = within_race(frame, blend(frame, p2, raw(frame, rank_model, choice["rounds"]), choice["alpha"]))
+    if rank_model is not None:
+        rank[longshot] = within_race(frame, blend(frame, p2, raw(frame, rank_model, choice["rounds"]), choice["alpha"]))
 
     pairs, triples, edges = combinations_for_field(len(horses))
     candidates = np.flatnonzero(longshot[pairs].any(axis=1))
@@ -155,10 +156,15 @@ def coherent_predictions(race, horses, longshot, saved, rank_model, models, choi
         triples, edges, len(pairs),
     )
     field = Race(pd.Timestamp(day), features, edges, None, np.arange(len(candidates)), candidates, len(pairs))
+    return field, numbers[pairs]
+
+
+def coherent_predictions(race, horses, longshot, saved, rank_model, models, choice):
+    field, pair_numbers = frozen_coherent_field(race, horses, longshot, saved, rank_model=rank_model, choice=choice)
     output = {}
     for name in ("coherentV2", "coherentV7"):
         marginal = pair_marginals(field, outcome_probabilities(field, models[name]))
-        output[name] = {tuple(numbers[pairs[i]]): float(marginal[i]) for i in candidates}
+        output[name] = {tuple(pair_numbers[i]): float(marginal[i]) for i in field.candidate_edges}
     return output
 
 

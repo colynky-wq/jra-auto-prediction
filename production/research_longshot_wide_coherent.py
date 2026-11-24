@@ -217,7 +217,7 @@ def scores(races, model, frame, evaluate_tickets=False):
     return result, predicted
 
 
-def evaluate(full25, full26, pairs25, pairs26):
+def evaluate(full25, full26, pairs25, pairs26, *, calibration_output=None, bootstrap=None):
     cutoff = pd.Timestamp("2025-09-01")
     train_pairs = pairs25.loc[pairs25["date"].lt(cutoff)]
     validation_pairs = pairs25.loc[pairs25["date"].ge(cutoff)]
@@ -245,6 +245,11 @@ def evaluate(full25, full26, pairs25, pairs26):
         quality[name], p = scores(test, model, pairs26, evaluate_tickets=True)
         if name != "market":
             pairs26[name] = p
+    if calibration_output is not None:
+        from research_wide_portfolio_calibration import write_calibration
+
+        write_calibration(calibration_output, train, validation, validation_pairs,
+                          test, pairs26, final, bootstrap)
     return final, {
         "selected2025": selected,
         "grid2025": grid,

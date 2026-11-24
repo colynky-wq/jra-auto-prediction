@@ -206,11 +206,14 @@ def settlement(d,methods,with_payout=False):
     return out
 
 
-def coherent_report(full25, full26, d25, d26, archive, provenance, *, compare_portfolios=False):
+def coherent_report(full25, full26, d25, d26, archive, provenance, *, compare_portfolios=False, calibrate_portfolios=False):
     from research_longshot_wide_coherent import evaluate
 
     frame = d26.copy()
-    models, study, test_races = evaluate(full25, full26, d25, frame)
+    calibration_output = OUT.with_name("longshot_wide_portfolio_calibration") if calibrate_portfolios else None
+    models, study, test_races = evaluate(
+        full25, full26, d25, frame, calibration_output=calibration_output, bootstrap=bootstrap,
+    )
     method_names = ("market", "v2Joint", "v7Joint", "temperature", "coherentV2", "coherentV7")
     methods = {name: frame[name].to_numpy() for name in method_names}
     covered, excluded = attach_payout(frame, archive)
@@ -287,7 +290,13 @@ def main():
     parser.add_argument("--coherent", action="store_true", help="also evaluate coherent top-three models")
     parser.add_argument("--odds-replay", action="store_true", help="replay archived pre-race odds with coherent models")
     parser.add_argument("--portfolio-selection", action="store_true", help="compare exact three-ticket joint coverage")
+    parser.add_argument("--portfolio-calibration", action="store_true", help="evaluate three-ticket event calibration")
+    parser.add_argument("--portfolio-four-way", action="store_true", help="replay four policies with frozen T-10 inputs")
     args = parser.parse_args()
+    if args.portfolio_four_way and not args.coherent:
+        parser.error("--portfolio-four-way requires --coherent")
+    if args.portfolio_calibration and not args.coherent:
+        parser.error("--portfolio-calibration requires --coherent")
     if args.portfolio_selection and not args.coherent:
         parser.error("--portfolio-selection requires --coherent")
     if args.odds_replay and not args.coherent:
@@ -356,7 +365,10 @@ def main():
         coherent_models = coherent_report(full25, full26, d25, d, archive, {
             "sourceHistorySha256": result["sourceHistorySha256"], "v2ModelSha256": sha,
             "v7Selection": v7, "candidateSelectionYear": 2025,
-        }, compare_portfolios=args.portfolio_selection)
+        }, compare_portfolios=args.portfolio_selection, calibrate_portfolios=args.portfolio_calibration)
+        if args.portfolio_four_way:
+            from research_wide_four_way import run as four_way
+            four_way(ROOT, OUT.with_name("longshot_wide_portfolio_t10"), coherent_models, datetime.now(JST))
         if args.odds_replay:
             from research_longshot_wide_odds_replay import run as replay
             replay(ROOT, OUT.with_name("longshot_wide_odds_replay"), coherent_models,

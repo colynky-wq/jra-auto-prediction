@@ -79,7 +79,7 @@ def maximum_any_three(race, outcomes, ranked_edges, marginals):
     return chosen
 
 
-def make_selections(races, frame, models):
+def make_selections(races, frame, models, *, model_names=MODELS):
     selection_rows = []
     for race in races:
         if race.observed is None:
@@ -88,7 +88,7 @@ def make_selections(races, frame, models):
         edge_to_row = dict(zip(race.candidate_edges, race.pair_rows, strict=True))
         race_id = pair_rows["raceID"].iloc[0]
         winners = race.edges[race.observed]
-        for name in MODELS:
+        for name in model_names:
             outcomes = outcome_probabilities(race, models[name])
             marginals = pair_marginals(race, outcomes)
             ranked = race.candidate_edges[np.argsort(-marginals[race.candidate_edges], kind="stable")]
