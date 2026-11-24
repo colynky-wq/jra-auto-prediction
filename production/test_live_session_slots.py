@@ -71,6 +71,17 @@ class LiveSessionSlotTests(unittest.TestCase):
         self.assertFalse(choose("schedule", daytime, DAY, clock(17, 30))["active"])
         self.assertFalse(choose("schedule", daytime, DAY, clock(12, 0, date=16))["active"])
 
+    def test_external_watchdog_date_and_cutoff(self):
+        def run(hour, minute, watchdog_date=DAY, day=DAY):
+            return choose("workflow_dispatch", "", day, clock(hour, minute),
+                          manual_minutes="335", watchdog_date=watchdog_date)
+        self.assertEqual(run(7, 0)["minutes"], 335)
+        self.assertEqual(run(16, 15)["minutes"], 75)
+        self.assertFalse(run(17, 29)["active"])
+        self.assertFalse(run(7, 0, "20261114")["active"])
+        self.assertEqual(choose("workflow_dispatch", "", DAY, clock(17, 29),
+                                manual_minutes="120")["minutes"], 120)
+
     def test_push_cannot_run_live_session(self):
         self.assertFalse(choose("push", "", "", clock(9, 30))["active"])
 
