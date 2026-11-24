@@ -11,11 +11,14 @@ from urllib3.util.retry import Retry
 import live_monitor_dry_run as base
 import live_monitor_topk as topk
 import live_monitor_topk_publish as publish
+from jra_win_odds_source import JRAAccessRestricted
+from jra_entry_source import JRAEntryAccessRestricted
 from live_capture_policy import (
     FORMAL_TIMING_MARKER,
     RECOVERY_TIMING_MARKER,
     classify_capture_timing,
     validate_capture_windows,
+    missed_capture_reason,
 )
 
 
@@ -86,13 +89,18 @@ def resilient_main() -> None:
         from live_recording_resume import published_race_ids
         processed = published_race_ids(base.HERE.parent, base.TARGET_DATE8, flat, require_research=True)
         print("LIVE_RESUME_PUBLISHED", sorted(processed))
+    worker_ready = base.now_jst()
+    print('LIVE_WORKER_READY', worker_ready.isoformat())
     missed: set[str] = set()
     attempts: dict[str, int] = {}
     last_error: dict[str, str] = {}
 
     while base.now_jst() < deadline:
-        now = base.now_jst()
         for race in flat:
+            # A previous race's I/O may have consumed several minutes.
+            now = base.now_jst()
+            if now >= deadline:
+                break
             rid = race["race_id"]
             if rid in processed or rid in missed:
                 continue
@@ -107,9 +115,14 @@ def resilient_main() -> None:
             if timing is None:
                 if remaining < RECOVERY_LATE_MINUTES:
                     missed.add(rid)
+                    reason = missed_capture_reason(
+                        worker_ready=worker_ready, post=post,
+                        recovery_late=RECOVERY_LATE_MINUTES,
+                        attempts=attempts.get(rid, 0), last_error=last_error.get(rid),
+                    )
                     print(
                         "MISSED recovery window:", rid, f"remaining={remaining:.2f}m",
-                        "attempts=", attempts.get(rid, 0), "last_error=", last_error.get(rid),
+                        "attempts=", attempts.get(rid, 0), "reason=", reason,
                     )
                     if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
                         try:
@@ -118,7 +131,7 @@ def resilient_main() -> None:
                                 rid,
                                 base.TARGET_DATE8,
                                 "monitor_missed",
-                                RuntimeError(last_error.get(rid) or "live capture window expired"),
+                                RuntimeError(reason),
                             )
                         except Exception:
                             pass
@@ -135,6 +148,14 @@ def resilient_main() -> None:
                 processed.add(rid)
                 last_error.pop(rid, None)
                 print("RESILIENT_TRIGGER_SUCCESS", rid, label)
+            except (JRAAccessRestricted, JRAEntryAccessRestricted) as exc:
+                # An explicit denial is not a transient per-race error.
+                # Stop this worker rather than retry or move to another race.
+                print("JRA_ACCESS_RESTRICTED_STOP", rid, type(exc).__name__, str(exc))
+                if os.environ.get("KEIBAAI_CAPTURE_PRERACE", "").lower() in {"true", "1"}:
+                    from pace_recording_events import record_event
+                    record_event(rid, base.TARGET_DATE8, "monitor_failed", exc)
+                raise
             except Exception as exc:
                 last_error[rid] = f"{type(exc).__name__}: {exc}"
                 print("RESILIENT_TRIGGER_RETRY", rid, label, last_error[rid])
