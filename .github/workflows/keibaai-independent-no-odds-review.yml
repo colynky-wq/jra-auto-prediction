@@ -1,0 +1,57 @@
+name: KeibaAI Independent No-Odds Research Settlement
+
+on:
+  pull_request:
+    paths:
+      - 'production/evaluate_no_current_odds_independent.py'
+      - 'production/test_evaluate_no_current_odds_independent.py'
+      - '.github/workflows/keibaai-independent-no-odds-review.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'production/production_history.parquet'
+      - 'reports/history_updates/*.json'
+      - 'reports/*/no_current_odds_independent_v1/*.json'
+      - 'production/evaluate_no_current_odds_independent.py'
+      - '.github/workflows/keibaai-independent-no-odds-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: independent-no-odds-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: |
+          pip install -r production/requirements.txt
+          pip install 'requests==2.32.5' 'beautifulsoup4==4.13.4'
+      - name: Verify independent settlement without external requests
+        run: python production/test_evaluate_no_current_odds_independent.py -v
+      - name: Evaluate existing frozen records only
+        run: python production/evaluate_no_current_odds_independent.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: independent-no-odds-review
+          path: research/NoCurrentOddsIndependentForwardReview.json
+      - name: Publish only independent research report
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          git config user.name 'KeibaAI GitHub Actions'
+          git config user.email 'keibaai@users.noreply.github.com'
+          git add research/NoCurrentOddsIndependentForwardReview.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Update independent no-odds research review"
+          git pull --rebase origin main
+          git push origin HEAD:main
