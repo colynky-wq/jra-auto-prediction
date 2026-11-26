@@ -1,0 +1,51 @@
+name: Research longshot V3 first-frozen T10 comparison
+
+on:
+  push:
+    branches:
+      - research/longshot-v3-market-anchor-20261123
+    paths:
+      - research/longshot_v3_t10_forward.py
+      - research/tests/test_longshot_v3_t10_forward.py
+      - .github/workflows/research-longshot-v3-t10.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout frozen research sources
+        uses: actions/checkout@v4
+      - name: Syntax validation
+        run: python3 -m py_compile research/longshot_v3_t10_forward.py research/tests/test_longshot_v3_t10_forward.py
+      - name: Unit tests
+        run: python3 -m unittest discover -s research/tests -p test_longshot_v3_t10_forward.py -v
+      - name: Evaluate immutable first-frozen T10 candidate
+        run: python3 research/longshot_v3_t10_forward.py --root . --output longshot_v3_t10_result.json
+      - name: Print metrics and readiness gate
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open('longshot_v3_t10_result.json'))
+          print('RESEARCH_STATUS',d['status'])
+          print('SCORED_DAYS',d['scored_days'])
+          print('COVERAGE',json.dumps(d['counts'],ensure_ascii=False))
+          for key, value in d['stats'].items():
+              print('METHOD',key,
+                    'Brier=',value['brier_equal_race'],
+                    'Logloss=',value['logloss_equal_race'],
+                    'TopPick=',value['top_pick_hits'],
+                    'ExpectedHits=',value['expected_hits'])
+          assert d['approved_for_production'] is False
+          assert d['auto_bet_enabled'] is False
+          PY
+      - name: Upload signed-off research results
+        uses: actions/upload-artifact@v4
+        with:
+          name: longshot-v3-first-frozen-comparison
+          path: longshot_v3_t10_result.json
+          retention-days: 7

@@ -1,0 +1,53 @@
+name: Research longshot T10 vs closing odds drift
+
+on:
+  push:
+    branches:
+      - research/longshot-v3-market-anchor-20261123
+    paths:
+      - research/longshot_v3_odds_drift.py
+      - research/tests/test_longshot_v3_odds_drift.py
+      - .github/workflows/research-longshot-v3-odds-drift.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout immutable T10 and official result records
+        uses: actions/checkout@v4
+      - name: Use matching Python 3.11 runtime
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install frozen project dependencies
+        run: pip install --disable-pip-version-check -r production/requirements.txt
+      - name: Validate Python syntax
+        run: python3 -m py_compile research/longshot_v3_odds_drift.py
+      - name: Odds drift regression tests
+        run: python3 -m unittest discover -s research/tests -p test_longshot_v3_odds_drift.py -v
+      - name: Analyze same-runner win odds and V2 sensitivity
+        run: python3 research/longshot_v3_odds_drift.py --root . --output longshot_t10_closing_odds_drift.json
+      - name: Check result is diagnostic only
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open('longshot_t10_closing_odds_drift.json'))
+          assert r['researchOnly'] is True
+          assert r['candidatePromotionApproved'] is False
+          assert r['autoBetEnabled'] is False
+          print('SCORABLE',r['quality'])
+          print('MOVEMENT_GROUPS',r['driftGroups'])
+          print('SCENARIOS',r['metrics'])
+          print('COHORT_CHANGE',r['cohortChange'])
+          PY
+      - name: Upload sensitivity audit
+        uses: actions/upload-artifact@v4
+        with:
+          name: longshot-t10-closing-odds-drift
+          path: longshot_t10_closing_odds_drift.json
+          retention-days: 7
