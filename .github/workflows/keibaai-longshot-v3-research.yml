@@ -1,0 +1,33 @@
+name: KeibaAI Longshot V3 Research
+
+on:
+  pull_request:
+    paths:
+      - 'production/research_longshot_top3_v3.py'
+      - 'production/test_research_longshot_top3_v3.py'
+      - '.github/workflows/keibaai-longshot-v3-research.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt
+      - run: python production/test_research_longshot_top3_v3.py -v
+      - name: Fit V3 candidates and evaluate chronological cohorts
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        run: python production/research_longshot_top3_v3.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-v3-research
+          path: research/model_candidates/longshot_top3_v3/
