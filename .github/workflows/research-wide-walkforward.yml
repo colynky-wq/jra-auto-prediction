@@ -1,0 +1,45 @@
+name: Research wide walk-forward validation
+
+on:
+  push:
+    branches:
+      - research/wide-calibration-20261123
+    paths:
+      - research/wide_walkforward_calibration.py
+      - research/tests/test_wide_walkforward_calibration.py
+      - .github/workflows/research-wide-walkforward.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+      - name: Syntax check
+        run: python3 -m py_compile research/wide_walkforward_calibration.py
+      - name: Regression tests for freshness, NULL and date separation
+        run: python3 -m unittest discover -s research/tests -p 'test_wide_walkforward_calibration.py' -v
+      - name: Run walk-forward analysis without changing production files
+        run: python3 research/wide_walkforward_calibration.py --root . > wide_walkforward_result.json
+      - name: Print comparable summaries
+        run: |
+          python3 - <<'PY'
+          import json
+          x = json.load(open("wide_walkforward_result.json"))
+          print("Matched formal captures:", x["capture_count"])
+          for row in x["cutoffs"]:
+              print("Freshness (minutes):", row["max_odds_age_minutes"])
+              print("Summary:", json.dumps(row["summary"], ensure_ascii=False))
+              print("Excluded stale:", sum(d["omitted"]["stale"] for d in row["days"]))
+          PY
+      - name: Upload reproducible summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: wide-walkforward-result
+          path: wide_walkforward_result.json
+          retention-days: 7
