@@ -167,6 +167,49 @@ struct KeibaAIFormalBetTypePerformance: Decodable, Identifiable {
     let formalEvaluationStatus: String?
 }
 
+struct KeibaAIWin5FormalReview: Decodable {
+    let schemaVersion: Int
+    let version: String
+    let status: String
+    let generatedAtJST: String
+    let sourceVersion: String
+    let prospectiveStartDate: String
+    let observationUnit: String
+    let sessionsObserved: Int
+    let sessionsEligible: Int
+    let sessionsResultMatched: Int
+    let sessionsPayoutVerified: Int
+    let sessionsPending: Int
+    let sessionsOutcomeExcluded: Int?
+    let sessionsAttentionRequired: Int?
+    let sessionsExcluded: Int
+    let probabilityEvaluation: KeibaAIWin5ProbabilityEvaluation
+    let bettingEvaluation: KeibaAIWin5BettingEvaluation
+}
+
+struct KeibaAIWin5ProbabilityEvaluation: Decodable {
+    let sessionsEvaluated: Int
+    let totalLegsEvaluated: Int
+    let aiTopOneAllFiveHits: Int
+    let marketTopOneAllFiveHits: Int
+    let aiTopOneLegHits: Int
+    let marketTopOneLegHits: Int
+    let aiTopOneLegHitRatePct: Double?
+    let marketTopOneLegHitRatePct: Double?
+    let meanAINegativeLogProbability: Double?
+    let meanMarketNegativeLogProbability: Double?
+    let aiLowerNLLSessions: Int
+    let marketLowerNLLSessions: Int
+}
+
+struct KeibaAIWin5BettingEvaluation: Decodable {
+    let status: String
+    let formalROIAvailable: Bool
+    let historicalReferenceBacktestExcluded: Bool
+    let selectionRuleFrozenForTheseSessions: Bool
+    let note: String
+}
+
 #if canImport(Combine)
 @MainActor
 final class KeibaAIBetResearchStore: ObservableObject {
@@ -251,6 +294,48 @@ final class KeibaAIBetPerformanceStore: ObservableObject {
             data = decoded
         } catch {
             errorMessage = data == nil ? "正式T-10成績を取得できませんでした。" : "正式T-10成績を更新できませんでした。"
+        }
+    }
+}
+
+@MainActor
+final class KeibaAIWin5FormalReviewStore: ObservableObject {
+    @Published private(set) var data: KeibaAIWin5FormalReview?
+    @Published private(set) var isLoading = false
+    @Published private(set) var errorMessage: String?
+    private let session: URLSession
+
+    init(session: URLSession = .shared) { self.session = session }
+
+    func load(force: Bool = false) async {
+        if isLoading { return }
+        if data != nil && !force { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        do {
+            var components = URLComponents(string:"https://raw.githubusercontent.com/colynky-wq/jra-auto-prediction/main/Win5FormalReview.json")!
+            components.queryItems = [URLQueryItem(name:"t",value:String(Date().timeIntervalSince1970))]
+            var request = URLRequest(url:components.url!)
+            request.timeoutInterval = 20
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+            request.setValue("KeibaAI-iOS/1.0", forHTTPHeaderField: "User-Agent")
+            let (bytes,response) = try await session.data(for:request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { throw URLError(.badServerResponse) }
+            let decoded = try JSONDecoder().decode(KeibaAIWin5FormalReview.self,from:bytes)
+            guard decoded.schemaVersion == 1,
+                  decoded.version == "win5-formal-review-v1-20261031",
+                  decoded.status == "research_evaluation_only",
+                  decoded.sourceVersion == "win5-factorized-win-v1-20261015",
+                  decoded.observationUnit == "one_frozen_five_race_win5_session",
+                  decoded.sessionsEligible <= decoded.sessionsObserved,
+                  decoded.sessionsResultMatched <= decoded.sessionsEligible,
+                  decoded.sessionsPayoutVerified <= decoded.sessionsResultMatched,
+                  decoded.probabilityEvaluation.totalLegsEvaluated == decoded.probabilityEvaluation.sessionsEvaluated * 5
+            else { throw URLError(.cannotParseResponse) }
+            data = decoded
+        } catch {
+            errorMessage = data == nil ? "正式WIN5評価を取得できませんでした。" : "正式WIN5評価を更新できませんでした。"
         }
     }
 }
