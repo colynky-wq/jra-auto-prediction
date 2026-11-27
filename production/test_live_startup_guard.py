@@ -39,10 +39,30 @@ class TestLiveStartupGuard(unittest.TestCase):
         self.assertEqual(fields['target_date'], '20261017')
         self.assertIn('races=2', result.stdout)
 
-    def test_nonempty_no_race_response_keeps_normal_skip(self):
-        result, fields = self.guard('<div>no races</div>', official_code='404')
+    def test_known_2026_non_race_weekday_keeps_normal_skip(self):
+        result, fields = self.guard('<div>no races</div>', date='20261201', official_code='404')
         self.assertEqual(result.returncode, 0)
         self.assertEqual(fields['has_races'], 'false')
+
+    def test_unknown_year_weekday_404_is_not_proof_of_no_meeting(self):
+        result, fields = self.guard('<div>no races</div>', official_code='404')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotEqual(fields.get('has_races'), 'false')
+        self.assertIn('::error::', result.stdout+result.stderr)
+
+    def test_announced_reorganized_meeting_404_allows_provisional_probe(self):
+        result, fields = self.guard('<div>no races</div>', date='20261130', official_code='404')
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(fields['has_races'], 'true')
+        self.assertIn('::warning::', result.stdout+result.stderr)
+
+    def test_scheduled_weekend_404_allows_provisional_probe(self):
+        for date in ('20261128', '20261129'):
+            with self.subTest(date=date):
+                result, fields = self.guard('<div>no races</div>', date=date, official_code='404')
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(fields['has_races'], 'true')
+                self.assertIn('::warning::', result.stdout+result.stderr)
 
     def test_zero_primary_ids_and_ambiguous_official_200_remain_unknown(self):
         result, fields = self.guard('<div>no races</div>', official_code='200')

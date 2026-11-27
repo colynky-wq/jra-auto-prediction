@@ -63,6 +63,16 @@ run_case() {
 run_case 20261110 empty 403 0 false
 # Published Monday holiday meeting must still enter provisional live schedule probe.
 run_case 20261123 empty 403 0 true
+# November 30 reorganized meeting is a published race day, not a holiday.
+run_case 20261130 empty 403 0 true
+run_case 20261130 fail 404 0 true
+# A missing daily URL must not suppress a scheduled weekend or holiday.
+run_case 20261128 empty 404 0 true
+run_case 20261129 fail 404 0 true
+run_case 20261123 empty 404 0 true
+# An ordinary 2026 weekday remains a clean skip; unknown-year weekday fails closed.
+run_case 20261201 empty 404 0 false
+run_case 20271109 empty 404 1 none
 # Normal Saturday with blocked calendar sources remains a provisional probe.
 run_case 20261114 empty 403 0 true
 # A positive race-ID parse always takes precedence.

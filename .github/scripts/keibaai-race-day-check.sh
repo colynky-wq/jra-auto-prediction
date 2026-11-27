@@ -17,12 +17,13 @@ emit_result() {
   echo "has_races=${has_races}" >> "$GITHUB_OUTPUT"
 }
 
-# JRA's published 2026 annual schedule includes four weekday holiday
-# sessions in addition to the normal Saturday/Sunday programme.
-# Source: https://www.jra.go.jp/keiba/program/2026/pdf/kaisainittei.pdf
+# JRA's published 2026 schedule includes weekday holiday meetings and the
+# November 30 reorganized Tokyo meeting announced November 23.
+# Sources: https://www.jra.go.jp/keiba/program/2026/pdf/kaisainittei.pdf
+#          https://www.jra.go.jp/news/202611/112301.html
 is_2026_weekday_race_date() {
   case "$date8" in
-    20260112|20260921|20261012|20261123) return 0 ;;
+    20260112|20260921|20261012|20261123|20261130) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -42,8 +43,8 @@ allow_scheduled_day_probe() {
   return 1
 }
 
-# The official 2026 annual JRA schedule has no ordinary weekday meetings
-# outside the four holiday dates above. This avoids turning a known non-race
+# The published 2026 JRA schedule and announced reorganization have no
+# ordinary weekday meetings outside the dates above. This avoids turning a known non-race
 # weekday into a failed production run when both live calendar endpoints
 # reject the runner. Other years remain fail-closed until their official
 # annual schedule is explicitly added.
@@ -114,9 +115,10 @@ if [ "$jra_code" = '200' ]; then
 fi
 
 if [ "$jra_code" = '404' ]; then
-  emit_result false
-  echo "No official JRA daily programme for ${date8}; no-race day confirmed."
-  exit 0
+  # A missing daily programme URL alone cannot override an announced race
+  # day. Require the actual live race list before recording any prediction.
+  handle_ambiguous_calendar "JRA HTTP 404" && exit 0
+  exit 1
 fi
 
 handle_ambiguous_calendar "JRA HTTP ${jra_code}" && exit 0
