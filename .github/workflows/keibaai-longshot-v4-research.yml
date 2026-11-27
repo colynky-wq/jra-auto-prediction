@@ -1,0 +1,31 @@
+name: KeibaAI Longshot V4 Context Research
+on:
+  pull_request:
+    paths:
+      - 'production/longshot_v4_context_features.py'
+      - 'production/research_longshot_top3_v4.py'
+      - 'production/test_longshot_v4_context_features.py'
+      - '.github/workflows/keibaai-longshot-v4-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: pip install -r production/requirements.txt
+      - run: python production/test_longshot_v4_context_features.py -v
+      - name: Fit and compare causal context features
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '2'
+        run: python production/research_longshot_top3_v4.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: longshot-v4-research
+          path: research/model_candidates/longshot_top3_v4/
