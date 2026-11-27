@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from jra_entry_source import _parse_entry_table, decode_jra_entry_html, JRAEntryUnavailable, JRAEntryAccessRestricted
-from early_prediction_runtime import _predict_with_one_retry
+from early_prediction_runtime import _predict_with_one_retry, _resolved_course
 from win_odds_freshness import WinOddsFreshnessError
 import live_monitor_topk as live
 
@@ -87,9 +87,23 @@ def test_entry_encoding_and_retry() -> None:
     assert bad["stale"]["attempts"] == 1
 
 
+def test_early_course_is_resolved_metadata_not_timing_label() -> None:
+    frame = pd.DataFrame()
+    frame.attrs["longshotTop3Context"] = {"surface": "ダ", "distance": 1150}
+    assert _resolved_course(frame) == "ダ1150m"
+    frame.attrs.clear()
+    try:
+        _resolved_course(frame)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("missing course accepted")
+
+
 def main() -> None:
     test_current_trainer_element()
     test_entry_encoding_and_retry()
+    test_early_course_is_resolved_metadata_not_timing_label()
     test_unseen_and_blank_name_fallbacks()
     print("JRA_ENTRY_NAME_HANDLING_REGRESSION_OK")
 
