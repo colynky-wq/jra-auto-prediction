@@ -170,6 +170,16 @@ def _predict_with_one_retry(races, predict, retry_allowed=lambda: True):
     return successful, failures
 
 
+def _resolved_course(out) -> str:
+    # Use the race metadata actually resolved by the successful predictor,
+    # not a timing label or the potentially incomplete initial race list.
+    context = out.attrs.get("longshotTop3Context") or {}
+    surface, distance = context.get("surface"), context.get("distance")
+    if surface not in {"芝", "ダ"} or type(distance) is not int or not 600 <= distance <= 5000:
+        raise ValueError("missing resolved early course")
+    return f"{surface}{distance}m"
+
+
 def _snapshot(date8: str, stage: str) -> dict:
     # The shared live modules read TARGET_DATE8 internally when they fetch the
     # official entry table. Override it explicitly for next-day evening runs.
@@ -213,6 +223,7 @@ def _snapshot(date8: str, stage: str) -> dict:
             "raceNumber": int(race.get("race_no") or 0),
             "startTime": str(race.get("start_time") or ""),
             "raceName": str(race.get("race_name") or ""),
+            "course": _resolved_course(out),
             "horses": horses,
             "winOddsFreshness": (out.attrs.get("winOddsSource") or {}).get("freshnessEvidence"),
         })
