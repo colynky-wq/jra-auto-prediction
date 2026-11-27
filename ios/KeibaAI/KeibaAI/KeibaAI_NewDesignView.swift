@@ -1620,6 +1620,11 @@ struct KeibaAINewDesignView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
 
+                if latestPredictionIsStale {
+                    stalePredictionWarning
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                }
                 if showTodayFilters {
                     snapshotBar
                         .padding(.horizontal, 16)
@@ -1768,6 +1773,22 @@ struct KeibaAINewDesignView: View {
                 .accessibilityIdentifier("main-tab-\(tab.rawValue)")
             }
         }
+    }
+
+    private var latestPredictionIsStale: Bool {
+        store.selectedSnapshotID == "latest" && selectedDate8 < Self.todayJST8
+    }
+
+    private var stalePredictionWarning: some View {
+        Label {
+            Text("本日分は未更新です。表示中は過去の開催日（\(Self.displayDate(selectedDate8))）のデータです。")
+                .font(.caption.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "exclamationmark.triangle.fill")
+        }
+        .foregroundStyle(.orange)
+        .accessibilityIdentifier("stale-prediction-warning")
     }
 
     private var snapshotBar: some View {
@@ -2039,10 +2060,13 @@ struct KeibaAINewDesignView: View {
                         .font(.title2)
                         .foregroundStyle(.blue)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("今日の結論").font(.largeTitle.bold())
+                        Text(latestPredictionIsStale ? "過去の開催データ" : "今日の結論").font(.largeTitle.bold())
                         Text("開催日 \(Self.displayDate(selectedDate8))")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
+                }
+                if latestPredictionIsStale {
+                    stalePredictionWarning
                 }
                 onePickHomeCard
 
@@ -2088,7 +2112,7 @@ struct KeibaAINewDesignView: View {
             .frame(maxWidth: 820, alignment: .leading)
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .navigationTitle("今日の結論")
+        .navigationTitle(latestPredictionIsStale ? "過去の開催データ" : "今日の結論")
         .accessibilityIdentifier("today-overview")
     }
 
@@ -2149,7 +2173,7 @@ struct KeibaAINewDesignView: View {
                         showTodayLanding = true
                         preferredCompactColumn = .detail
                     } label: {
-                        Label("今日の結論を見る", systemImage: "ticket.fill")
+                        Label(latestPredictionIsStale ? "過去の開催データを見る" : "今日の結論を見る", systemImage: "ticket.fill")
                             .font(.headline)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(12)
@@ -2159,7 +2183,7 @@ struct KeibaAINewDesignView: View {
                     .buttonStyle(.plain)
                 }
                 sectionHeader(
-                    title: todayMode == .recommended ? "注目レースと研究候補" : (todayMode == .longshot ? "穴狙い候補" : "今日の全レース"),
+                    title: todayMode == .recommended ? "注目レースと研究候補" : (todayMode == .longshot ? "穴狙い候補" : (latestPredictionIsStale ? "過去の全レース" : "今日の全レース")),
                     subtitle: todayMode == .recommended
                         ? "AI評価B以上だけ表示。候補がなければ無理に選びません"
                         : (todayMode == .longshot ? "人気薄の候補があるレースだけ表示" : "未予測を含む予定表 / \(todayListItems.count)レース")
