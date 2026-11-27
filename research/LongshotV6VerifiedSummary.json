@@ -1,0 +1,463 @@
+{
+  "schemaVersion": 1,
+  "source": "verified GitHub Actions log; complete report and candidate model in workflow artifact",
+  "sourceCommit": "9e4abbca0cdc80bca526c134ef10a834ee240947",
+  "runID": 45407006877,
+  "artifacts": [
+    {
+      "id": 14926596987,
+      "name": "longshot-v6-research"
+    }
+  ],
+  "researchOnly": true,
+  "candidatePromotionApproved": false,
+  "formalPredictionAIChanged": false,
+  "autoBetEnabled": false,
+  "lapArchive": {
+    "files": 309,
+    "records": 9508,
+    "invalidRecords": 0,
+    "archiveSha256": "5372415792ffcaa4680c931bcfe84f7c0723fb2b791987ef03f6b4ff136674ff"
+  },
+  "results": {
+    "2026": {
+      "races": 2870,
+      "horses": 24975,
+      "sameVenueCoveredHorses": 12496,
+      "exactCourseCoveredHorses": 8986,
+      "pairCoveredHorses": 9360,
+      "wetHistoryCoveredHorses": 13748,
+      "methods": {
+        "v2": {
+          "brier": 0.07922590832255498,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": 0,
+            "raceBootstrap95": [
+              0,
+              0
+            ],
+            "wholeRaceDateBootstrap95": [
+              0,
+              0
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 606,
+              "racesHit": 606,
+              "raceHitRate": 0.21114982578397212,
+              "wholeDateHitDeltaVsV2_95": null
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1062,
+              "racesHit": 978,
+              "raceHitRate": 0.3407665505226481,
+              "wholeDateHitDeltaVsV2_95": null
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1397,
+              "racesHit": 1238,
+              "raceHitRate": 0.4313588850174216,
+              "wholeDateHitDeltaVsV2_95": null
+            }
+          }
+        },
+        "market": {
+          "brier": 0.07991975319597375,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": 0.0006938448734187705,
+            "raceBootstrap95": [
+              0.0004569507887761449,
+              0.0009499490964391487
+            ],
+            "wholeRaceDateBootstrap95": [
+              0.00041532687376077607,
+              0.0009603799878086386
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 590,
+              "racesHit": 590,
+              "raceHitRate": 0.20557491289198607,
+              "wholeDateHitDeltaVsV2_95": null
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1045,
+              "racesHit": 969,
+              "raceHitRate": 0.3376306620209059,
+              "wholeDateHitDeltaVsV2_95": null
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1386,
+              "racesHit": 1232,
+              "raceHitRate": 0.4292682926829268,
+              "wholeDateHitDeltaVsV2_95": null
+            }
+          }
+        },
+        "calibration": {
+          "brier": 0.07922829623860496,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": 0.0000023879160499917567,
+            "raceBootstrap95": [
+              -0.00003307202624316547,
+              0.00003607258807065713
+            ],
+            "wholeRaceDateBootstrap95": [
+              -0.000032125409898264956,
+              0.00003967368085733464
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 606,
+              "racesHit": 606,
+              "raceHitRate": 0.21114982578397212,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1062,
+              "racesHit": 978,
+              "raceHitRate": 0.3407665505226481,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1397,
+              "racesHit": 1238,
+              "raceHitRate": 0.4313588850174216,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "course": {
+          "brier": 0.07922936935624943,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": 0.0000034610336944469247,
+            "raceBootstrap95": [
+              -0.00003251319888424923,
+              0.00003806163768841744
+            ],
+            "wholeRaceDateBootstrap95": [
+              -0.000030574561496723705,
+              0.000040084555420121196
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 605,
+              "racesHit": 605,
+              "raceHitRate": 0.21080139372822299,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0014381121764464103,
+                0.0007106510744694305
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1064,
+              "racesHit": 979,
+              "raceHitRate": 0.34111498257839723,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0.0010788912519304583
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1397,
+              "racesHit": 1239,
+              "raceHitRate": 0.4317073170731707,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0.0010573355371753012
+              ]
+            }
+          }
+        },
+        "jockey": {
+          "brier": 0.07921893445621433,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": -0.000006973866340643295,
+            "raceBootstrap95": [
+              -0.00004413760388411624,
+              0.000028573922685953343
+            ],
+            "wholeRaceDateBootstrap95": [
+              -0.000043004543625635356,
+              0.00003060107994579087
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 611,
+              "racesHit": 611,
+              "raceHitRate": 0.21289198606271778,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.00033963689788822876,
+                0.0038491938004483013
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1062,
+              "racesHit": 976,
+              "raceHitRate": 0.3400696864111498,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0026798740741239375,
+                0.001055613353682566
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1395,
+              "racesHit": 1238,
+              "raceHitRate": 0.4313588850174216,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0013850901740175097,
+                0.0013935981067386748
+              ]
+            }
+          }
+        },
+        "courseJockey": {
+          "brier": 0.07922018804315355,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": -0.000005720279401426764,
+            "raceBootstrap95": [
+              -0.00004260455483796348,
+              0.00003052748635889155
+            ],
+            "wholeRaceDateBootstrap95": [
+              -0.000040977160161318796,
+              0.00003119350025449409
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 608,
+              "racesHit": 608,
+              "raceHitRate": 0.2118466898954704,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0013762615800202184,
+                0.002728957442544053
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1065,
+              "racesHit": 979,
+              "raceHitRate": 0.34111498257839723,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0014072243813774735,
+                0.0021160854809753856
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1395,
+              "racesHit": 1238,
+              "raceHitRate": 0.4313588850174216,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0014068319078960386,
+                0.0014008678574135432
+              ]
+            }
+          }
+        },
+        "withGoingProfile": {
+          "brier": 0.07922468079972576,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": -0.0000012275228292183283,
+            "raceBootstrap95": [
+              -0.00004132066831690098,
+              0.00003700234956101679
+            ],
+            "wholeRaceDateBootstrap95": [
+              -0.000039787615218652725,
+              0.00003807393854220724
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 606,
+              "racesHit": 606,
+              "raceHitRate": 0.21114982578397212,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.00213907583403406,
+                0.002119468362381102
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1066,
+              "racesHit": 981,
+              "raceHitRate": 0.34181184668989545,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0010717088289410222,
+                0.0032328170973937036
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1397,
+              "racesHit": 1241,
+              "raceHitRate": 0.432404181184669,
+              "wholeDateHitDeltaVsV2_95": [
+                -0.0006901431141134809,
+                0.002869492288828054
+              ]
+            }
+          }
+        },
+        "selected": {
+          "brier": 0.07922590832255498,
+          "pairedBrierVsV2": {
+            "equalRaceBrierDelta": 0,
+            "raceBootstrap95": [
+              0,
+              0
+            ],
+            "wholeRaceDateBootstrap95": [
+              0,
+              0
+            ],
+            "races": 2870,
+            "raceDates": 99
+          },
+          "picks": {
+            "1": {
+              "selected": 2870,
+              "hits": 606,
+              "racesHit": 606,
+              "raceHitRate": 0.21114982578397212,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            },
+            "2": {
+              "selected": 5725,
+              "hits": 1062,
+              "racesHit": 978,
+              "raceHitRate": 0.3407665505226481,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            },
+            "3": {
+              "selected": 8527,
+              "hits": 1397,
+              "racesHit": 1238,
+              "raceHitRate": 0.4313588850174216,
+              "wholeDateHitDeltaVsV2_95": [
+                0,
+                0
+              ]
+            }
+          }
+        }
+      }
+    },
+    "selected": {
+      "spec": "v2",
+      "penalty": null,
+      "brier": 0.07505432166613431
+    },
+    "audit": {
+      "2014": {
+        "flatRaces": 3326,
+        "usableRaces": 3010
+      },
+      "2015": {
+        "flatRaces": 3326,
+        "usableRaces": 3016
+      },
+      "2016": {
+        "flatRaces": 3326,
+        "usableRaces": 3028
+      },
+      "2017": {
+        "flatRaces": 3329,
+        "usableRaces": 3030
+      },
+      "2018": {
+        "flatRaces": 3328,
+        "usableRaces": 3002
+      },
+      "2019": {
+        "flatRaces": 3325,
+        "usableRaces": 3011
+      },
+      "2020": {
+        "flatRaces": 3331,
+        "usableRaces": 3017
+      },
+      "2021": {
+        "flatRaces": 3329,
+        "usableRaces": 3041
+      },
+      "2022": {
+        "flatRaces": 3331,
+        "usableRaces": 3051
+      },
+      "2023": {
+        "flatRaces": 3329,
+        "usableRaces": 3026
+      },
+      "2024": {
+        "flatRaces": 3327,
+        "usableRaces": 2978,
+        "goingMatchedRaces": 2978
+      },
+      "2025": {
+        "flatRaces": 3335,
+        "usableRaces": 3010,
+        "goingMatchedRaces": 3010
+      },
+      "2026": {
+        "flatRaces": 3006,
+        "usableRaces": 2757,
+        "goingMatchedRaces": 2600
+      }
+    }
+  },
+  "decision": "V2 retained by 2025 selection. V6 not promoted. No current going input."
+}
