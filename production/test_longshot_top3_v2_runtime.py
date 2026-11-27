@@ -12,7 +12,8 @@ import lightgbm as lgb
 import pandas as pd
 
 import formal_portfolio_capture as capture
-from evaluate_longshot_top3_v2 import calibration_summary, evaluate, verified_fresh_win_odds
+from evaluate_longshot_top3_v2 import (calibration_summary, evaluate, verified_fresh_win_odds,
+    shortlist_summary, day_cluster_interval, daily_brier_intervals, markdown)
 from longshot_top3_v2_runtime import (
     FEATURES, MODEL_FEATURES, OUTPUT, path_for, prepare, record_first, score_race, validate_record,
 )
@@ -142,6 +143,11 @@ class LongshotV2RuntimeTest(unittest.TestCase):
             self.assertEqual(calibration["observedRatePct"], 50.)
             self.assertEqual(report["calibrationSelectedHorse"]["market"]["horses"], 1)
             self.assertEqual(report["matchedRaceDates"], 1)
+            short = report["freshOddsVerified30m"]["shortlistComparison"]
+            self.assertEqual(short["byCount"]["2"]["methods"]["market"]["racesHit"], 1)
+            self.assertEqual(short["byCount"]["3"]["methods"]["market"]["selectedHorses"], 2)
+            self.assertIsNone(report["pairedCandidateBrierDifferenceByDate"]["market"]["bootstrap95"])
+            self.assertIn("穴馬1〜3頭の好走率", markdown(report))
             corrupted = json.loads(saved)
             corrupted["modelInput"]["rows"][0][0] += 1
             corrupted["recordFingerprint"] = fingerprint({
@@ -199,6 +205,31 @@ class LongshotV2RuntimeTest(unittest.TestCase):
         empty = calibration_summary([])
         self.assertIsNone(empty["observedRatePct"])
         self.assertIsNone(empty["brierScore"])
+
+    def test_shortlist_cohort_ties_and_multiple_hits(self):
+        rows = [{"raceID": "R", "raceDate": DAY, "number": n, "outcome": y,
+                 "probability": p} for n, y, p in [(3, 1, .2), (1, 0, .2), (2, 1, .1)]]
+        samples = {"candidate": rows, "market": rows, "formalAI": rows}
+        out = shortlist_summary(samples)["byCount"]
+        self.assertEqual(out["1"]["methods"]["candidate"]["racesHit"], 0)
+        self.assertEqual(out["2"]["methods"]["candidate"]["racesHit"], 1)
+        self.assertEqual(out["3"]["methods"]["candidate"]["racesWithTwoOrMoreHits"], 1)
+        self.assertIsNone(shortlist_summary({})["byCount"]["1"]["methods"]["market"]["raceHitRatePct"])
+        with self.assertRaisesRegex(ValueError, "horse cohorts"):
+            shortlist_summary({**samples, "market": rows[:2]})
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            shortlist_summary({**samples, "market": rows + rows[:1]})
+
+    def test_day_cluster_equal_race_weight_and_threshold(self):
+        self.assertIsNone(day_cluster_interval({"a": [1], "b": [0, 0, 0]})["bootstrap95"])
+        self.assertEqual(day_cluster_interval({"a": [1], "b": [0, 0, 0]})["meanDelta"], .25)
+        days = {str(i): [.25, .25] for i in range(20)}
+        self.assertEqual(day_cluster_interval(days)["bootstrap95"], [.25, .25])
+        self.assertEqual(day_cluster_interval(days), day_cluster_interval(dict(reversed(list(days.items())))))
+        self.assertIsNone(day_cluster_interval({})["meanDelta"])
+        result = daily_brier_intervals({"a": {"candidate": [.1], "market": [.2], "formalAI": [.1]}})
+        self.assertAlmostEqual(result["market"]["meanDelta"], -.1)
+        self.assertEqual(result["formalAI"]["meanDelta"], 0.)
 
     def test_live_publication_passes_the_original_history_to_capture(self):
         import live_monitor_topk_publish as publisher
