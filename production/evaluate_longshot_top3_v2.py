@@ -5,6 +5,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 import json
 import math
+import random
 from pathlib import Path
 
 import formal_portfolio_capture as capture
@@ -124,6 +125,88 @@ def aligned_candidates(race, record) -> list[dict]:
     if record["selectedHorseNumber"] != top_number(candidates, METHODS["candidate"]):
         raise ValueError("frozen longshot pick differs from model scores")
     return candidates
+
+
+def day_cluster_interval(daily, minimum_dates=20):
+    """Paired date resampling, retaining the equal-race estimand."""
+    if not daily:
+        return {"races": 0, "raceDates": 0, "meanDelta": None, "bootstrap95": None}
+    days = sorted(daily)
+    sums = [math.fsum(daily[day]) for day in days]
+    counts = [len(daily[day]) for day in days]
+    total = sum(counts)
+    if not total or any(n == 0 for n in counts):
+        raise ValueError("empty date cluster")
+    interval = None
+    if len(days) >= minimum_dates:
+        rng = random.Random(20261127)
+        draws = []
+        for _ in range(2000):
+            indexes = rng.choices(range(len(days)), k=len(days))
+            draws.append(math.fsum(sums[i] for i in indexes) / sum(counts[i] for i in indexes))
+        draws.sort()
+        interval = [draws[49], draws[1949]]
+    return {"races": total, "raceDates": len(days),
+            "meanDelta": math.fsum(sums) / total, "bootstrap95": interval}
+
+
+def shortlist_summary(samples):
+    """Same immutable candidate cohort, fixed k, no selection by outcomes."""
+    groups = {}
+    for method in METHODS:
+        by_race = defaultdict(dict)
+        for row in samples.get(method, []):
+            key = (row["raceDate"], row["raceID"])
+            number = row["number"]
+            if number in by_race[key]:
+                raise ValueError("duplicate shortlist runner")
+            by_race[key][number] = row
+        groups[method] = by_race
+    keys = sorted(groups["candidate"])
+    for method in METHODS:
+        if set(groups[method]) != set(keys):
+            raise ValueError("shortlist race cohorts differ")
+    ranked = {method: {} for method in METHODS}
+    for key in keys:
+        base = {n: row["outcome"] for n, row in groups["candidate"][key].items()}
+        for method in METHODS:
+            rows = groups[method][key]
+            if {n: row["outcome"] for n, row in rows.items()} != base:
+                raise ValueError("shortlist horse cohorts or outcomes differ")
+            ranked[method][key] = sorted(rows.values(),
+                key=lambda row: (-row["probability"], row["number"]))
+    result = {"races": len(keys), "raceDates": len({k[0] for k in keys}),
+              "fixedCandidateCounts": [1, 2, 3], "byCount": {}}
+    for k in (1, 2, 3):
+        methods = {}
+        outcomes = {}
+        for method in METHODS:
+            counts = [sum(row["outcome"] for row in ranked[method][key][:k]) for key in keys]
+            outcomes[method] = counts
+            n = len(keys)
+            methods[method] = {"selectedHorses": sum(min(k, len(ranked[method][key])) for key in keys),
+                               "racesWithAtLeastKCandidates": sum(len(ranked[method][key]) >= k for key in keys),
+                               "podiumHorses": sum(counts), "racesHit": sum(h > 0 for h in counts),
+                               "raceHitRatePct": 100*sum(h > 0 for h in counts)/n if n else None,
+                               "racesWithTwoOrMoreHits": sum(h >= 2 for h in counts)}
+        comparisons = {}
+        for method in ("market", "formalAI"):
+            daily = defaultdict(list)
+            for key, a, b in zip(keys, outcomes["candidate"], outcomes[method], strict=True):
+                daily[key[0]].append(int(a > 0) - int(b > 0))
+            comparisons[method] = day_cluster_interval(daily)
+        result["byCount"][str(k)] = {"methods": methods,
+                                   "pairedCandidateHitRateDelta": comparisons}
+    return result
+
+
+def daily_brier_intervals(daily_errors):
+    out = {}
+    for method in ("market", "formalAI"):
+        daily = {day: [a-b for a, b in zip(values["candidate"], values[method], strict=True)]
+                 for day, values in daily_errors.items()}
+        out[method] = day_cluster_interval(daily)
+    return out
 
 
 def evaluate(root, audit) -> dict:
@@ -252,6 +335,8 @@ def evaluate(root, audit) -> dict:
                   for method, values in methods.items()}
             for day, methods in sorted(fresh_daily_errors.items())
         },
+        "shortlistComparison": shortlist_summary(fresh_samples),
+        "pairedCandidateBrierDifferenceByDate": daily_brier_intervals(fresh_daily_errors),
         "promotionApproved": False,
         "limitations": [
             "Requires frozen source update time verified within 30 minutes at publication.",
@@ -298,6 +383,8 @@ def evaluate(root, audit) -> dict:
                   for method, values in methods.items()}
             for day, methods in sorted(daily_errors.items())
         },
+        "shortlistComparison": shortlist_summary(samples),
+        "pairedCandidateBrierDifferenceByDate": daily_brier_intervals(daily_errors),
         "rejectedExamples": rejected,
     }
 
@@ -319,8 +406,6 @@ def markdown(report) -> str:
         f"- 元時刻の整合性が不正な保存レース {report['freshOddsVerified30m']['invalidProvenanceCaptures']}",
         f"- 鮮度検証済み・結果照合済み {report['freshOddsVerified30m']['matchedRaces']} レース",
         "",
-        "| 選び方 | 3着以内の回数 | 3着内率 | Brierスコア |",
-        "|---|---:|---:|---:|",
         "| 選び方 | 3着以内の回数 | 3着内率 | 確率誤差（Brier） |",
         "|---|---:|---:|---:|",
     ]
@@ -331,13 +416,30 @@ def markdown(report) -> str:
         else:
             lines.append(f"| {labels[method]} | {result['top3Hits']} | "
                          f"{result['top3RatePct']:.2f}% | {result['brierEqualRace']:.6f} |")
-    lines += ["", "## 従来の全保存レース比較（鮮度未確認を含む）", ""]
+    lines += ["", "## 従来の全保存レース比較（鮮度未確認を含む）", "",
+              "| 選び方 | 3着以内の回数 | 3着内率 | 確率誤差（Brier） |",
+              "|---|---:|---:|---:|"]
     for method, result in report["topPickComparison"].items():
         if result["top3RatePct"] is None:
             lines.append(f"| {labels[method]} | — | — | — |")
         else:
             lines.append(f"| {labels[method]} | {result['top3Hits']} | "
                          f"{result['top3RatePct']:.2f}% | {result['brierEqualRace']:.6f} |")
+    for title, cohort in (("鮮度検証済み", report["freshOddsVerified30m"]),
+                          ("全保存（鮮度未確認を含む）", report)):
+        lines += ["", f"## 穴馬1〜3頭の好走率：{title}", "",
+                  "同じレースで上位k頭（不足時は全候補）を比較。馬券の的中率とは異なります。",
+                  "開催日単位の95%区間は20日未満では表示しません。", "",
+                  "| 頭数 | 方式 | 対象レース | 好走あり | 好走率 | 2頭以上好走 |",
+                  "|---|---|---:|---:|---:|---:|"]
+        shortlist = cohort["shortlistComparison"]
+        for k, comparison in shortlist["byCount"].items():
+            for method, row in comparison["methods"].items():
+                rate = row["raceHitRatePct"]
+                label = f"{rate:.2f}%" if rate is not None else "—"
+                lines.append(f"| {k} | {labels[method]} | {shortlist['races']} | "
+                             f"{row['racesHit']} | {label} | {row['racesWithTwoOrMoreHits']} |")
+        lines += ["", "日付単位の対応ありBrier差・好走率差の信頼区間はJSONに記録します。"]
     lines += ["", "## 予測確率と実際の3着内率", "",
               "対象の穴馬全頭を同じレースで比較。各方式が選んだ1頭の集計もJSONに保存します。",
               f"照合できた開催日数 {report['matchedRaceDates']} 日。", "",
