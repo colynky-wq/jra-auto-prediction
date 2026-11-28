@@ -19,6 +19,8 @@ on:
       - 'production/test_win_odds_freshness.py'
       - 'production/market_shrink_shadow.py'
       - 'production/no_current_odds_shadow.py'
+      - 'production/no_current_odds_independent.py'
+      - 'production/test_no_current_odds_independent.py'
       - 'production/market_anchor_shadow.py'
       - 'production/longshot_top3_shadow.py'
       - 'production/test_longshot_top3_shadow.py'
@@ -186,6 +188,7 @@ jobs:
           python production/test_market_shrink_shadow.py -v
           python -m py_compile production/no_current_odds_shadow.py production/evaluate_no_current_odds_shadow.py production/test_no_current_odds_shadow.py
           python production/test_no_current_odds_shadow.py -v
+          python production/test_no_current_odds_independent.py -v
           python -m py_compile production/market_anchor_shadow.py production/test_market_anchor_shadow.py production/evaluate_market_anchor_forward.py production/test_evaluate_market_anchor_forward.py
           python production/test_market_anchor_shadow.py -v
           python -m py_compile production/longshot_top3_shadow.py production/test_longshot_top3_shadow.py production/evaluate_longshot_top3_forward.py production/test_evaluate_longshot_top3_forward.py
@@ -252,6 +255,8 @@ jobs:
           # First eligible race on the next official race day only.
           KEIBAAI_JRA_WIDE_PILOT_DATE: '20261128'
           KEIBAAI_CAPTURE_PRERACE: 'true'
+          # Research-only opt-in; absent variable leaves extra capture disabled.
+          KEIBAAI_CAPTURE_ODDS_INDEPENDENT_SHADOW: ${{ vars.KEIBAAI_CAPTURE_ODDS_INDEPENDENT_SHADOW || '0' }}
           KEIBAAI_REFRESH_SIGNALS: 'true'
           KEIBAAI_OUTBOX: ${{ runner.temp }}/keibaai-live-outbox
         shell: bash
