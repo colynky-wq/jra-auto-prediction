@@ -146,15 +146,47 @@ jobs:
         run: |
           git config user.name 'KeibaAI GitHub Actions'
           git config user.email 'keibaai@users.noreply.github.com'
-          git add research/laps
+          set -euo pipefail
+          # Preserve collected source data first. Generated views are rebuilt
+          # against the latest remote tree, never rebased over a live board.
+          git add research/laps -- ':!research/laps/PaceBaselines2024.json'
           if [ -d reports/race_laps ]; then git add reports/race_laps; fi
-          if [ -f reports/PaceBaselineValidation.json ]; then git add reports/PaceBaselineValidation.json; fi
-          if [ -f reports/PaceProspectiveValidation.json ]; then git add reports/PaceProspectiveValidation.json; fi
-          if [ -f PaceRecordingStatus.json ]; then git add PaceRecordingStatus.json reports/PaceRecordingStatus.md; fi
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Update independent official race lap research data'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update independent official race lap source data'
+            # Discard only generated views in this disposable runner checkout;
+            # the pre-publication artifact already retains their original bytes.
+            git restore --worktree --source=HEAD -- research/laps/PaceBaselines2024.json reports/PaceBaselineValidation.json reports/PaceProspectiveValidation.json PaceRecordingStatus.json reports/PaceRecordingStatus.md
+            published=false
+            for attempt in 1 2 3 4 5; do
+              git fetch origin main
+              if ! git rebase origin/main; then
+                git rebase --abort
+                echo '::error::Conflicting collected source data; original artifact retained.'
+                exit 1
+              fi
+              if git push origin HEAD:main; then published=true; break; fi
+              sleep "$attempt"
+            done
+            if [ "$published" != true ]; then exit 1; fi
+          fi
+
+          # Use a non-force push from an exact remote base. If the live writer
+          # advances main, discard only this attempt's derived commit and
+          # rebuild all derived reports against the new history and journals.
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            python production/research_pace_baselines.py
+            python production/evaluate_prospective_pace.py
+            python production/build_pace_recording_status.py
+            git add research/laps/PaceBaselines2024.json reports/PaceBaselineValidation.json reports/PaceProspectiveValidation.json PaceRecordingStatus.json reports/PaceRecordingStatus.md
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m 'Refresh race lap research views from current main'
+            if git push origin HEAD:main; then exit 0; fi
+            sleep "$attempt"
+          done
+          echo '::error::Derived views could not be published without a concurrent update; source data is preserved.'
+          exit 1
       - name: Surface collection failures
         if: steps.collect.outcome == 'failure' || steps.backfill.outcome == 'failure' || steps.prospective.outcome == 'failure' || steps.recording_status.outcome == 'failure'
         run: exit 1
