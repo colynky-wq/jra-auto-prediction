@@ -15,7 +15,9 @@ import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
 import live_monitor_dry_run as base
-from market_shrink_shadow import JST, fingerprint, _write_first
+from market_shrink_shadow import JST, fingerprint
+from jra_entry_source import JRAEntryAccessRestricted
+from all_bet_forward import write_first
 from no_current_odds_shadow import verify_model
 from train_no_current_odds_challenger import FEATURES, probability_triplet
 
@@ -209,6 +211,15 @@ def record_best_effort(root, race, hist, target_date, *, clock=base.now_jst):
         entries, _, _ = base.fetch_jra_entry_table(rid, day.replace("-", ""), JST)
         value = build(race, entries, entries.attrs.get("allBetEntryEvidence"),
                       hist, target_date, meta, model, clock=clock)
-        return {"status": "prospectively_frozen", "path": str(_write_first(path, value))}
+        # Check the capture deadline again after the complete bytes are
+        # flushed, before atomically exposing the first research record.
+        saved = write_first(path, value, post - timedelta(minutes=8), clock)
+        if saved is None:
+            return {"status": "error_no_formal_impact", "reason": "independent T10 window passed during save"}
+        return {"status": "prospectively_frozen", "path": str(saved)}
+    except JRAEntryAccessRestricted:
+        # Propagate an explicit refusal to the live worker's terminal
+        # restriction handler. Never treat it as a retryable research error.
+        raise
     except Exception as exc:
         return {"status": "error_no_formal_impact", "reason": str(exc)[:200]}

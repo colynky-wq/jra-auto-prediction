@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 
 from horse_identity_runtime import assign_horse_keys
+from jra_entry_source import JRAEntryAccessRestricted
+from live_capture_policy import FORMAL_TIMING_MARKER
 from win_odds_freshness import validate_win_odds_freshness
 from win_odds_retry import WinOddsFetchError, retryable_win_odds_failure
 
@@ -93,12 +95,16 @@ def predict_live_race_topk(
                 and os.environ.get("KEIBAAI_ODDS_SOURCE", "netkeiba_api") == "netkeiba_api"
                 and os.environ.get("KEIBAAI_CAPTURE_ODDS_INDEPENDENT_SHADOW") == "1"
                 and os.environ.get("KEIBAAI_PUBLISH_RACEDATA", "").lower() in {"1", "true"}
-                and base.MODE == "live" and key not in _INDEPENDENT_ATTEMPTED):
+                and base.MODE == "live"
+                and race.get("_prediction_timing") == FORMAL_TIMING_MARKER
+                and key not in _INDEPENDENT_ATTEMPTED):
             _INDEPENDENT_ATTEMPTED.add(key)
             try:
                 from no_current_odds_independent import record_best_effort
                 status = record_best_effort(HERE.parent, race, hist, target_date)
                 print("NO_CURRENT_ODDS_INDEPENDENT_STATUS", rid, status)
+            except JRAEntryAccessRestricted:
+                raise
             except Exception as research_error:
                 print("NO_CURRENT_ODDS_INDEPENDENT_ERROR", rid, repr(research_error))
         raise
