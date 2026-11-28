@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'production/jra_entry_source.py'
+      - 'production/jra_win_odds_source.py'
+      - 'production/test_jra_win_odds_source.py'
       - 'production/early_prediction_runtime.py'
       - 'production/live_monitor_topk.py'
       - 'production/test_jra_entry_name_handling.py'
@@ -12,6 +14,8 @@ on:
     branches: [main, test/jra-name-regression-20261023]
     paths:
       - 'production/jra_entry_source.py'
+      - 'production/jra_win_odds_source.py'
+      - 'production/test_jra_win_odds_source.py'
       - 'production/early_prediction_runtime.py'
       - 'production/live_monitor_topk.py'
       - 'production/test_jra_entry_name_handling.py'
@@ -43,4 +47,6 @@ jobs:
       - name: Verify local/NAR name handling
         env:
           PYTHONPATH: production
-        run: python production/test_jra_entry_name_handling.py
+        run: |
+          python production/test_jra_entry_name_handling.py
+          python production/test_jra_win_odds_source.py
