@@ -1,10 +1,17 @@
 name: KeibaAI Early Prediction
 
 on:
+  pull_request:
+    paths:
+      - 'production/early_publish_guard.py'
+      - 'production/test_early_publish_guard.py'
+      - '.github/workflows/keibaai-early-prediction.yml'
   push:
     branches: [main]
     paths:
       - 'production/early_prediction_runtime.py'
+      - 'production/early_publish_guard.py'
+      - 'production/test_early_publish_guard.py'
       - 'production/publish_early_racedata.py'
       - 'production/validate_early_prediction.py'
       - 'production/all_bet_recommendation_shadow.py'
@@ -24,6 +31,8 @@ on:
     - cron: '15 10 * * *'  # 19:15 JST
     - cron: '35 10 * * *'  # 19:35 JST retry
     - cron: '55 10 * * *'  # 19:55 JST final evening retry
+    - cron: '40 20 * * 5,6,0'  # 05:40 JST Sat/Sun/Mon backup
+    - cron: '40 21 * * 5,6,0'  # 06:40 JST Sat/Sun/Mon backup
     - cron: '30 22 * * *'  # 07:30 JST morning refresh
   workflow_dispatch:
     inputs:
@@ -44,7 +53,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  guard-tests:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - run: python3 production/test_early_publish_guard.py
   early:
+    if: github.event_name != 'pull_request'
+    needs: guard-tests
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -208,6 +226,18 @@ jobs:
             echo "Atomic publish attempt ${attempt}/3"
             git fetch origin main
             git reset --hard origin/main
+            # Recheck the latest main on EVERY retry, before copying any generated feed.
+            # A delayed early job must not erase live captures or a newer meeting.
+            if python production/early_publish_guard.py "$publish_dir/RaceData.json" RaceData.json "$publish_dir/EarlyPredictionData.json" "$stage"; then
+              :
+            else
+              status=$?
+              if [ "$status" -eq 3 ]; then
+                echo 'Early publish safely skipped; latest main or race deadline takes precedence.'
+                exit 0
+              fi
+              exit "$status"
+            fi
             mkdir -p "reports/${date8}"
             cp "$publish_dir/EarlyPredictionData.json" EarlyPredictionData.json
             cp "$publish_dir/RaceData.json" RaceData.json
@@ -219,12 +249,12 @@ jobs:
             cp "$publish_dir/reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AllBetRecommendationData.${stage}.json"
             cp "$publish_dir/reports/${date8}/AppResearchData.json" "reports/${date8}/AppResearchData.json"
 
-            if git diff --quiet -- EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AppResearchData.json"; then
+            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AppResearchData.json"
+            if git diff --cached --quiet; then
               echo 'No early prediction or app research change after syncing latest main.'
               exit 0
             fi
 
-            git add EarlyPredictionData.json RaceData.json AllBetRecommendationData.json AppResearchData.json "reports/${date8}/EarlyPredictionData.json" "reports/${date8}/RaceData.early.json" "reports/${date8}/AllBetRecommendationData.json" "reports/${date8}/AllBetRecommendationData.${stage}.json" "reports/${date8}/AppResearchData.json"
             git commit -m "Update early prediction ${date8} ${stage}"
 
             if git push origin HEAD:main; then
