@@ -1,6 +1,7 @@
 """Offline tests for the independent T10 research runtime."""
 from test_no_current_odds_shadow import fixture, now, FakeBooster
-from datetime import datetime
+from datetime import datetime, timedelta
+from tempfile import TemporaryDirectory
 from pathlib import Path
 from unittest.mock import patch
 import unittest
@@ -52,6 +53,67 @@ class IndependentCaptureTests(unittest.TestCase):
         self.assertNotIn("市場ロジット", actual.columns)
         with self.assertRaisesRegex(ValueError, "history must strictly precede"):
             feature_matrix(race, entries, cur, day)
+
+    def test_restricted_entry_propagates_and_no_record_is_written(self):
+        import pandas as pd
+        from jra_entry_source import JRAEntryAccessRestricted
+        from no_current_odds_independent import record_best_effort
+        race, _, meta, _ = fixture()
+        day = pd.Timestamp(race["raceDate"])
+        r = {"race_id": race["raceID"], "start_time": race["startTime"]}
+        with TemporaryDirectory() as tmp, \
+                patch("no_current_odds_independent.verify_model", return_value=(meta, FakeBooster())), \
+                patch("no_current_odds_independent.base.fetch_jra_entry_table",
+                      side_effect=JRAEntryAccessRestricted("denied")) as fetch:
+            with self.assertRaises(JRAEntryAccessRestricted):
+                record_best_effort(Path(tmp), r, None, day, clock=now)
+            self.assertEqual(fetch.call_count, 1)
+            self.assertFalse(list(Path(tmp).rglob("*.json")))
+
+    def test_deadline_rechecked_before_record_becomes_visible(self):
+        import pandas as pd
+        from no_current_odds_independent import record_best_effort
+        race, _, meta, _ = fixture()
+        day = pd.Timestamp(race["raceDate"])
+        r = {"race_id": race["raceID"], "start_time": race["startTime"]}
+        entries = pd.DataFrame()
+        late = datetime.fromisoformat("2026-11-23T10:52:01+09:00")
+        with TemporaryDirectory() as tmp, \
+                patch("no_current_odds_independent.verify_model", return_value=(meta, FakeBooster())), \
+                patch("no_current_odds_independent.base.fetch_jra_entry_table", return_value=(entries, None, None)), \
+                patch("no_current_odds_independent.build", return_value={"researchOnly": True}):
+            clock = iter([now(), late]).__next__
+            result = record_best_effort(Path(tmp), r, None, day, clock=clock)
+            self.assertEqual(result["status"], "error_no_formal_impact")
+            self.assertIn("during save", result["reason"])
+            self.assertFalse(list(Path(tmp).rglob("*.json")))
+
+    def test_live_research_refusal_stops_worker_and_late_recovery_never_fetches(self):
+        import pandas as pd
+        import live_monitor_topk as topk
+        from jra_entry_source import JRAEntryAccessRestricted
+        from win_odds_retry import WinOddsFetchError
+        race, _, _, _ = fixture()
+        day = pd.Timestamp(race["raceDate"])
+        r = {"race_id": race["raceID"], "start_time": race["startTime"],
+             "surface": "芝", "distance": 1600, "_prediction_timing": "live_10min"}
+        with patch.dict("os.environ", {"KEIBAAI_ODDS_SOURCE": "netkeiba_api",
+                    "KEIBAAI_CAPTURE_ODDS_INDEPENDENT_SHADOW": "1",
+                    "KEIBAAI_PUBLISH_RACEDATA": "true"}), \
+                patch.object(topk.base, "MODE", "live"), \
+                patch.object(topk.base, "TARGET_DATE8", "20261123"), \
+                patch.object(topk, "_INDEPENDENT_ATTEMPTED", set()), \
+                patch.object(topk.base, "fetch_meta", side_effect=lambda r: r), \
+                patch.object(topk.base, "fetch_win_odds", side_effect=WinOddsFetchError("stale")), \
+                patch("no_current_odds_independent.record_best_effort",
+                      side_effect=JRAEntryAccessRestricted("denied")) as attempt:
+            with self.assertRaises(JRAEntryAccessRestricted):
+                topk.predict_live_race_topk(r, None, day)
+            attempt.assert_called_once()
+            topk._INDEPENDENT_ATTEMPTED.clear()
+            with self.assertRaises(WinOddsFetchError):
+                topk.predict_live_race_topk(dict(r, _prediction_timing="live_late_recovery"), None, day)
+            attempt.assert_called_once()
 
     def test_independent_record_separate_and_rejects_late(self):
         import pandas as pd
