@@ -49,3 +49,10 @@ for race in races:
         assert normalize(race["raceDate"]), race
 
 print("race date display regression checks passed")
+
+# Stale latest data must be called out even when the date filter is collapsed.
+assert 'store.selectedSnapshotID == "latest" && selectedDate8 < Self.todayJST8' in source
+assert 'accessibilityIdentifier("stale-prediction-warning")' in source
+assert source.count('if latestPredictionIsStale {') >= 2
+assert 'latestPredictionIsStale ? "過去の全レース" : "今日の全レース"' in source
+assert 'latestPredictionIsStale ? "過去の開催データ" : "今日の結論"' in source
