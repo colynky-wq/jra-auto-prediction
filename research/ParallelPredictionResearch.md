@@ -1,15 +1,15 @@
 # KeibaAI Parallel Prediction Research (read-only)
 
 Status: quality_limited_research_only
-Source strict audit: 2026-11-23T16:22:14+09:00
+Source strict audit: 2026-11-28T14:56:33+09:00
 Formal AI / betting unchanged; no automatic candidate promotion.
 
 ## Track 1: Collection and verification
 - Verified aligned races: 150
 - Independently matched races: 146
 - Remaining matched races for the 300-R research gate: 154
-- Formal capture misses: 25
-- Outstanding quality issues: 30
+- Formal capture misses: 36
+- Outstanding quality issues: 42
 - Pending selected settlements: 3
 
 ## Track 2: Fixed historical probability diagnostics

@@ -1,13 +1,13 @@
 # No-current-odds prospective validation (research only)
 
 Status: insufficient_prospective_evidence
-Source strict audit: 2026-11-23T16:22:14+09:00
+Source strict audit: 2026-11-28T14:56:33+09:00
 First-frozen T-10 shadows: 22
 Independently matched: 22
 Eligible formal captures since 2026-11-23: 22
 Missing candidate shadows: 0
 Capture coverage: 100.0%
-Quality issues in strict audit: 30
+Quality issues in strict audit: 42
 
 | Event | Races | Formal AI Brier | Market T10 Brier | Odds-free Brier | Challenger - formal AI | Paired race bootstrap 95% |
 |---|---:|---:|---:|---:|---:|---|

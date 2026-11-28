@@ -1,7 +1,7 @@
 # Frozen T10 retrospective benchmark: historical 2024 market calibration
 
 Status: retrospective_same_timestamp_not_prospective_promotion
-Source aligned audit: 2026-11-23T16:22:14+09:00
+Source aligned audit: 2026-11-28T14:56:33+09:00
 2024-selected market power: 1.05
 Matched formal win races: 146
 

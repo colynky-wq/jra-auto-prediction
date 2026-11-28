@@ -2,7 +2,7 @@
 
 Status: insufficient_first_frozen_evidence
 Model: longshot-top3-market-residual-v1-20261123
-Verified audit: 2026-11-23T16:22:14+09:00
+Verified audit: 2026-11-28T14:56:33+09:00
 Eligible formal races: 22
 First-frozen specialist captures: 22
 Capture coverage: 100.0%

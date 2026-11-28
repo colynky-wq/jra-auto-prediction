@@ -1,7 +1,7 @@
 # Market-anchored prospective first-T10 research
 
 Status: insufficient_future_evidence
-Audit: 2026-11-23T16:22:14+09:00
+Audit: 2026-11-28T14:56:33+09:00
 First-frozen market snapshots: 22
 Matched market-calibrated: 22
 Matched history-augmented: 22
