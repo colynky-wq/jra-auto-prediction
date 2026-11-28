@@ -15,7 +15,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from jra_entry_source import ACCESS_D, JRA_HOST, HEADERS, discover_entry_url
+from jra_entry_source import ACCESS_D, JRA_HOST, HEADERS, discover_entry_url, decode_jra_entry_html
 from win_odds_freshness import JST, validate_win_odds_freshness
 from win_odds_retry import WinOddsFetchError
 
@@ -179,8 +179,13 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
         except requests.exceptions.RequestException as exc:
             raise JRAWinOddsError("jra_entry_transport_failure") from exc
         _require_http_ok(response, "entry")
-        raw_entry = response.content.decode(
-            response.apparent_encoding or "shift_jis", errors="replace")
+        try:
+            raw_entry = decode_jra_entry_html(response.content)
+        except UnicodeDecodeError as exc:
+            raise JRAWinOddsError("jra_entry_html_decode_failed") from exc
+        if any(message in raw_entry for message in (
+                "アクセスが集中", "ご指定のページに接続できません")):
+            raise JRAAccessRestricted("jra_entry_access_restricted_page")
         token = discover_win_odds_cname(raw_entry)
         if navigation_cache is not None:
             navigation_cache[cache_key] = (entry_url, token)
@@ -193,8 +198,10 @@ def fetch_jra_win_odds(race_id: str, date8: str, *,
         raise JRAWinOddsError("jra_odds_transport_failure") from exc
     received = clock()
     _require_http_ok(response, "odds")
-    html = response.content.decode(response.apparent_encoding or "shift_jis",
-                                   errors="replace")
+    try:
+        html = decode_jra_entry_html(response.content)
+    except UnicodeDecodeError as exc:
+        raise JRAWinOddsError("jra_odds_html_decode_failed") from exc
     if any(message in html for message in (
             "アクセスが集中", "ご指定のページに接続できません")):
         raise JRAAccessRestricted("jra_odds_access_restricted_page")
