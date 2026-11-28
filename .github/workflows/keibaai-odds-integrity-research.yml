@@ -1,0 +1,337 @@
+name: KeibaAI Odds Integrity Research Audit
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'production/odds_integrity_audit.py'
+      - 'production/final_odds_drift_audit.py'
+      - 'production/market_logit_feature_audit.py'
+      - 'production/team_nave_tan_history_probe.py'
+      - 'production/zero_cost_odds_policy.py'
+      - 'tests/test_zero_cost_odds_policy.py'
+      - 'production/zero_cost_wide_stress_audit.py'
+      - 'production/wide_reference_calibration_audit.py'
+      - 'production/wide_full_field_calibration_audit.py'
+      - 'production/wide_reference_selector_replay.py'
+      - 'production/wide_threshold_gate_audit.py'
+      - 'tests/test_wide_threshold_gate_audit.py'
+      - 'docs/wide-reference-selection-source-vs-probability-audit-20261119.md'
+      - 'tests/test_wide_reference_selector_replay.py'
+      - 'tests/test_wide_full_field_calibration_audit.py'
+      - 'docs/wide-full-field-calibration-selection-audit-20261118.md'
+      - 'tests/test_wide_reference_calibration_audit.py'
+      - 'docs/wide-reference-calibration-race-clusters-20261118.md'
+      - 'tests/test_zero_cost_wide_stress_audit.py'
+      - 'tests/test_team_nave_tan_history_probe.py'
+      - 'research/independent_odds_provider_selection.json'
+      - 'docs/independent-odds-provider-decision-20261118.md'
+      - 'tests/test_market_logit_feature_audit.py'
+      - 'ops/mac_independent_odds_launchd.py'
+      - 'tests/test_mac_independent_odds_launchd.py'
+      - 'tests/test_final_odds_drift_audit.py'
+      - 'tests/test_odds_integrity_audit.py'
+      - '.github/workflows/keibaai-odds-integrity-research.yml'
+      - 'production/independent_odds_*.py'
+      - 'tests/test_independent_odds_*.py'
+      - 'docs/independent-odds-*.md'
+      - 'AlignedPortfolioReview.json'
+
+permissions:
+  contents: read
+
+jobs:
+  research-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout immutable inputs
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Unit tests (no network required)
+        run: python -m unittest discover -s tests -p 'test_odds_integrity_audit.py' -v
+
+      - name: Independent-source comparison regression tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_audit.py' -v
+
+      - name: Licensed export folder bridge tests (offline only)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_dropwatch.py' -v
+
+      - name: Licensed CSV adapter regression tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_csv_adapter.py' -v
+
+      - name: Mac authorized CSV bridge integration tests (no network)
+        run: python -m unittest discover -s tests -p 'test_independent_odds_bridge.py' -v
+
+      - name: Research CSV-to-receipt bridge empty-folder dry run
+        run: python production/independent_odds_bridge.py --root . > independent-bridge-dry-run.json
+
+      - name: Mac LaunchAgent opt-in generator regression tests
+        run: python -m unittest discover -s tests -p 'test_mac_independent_odds_launchd.py' -v
+
+      - name: Check Mac auto-setup preview does not install anything
+        run: python ops/mac_independent_odds_launchd.py --repo-root . > mac-odds-agent-preview.txt
+
+      - name: Offline independent-source comparison (missing data remain pending)
+        run: python production/independent_odds_audit.py --root . > independent-odds-audit.json
+
+      - name: Dry-run empty authorized export folder
+        run: python production/independent_odds_dropwatch.py --root . --source-dir /tmp/keibaai-licensed-odds-drop --accepted-dir /tmp/keibaai-accepted-odds > independent-dropwatch-audit.json
+
+      - name: Independent source comparison summary
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('independent-odds-audit.json', encoding='utf-8'))
+          print('independentObservationFiles:', data['observationFilesPresent'])
+          print('independentSourceQualityGate:', data['qualityGate'])
+          print('unobservedRaces:', data['unobservedRaces'])
+          PY
+
+      - name: Zero-fee counterfactual Wide quote robustness tests
+        run: python -m unittest discover -s tests -p 'test_zero_cost_wide_stress_audit.py' -v
+
+      - name: Research-only hypothetical quote-haircut sensitivity
+        run: python production/zero_cost_wide_stress_audit.py --root . > zero-cost-wide-stress.json
+
+      - name: Summarize hypothetical Wide quote sensitivity
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('zero-cost-wide-stress.json',encoding='utf-8'))
+          print('settledWideCandidates:',x['referenceCandidatesSettled'])
+          print('observedWideHits:',x['allReferenceObservedHits'])
+          print('sumPredictedWideHits:',x['allReferencePredictedHits'])
+          print('actualMarketPricesVerified:',x['marketPriceAtT10Verified'])
+          print('wideCalibrationByRaceDate:',x['byRaceDateCalibrationDiagnostic'])
+          for scenario in x['scenarios']:
+              at_least_one=next(t['candidateCount'] for t in scenario['thresholds']
+                  if t['frozenReferenceEVThreshold']==1.0)
+              print(f"hypotheticalHaircut{scenario['assumedQuoteHaircutPct']}pct:",
+                    at_least_one)
+          PY
+
+      - name: Race-cluster-aware Wide calibration unit tests (offline)
+        run: python -m unittest discover -s tests -p 'test_wide_reference_calibration_audit.py' -v
+
+      - name: Read-only Wide event calibration with race-block resampling
+        run: python production/wide_reference_calibration_audit.py --root . > wide-reference-calibration.json
+
+      - name: Summarize Wide calibration, race-block range and leave-one-date-out
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-reference-calibration.json',encoding='utf-8'))
+          print('referenceWideCandidates:',r['allCandidateStatistics']['candidateCount'])
+          print('referenceRaces:',r['settledReferenceRaceCount'])
+          print('referenceDays:',r['settledReferenceDayCount'])
+          print('sumFrozenPredictedHits:',r['allCandidateStatistics']['predictedHitCount'])
+          print('observedWideHits:',r['allCandidateStatistics']['observedHitCount'])
+          print('observedToPredictedHitRatio:',r['allCandidateStatistics']['observedToPredictedHitRatio'])
+          print('raceBlockDescriptiveHitRateGapPp:',r['raceClusterBootstrap']['hitRateGapPpDescriptivePercentiles'])
+          print('raceBlockDescriptiveRatio:',r['raceClusterBootstrap']['observedToPredictedHitRatioDescriptivePercentiles'])
+          print('dayBlockDescriptiveRatio:',r['dayBlockBootstrap']['observedToPredictedHitRatioDescriptivePercentiles'])
+          print('dayBlockDescriptiveGapPp:',r['dayBlockBootstrap']['hitRateGapPpDescriptivePercentiles'])
+          print('fixedProbabilityBins:',r['fixedProbabilityBins'])
+          print('leaveOneDayOut:',r['leaveOneDayOut'])
+          print('forwardOnlyPriorDateDrift:',r['forwardOnlyPriorDateDriftDiagnostic'])
+          print('marketOddsFreshnessVerified:',r['marketOddsFreshnessVerified'])
+          PY
+
+      - name: Full-field frozen Wide probability conservation and scoring tests
+        run: python -m unittest discover -s tests -p 'test_wide_full_field_calibration_audit.py' -v
+
+      - name: Full-field frozen Wide calibration (all pair combinations, read-only)
+        run: python production/wide_full_field_calibration_audit.py --root . > wide-full-field-calibration.json
+
+      - name: Compare all-pair probability quality to selected reference candidate subset
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('wide-full-field-calibration.json').read_text())
+          print('allPairRacesAudited:',r.get('racesAudited'))
+          print('allPairRacesExcluded:',r.get('racesExcluded'))
+          print('allPairsCompared:',r.get('totalPairsCompared'))
+          print('wideAllPairExpectedHits:',r.get('fullFieldExpectedHits'))
+          print('wideAllPairObservedHits:',r.get('fullFieldObservedHits'))
+          print('expectedEqualsObservedIsTautology:',r.get('fullFieldExpectedHitTotalIsTautology'))
+          print('wideAllPairBrier:',r.get('modelBrier'))
+          print('wideUniformBrier:',r.get('uniformBrier'))
+          print('wideAllPairLogLoss:',r.get('modelLogLoss'))
+          print('wideUniformLogLoss:',r.get('uniformLogLoss'))
+          print('brierBetterThanUniformRaces:',r.get('racesBrierBetterThanUniform'))
+          print('probabilityBands:',r.get('fixedProbabilityBins'))
+          print('referenceVsShadow:',r.get('referenceVsFullField'))
+          matched=r.get('referenceVsFullField',{})
+          print('selectedReferenceExpectedHits:',matched.get('matchedReferenceExpectedHits'))
+          print('sameSelectedPairsShadowExpectedHits:',matched.get('matchedShadowExpectedHits'))
+          print('sameSelectedPairsObservedHits:',matched.get('matchedObservedHits'))
+          print('selectedReferenceBrier:',matched.get('referenceBrierSamePairs'))
+          print('sameSelectedPairsShadowBrier:',matched.get('shadowBrierSamePairs'))
+          selection=r.get('selectedReferenceVsOtherWidePairs',{})
+          print('selectedInFullMatrix:',selection.get('selected'))
+          print('notSelectedInFullMatrix:',selection.get('notSelected'))
+          print('selectionDifferenceByProbabilityBand:',selection.get('byProbabilityBand'))
+          print('missingReasons:',r.get('excludedReasons'))
+          PY
+
+      - name: Deterministic preregistered Wide reference selector replay tests
+        run: python -m unittest discover -s tests -p 'test_wide_reference_selector_replay.py' -v
+
+      - name: Replay frozen top-20 and full-rank Wide selector without changes
+        run: python production/wide_reference_selector_replay.py --root . > wide-reference-selector-replay.json
+
+      - name: Quantify selection gates and hidden qualifying pairs
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-reference-selector-replay.json',encoding='utf-8'))
+          for k in ('alignedRaces','racesReplayed','racesExcluded',
+                    'qualifyingPairsInFullSignal','qualifyingPairsOnDisplay',
+                    'qualifyingPairsHiddenBeyondTop20','racesWithHiddenQualifiedPairs',
+                    'racesWhereTop20ChangesReferences','savedSelectedReferences',
+                    'allFieldCounterfactualSelectedReferences','referenceSelectionIdentityVerified',
+                    'selectedCandidateSummary','qualifiedButNotSelectedSummary',
+                    'metadataAgeMinutesRange','resultSettlement'):
+              print(k+':',r[k])
+          assert r['referenceSelectionIdentityVerified']
+          PY
+
+      - name: Registered probability versus EV threshold-gate regression tests
+        run: python -m unittest discover -s tests -p 'test_wide_threshold_gate_audit.py' -v
+
+      - name: Compare all Wide pairs under registered probability and EV gates
+        run: python production/wide_threshold_gate_audit.py --root . > wide-threshold-gates.json
+
+      - name: Summarize threshold gate outcomes without optimizing cutoffs
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('wide-threshold-gates.json',encoding='utf-8'))
+          print('gateRacesAudited:',r['racesAudited'])
+          print('gateRacesExcluded:',r['racesExcluded'])
+          print('gateAllPairs:',r['allPairs'])
+          print('gateProbabilityAtLeastFive:',r['probabilityAtLeastFivePct'])
+          print('gateProbabilityBelowFive:',r['probabilityBelowFivePct'])
+          print('twoByTwoGateGroups:',r['twoByTwoGates'])
+          print('gateWithinProbabilityBands:',r['withinFixedProbabilityBands'])
+          print('gatePriceEVAcrossDates:',r['priceEVAcrossDates'])
+          print('gateByRaceDate:',r['byRaceDate'])
+          print('marketPriceFreshnessVerified:',r['sourcePriceFreshnessVerified'])
+          PY
+
+      - name: Test post-hoc frozen versus final odds drift (no lookahead)
+        run: python -m unittest discover -s tests -p 'test_final_odds_drift_audit.py' -v
+
+      - name: Measure historical win odds drift (never used in predictions)
+        run: python production/final_odds_drift_audit.py --root . > final-odds-drift.json
+
+      - name: Display final odds movement diagnostic
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('final-odds-drift.json', encoding='utf-8'))
+          print('winOddsMatchedRaces:', data['matchedRacesAudited'])
+          print('winOddsMatchedHorses:', data['totalHorsesCompared'])
+          print('winFavoriteChanged:', data['favoriteChangedRaces'])
+          print('medianAbsWinOddsMovePct:', data['medianAbsPctPriceMovement'])
+          print('winOddsMoved20Pct:', data['horsesMovedAtLeast20Pct'])
+          print('finalOddsUsedAsPreRace:', data['finalOddsUsedAsPreRace'])
+          PY
+
+      - name: Team-Nave documented TAN history offline parser tests
+        run: python -m unittest discover -s tests -p 'test_team_nave_tan_history_probe.py' -v
+
+      - name: Enforce zero-cost-only independent odds sourcing
+        run: |
+          python -m unittest discover -s tests -p 'test_zero_cost_odds_policy.py' -v
+          python production/zero_cost_odds_policy.py --config research/independent_odds_provider_selection.json > odds-zero-cost-policy.json
+          python - <<'PY'
+          import json
+          x=json.load(open('odds-zero-cost-policy.json',encoding='utf-8'))
+          assert x['policyPass'] is True
+          assert x['spendCapJPY'] == 0
+          assert x['independentFreshOddsVerified'] is False
+          print('zeroCostOnly:',x['policyPass'])
+          print('budgetCapJPY:',x['spendCapJPY'])
+          PY
+
+      - name: Inspect LightGBM's actual market-logit usage
+        run: |
+          python -m unittest discover -s tests -p 'test_market_logit_feature_audit.py' -v
+          python production/market_logit_feature_audit.py --model production/lightgbm_fixed_2025.txt > market-logit-feature-audit.json
+
+      - name: Verify audited model matches frozen live shadow hashes
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('market-logit-feature-audit.json').read_text())
+          files=[
+              'reports/20261107/ticket_shadow_v1/prediction/202605050101.json',
+              'reports/20261108/ticket_shadow_v1/prediction/202605050204.json',
+              'reports/20261115/ticket_shadow_v1/prediction/202603030407.json',
+          ]
+          for file in files:
+              observed=json.loads(Path(file).read_text())
+              expected=observed['models']['formalAWin']['sha256']
+              if expected!=report['modelSha256']:
+                  raise SystemExit('market model sha mismatch: '+file)
+          print('marketModelLiveShadowHashMatched:',len(files))
+          print('marketModelSha256:',report['modelSha256'])
+          PY
+
+      - name: Summarize market feature split statistics
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('market-logit-feature-audit.json', encoding='utf-8'))
+          print('marketLogitPresent:',x['marketLogitPresent'])
+          print('marketLogitSplitCount:',x['marketLogitSplitCount'])
+          print('marketLogitSplitSharePct:',x['marketLogitSplitSharePct'])
+          print('marketLogitGainSharePct:',x['marketLogitGainSharePct'])
+          PY
+
+      - name: Read-only odds provenance and reference-wide audit
+        run: python production/odds_integrity_audit.py --root . --strict-structure > odds-integrity-audit.json
+
+      - name: Show summary
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('odds-integrity-audit.json', encoding='utf-8'))
+          print('racesAudited:', data['racesAudited'])
+          print('sourceAgeMinutes:', data['sourceAgeMinutes'])
+          print('alertCounts:', data['alertCounts'])
+          print('researchOddsReliability:', data['researchOddsReliability'])
+          print('earlyVersusFormal:', data['earlyVersusFormal'])
+          print('favoritePairPriceOutliers:', data['favoritePairPriceOutliers'])
+          print('wideReferenceResearch:', data['wideReferenceResearch']['bins'])
+          PY
+
+      - name: Upload read-only research artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: keibaai-odds-integrity-research
+          path: |
+            odds-integrity-audit.json
+            independent-odds-audit.json
+            independent-dropwatch-audit.json
+            independent-bridge-dry-run.json
+            mac-odds-agent-preview.txt
+            final-odds-drift.json
+            market-logit-feature-audit.json
+            odds-zero-cost-policy.json
+            zero-cost-wide-stress.json
+            wide-reference-calibration.json
+            wide-full-field-calibration.json
+            wide-reference-selector-replay.json
+            wide-threshold-gates.json
+          if-no-files-found: ignore
