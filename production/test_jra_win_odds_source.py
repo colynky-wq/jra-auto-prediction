@@ -166,6 +166,26 @@ class JRAWinOddsSourceTests(unittest.TestCase):
         self.assertEqual(source["preflightFreshnessEvidence"]["freshnessStatus"],
                          "verified_within_30m")
 
+    def test_declared_cp932_over_wrong_apparent_encoding(self):
+        class Response:
+            status_code = 200
+            apparent_encoding = "Windows-1252"
+            def __init__(self, body):
+                self.content = ('<meta charset="Shift_JIS">' + body).encode("cp932")
+        class Session:
+            def __init__(self):
+                self.headers = {}
+            def get(self, *args, **kwargs):
+                return Response('<a onclick="doAction(\'/JRADB/accessO.html\',\'pw15oli00/6D\')">オッズ</a>')
+            def post(self, *args, **kwargs):
+                return Response(html())
+        with patch("jra_win_odds_source.discover_entry_url",
+                   return_value="https://www.jra.go.jp/JRADB/accessD.html?CNAME=observed"):
+            odds, source = fetch_jra_win_odds(RACE, DATE, session=Session(),
+                                              clock=lambda: RECEIVED)
+        self.assertEqual(len(odds), 3)
+        self.assertEqual(source["sourceDisplayLabel"], "10時20分現在オッズ")
+
     def test_navigation_discovery_stops_at_first_restricted_page(self):
         class Response:
             content = b"blocked"
