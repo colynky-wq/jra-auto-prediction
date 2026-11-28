@@ -25,7 +25,7 @@ HOLD = {'insufficient_style_history': '過去3走以上の脚質記録が足り�
 FAILURES = {'capture_failed': '発走前の出馬表を保存できませんでした。',
             'prediction_failed': '研究予測の作成または保存に失敗しました。',
             'monitor_failed': '自動監視の処理が失敗し、研究予測が残っていません。'}
-EVENT_STAGES = set(FAILURES) | {'monitor_missed', 'track_unavailable'}
+EVENT_STAGES = set(FAILURES) | {'monitor_missed', 'track_unavailable', 'monitor_retry'}
 READ_ERRORS = (KeyError, ValueError, TypeError, OSError, AttributeError, OverflowError)
 
 
@@ -111,9 +111,12 @@ def build(reports_root, lap_root, history, models_root, now):
             except READ_ERRORS:
                 issues.append('失敗記録の一部を読み取れません。')
         latest = max(events, key=lambda event: aware_time(event['atJST'])) if events else None
-        # An optional track warning is an attempt, not a recording outcome.
-        # Keep its timestamp and warning without hiding an earlier failure.
-        outcomes = [event for event in events if event['stage'] != 'track_unavailable']
+        # A retry is an observed attempt, not a completed or terminal outcome.
+        # Keep its timestamp and reason without hiding saved or failed evidence.
+        retries = [event for event in events if event['stage'] == 'monitor_retry']
+        latest_retry = max(retries, key=lambda event: aware_time(event['atJST'])) if retries else None
+        stale_retry = any(event.get('detail') == 'win_odds_source_stale_over_30m' for event in retries)
+        outcomes = [event for event in events if event['stage'] not in {'track_unavailable', 'monitor_retry'}]
         latest_outcome = max(outcomes, key=lambda event: aware_time(event['atJST'])) if outcomes else None
         state, reason = 'waiting', '発走前の記録を待っています。'
         result_state, result_label = 'no_prediction', '予測未保存'
@@ -157,6 +160,15 @@ def build(reports_root, lap_root, history, models_root, now):
 
         if latest_outcome and latest_outcome['stage'] == 'monitor_missed' and pred is None and not pred_error:
             state, reason = 'missing', '発走前の記録時間に間に合いませんでした。'
+        if latest_retry:
+            if stale_retry:
+                issues.append('単勝オッズの提供元更新時刻が30分を超えた試行がありました。')
+            else:
+                issues.append('自動監視で再試行がありました。')
+            if state == 'waiting' and latest_outcome is None:
+                reason = ('単勝オッズの鮮度不足により自動監視で再試行中です。'
+                          if latest_retry.get('detail') == 'win_odds_source_stale_over_30m'
+                          else '自動監視で再試行が記録されました。予測は未保存です。')
         if any(event['stage'] == 'track_unavailable' for event in events):
             issues.append('馬場情報を取得できない試行がありました。')
         if state == 'saved' and any(event['stage'] in FAILURES for event in events):
