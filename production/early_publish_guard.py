@@ -7,6 +7,24 @@ import sys
 JST = timezone(timedelta(hours=9))
 
 
+def capture_window(day, stage, start_times, now):
+    """Reject a delayed early job before requesting any race odds."""
+    if stage not in {"morning", "previous_evening"} or now.tzinfo is None:
+        raise ValueError("invalid early capture stage or clock")
+    date = datetime.strptime(day, "%Y-%m-%d").date()
+    now = now.astimezone(JST)
+    expected = date if stage == "morning" else date - timedelta(days=1)
+    if now.date() != expected:
+        return "stage_clock_mismatch"
+    if not start_times:
+        raise ValueError("no eligible race start times")
+    first_post = min(datetime.fromisoformat(day + "T" + t).replace(tzinfo=JST)
+                     for t in start_times)
+    if now >= first_post:
+        return "first_post_deadline"
+    return "capture"
+
+
 def decision(candidate, current, payload, stage, now):
     if stage not in {"morning", "previous_evening"} or not candidate:
         raise ValueError("invalid early publication")
