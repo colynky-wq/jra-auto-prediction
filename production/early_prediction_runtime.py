@@ -21,6 +21,9 @@ import pandas as pd
 
 import live_monitor_dry_run as base
 import live_monitor_topk as live
+from jra_entry_source import JRAEntryUnavailable
+from win_odds_freshness import WinOddsFreshnessError
+from win_odds_retry import WinOddsFetchError
 
 
 HERE = Path(__file__).resolve().parent
@@ -125,6 +128,58 @@ def _safe_predict(race: dict, hist: pd.DataFrame, target_date: pd.Timestamp) -> 
         live.base.fetch_jra_entry_table = original_fetch
 
 
+def _retryable_early_failure(exc: Exception) -> bool:
+    # Retry only upstream temporary failures, never access refusals, unknown
+    # timestamps, feature/model errors or arbitrary exceptions.
+    if isinstance(exc, WinOddsFreshnessError):
+        return str(exc) == "win_odds_source_stale_over_30m"
+    if isinstance(exc, WinOddsFetchError):
+        return str(exc) in {"upstream win odds HTTP transport failure",
+                            "insufficient live win odds", "odds HTTP 500",
+                            "odds HTTP 502", "odds HTTP 503", "odds HTTP 504"}
+    if isinstance(exc, JRAEntryUnavailable):
+        return not any(f"HTTP={code}" in str(exc) for code in (401, 403, 429, 451))
+    return False
+
+
+def _predict_with_one_retry(races, predict, retry_allowed=lambda: True):
+    """Finish the first pass before retrying only failed upstream races once."""
+    successful, pending, failures = {}, [], {}
+    for race in races:
+        rid = str(race["race_id"])
+        try:
+            successful[rid] = predict(race)
+        except Exception as exc:
+            failures[rid] = {"raceID": rid, "errorType": type(exc).__name__,
+                             "reason": str(exc), "attempts": 1}
+            print("EARLY_SKIP", rid, type(exc).__name__, str(exc))
+            if _retryable_early_failure(exc):
+                pending.append(race)
+    for race in pending:
+        if not retry_allowed():
+            break
+        rid = str(race["race_id"])
+        try:
+            successful[rid] = predict(race)
+            del failures[rid]
+            print("EARLY_RETRY_RECOVERED", rid)
+        except Exception as exc:
+            failures[rid] = {"raceID": rid, "errorType": type(exc).__name__,
+                             "reason": str(exc), "attempts": 2}
+            print("EARLY_RETRY_FAILED", rid, type(exc).__name__, str(exc))
+    return successful, failures
+
+
+def _resolved_course(out) -> str:
+    # Use the race metadata actually resolved by the successful predictor,
+    # not a timing label or the potentially incomplete initial race list.
+    context = out.attrs.get("longshotTop3Context") or {}
+    surface, distance = context.get("surface"), context.get("distance")
+    if surface not in {"芝", "ダ"} or type(distance) is not int or not 600 <= distance <= 5000:
+        raise ValueError("missing resolved early course")
+    return f"{surface}{distance}m"
+
+
 def _snapshot(date8: str, stage: str) -> dict:
     # The shared live modules read TARGET_DATE8 internally when they fetch the
     # official entry table. Override it explicitly for next-day evening runs.
@@ -133,16 +188,18 @@ def _snapshot(date8: str, stage: str) -> dict:
 
     target_date = pd.Timestamp(f"{date8[:4]}-{date8[4:6]}-{date8[6:8]}")
     hist = base.load_history(target_date)
-    races = base.fetch_schedule(date8)
+    races = [race for race in base.fetch_schedule(date8)
+             if race.get("surface") != "障" and "障害" not in str(race.get("race_name", ""))]
     output = []
+    first_post = min((base.race_post_datetime(date8, race["start_time"]) for race in races),
+                     default=datetime.now(JST))
+    successful, failures = _predict_with_one_retry(
+        races, lambda race: _safe_predict(race, hist, target_date),
+        retry_allowed=lambda: datetime.now(JST) < first_post)
 
     for race in races:
-        if race.get("surface") == "障" or "障害" in str(race.get("race_name", "")):
-            continue
-        try:
-            out = _safe_predict(race, hist, target_date)
-        except Exception as exc:
-            print("EARLY_SKIP", race.get("race_id"), type(exc).__name__, str(exc))
+        out = successful.get(str(race["race_id"]))
+        if out is None:
             continue
 
         ranked = out.sort_values("AI勝率(%)", ascending=False).reset_index(drop=True)
@@ -166,10 +223,14 @@ def _snapshot(date8: str, stage: str) -> dict:
             "raceNumber": int(race.get("race_no") or 0),
             "startTime": str(race.get("start_time") or ""),
             "raceName": str(race.get("race_name") or ""),
+            "course": _resolved_course(out),
             "horses": horses,
+            "winOddsFreshness": (out.attrs.get("winOddsSource") or {}).get("freshnessEvidence"),
         })
 
-    return {"stage": stage, "capturedAtJST": datetime.now(JST).isoformat(), "races": output}
+    return {"stage": stage, "capturedAtJST": datetime.now(JST).isoformat(), "races": output,
+            "expectedRaceCount": len(races), "failedRaces": list(failures.values()),
+            "winOddsPolicy": "verified_within_30m_required"}
 
 
 def _load_existing() -> dict:

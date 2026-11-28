@@ -71,6 +71,29 @@ HEADERS = {
 }
 
 
+def decode_jra_entry_html(raw: bytes) -> str:
+    """Decode declared Japanese HTML without trusting statistical guesses.
+
+    The HTTP body may be Windows-31J even when apparent_encoding reports
+    a Western single-byte codec. Reject undecodable bytes instead of
+    passing replacement characters into horse and jockey identities.
+    """
+    if raw.startswith(b"\xef\xbb\xbf"):
+        return raw.decode("utf-8-sig", errors="strict")
+    match = re.search(rb"<meta\b[^>]*charset\s*=\s*['\"]?\s*([a-zA-Z0-9_-]+)", raw[:8192], re.I)
+    declared = match[1].decode("ascii").lower() if match else ""
+    if declared in {"shift_jis", "shift-jis", "sjis", "cp932", "windows-31j", "ms932", "x-sjis"}:
+        return raw.decode("cp932", errors="strict")
+    if declared in {"utf-8", "utf8"}:
+        return raw.decode("utf-8", errors="strict")
+    if declared in {"euc-jp", "euc_jp"}:
+        return raw.decode("euc_jp", errors="strict")
+    try:
+        return raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError:
+        return raw.decode("cp932", errors="strict")
+
+
 def _make_direct_entry_url(race_id: str, date8: str) -> str:
     rid = str(race_id).zfill(12)
     year = rid[0:4]
@@ -187,6 +210,10 @@ def _prefer_url(existing: str | None, candidate: str) -> str:
     return existing
 
 
+class JRAEntryUnavailable(RuntimeError):
+    """Entry table unavailable after the existing route checks."""
+
+
 class JRAEntryAccessRestricted(RuntimeError):
     """Official access restriction observed during public route discovery."""
 
@@ -263,8 +290,7 @@ def discover_entry_url(
             if r.status_code != 200:
                 continue
 
-            enc = r.apparent_encoding or "shift_jis"
-            text = r.content.decode(enc, errors="replace")
+            text = decode_jra_entry_html(r.content)
             if abort_on_restricted and any(message in text for message in (
                     "アクセスが集中", "ご指定のページに接続できません")):
                 raise JRAEntryAccessRestricted("jra_navigation_access_restricted_page")
@@ -482,7 +508,7 @@ def fetch_entry_table(
     session = requests.Session()
     session.headers.update(HEADERS)
 
-    discovered = discover_entry_url(race_id, date8, session)
+    discovered = discover_entry_url(race_id, date8, session, abort_on_restricted=True)
     direct = _make_direct_entry_url(race_id, date8)
 
     urls: list[str] = []
@@ -501,12 +527,15 @@ def fetch_entry_table(
             print("JRA entry URL:", url)
             print("JRA entry HTTP:", r.status_code, "bytes:", len(r.content))
 
+            if r.status_code in (401, 403, 429, 451):
+                raise JRAEntryAccessRestricted(f"jra_entry_access_restricted_http_{r.status_code}")
             if r.status_code != 200:
                 last_error = f"HTTP={r.status_code}"
                 continue
 
-            enc = r.apparent_encoding or "shift_jis"
-            text = r.content.decode(enc, errors="replace")
+            text = decode_jra_entry_html(r.content)
+            if any(message in text for message in ("アクセスが集中", "ご指定のページに接続できません")):
+                raise JRAEntryAccessRestricted("jra_entry_access_restricted_page")
             d = _parse_entry_table(text, race_id)
 
             # Optional metadata only. A research-parser failure must never
@@ -549,10 +578,12 @@ def fetch_entry_table(
                     record_event(str(race_id), date8, "capture_failed", exc)
             return d, fetch_time, url
 
+        except JRAEntryAccessRestricted:
+            raise
         except Exception as e:
             last_error = str(e)
             print("JRA entry parse warning:", last_error)
 
-    raise RuntimeError(
+    raise JRAEntryUnavailable(
         f"JRA出馬表取得失敗: {race_id} / {last_error}"
     )
