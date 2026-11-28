@@ -76,6 +76,36 @@ class TestRecordingFaults(unittest.TestCase):
             (events/f'{i}.json').write_text(json.dumps(event))
         return folder, pred, history.iloc[:0]
 
+    def test_odds_retry_is_valid_attempt_not_corrupt_or_terminal(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            folder, pred, history = self.attempt_sequence(root, ['monitor_retry'])
+            path = folder/'events/0.json'
+            event = json.loads(path.read_text())
+            event['detail'] = 'win_odds_source_stale_over_30m'
+            path.write_text(json.dumps(event))
+            row = self.board(root, history)['races'][0]
+            self.assertEqual(row['recordingState'], 'waiting')
+            self.assertEqual(row['lastAttemptAtJST'], event['atJST'])
+            self.assertIn('鮮度不足', row['reason'])
+            self.assertTrue(row['needsAttention'])
+            self.assertTrue(any('30分' in issue for issue in row['issues']))
+            self.assertFalse(any('読み取れません' in issue for issue in row['issues']))
+            missed = TestRecordingStatus().run_case(root, history, NOW+timedelta(minutes=11))['races'][0]
+            self.assertEqual(missed['recordingState'], 'missing')
+            self.assertTrue(any('30分' in issue for issue in missed['issues']))
+
+    def test_retry_does_not_override_terminal_or_saved_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            folder, pred, history = self.attempt_sequence(root, ['monitor_failed', 'monitor_retry'])
+            row = self.board(root, history)['races'][0]
+            self.assertEqual(row['recordingState'], 'failed')
+            (folder/'PacePrediction.json').write_text(json.dumps(pred))
+            row = self.board(root, history)['races'][0]
+            self.assertEqual(row['recordingState'], 'saved')
+            self.assertTrue(row['needsAttention'])
+
     def test_track_warning_does_not_hide_unsaved_failure(self):
         for failure in ['capture_failed', 'prediction_failed', 'monitor_failed']:
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as d:
