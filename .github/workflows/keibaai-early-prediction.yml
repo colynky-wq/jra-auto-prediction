@@ -146,35 +146,60 @@ jobs:
           python production/test_cross_bet_recommendation.py
           python production/test_early_all_bet_recommendation.py
 
-      - name: Build early prediction snapshot
+      - name: Reject expired early capture before fetching race odds
+        id: window
         if: steps.day.outputs.has_races == 'true'
+        env:
+          KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
+          KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
+        run: |
+          PYTHONPATH=production python - <<'PY'
+          import os
+          from datetime import datetime
+          import live_monitor_dry_run as base
+          from early_publish_guard import capture_window, JST
+          date8 = os.environ["KEIBAAI_EARLY_DATE"]
+          day = f"{date8[:4]}-{date8[4:6]}-{date8[6:]}"
+          stage = os.environ["KEIBAAI_EARLY_STAGE"]
+          races = base.fetch_schedule(date8)
+          # Include obstacle races in the day-start deadline: an early job must
+          # finish before racing begins, even if its model excludes obstacles.
+          starts = [str(r["start_time"]) for r in races]
+          outcome = capture_window(day, stage, starts, datetime.now(JST))
+          print("EARLY_CAPTURE_WINDOW", outcome)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("active=" + str(outcome == "capture").lower() + "\n")
+          PY
+
+      - name: Build early prediction snapshot
+        if: steps.window.outputs.active == 'true'
         env:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/early_prediction_runtime.py
 
       - name: Validate complete early snapshot before publishing
-        if: steps.day.outputs.has_races == 'true'
+        if: steps.window.outputs.active == 'true'
         env:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/validate_early_prediction.py
 
       - name: Publish early snapshot through canonical RaceData feed
-        if: steps.day.outputs.has_races == 'true'
+        if: steps.window.outputs.active == 'true'
         env:
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
         run: python production/publish_early_racedata.py
 
       - name: Build honest all-bet early status or morning real-odds snapshot
-        if: steps.day.outputs.has_races == 'true'
+        if: steps.window.outputs.active == 'true'
         env:
           KEIBAAI_EARLY_STAGE: ${{ steps.target.outputs.stage }}
           KEIBAAI_EARLY_ALL_BET_WORKERS: '4'
         run: python production/early_all_bet_recommendation.py
 
       - name: Build app research display from the same early RaceData
-        if: steps.day.outputs.has_races == 'true'
+        if: steps.window.outputs.active == 'true'
         env:
           KEIBAAI_EARLY_DATE: ${{ steps.target.outputs.date8 }}
         run: |
@@ -191,7 +216,7 @@ jobs:
           PY
 
       - name: Publish validated snapshot atomically
-        if: steps.day.outputs.has_races == 'true'
+        if: steps.window.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
