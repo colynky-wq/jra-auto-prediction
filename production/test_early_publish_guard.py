@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from early_publish_guard import decision
+from early_publish_guard import decision, capture_window
 
 DAY = "2026-11-28"
 ROWS = [{"raceDate": DAY, "startTime": "09:45"}]
@@ -12,6 +12,19 @@ PAYLOAD = {"raceDate": DAY, "snapshots": {
 class EarlyGuardTests(unittest.TestCase):
     def check(self, current=(), now="2026-11-28T07:00:00+09:00", stage="morning", payload=PAYLOAD):
         return decision(ROWS, list(current), payload, stage, datetime.fromisoformat(now))
+
+    def test_capture_window(self):
+        for clock, stage, expected in (
+            ("2026-11-28T07:00:00+09:00", "morning", "capture"),
+            ("2026-11-28T09:45:00+09:00", "morning", "first_post_deadline"),
+            ("2026-11-28T13:00:00+09:00", "morning", "first_post_deadline"),
+            ("2026-11-28T00:01:00+09:00", "previous_evening", "stage_clock_mismatch"),
+            ("2026-11-27T20:00:00+09:00", "previous_evening", "capture"),
+        ):
+            self.assertEqual(capture_window(DAY, stage, ["10:05", "09:45"],
+                                            datetime.fromisoformat(clock)), expected)
+        with self.assertRaises(ValueError):
+            capture_window(DAY, "morning", [], datetime.fromisoformat(DAY + "T07:00:00+09:00"))
 
     def test_old_feed_and_same_day_early_can_refresh(self):
         self.assertEqual(self.check([{"raceDate": "2026-11-23"}]), "publish")
